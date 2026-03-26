@@ -1,7 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
 import { addMinutes, format } from "date-fns";
 
-import { BUSINESS_HOURS } from "@/lib/constants";
+import {
+  BARBER_CLOSE_SATURDAY_HOUR,
+  BARBER_CLOSE_WEEKDAY_HOUR,
+  BUSINESS_HOURS,
+} from "@/lib/constants";
 
 export function cn(...values: ClassValue[]) {
   return clsx(values);
@@ -31,4 +35,26 @@ export function getSlotsForDate(date: Date) {
 
 export function getSlotEnd(start: Date, durationMinutes: number) {
   return addMinutes(start, durationMinutes);
+}
+
+/** Momento de fecho no mesmo dia civil do agendamento (seg–sex 20h, sáb 17h). */
+export function getShopClosingTime(slotDay: Date): Date {
+  const close = new Date(slotDay);
+  if (close.getDay() === 6) {
+    close.setHours(BARBER_CLOSE_SATURDAY_HOUR, 0, 0, 0);
+  } else {
+    close.setHours(BARBER_CLOSE_WEEKDAY_HOUR, 0, 0, 0);
+  }
+  return close;
+}
+
+/** Domingo fechado; outros dias o serviço tem de terminar até ao fecho. */
+export function isSlotWithinBusinessHours(
+  slotStart: Date,
+  durationMinutes: number,
+): boolean {
+  if (slotStart.getDay() === 0) return false;
+  const slotEnd = getSlotEnd(slotStart, durationMinutes);
+  const close = getShopClosingTime(slotStart);
+  return slotEnd.getTime() <= close.getTime();
 }

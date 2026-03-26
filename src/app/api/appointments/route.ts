@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-import { getSlotEnd, getSlotStart } from "@/lib/utils";
+import {
+  getSlotEnd,
+  getSlotStart,
+  isSlotWithinBusinessHours,
+} from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
@@ -36,6 +40,20 @@ export async function POST(request: Request) {
 
     const startsAt = getSlotStart(day, payload.time);
     const endsAt = getSlotEnd(startsAt, service.durationMinutes);
+
+    if (startsAt.getDay() === 0) {
+      return NextResponse.json(
+        { message: "A barbearia não abre ao domingo." },
+        { status: 400 },
+      );
+    }
+
+    if (!isSlotWithinBusinessHours(startsAt, service.durationMinutes)) {
+      return NextResponse.json(
+        { message: "Horário fora do expediente para este serviço." },
+        { status: 400 },
+      );
+    }
 
     const conflict = await prisma.appointment.findFirst({
       where: {

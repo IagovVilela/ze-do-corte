@@ -1,0 +1,24 @@
+# PostgreSQL apenas para desenvolvimento local (Docker).
+# Credenciais fixas de dev — não usar em produção.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ze-do-corte-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ze_docorte_dev
+      POSTGRES_DB: ze_do_corte
+    volumes:
+      - ze_do_corte_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ze_do_corte"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+volumes:
+  ze_do_corte_pgdata:

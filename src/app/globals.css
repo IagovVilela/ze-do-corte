@@ -69,6 +69,10 @@ body {
   color: transparent;
 }
 
+.font-display {
+  font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
+}
+
 .container-max {
   width: 100%;
   max-width: 1200px;

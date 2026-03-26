@@ -10,7 +10,9 @@ type DashboardChartProps = {
 export function DashboardChart({ data }: DashboardChartProps) {
   return (
     <div className="glass-card rounded-2xl p-5">
-      <h3 className="text-lg font-semibold">Agendamentos (últimos 7 dias)</h3>
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-white">
+        Agendamentos (últimos 7 dias)
+      </h3>
       <p className="mt-1 text-sm text-zinc-400">Visão rápida do volume diário de reservas.</p>
       <div className="mt-5 h-64">
         <ResponsiveContainer width="100%" height="100%">

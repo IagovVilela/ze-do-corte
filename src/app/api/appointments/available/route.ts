@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { getSlotEnd, getSlotStart } from "@/lib/utils";
+import { getSlotEnd, getSlotStart, isSlotWithinBusinessHours } from "@/lib/utils";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -84,7 +84,14 @@ export async function GET(request: Request) {
         appointment.startsAt.getTime() < slotEnd.getTime() &&
         appointment.endsAt.getTime() > slotStart.getTime(),
     );
-    const available = !overlaps && slotStart.getTime() > now.getTime();
+    const withinHours = isSlotWithinBusinessHours(
+      slotStart,
+      service.durationMinutes,
+    );
+    const available =
+      withinHours &&
+      !overlaps &&
+      slotStart.getTime() > now.getTime();
     return {
       hour,
       available,

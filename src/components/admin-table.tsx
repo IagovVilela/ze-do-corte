@@ -3,10 +3,13 @@
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { ReactNode } from "react";
+
 import type { AppointmentRow } from "@/lib/types";
 
 type Props = {
   appointments: AppointmentRow[];
+  footer?: ReactNode;
 };
 
 const statusStyles: Record<AppointmentRow["status"], string> = {
@@ -21,7 +24,7 @@ const statusLabel: Record<AppointmentRow["status"], string> = {
   CANCELLED: "Cancelado",
 };
 
-export function AdminTable({ appointments }: Props) {
+export function AdminTable({ appointments, footer }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -67,6 +70,7 @@ export function AdminTable({ appointments }: Props) {
           </tbody>
         </table>
       </div>
+      {footer}
     </motion.div>
   );
 }

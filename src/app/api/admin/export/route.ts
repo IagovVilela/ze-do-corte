@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { requireAdminApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const authResult = await requireAdminApiAuth();
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
   try {
     const appointments = await prisma.appointment.findMany({
       include: {

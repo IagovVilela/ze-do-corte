@@ -1,18 +1,26 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ServiceSummary } from "@/lib/types";
 import { formatMoney } from "@/lib/utils";
+
+import { staggerItem } from "@/lib/motion-presets";
 
 type ServiceCardProps = {
   service: ServiceSummary;
 };
 
 export function ServiceCard({ service }: ServiceCardProps) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.article
-      whileHover={{ y: -6, scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 280, damping: 24 }}
+      variants={staggerItem}
+      whileHover={
+        reduceMotion
+          ? undefined
+          : { y: -8, scale: 1.015, transition: { type: "spring", stiffness: 300, damping: 22 } }
+      }
       className="glass-card rounded-2xl p-6"
     >
       <div className="flex items-start justify-between gap-4">

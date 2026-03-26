@@ -1,77 +1,19 @@
-import { endOfDay, endOfWeek, format, startOfDay, startOfWeek, subDays } from "date-fns";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import { getAdminDashboardSnapshot } from "@/lib/admin-dashboard";
+import { requireAdminApiAuth } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+  const authResult = await requireAdminApiAuth();
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
   try {
-    const now = new Date();
-    const startToday = startOfDay(now);
-    const endToday = endOfDay(now);
-    const startWeek = startOfWeek(now, { weekStartsOn: 1 });
-    const endWeek = endOfWeek(now, { weekStartsOn: 1 });
-    const lastSevenDays = subDays(startToday, 6);
-
-    const [appointmentsLastSeven, todayCount, weekCount, totalCount] = await Promise.all([
-      prisma.appointment.findMany({
-        where: {
-          startsAt: {
-            gte: lastSevenDays,
-          },
-        },
-        include: {
-          service: true,
-        },
-        orderBy: {
-          startsAt: "asc",
-        },
-      }),
-      prisma.appointment.count({
-        where: {
-          startsAt: {
-            gte: startToday,
-            lte: endToday,
-          },
-        },
-      }),
-      prisma.appointment.count({
-        where: {
-          startsAt: {
-            gte: startWeek,
-            lte: endWeek,
-          },
-        },
-      }),
-      prisma.appointment.count(),
-    ]);
-
-    const byDayMap = new Map<string, number>();
-    for (let i = 0; i < 7; i += 1) {
-      const day = subDays(startToday, 6 - i);
-      byDayMap.set(format(day, "yyyy-MM-dd"), 0);
-    }
-
-    appointmentsLastSeven.forEach((appointment) => {
-      const key = format(appointment.startsAt, "yyyy-MM-dd");
-      byDayMap.set(key, (byDayMap.get(key) ?? 0) + 1);
-    });
-
-    const series = Array.from(byDayMap.entries()).map(([key, count]) => ({
-      date: key,
-      dateLabel: format(new Date(`${key}T00:00:00`), "dd/MM"),
-      count,
-    }));
-
-    return NextResponse.json({
-      metrics: {
-        totalToday: todayCount,
-        totalWeek: weekCount,
-        totalAppointments: totalCount,
-      },
-      series,
-    });
+    const snapshot = await getAdminDashboardSnapshot();
+    return NextResponse.json(snapshot);
   } catch (error) {
     console.error("Erro ao montar dashboard:", error);
     return NextResponse.json(

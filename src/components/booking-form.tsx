@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LoaderCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
 import type { ServiceSummary } from "@/lib/types";
@@ -201,10 +201,11 @@ export function BookingForm({ services }: BookingFormProps) {
               const iso = format(date, "yyyy-MM-dd");
               const isActive = iso === selectedDate;
               return (
-                <button
+                <motion.button
                   key={iso}
                   type="button"
                   onClick={() => setSelectedDate(iso)}
+                  whileTap={{ scale: 0.97 }}
                   className={cn(
                     "min-w-[88px] rounded-xl border px-3 py-2 text-left transition",
                     isActive
@@ -216,7 +217,7 @@ export function BookingForm({ services }: BookingFormProps) {
                     {format(date, "EEE", { locale: ptBR })}
                   </span>
                   <span className="text-sm font-semibold">{format(date, "dd/MM")}</span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -234,13 +235,14 @@ export function BookingForm({ services }: BookingFormProps) {
               const isAvailable = availableSlots.includes(time);
               const isSelected = selectedTime === time;
               return (
-                <button
+                <motion.button
                   key={time}
                   type="button"
                   onClick={() => {
                     if (isAvailable) setSelectedTime(time);
                   }}
                   disabled={!isAvailable}
+                  whileTap={isAvailable ? { scale: 0.95 } : undefined}
                   className={cn(
                     "rounded-xl border px-3 py-2 text-sm transition",
                     isSelected && "border-brand-500 bg-brand-500/20",
@@ -250,7 +252,7 @@ export function BookingForm({ services }: BookingFormProps) {
                   )}
                 >
                   {time}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -267,13 +269,15 @@ export function BookingForm({ services }: BookingFormProps) {
           />
         </label>
 
-        <button
+        <motion.button
           type="submit"
           disabled={bookingState === "loading"}
+          whileHover={{ scale: bookingState === "loading" ? 1 : 1.01 }}
+          whileTap={{ scale: bookingState === "loading" ? 1 : 0.99 }}
           className="w-full rounded-full bg-brand-500 px-6 py-3 font-semibold text-zinc-950 transition hover:brightness-110 disabled:opacity-70"
         >
           {bookingState === "loading" ? "Confirmando..." : "Confirmar agendamento"}
-        </button>
+        </motion.button>
       </motion.form>
 
       <motion.aside
@@ -306,19 +310,26 @@ export function BookingForm({ services }: BookingFormProps) {
           </p>
         </div>
 
-        {message ? (
-          <p
-            className={cn(
-              "rounded-xl border px-4 py-3 text-sm",
-              bookingState === "success" &&
-                "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
-              bookingState === "error" &&
-                "border-rose-400/40 bg-rose-500/10 text-rose-300",
-            )}
-          >
-            {message}
-          </p>
-        ) : null}
+        <AnimatePresence mode="wait">
+          {message ? (
+            <motion.p
+              key={bookingState + message.slice(0, 12)}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className={cn(
+                "rounded-xl border px-4 py-3 text-sm",
+                bookingState === "success" &&
+                  "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+                bookingState === "error" &&
+                  "border-rose-400/40 bg-rose-500/10 text-rose-300",
+              )}
+            >
+              {message}
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
       </motion.aside>
     </div>
   );

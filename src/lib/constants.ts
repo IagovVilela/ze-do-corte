@@ -1,3 +1,48 @@
+/** Vídeo institucional do hero (ficheiro em `public/images/`). */
+export const HERO_VIDEO_SRC = "/images/videoPrincipal.mp4";
+
+/** Slogans oficiais da marca (usar no site e materiais). */
+export const BARBER_SLOGAN_PRIMARY = "Estilo e confiança";
+export const BARBER_SLOGAN_SECONDARY = "Experiências única para homens únicos";
+
+/** Endereço físico da barbearia (contacto e mapas). */
+export const BARBER_SHOP_ADDRESS =
+  "R. Laurent Martins, 209 - Jardim Esplanada, São José dos Campos - SP, 12242-431, Brasil";
+
+/**
+ * Horário de funcionamento (calendário completo — UI e referência para regras de agendamento).
+ * Seg–sex: 09h–20h · Sábado: 09h–17h · Domingo: fechado.
+ */
+export const BARBER_WEEKLY_SCHEDULE: readonly { label: string; range: string }[] = [
+  { label: "Segunda-feira", range: "09h — 20h" },
+  { label: "Terça-feira", range: "09h — 20h" },
+  { label: "Quarta-feira", range: "09h — 20h" },
+  { label: "Quinta-feira", range: "09h — 20h" },
+  { label: "Sexta-feira", range: "09h — 20h" },
+  { label: "Sábado", range: "09h — 17h" },
+  { label: "Domingo", range: "Fechado" },
+] as const;
+
+/** Hora de encerramento (fim do último atendimento possível = fecho da loja). */
+export const BARBER_CLOSE_WEEKDAY_HOUR = 20;
+export const BARBER_CLOSE_SATURDAY_HOUR = 17;
+
+/**
+ * Links opcionais de contacto. Deixe vazios para ocultar os botões na UI.
+ * whatsappDigits: apenas dígitos com DDI, ex. 5512999999999
+ */
+export const BARBER_CONTACT_LINKS: {
+  telHref: string;
+  telLabel: string;
+  whatsappDigits: string;
+  instagramUser: string;
+} = {
+  telHref: "",
+  telLabel: "",
+  whatsappDigits: "",
+  instagramUser: "",
+};
+
 export const BUSINESS_HOURS = [
   "09:00",
   "09:30",

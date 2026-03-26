@@ -1,11 +1,13 @@
 import { BookingForm } from "@/components/booking-form";
+import { DatabaseUnavailableNotice } from "@/components/database-unavailable-notice";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import { BARBER_SLOGAN_PRIMARY } from "@/lib/constants";
 import { getServices } from "@/lib/data";
 
 export const metadata = {
   title: "Agendar horário | Zé do Corte",
-  description: "Escolha data, horário e serviço para agendar seu corte em segundos.",
+  description: `${BARBER_SLOGAN_PRIMARY}. Escolha data, horário e serviço em poucos passos.`,
 };
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,11 @@ export default async function BookingPage() {
             </p>
           </div>
 
-          <BookingForm services={services} />
+          {services.length === 0 ? (
+            <DatabaseUnavailableNotice variant="compact" />
+          ) : (
+            <BookingForm services={services} />
+          )}
         </section>
       </main>
       <SiteFooter />
