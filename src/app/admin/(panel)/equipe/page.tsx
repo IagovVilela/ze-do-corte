@@ -5,6 +5,7 @@ import { AnimatedSection } from "@/components/animated-section";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { defaultWorkWeekFromShop, parseWorkWeekFromDb } from "@/lib/work-week";
 
 export const dynamic = "force-dynamic";
 
@@ -25,17 +26,27 @@ export default async function AdminEquipePage() {
     }),
   ]);
 
-  const staffRows = staff.map((s) => ({
-    id: s.id,
-    email: s.email,
-    displayName: s.displayName,
-    role: s.role,
-    unitId: s.unitId,
-    unitName: s.unit?.name ?? null,
-    hasPassword: Boolean(s.passwordHash),
-    websiteBio: s.websiteBio,
-    showOnWebsite: s.showOnWebsite,
-  }));
+  const defaults = defaultWorkWeekFromShop();
+  const staffRows = staff.map((s) => {
+    const base = {
+      id: s.id,
+      email: s.email,
+      displayName: s.displayName,
+      role: s.role,
+      unitId: s.unitId,
+      unitName: s.unit?.name ?? null,
+      hasPassword: Boolean(s.passwordHash),
+      websiteBio: s.websiteBio,
+      showOnWebsite: s.showOnWebsite,
+    };
+    if (s.role !== "STAFF") return base;
+    const custom = parseWorkWeekFromDb(s.workWeekJson ?? null);
+    return {
+      ...base,
+      workWeekInitialWeek: custom ?? defaults,
+      workWeekUsesCustom: custom !== null,
+    };
+  });
 
   const unitOptions = units.map((u) => ({ id: u.id, name: u.name }));
 

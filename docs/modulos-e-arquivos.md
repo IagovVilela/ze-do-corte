@@ -24,7 +24,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + tabela + paginação `?page=` |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
-| `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio e “Mostrar na home” (`admin-staff-manager.tsx`) |
+| `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio, “Mostrar na home”, **expediente** (`workWeekJson`) para OWNER/ADMIN (`admin-staff-manager.tsx`) |
 | `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
 | `/admin/expediente` | `src/app/admin/(panel)/expediente/page.tsx` | Expediente semanal do **STAFF** (`admin-work-schedule-form.tsx`) |
 | `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
@@ -44,7 +44,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` |
 | Export Excel | `src/app/api/admin/export/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
-| Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts` |
+| Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
 | Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` |
 | Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH`, `DELETE` |
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |

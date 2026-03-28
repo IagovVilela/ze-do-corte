@@ -23,8 +23,8 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
 
 - **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie.
 - **`/admin/perfil`** — utilizador autenticado altera `displayName`, `phone`, senha (`PATCH /api/auth/profile`) e foto (`POST`/`DELETE /api/auth/profile/avatar` → Cloudinary quando configurado); a foto alimenta o cartão na home para quem é barbeiro em destaque.
-- **`/admin/expediente`** — só **STAFF**: define `workWeekJson` (expediente semanal) via `PATCH /api/auth/work-schedule`; `null` significa seguir apenas o horário global da barbearia nos slots públicos.
-- **`/admin/equipe`** — gestão de membros; para **STAFF**, texto curto e visibilidade na home (`websiteBio`, `showOnWebsite` via `PATCH /api/admin/staff/[id]`).
+- **`/admin/expediente`** — só **STAFF**: define o próprio `workWeekJson` via `PATCH /api/auth/work-schedule`; `null` segue só o horário global da barbearia nos slots públicos.
+- **`/admin/equipe`** — gestão de membros; para **STAFF**, texto e visibilidade na home (`PATCH /api/admin/staff/[id]`) e **expediente** por funcionário para **OWNER/ADMIN** (`GET`/`PATCH /api/admin/staff/[id]/work-schedule`).
 - **`/admin` (painel)** — `src/app/admin/(panel)/layout.tsx`: `getStaffAccessOrNull()` (`src/lib/admin-auth.ts` + `src/lib/staff-access.ts`); sem sessão válida → `redirect("/admin/login")`.
 - **`src/proxy.ts`** — pass-through mínimo (Next.js 16 **proxy**); não faz auth Clerk.
 - **APIs `/api/admin/*`** — `requireStaffApiAuth()` e permissões por papel (export, unidades, equipe, serviços, configuração, **PATCH** em agendamentos para `staffMemberId` só OWNER/ADMIN).

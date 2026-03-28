@@ -1,9 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { Fragment, useState } from "react";
 
+import { AdminWorkScheduleForm } from "@/components/admin-work-schedule-form";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
+import {
+  defaultWorkWeekFromShop,
+  parseWorkWeekFromDb,
+  type WorkWeekState,
+} from "@/lib/work-week";
+import { cn } from "@/lib/utils";
 
 type StaffRow = {
   id: string;
@@ -15,6 +23,8 @@ type StaffRow = {
   hasPassword: boolean;
   websiteBio: string | null;
   showOnWebsite: boolean;
+  workWeekInitialWeek?: WorkWeekState;
+  workWeekUsesCustom?: boolean;
 };
 
 type Props = {
@@ -50,6 +60,7 @@ export function AdminStaffManager({
   async function refresh() {
     const res = await fetch("/api/admin/staff");
     if (!res.ok) return;
+    const defaults = defaultWorkWeekFromShop();
     const data = (await res.json()) as {
       staff: {
         id: string;
@@ -61,20 +72,30 @@ export function AdminStaffManager({
         hasPassword: boolean;
         websiteBio: string | null;
         showOnWebsite: boolean;
+        workWeekJson?: unknown;
       }[];
     };
     setStaff(
-      data.staff.map((s) => ({
-        id: s.id,
-        email: s.email,
-        displayName: s.displayName,
-        role: s.role,
-        unitId: s.unitId,
-        unitName: s.unit?.name ?? null,
-        hasPassword: s.hasPassword,
-        websiteBio: s.websiteBio,
-        showOnWebsite: s.showOnWebsite,
-      })),
+      data.staff.map((s) => {
+        const base: StaffRow = {
+          id: s.id,
+          email: s.email,
+          displayName: s.displayName,
+          role: s.role,
+          unitId: s.unitId,
+          unitName: s.unit?.name ?? null,
+          hasPassword: s.hasPassword,
+          websiteBio: s.websiteBio,
+          showOnWebsite: s.showOnWebsite,
+        };
+        if (s.role !== "STAFF") return base;
+        const custom = parseWorkWeekFromDb(s.workWeekJson ?? null);
+        return {
+          ...base,
+          workWeekInitialWeek: custom ?? defaults,
+          workWeekUsesCustom: custom !== null,
+        };
+      }),
     );
     router.refresh();
   }
@@ -368,6 +389,47 @@ export function AdminStaffManager({
                       >
                         Guardar página inicial
                       </button>
+                    </td>
+                  </tr>
+                ) : null}
+                {s.role === "STAFF" &&
+                s.workWeekInitialWeek !== undefined &&
+                s.workWeekUsesCustom !== undefined ? (
+                  <tr className="bg-white/[0.02]">
+                    <td colSpan={5} className="px-4 py-3">
+                      <details className="group rounded-xl border border-white/[0.08] bg-zinc-950/30 open:border-white/15">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-sm outline-none marker:content-none [&::-webkit-details-marker]:hidden">
+                          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="font-medium text-zinc-300">Expediente</span>
+                            <span className="text-zinc-600">·</span>
+                            <span className="truncate text-zinc-400">
+                              {s.displayName?.trim() || s.email}
+                            </span>
+                            <span
+                              className={cn(
+                                "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                                s.workWeekUsesCustom
+                                  ? "bg-brand-500/15 text-brand-300"
+                                  : "bg-zinc-600/20 text-zinc-500",
+                              )}
+                            >
+                              {s.workWeekUsesCustom ? "Personalizado" : "Horário da barbearia"}
+                            </span>
+                          </span>
+                          <ChevronDown className="size-4 shrink-0 text-zinc-500 transition-transform duration-200 group-open:rotate-180" />
+                        </summary>
+                        <div className="border-t border-white/5 px-3 pb-3 pt-2">
+                          <AdminWorkScheduleForm
+                            key={`${s.id}-schedule`}
+                            layout="compact"
+                            initialWeek={s.workWeekInitialWeek}
+                            usesCustomInitial={s.workWeekUsesCustom}
+                            managedStaffMemberId={s.id}
+                            managedStaffLabel={s.displayName?.trim() || s.email}
+                            onScheduleSaved={() => void refresh()}
+                          />
+                        </div>
+                      </details>
                     </td>
                   </tr>
                 ) : null}
