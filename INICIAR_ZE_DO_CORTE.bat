@@ -24,6 +24,9 @@ if errorlevel 1 (
 echo [INFO] Diretorio: %cd%
 echo.
 
+REM Caminho absoluto sem ambiguidade (espacos no path + start/cmd /k)
+for %%I in ("%~dp0.") do set "ZDC_ROOT=%%~fI"
+
 REM --- Node.js no PATH (instale Node 20+ de https://nodejs.org ) ---
 where node >nul 2>&1
 if errorlevel 1 (
@@ -102,11 +105,11 @@ if errorlevel 1 (
     echo.
     echo [AVISO] prisma db push falhou - o servidor ainda pode subir, mas APIs que usam o banco podem falhar.
     echo.
-    echo Se o erro foi P1001 (nao alcanca localhost:5432):
-    echo   1) Inicie o servico PostgreSQL (services.msc - procure "postgresql").
-    echo   2) Confirme USER e PASSWORD reais no .env - nao deixe USER:PASSWORD do exemplo.
-    echo   3) Crie a base ze_do_corte no Postgres se ainda nao existir.
-    echo   4) Guia completo: docs\operacao.md (secao Erro P1001)
+    echo Se o erro foi P1001 ^(nao alcanca localhost:5432^):
+    echo   1^) Inicie o servico PostgreSQL ^(services.msc - procure "postgresql"^).
+    echo   2^) Confirme USER e PASSWORD reais no .env - nao deixe USER:PASSWORD do exemplo.
+    echo   3^) Crie a base ze_do_corte no Postgres se ainda nao existir.
+    echo   4^) Guia completo: docs\operacao.md ^(secao Erro P1001^)
     echo.
     echo Depois rode manualmente: npx prisma db push
     echo.
@@ -117,7 +120,7 @@ if errorlevel 1 (
 
 echo.
 echo [5/5] Iniciando servidor de desenvolvimento Next.js...
-start "Next.js - Zé do Corte" cmd /k "cd /d %cd% && echo ========================================= && echo    ZE DO CORTE - NEXT.JS && echo ========================================= && echo. && echo Aplicacao: http://localhost:3000 && echo Admin: http://localhost:3000/admin ^(login Clerk^) && echo. && npm run dev"
+start "Next.js - Zé do Corte" cmd /k "cd /d ""!ZDC_ROOT!"" && echo ========================================= && echo    ZE DO CORTE - NEXT.JS && echo ========================================= && echo. && echo Aplicacao: http://localhost:3000 && echo Admin: http://localhost:3000/admin ^(login Clerk^) && echo. && npm run dev"
 
 timeout /t 2 /nobreak >nul
 

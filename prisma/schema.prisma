@@ -12,18 +12,99 @@ enum AppointmentStatus {
   COMPLETED
 }
 
+enum StaffRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum ServiceCategory {
+  CORTE
+  BARBA
+  COMBO
+  TRATAMENTO
+  OUTRO
+}
+
+model BarbershopUnit {
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  addressLine  String?
+  city         String?
+  phone        String?
+  isActive     Boolean         @default(true)
+  isDefault    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  appointments Appointment[]
+  staffMembers StaffMember[]
+}
+
+model StaffMember {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  displayName  String?
+  /// Telefone de contato (opcional), editável pelo próprio usuário no painel.
+  phone        String?
+  /// URL pública da foto de perfil (Cloudinary `secure_url`).
+  profileImageUrl       String?
+  /// `public_id` no Cloudinary — usado para apagar a imagem ao substituir ou remover.
+  profileImagePublicId String?
+  /// Texto curto na página inicial (só exibido para `STAFF` com `showOnWebsite`).
+  websiteBio    String?   @db.VarChar(400)
+  /// Incluir cartão na home institucional (barbeiros com papel `STAFF`).
+  showOnWebsite Boolean   @default(false)
+  role         StaffRole
+  /// Hash bcrypt da senha de acesso ao painel (nunca em texto puro).
+  passwordHash String?
+  unitId       String?
+  unit         BarbershopUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     Session[]
+  /// Agendamentos em que este membro é o barbeiro/profissional responsável.
+  appointments Appointment[]
+
+  @@index([unitId])
+  @@index([showOnWebsite, role])
+}
+
+model Session {
+  id            String      @id @default(cuid())
+  /// SHA-256 hex do token enviado no cookie (o cookie guarda o token em claro).
+  tokenHash     String      @unique
+  staffMemberId String
+  staffMember   StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([staffMemberId])
+  @@index([expiresAt])
+}
+
+model BarbershopSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
 model Service {
-  id              String        @id @default(cuid())
+  id              String           @id @default(cuid())
   name            String
   description     String
+  /// Agrupa serviços no painel e permite filtrar por tipo.
+  category        ServiceCategory  @default(OUTRO)
   durationMinutes Int
-  price           Decimal       @db.Decimal(10, 2)
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  price           Decimal          @db.Decimal(10, 2)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   appointments    Appointment[]
 
   @@unique([name])
+  @@index([category])
 }
 
 model Appointment {
@@ -39,8 +120,15 @@ model Appointment {
   updatedAt   DateTime          @updatedAt
   serviceId   String
   service     Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  unitId      String?
+  unit        BarbershopUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  /// Profissional (barbeiro) responsável; null = ainda não atribuído (visível só a dono/admin).
+  staffMemberId String?
+  staffMember   StaffMember?    @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
 
   @@index([startsAt])
   @@index([status])
   @@index([serviceId])
+  @@index([unitId])
+  @@index([staffMemberId])
 }

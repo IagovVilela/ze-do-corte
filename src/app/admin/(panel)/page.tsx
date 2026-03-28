@@ -1,0 +1,186 @@
+import { format } from "date-fns";
+
+import { AdminExportButton } from "@/components/admin-export-button";
+import { AdminPagination } from "@/components/admin-pagination";
+import { AdminTable } from "@/components/admin-table";
+import { AnimatedSection } from "@/components/animated-section";
+import { DashboardChart } from "@/components/dashboard-chart";
+import { DashboardServicesBarChart } from "@/components/dashboard-services-bar-chart";
+import { DashboardStatusPie } from "@/components/dashboard-status-pie";
+import { DashboardSummaryTable } from "@/components/dashboard-summary-table";
+import { SectionTitle } from "@/components/section-title";
+import { getStaffAccessOrNull } from "@/lib/admin-auth";
+import { cn } from "@/lib/utils";
+import {
+  getAdminAppointmentsPaginated,
+  getAdminDashboardSnapshot,
+} from "@/lib/admin-dashboard";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+type SearchParams = Promise<{ page?: string }>;
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const access = await getStaffAccessOrNull();
+  if (!access) {
+    return null;
+  }
+
+  const { page: pageRaw } = await searchParams;
+  const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+
+  const [snapshot, { rows, total, pageSize }, barberRows] = await Promise.all([
+    getAdminDashboardSnapshot(access),
+    getAdminAppointmentsPaginated(access, page),
+    access.role === "STAFF"
+      ? Promise.resolve([] as const)
+      : prisma.staffMember.findMany({
+          where: { role: "STAFF" },
+          select: { id: true, displayName: true, email: true, unitId: true },
+          orderBy: [{ displayName: "asc" }, { email: "asc" }],
+        }),
+  ]);
+
+  const {
+    metrics,
+    series,
+    nextAppointment,
+    statusSlicesMonth,
+    servicesMonth,
+    summaryRows,
+    monthLabel,
+  } = snapshot;
+  const showUnitColumn = access.role !== "STAFF";
+  const showBarberColumn = access.role !== "STAFF";
+  const canAssignBarber =
+    access.role === "OWNER" || access.role === "ADMIN";
+  const showRevenue = access.permissions.viewRevenue;
+
+  const barberOptions = barberRows.map((b) => ({
+    id: b.id,
+    label: b.displayName?.trim() || b.email,
+    unitId: b.unitId,
+  }));
+
+  const overviewSubtitle =
+    access.role === "STAFF"
+      ? "Só vê agendamentos atribuídos a você. Peça ao administrador para associar reservas novas."
+      : "Métricas e agendamentos do negócio. Atribua um profissional na lista quando a reserva ainda estiver sem barbeiro.";
+
+  return (
+    <main className="flex-1">
+      <section className="container-max pt-6 pb-8 md:pt-8">
+        <AnimatedSection>
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <SectionTitle
+              eyebrow="Painel administrativo"
+              title="Visão da operação"
+              subtitle={overviewSubtitle}
+            />
+            <AdminExportButton canExport={access.permissions.exportData} />
+          </div>
+        </AnimatedSection>
+      </section>
+
+      <section className="container-max pb-10">
+        <AnimatedSection>
+          <div
+            className={cn(
+              "grid gap-4 sm:grid-cols-2",
+              showRevenue ? "xl:grid-cols-5" : "xl:grid-cols-4",
+            )}
+          >
+            <div className="glass-card rounded-2xl p-5">
+              <p className="text-sm text-zinc-400">Agendamentos hoje</p>
+              <p className="mt-2 text-3xl font-semibold text-white">
+                {metrics.totalToday}
+              </p>
+            </div>
+            <div className="glass-card rounded-2xl p-5">
+              <p className="text-sm text-zinc-400">Agendamentos na semana</p>
+              <p className="mt-2 text-3xl font-semibold text-white">
+                {metrics.totalWeek}
+              </p>
+            </div>
+            <div className="glass-card rounded-2xl p-5">
+              <p className="text-sm text-zinc-400">Clientes (cadastro telefone)</p>
+              <p className="mt-2 text-3xl font-semibold text-white">
+                {metrics.distinctClients}
+              </p>
+            </div>
+            {showRevenue ? (
+              <div className="glass-card rounded-2xl p-5">
+                <p className="text-sm text-zinc-400">Faturamento (mês, concluídos)</p>
+                <p className="mt-2 text-3xl font-semibold text-brand-300">
+                  R$ {metrics.revenueMonth.toFixed(2)}
+                </p>
+              </div>
+            ) : null}
+            <div className="glass-card rounded-2xl p-5 sm:col-span-2 xl:col-span-1">
+              <p className="text-sm text-zinc-400">Próximo horário</p>
+              <p className="mt-2 text-lg font-semibold leading-snug text-brand-300">
+                {nextAppointment
+                  ? `${nextAppointment.clientName} · ${format(
+                      nextAppointment.startsAt,
+                      "dd/MM HH:mm",
+                    )}`
+                  : "Sem agendamentos futuros"}
+              </p>
+            </div>
+          </div>
+        </AnimatedSection>
+      </section>
+
+      <section className="container-max pb-10">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <AnimatedSection delay={0.06}>
+            <DashboardStatusPie
+              data={statusSlicesMonth}
+              monthLabel={monthLabel}
+            />
+          </AnimatedSection>
+          <AnimatedSection delay={0.08}>
+            <DashboardChart data={series} />
+          </AnimatedSection>
+        </div>
+      </section>
+
+      <section className="container-max pb-10">
+        <AnimatedSection delay={0.1}>
+          <DashboardServicesBarChart
+            data={servicesMonth}
+            monthLabel={monthLabel}
+          />
+        </AnimatedSection>
+      </section>
+
+      <section className="container-max pb-10">
+        <AnimatedSection delay={0.12}>
+          <DashboardSummaryTable rows={summaryRows} />
+        </AnimatedSection>
+      </section>
+
+      <section className="container-max pb-16">
+        <AnimatedSection delay={0.15}>
+          <AdminTable
+            appointments={rows}
+            showUnitColumn={showUnitColumn}
+            showBarberColumn={showBarberColumn}
+            barbers={barberOptions}
+            canAssignBarber={canAssignBarber}
+            title="Lista de agendamentos"
+            subtitle={`${total} registo(s) no total · página ${page}`}
+            footer={
+              <AdminPagination page={page} pageSize={pageSize} total={total} />
+            }
+          />
+        </AnimatedSection>
+      </section>
+    </main>
+  );
+}

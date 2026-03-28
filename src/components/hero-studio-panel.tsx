@@ -180,7 +180,7 @@ export function HeroStudioPanel() {
                         ? undefined
                         : { scale: 1.06, rotate: [0, -4, 4, 0] }
                     }
-                    transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                    transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
                   >
                     <item.icon className="h-5 w-5" aria-hidden />
                   </motion.span>

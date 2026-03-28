@@ -10,6 +10,10 @@
   --border: rgba(255, 255, 255, 0.08);
   --success: #22c55e;
   --danger: #f43f5e;
+  /* Barras de rolagem (tema escuro) */
+  --scrollbar-track: rgba(255, 255, 255, 0.05);
+  --scrollbar-thumb: rgba(245, 158, 11, 0.35);
+  --scrollbar-thumb-hover: rgba(245, 158, 11, 0.55);
 }
 
 @theme inline {
@@ -35,6 +39,45 @@ html,
 body {
   width: 100%;
   min-height: 100%;
+}
+
+/* Firefox — barras finas e cores escuras */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Chromium / Safari / Edge — cantos arredondados, sem “setas” pesadas do sistema */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 100px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 100px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 body {

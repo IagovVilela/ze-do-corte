@@ -1,4 +1,4 @@
-# Módulos e ficheiros-chave
+# Módulos e arquivos-chave
 
 Mapa orientativo — quando alterar uma área, atualize também [historico-de-mudancas.md](./historico-de-mudancas.md) se o comportamento visível ou de API mudar.
 
@@ -8,68 +8,96 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 |---------|--------|
 | `package.json` | Scripts `dev`, `build`, `db:*`, dependências |
 | `.env.example` | Modelo de variáveis (nunca commitar segredos reais) |
-| `INICIAR_ZE_DO_CORTE.bat` | Arranque assistido no Windows (Node, Prisma, `npm run dev`) |
+| `INICIAR_ZE_DO_CORTE.bat` | Inicialização assistida no Windows (Node, Prisma, `npm run dev`) |
 | `PREPARAR_BASE.bat` | Docker Postgres + `.env` + `prisma db push` + seed |
 | `docker-compose.yml` | Serviço `postgres:16` para desenvolvimento local |
 | `scripts/preparar-postgres.ps1` | Script chamado pelo `PREPARAR_BASE.bat` |
+| `scripts/create-owner.ts` | `npm run create-owner` — upsert de `StaffMember` OWNER + senha |
 | `INICIAR_APLICACAO.bat` | Legado: outro projeto Laravel em `reviews-platform` (não é este app) |
 
 ## App Router — páginas
 
-| Rota | Ficheiro | Notas |
-|------|----------|--------|
-| `/` | `src/app/page.tsx` | Institucional, serviços do DB |
+| Rota | Arquivo | Notas |
+|------|---------|--------|
+| `/` | `src/app/page.tsx` | Institucional, serviços do DB; secção **Equipe** (`#equipe`) se houver barbeiros em destaque |
 | `/agendar` | `src/app/agendar/page.tsx` | Agendamento |
-| `/admin` | `src/app/admin/page.tsx` | Painel + paginação `?page=` |
-| `/admin` layout | `src/app/admin/layout.tsx` | Gate `ADMIN_EMAILS` |
-| `/sign-in` | `src/app/sign-in/[[...sign-in]]/page.tsx` | Clerk `SignIn` |
+| `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + tabela + paginação `?page=` |
+| `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
+| `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio e “Mostrar na home” (`admin-staff-manager.tsx`) |
+| `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
+| `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
+| `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Textos `BarbershopSetting` (só proprietário) |
+| `/admin/login` | `src/app/admin/(auth)/login/page.tsx` | Formulário de login |
+| `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
+| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` |
 
 ## API Routes
 
-| Caminho | Ficheiro |
-|---------|----------|
+| Caminho | Arquivo |
+|---------|---------|
 | Serviços | `src/app/api/services/route.ts` |
-| Slots disponíveis | `src/app/api/appointments/available/route.ts` |
-| Criar agendamento | `src/app/api/appointments/route.ts` |
+| Slots disponíveis | `src/app/api/appointments/available/route.ts` — query opcional `staffMemberId` |
+| Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; notificação Resend se configurada |
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` |
 | Export Excel | `src/app/api/admin/export/route.ts` |
+| Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
+| Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts` |
+| Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` |
+| Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH`, `DELETE` |
+| Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
+| Configuração | `src/app/api/admin/settings/route.ts` |
+| Login / logout painel | `src/app/api/auth/login/route.ts`, `logout/route.ts` |
+| Perfil (dados + senha) | `src/app/api/auth/profile/route.ts` — `PATCH` (próprio usuário) |
+| Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 
 ## Biblioteca (`src/lib`)
 
-| Ficheiro | Responsabilidade |
-|----------|------------------|
+| Arquivo | Responsabilidade |
+|---------|------------------|
 | `prisma.ts` | Cliente Prisma (adapter pg quando aplicável) |
-| `types.ts` | Tipos partilhados + schema Zod de criação de agendamento |
+| `types.ts` | Tipos compartilhados + schema Zod de criação de agendamento |
 | `utils.ts` | `cn`, dinheiro, datas, cálculo de slots |
-| `constants.ts` | `BARBER_SHOP_ADDRESS`, horário de negócio para UI de slots |
-| `data.ts` | `getServices`, seed assistido se necessário |
-| `clerk-config.ts` | `isClerkConfigured()` — chave `pk_...` presente |
-| `admin-auth.ts` | `ADMIN_EMAILS`, `requireAdminApiAuth`, e-mail primário Clerk |
-| `admin-dashboard.ts` | Métricas admin + lista paginada |
+| `constants.ts` | `BARBER_SHOP_ADDRESS`, `BARBER_CONTACT_LINKS` (tel, WhatsApp, Instagram) |
+| `contact-links.ts` | `getWhatsappContactHref`, `getInstagramContactHref` a partir das constantes |
+| `lordicon-cdn-ids.ts` | IDs públicos `cdn.lordicon.com` por slot; `lordicon-server.ts` usa sem API token |
+| `data.ts` | `getServices`, `getPublicBarbers`, `getBarbersForBooking` (STAFF da unidade padrão), seed assistido se necessário |
+| `password.ts` | `hashPassword` / `verifyPassword` (bcryptjs) |
+| `session-cookie.ts` | Token de sessão, `createDbSession`, resolução por cookie |
+| `admin-auth.ts` | `getStaffAccessOrNull` (cache por requisição), `requireStaffApiAuth`, cookies de sessão |
+| `staff-access.ts` | Papéis a partir de `StaffMember`, filtros por unidade e por `staffMemberId` (STAFF) |
+| `staff-display-names.ts` | Mapa id → rótulo do profissional para tabela admin / export |
+| `barbershop-unit.ts` | Resolução da unidade padrão para agendamentos públicos |
+| `slug.ts` | `slugify` para slugs de unidades |
+| `service-category.ts` | Tipos e rótulos pt-BR do enum `ServiceCategory` (Prisma) |
+| `admin-dashboard.ts` | Métricas (clientes, faturamento) + lista paginada com âmbito por papel |
+| `cloudinary-server.ts` | Upload/remoção de avatar no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
+| `appointment-slot-conflict.ts` | Regras de sobreposição de horário (agendamento geral vs. por profissional) |
+| `notify-barber-booking.ts` | Envio de e-mail via Resend ao barbeiro atribuído (`RESEND_*`) |
 
 ## Componentes UI relevantes
 
 | Componente | Pasta |
-|------------|--------|
-| Navbar (Clerk `useAuth`) | `src/components/navbar.tsx` |
-| Hero, secções animadas | `hero.tsx`, `hero-studio-panel.tsx` (painel 3D / spotlight), `animated-section.tsx`, `section-title.tsx` |
+|------------|-------|
+| Navbar (ícones redes, link Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
+| Hero, seções animadas | `hero.tsx`, `hero-studio-panel.tsx` (painel 3D / spotlight), `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx` (cartões da equipe na home) |
 | Formulário agendamento | `booking-form.tsx` |
-| Painel | `admin-table.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-chart.tsx` |
-| Mapa contacto | `location-map.tsx` |
+| Painel | `admin-panel-nav.tsx`, `admin-table.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-chart.tsx` (barras 7 dias), `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx` |
+| Mapa (contato) | `location-map.tsx` |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
-| Logo marca | `brand-logo.tsx` + ficheiro estático [`public/images/logo.jpeg`](../public/images/logo.jpeg) |
+| Logo marca | `brand-logo.tsx` + arquivo estático [`public/images/logo.jpeg`](../public/images/logo.jpeg) |
+| Ícones de marca (WhatsApp / Instagram) | `src/components/icons/whatsapp-icon.tsx`, `instagram-icon.tsx`, `index.ts` |
 
 ## Prisma
 
-| Ficheiro | Função |
-|----------|--------|
-| `prisma/schema.prisma` | Modelos `Service`, `Appointment` |
-| `prisma/seed.ts` | Dados iniciais de serviços |
+| Arquivo | Função |
+|---------|--------|
+| `prisma/schema.prisma` | `Service`, `Appointment`, `BarbershopUnit`, `StaffMember`, `Session`, `BarbershopSetting`, enums |
+| `prisma/seed.ts` | Serviços + unidade matriz + proprietário inicial + `unitId` em agendamentos sem unidade |
 | `prisma.config.ts` | Configuração Prisma 7 (se presente) |
 
 ## Autenticação e proxy
 
-| Ficheiro | Função |
-|----------|--------|
-| `src/middleware.ts` | Clerk: protege `/admin` |
-| `src/app/layout.tsx` | `ClerkProvider`, fontes (Geist + display) |
+| Arquivo | Função |
+|---------|--------|
+| `src/proxy.ts` | Next.js 16 **proxy** (ex-middleware): `NextResponse.next()` — auth do painel é por sessão no servidor |
+| `src/app/layout.tsx` | Layout raiz, fontes (Geist + display), sem provider de terceiros para auth |

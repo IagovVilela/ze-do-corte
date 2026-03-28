@@ -1,11 +1,11 @@
-/** Vídeo institucional do hero (ficheiro em `public/images/`). */
+/** Vídeo institucional do hero (arquivo em `public/images/`). */
 export const HERO_VIDEO_SRC = "/images/videoPrincipal.mp4";
 
 /** Slogans oficiais da marca (usar no site e materiais). */
 export const BARBER_SLOGAN_PRIMARY = "Estilo e confiança";
 export const BARBER_SLOGAN_SECONDARY = "Experiências única para homens únicos";
 
-/** Endereço físico da barbearia (contacto e mapas). */
+/** Endereço físico da barbearia (contato e mapas). */
 export const BARBER_SHOP_ADDRESS =
   "R. Laurent Martins, 209 - Jardim Esplanada, São José dos Campos - SP, 12242-431, Brasil";
 
@@ -23,24 +23,33 @@ export const BARBER_WEEKLY_SCHEDULE: readonly { label: string; range: string }[]
   { label: "Domingo", range: "Fechado" },
 ] as const;
 
-/** Hora de encerramento (fim do último atendimento possível = fecho da loja). */
+/** Hora de encerramento (fim do último atendimento possível = fechamento da loja). */
 export const BARBER_CLOSE_WEEKDAY_HOUR = 20;
 export const BARBER_CLOSE_SATURDAY_HOUR = 17;
 
 /**
- * Links opcionais de contacto. Deixe vazios para ocultar os botões na UI.
- * whatsappDigits: apenas dígitos com DDI, ex. 5512999999999
+ * Links opcionais de contato. Deixe vazios para ocultar os botões na UI.
+ *
+ * - **whatsappHref**: link direto (ex. `api.whatsapp.com/message/...`). Se preenchido, tem prioridade sobre `whatsappDigits`.
+ * - **whatsappDigits**: apenas dígitos com DDI, ex. `5512999999999` — usado em `wa.me` quando `whatsappHref` está vazio.
+ * - **instagramHref**: URL completo do perfil no Instagram.
+ * - **instagramUser**: nome de usuário do Instagram sem `@` (rótulo nos botões); usado só se `instagramHref` estiver vazio para montar `instagram.com/{user}`.
  */
 export const BARBER_CONTACT_LINKS: {
   telHref: string;
   telLabel: string;
+  whatsappHref: string;
   whatsappDigits: string;
+  instagramHref: string;
   instagramUser: string;
 } = {
   telHref: "",
   telLabel: "",
+  whatsappHref:
+    "https://api.whatsapp.com/message/PG2CKBFY6OYDP1?autoload=1&app_absent=0&utm_source=ig",
   whatsappDigits: "",
-  instagramUser: "",
+  instagramHref: "https://www.instagram.com/barbeariazedocorte.sjc/",
+  instagramUser: "barbeariazedocorte.sjc",
 };
 
 export const BUSINESS_HOURS = [

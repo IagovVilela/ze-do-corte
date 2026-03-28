@@ -26,10 +26,6 @@ export async function GET(request: Request) {
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Lordicon error";
-    const missingToken = message.includes("LORDICON_API_TOKEN");
-    return NextResponse.json(
-      { error: message },
-      { status: missingToken ? 503 : 502 },
-    );
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

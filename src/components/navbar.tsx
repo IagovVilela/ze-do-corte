@@ -1,7 +1,5 @@
-import { isClerkConfigured } from "@/lib/clerk-config";
-
-import { NavbarClient } from "./navbar-client";
+import { NavbarChrome, NavbarPainelTrailing } from "./navbar-client";
 
 export function Navbar() {
-  return <NavbarClient clerkEnabled={isClerkConfigured()} />;
+  return <NavbarChrome trailing={<NavbarPainelTrailing />} />;
 }

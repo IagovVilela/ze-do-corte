@@ -1,4 +1,5 @@
 import { AnimatedSection } from "@/components/animated-section";
+import { HomeBarbersGrid } from "@/components/home-barbers-grid";
 import { HomeContactGrid } from "@/components/home-contact-grid";
 import { HomeDifferentials } from "@/components/home-differentials";
 import { HomeServicesGrid } from "@/components/home-services-grid";
@@ -8,12 +9,12 @@ import { Navbar } from "@/components/navbar";
 import { SectionTitle } from "@/components/section-title";
 import { SiteFooter } from "@/components/site-footer";
 import { BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
-import { getServices } from "@/lib/data";
+import { getPublicBarbers, getServices } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const services = await getServices();
+  const [services, barbers] = await Promise.all([getServices(), getPublicBarbers()]);
 
   return (
     <HomeEntrance>
@@ -30,6 +31,17 @@ export default async function Home() {
             />
             <HomeServicesGrid services={services} />
           </AnimatedSection>
+
+          {barbers.length > 0 ? (
+            <AnimatedSection id="equipe" className="container-max py-20">
+              <SectionTitle
+                eyebrow="Equipe"
+                title="Quem cuida do seu estilo"
+                description="Profissionais experientes, com a mesma obsessão por detalhe que você encontra em cada serviço."
+              />
+              <HomeBarbersGrid barbers={barbers} />
+            </AnimatedSection>
+          ) : null}
 
           <AnimatedSection id="sobre" className="container-max py-16">
             <SectionTitle

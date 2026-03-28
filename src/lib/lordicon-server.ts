@@ -1,5 +1,6 @@
 import "server-only";
 
+import { LORDICON_CDN_BASE, LORDICON_SLOT_CDN_ID } from "@/lib/lordicon-cdn-ids";
 import type { LordIconSlot } from "@/lib/lordicon-slots";
 
 const LORDICON_API = "https://api.lordicon.com";
@@ -93,13 +94,30 @@ async function fetchLottieFromUrl(
 }
 
 /**
- * Resolve Lottie JSON for a fixed UI slot using the Lordicon API (server-only).
- * Requires `LORDICON_API_TOKEN` in the environment.
+ * Lottie público no CDN Lordicon (sem Bearer). Fallback quando não há API token.
+ */
+async function fetchLottieFromCdn(slot: LordIconSlot): Promise<unknown> {
+  const id = LORDICON_SLOT_CDN_ID[slot];
+  const url = `${LORDICON_CDN_BASE}/${id}.json`;
+  const res = await fetch(url, {
+    next: { revalidate: 86_400 },
+  });
+  if (!res.ok) {
+    throw new Error(`Lordicon CDN fetch failed ${res.status} for ${url}`);
+  }
+  return res.json() as Promise<unknown>;
+}
+
+/**
+ * Resolve Lottie JSON para um slot da UI.
+ *
+ * - Com `LORDICON_API_TOKEN`: pesquisa na API Lordicon (ícones à escolha dinâmica).
+ * - Sem token: usa JSON público em `cdn.lordicon.com` (`lordicon-cdn-ids.ts`).
  */
 export async function getLordIconLottieForSlot(slot: LordIconSlot): Promise<unknown> {
   const token = process.env.LORDICON_API_TOKEN?.trim();
   if (!token) {
-    throw new Error("LORDICON_API_TOKEN is not set");
+    return fetchLottieFromCdn(slot);
   }
 
   const attempts = SLOT_QUERIES[slot];

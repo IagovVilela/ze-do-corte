@@ -7,7 +7,7 @@ import { staggerContainer } from "@/lib/motion-presets";
 
 type StaggerRevealProps = PropsWithChildren<{
   className?: string;
-  /** Fracção da secção visível para disparar (0–1). */
+  /** Fração da seção visível para disparar (0–1). */
   amount?: number | "some" | "all";
   stagger?: number;
   delayChildren?: number;

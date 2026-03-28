@@ -1,74 +1,74 @@
 import "server-only";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import type { User } from "@clerk/nextjs/server";
+import { cache } from "react";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { isClerkConfigured } from "@/lib/clerk-config";
+import {
+  SESSION_COOKIE_NAME,
+  findStaffMemberBySessionToken,
+  sessionCookieMaxAgeSec,
+} from "@/lib/session-cookie";
+import { staffAccessFromMember, type StaffAccess } from "@/lib/staff-access";
 
-function parseAdminEmails(): Set<string> {
-  const raw = process.env.ADMIN_EMAILS ?? "";
-  return new Set(
-    raw
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean),
-  );
+async function loadStaffAccessOrNull(): Promise<StaffAccess | null> {
+  const jar = await cookies();
+  const raw = jar.get(SESSION_COOKIE_NAME)?.value;
+  const member = await findStaffMemberBySessionToken(raw);
+  if (!member) return null;
+  return staffAccessFromMember(member);
 }
 
-export function getPrimaryEmail(user: User | null): string | undefined {
-  const primary = user?.primaryEmailAddress?.emailAddress;
-  if (primary) return primary;
-  const first = user?.emailAddresses?.[0]?.emailAddress;
-  return first ?? undefined;
-}
+/** Uma leitura por requisição (layout + páginas admin no mesmo render). */
+export const getStaffAccessOrNull = cache(loadStaffAccessOrNull);
 
 /**
- * If ADMIN_EMAILS is set, only those emails may access admin.
- * In development, when ADMIN_EMAILS is empty, any signed-in user is allowed (easier local setup).
- * In production, an empty list denies admin access.
+ * @deprecated Use `getStaffAccessOrNull` e `access.role`.
  */
-export function isAdminUser(email: string | undefined | null): boolean {
-  const allowed = parseAdminEmails();
-  if (allowed.size === 0) {
-    return process.env.NODE_ENV === "development";
-  }
-  if (!email) return false;
-  return allowed.has(email.toLowerCase());
+export async function isAdminUser(_email: string | undefined | null): Promise<boolean> {
+  const access = await getStaffAccessOrNull();
+  return access !== null;
 }
 
 export type AdminApiAuthResult =
-  | { ok: true; userId: string; email: string | undefined }
+  | { ok: true; access: StaffAccess }
   | { ok: false; response: NextResponse };
 
-export async function requireAdminApiAuth(): Promise<AdminApiAuthResult> {
-  if (!isClerkConfigured()) {
-    if (process.env.NODE_ENV === "production") {
-      return {
-        ok: false,
-        response: NextResponse.json(
-          { message: "Autenticação não configurada." },
-          { status: 503 },
-        ),
-      };
-    }
-    return { ok: true, userId: "dev-local", email: "dev@local" };
-  }
-
-  const { userId } = await auth();
-  if (!userId) {
+export async function requireStaffApiAuth(): Promise<AdminApiAuthResult> {
+  const access = await getStaffAccessOrNull();
+  if (!access) {
     return {
       ok: false,
       response: NextResponse.json({ message: "Não autorizado." }, { status: 401 }),
     };
   }
-  const user = await currentUser();
-  const email = getPrimaryEmail(user);
-  if (!isAdminUser(email)) {
-    return {
-      ok: false,
-      response: NextResponse.json({ message: "Acesso negado." }, { status: 403 }),
-    };
-  }
-  return { ok: true, userId, email };
+  return { ok: true, access };
+}
+
+/** Alias: qualquer papel com acesso ao painel. */
+export async function requireAdminApiAuth(): Promise<AdminApiAuthResult> {
+  return requireStaffApiAuth();
+}
+
+/** Define o cookie de sessão na resposta (rotas Route Handler). */
+export function appendSessionCookie(response: NextResponse, rawToken: string): void {
+  const secure = process.env.NODE_ENV === "production";
+  response.cookies.set(SESSION_COOKIE_NAME, rawToken, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: sessionCookieMaxAgeSec(),
+  });
+}
+
+/** Remove o cookie de sessão. */
+export function clearSessionCookie(response: NextResponse): void {
+  response.cookies.set(SESSION_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
 }

@@ -1,8 +1,6 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Bebas_Neue, Geist, Geist_Mono } from "next/font/google";
 
-import { isClerkConfigured } from "@/lib/clerk-config";
 import { BARBER_SLOGAN_PRIMARY, BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
 import "./globals.css";
 
@@ -36,20 +34,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const htmlShell = (
+  return (
     <html
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-brand-950 text-zinc-100">
+      <body className="flex min-h-full flex-col overflow-x-clip bg-brand-950 text-zinc-100">
         {children}
       </body>
     </html>
   );
-
-  if (!isClerkConfigured()) {
-    return htmlShell;
-  }
-
-  return <ClerkProvider>{htmlShell}</ClerkProvider>;
 }

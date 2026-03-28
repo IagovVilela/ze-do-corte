@@ -2,55 +2,58 @@
 
 ## Visão geral
 
-Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind CSS 4**, animações com **Framer Motion**. Persistência em **PostgreSQL** via **Prisma 7**. O painel administrativo usa **Clerk** para identidade; clientes que agendam **não** precisam de conta.
+Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind CSS 4**, animações com **Framer Motion**. Persistência em **PostgreSQL** via **Prisma 7**. O painel administrativo usa **e-mail, senha (bcrypt) e sessão** (`Session` + cookie HTTP-only); clientes que agendam **não** precisam de conta.
 
 ## Camadas
 
 1. **Apresentação** — `src/app/**/page.tsx`, componentes em `src/components/*`.
 2. **API Routes** — `src/app/api/**/route.ts` (REST JSON ou binário no export Excel).
 3. **Domínio / dados** — `src/lib/*` (validação Zod, helpers de slots, dashboard admin, auth admin).
-4. **Base de dados** — `prisma/schema.prisma`, acesso via `src/lib/prisma.ts`.
+4. **Banco de dados** — `prisma/schema.prisma`, acesso via `src/lib/prisma.ts`.
 
 ## Fluxo público (institucional + agendamento)
 
-- **`/`** — Server Component obtém serviços (`getServices` / Prisma), renderiza Hero, lista de serviços, contacto, mapa.
+- **`/`** — Server Component obtém serviços (`getServices` / Prisma) e barbeiros públicos (`getPublicBarbers`: `STAFF` com `showOnWebsite`); renderiza Hero, lista de serviços, secção **Equipe** (se houver), contato, mapa.
 - **`/agendar`** — Formulário cliente (`BookingForm`) chama:
-  - `GET /api/appointments/available` — slots livres por serviço e data;
-  - `POST /api/appointments` — cria registo; o servidor valida sobreposição com agendamentos `CONFIRMED` ou `COMPLETED`.
+  - `GET /api/appointments/available` — slots livres por serviço e data; com **`staffMemberId`**, considera só conflitos desse profissional (e vagas ainda sem profissional);
+  - `POST /api/appointments` — cria registro; valida sobreposição; opcionalmente **`staffMemberId`** (barbeiro da unidade padrão). Com **Resend** (`RESEND_API_KEY` + `RESEND_FROM_EMAIL`), envia e-mail ao barbeiro quando atribuído.
 
 ## Fluxo administrativo
 
-- **`/admin`** — Protegido por:
-  1. **`src/middleware.ts`** — `clerkMiddleware` + `auth.protect()` para rotas `/admin`.
-  2. **`src/app/admin/layout.tsx`** — `currentUser()` + `ADMIN_EMAILS` (`src/lib/admin-auth.ts`); se o e-mail não for permitido, `redirect("/")`.
-- **APIs `/api/admin/*`** — `requireAdminApiAuth()` nas rotas: sessão Clerk + mesma regra de e-mails.
+- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie.
+- **`/admin/perfil`** — utilizador autenticado altera `displayName`, `phone`, senha (`PATCH /api/auth/profile`) e foto (`POST`/`DELETE /api/auth/profile/avatar` → Cloudinary quando configurado); a foto alimenta o cartão na home para quem é barbeiro em destaque.
+- **`/admin/equipe`** — gestão de membros; para **STAFF**, texto curto e visibilidade na home (`websiteBio`, `showOnWebsite` via `PATCH /api/admin/staff/[id]`).
+- **`/admin` (painel)** — `src/app/admin/(panel)/layout.tsx`: `getStaffAccessOrNull()` (`src/lib/admin-auth.ts` + `src/lib/staff-access.ts`); sem sessão válida → `redirect("/admin/login")`.
+- **`src/proxy.ts`** — pass-through mínimo (Next.js 16 **proxy**); não faz auth Clerk.
+- **APIs `/api/admin/*`** — `requireStaffApiAuth()` e permissões por papel (export, unidades, equipe, serviços, configuração, **PATCH** em agendamentos para `staffMemberId` só OWNER/ADMIN).
 
-### Regra `ADMIN_EMAILS`
+### Papéis
 
-- Lista separada por vírgulas, comparação case-insensitive.
-- **Desenvolvimento** + lista vazia: qualquer utilizador autenticado é tratado como admin (facilita testes).
-- **Produção** + lista vazia: nenhum e-mail passa na verificação → sem acesso admin.
+Documentação detalhada: **[admin-hierarquia.md](./admin-hierarquia.md)**.
+
+- **`StaffMember`** — e-mail, `StaffRole`, `passwordHash`, `unitId` obrigatório para **STAFF**.
+- Não há mais `OWNER_EMAILS` / `ADMIN_EMAILS` nem Clerk: só utilizadores com registo e senha no banco.
 
 ## Modelo de dados (resumo)
 
 Ver `prisma/schema.prisma` para o contrato exato.
 
-- **Service** — nome, descrição, duração, preço, `isActive`.
-- **Appointment** — cliente, contacto, intervalo `startsAt`/`endsAt`, `status` (enum), relação com `Service`.
+- **Service** — nome, descrição, **`category`** (`ServiceCategory`: Corte, Barba, Combo, Tratamento, Outro), duração, preço, `isActive`.
+- **Appointment** — cliente, dados de contato, intervalo `startsAt`/`endsAt`, `status` (enum), relação com `Service`, opcionalmente **`unitId`**, opcionalmente **`staffMemberId`** (barbeiro `STAFF` atribuído; reservas públicas costumam entrar sem profissional até dono/admin atribuírem).
+- **BarbershopUnit** — unidades (slug, endereço, `isDefault` para o site público).
+- **StaffMember** — e-mail, `StaffRole`, hash bcrypt da senha, unidade opcional (obrigatória para STAFF), `displayName`, `phone`, `profileImageUrl` / `profileImagePublicId` (Cloudinary), `websiteBio` e `showOnWebsite` (cartão na página inicial, só para STAFF).
+- **Session** — `tokenHash` (SHA-256 do token do cookie), `expiresAt`, ligação a `StaffMember`.
+- **BarbershopSetting** — pares chave/valor (textos institucionais editáveis no painel).
 
 ## Exportação e métricas
 
 - **`src/lib/admin-dashboard.ts`** — fonte única para série dos últimos 7 dias, contagens e próximo agendamento `CONFIRMED`.
-- **`GET /api/admin/dashboard`** — JSON (protegido); a página admin usa as mesmas funções no servidor.
-- **`GET /api/admin/export`** — ficheiro XLSX (protegido).
-
-## Middleware e Next.js 16
-
-O ficheiro `src/middleware.ts` pode emitir aviso de depreciação em favor de **proxy** no Next 16; o comportamento atual continua válido até migração oficial.
+- **`GET /api/admin/dashboard`** — JSON (protegido): métricas, série de 7 dias, fatias de status no mês, top serviços no mês, linhas de resumo e próximo agendamento; a página `/admin` usa as mesmas funções no servidor.
+- **`GET /api/admin/export`** — arquivo XLSX (protegido).
 
 ## Diagrama lógico (texto)
 
 ```
 Cliente → páginas / e /agendar → API appointments → Prisma → PostgreSQL
-Admin → /admin (Clerk + ADMIN_EMAILS) → Prisma / APIs admin → PostgreSQL
+Admin → /admin/login → Session + cookie → /admin + APIs admin → Prisma → PostgreSQL
 ```

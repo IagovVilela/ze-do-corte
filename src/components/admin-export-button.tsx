@@ -3,7 +3,14 @@
 import { motion } from "framer-motion";
 import { Download } from "lucide-react";
 
-export function AdminExportButton() {
+type Props = {
+  /** Funcionários não exportam dados. */
+  canExport?: boolean;
+};
+
+export function AdminExportButton({ canExport = true }: Props) {
+  if (!canExport) return null;
+
   return (
     <motion.a
       href="/api/admin/export"

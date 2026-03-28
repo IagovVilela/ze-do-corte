@@ -21,7 +21,7 @@ export function DatabaseUnavailableNotice({ variant = "section" }: Props) {
         <code className="text-xs">npx prisma db push</code>
       </p>
       <p className="mt-3 text-xs text-amber-200/80">
-        Guia: <span className="font-mono">docs/operacao.md</span> (secção Erro P1001).
+        Guia: <span className="font-mono">docs/operacao.md</span> (seção Erro P1001).
       </p>
     </div>
   );

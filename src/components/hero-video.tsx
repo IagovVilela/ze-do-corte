@@ -21,8 +21,8 @@ const VIDEO_CLASS =
 
 /**
  * Vídeo em full-bleed atrás do hero (Framer Motion):
- * - preenche toda a secção, object-cover;
- * - zoom / parallax suave com o scroll da secção;
+ * - preenche toda a seção, object-cover;
+ * - zoom / parallax suave com o scroll da seção;
  * - play quando o hero está visível;
  * - gradientes para contraste do texto;
  * - sem controlos nativos (visual mais limpo).

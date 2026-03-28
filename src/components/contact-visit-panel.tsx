@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, AtSign, CalendarClock, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, CalendarClock, Phone } from "lucide-react";
 
 import {
   BARBER_CONTACT_LINKS,
@@ -11,15 +11,22 @@ import {
   BARBER_SLOGAN_SECONDARY,
   BARBER_WEEKLY_SCHEDULE,
 } from "@/lib/constants";
+import {
+  getInstagramContactHref,
+  getWhatsappContactHref,
+} from "@/lib/contact-links";
+import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import { LordIconAnimated } from "@/components/lord-icon-animated";
 
 export function ContactVisitPanel() {
   const reduceMotion = useReducedMotion();
   const [ctaHover, setCtaHover] = useState(false);
-  const { telHref, telLabel, whatsappDigits, instagramUser } = BARBER_CONTACT_LINKS;
+  const { telHref, telLabel, instagramUser } = BARBER_CONTACT_LINKS;
   const showTel = Boolean(telHref && telLabel);
-  const showWa = Boolean(whatsappDigits);
-  const showIg = Boolean(instagramUser);
+  const waHref = getWhatsappContactHref();
+  const igHref = getInstagramContactHref();
+  const showWa = Boolean(waHref);
+  const showIg = Boolean(igHref);
 
   return (
     <motion.article
@@ -120,36 +127,24 @@ export function ContactVisitPanel() {
             ) : null}
             {showWa ? (
               <a
-                href={`https://wa.me/${whatsappDigits}`}
+                href={waHref!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
               >
-                <LordIconAnimated
-                  slot="chat"
-                  size={18}
-                  label="WhatsApp"
-                  colors="primary:#34d399,secondary:#a1a1aa"
-                  fallback={<MessageCircle className="h-3.5 w-3.5 text-emerald-400/90" aria-hidden />}
-                />
+                <WhatsappIcon className="h-[18px] w-[18px]" aria-hidden />
                 WhatsApp
               </a>
             ) : null}
             {showIg ? (
               <a
-                href={`https://instagram.com/${instagramUser}`}
+                href={igHref!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
               >
-                <LordIconAnimated
-                  slot="social"
-                  size={18}
-                  label="Instagram"
-                  colors="primary:#f472b6,secondary:#a1a1aa"
-                  fallback={<AtSign className="h-3.5 w-3.5 text-pink-300/90" aria-hidden />}
-                />
-                @{instagramUser}
+                <InstagramIcon className="h-[18px] w-[18px]" aria-hidden />
+                {instagramUser ? `@${instagramUser.replace(/^@/, "")}` : "Instagram"}
               </a>
             ) : null}
           </div>

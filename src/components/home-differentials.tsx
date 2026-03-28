@@ -47,7 +47,7 @@ export function HomeDifferentials() {
             whileHover={
               reduceMotion ? undefined : { scale: 1.08, rotate: [0, -6, 6, 0] }
             }
-            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            transition={{ type: "tween", duration: 0.45, ease: "easeInOut" }}
           >
             <item.icon className="h-8 w-8 text-brand-300" aria-hidden />
           </motion.span>

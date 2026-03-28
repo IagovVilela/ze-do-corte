@@ -1,6 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+import { hashPassword } from "../src/lib/password";
+import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
+
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL nao definida. Use o .env ou PREPARAR_BASE.bat.");
@@ -11,6 +14,60 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const unit = await prisma.barbershopUnit.upsert({
+    where: { slug: "matriz" },
+    create: {
+      name: "Unidade matriz",
+      slug: "matriz",
+      isDefault: true,
+      isActive: true,
+      city: "São José dos Campos",
+    },
+    update: {
+      isDefault: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.appointment.updateMany({
+    where: { unitId: null },
+    data: { unitId: unit.id },
+  });
+
+  const ownerEmail = (
+    process.env.SEED_OWNER_EMAIL ?? "admin@zdc.local"
+  ).toLowerCase();
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD ?? "AlterarSenha123!";
+  if (ownerPassword.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `SEED_OWNER_PASSWORD deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+    );
+  }
+  const ownerHash = await hashPassword(ownerPassword);
+  const existingOwner = await prisma.staffMember.findUnique({
+    where: { email: ownerEmail },
+  });
+  if (!existingOwner) {
+    await prisma.staffMember.create({
+      data: {
+        email: ownerEmail,
+        displayName: "Proprietário (seed)",
+        role: "OWNER",
+        passwordHash: ownerHash,
+        unitId: null,
+      },
+    });
+    console.log(
+      `[seed] Criado proprietário: ${ownerEmail} (senha em SEED_OWNER_PASSWORD ou padrão do seed — altere após o primeiro login).`,
+    );
+  } else if (!existingOwner.passwordHash) {
+    await prisma.staffMember.update({
+      where: { email: ownerEmail },
+      data: { passwordHash: ownerHash },
+    });
+    console.log(`[seed] Senha definida para o proprietário existente: ${ownerEmail}`);
+  }
+
   const services = [
     {
       name: "Corte Premium",
@@ -19,6 +76,7 @@ async function main() {
       price: 75,
       durationMinutes: 45,
       isActive: true,
+      category: "CORTE" as const,
     },
     {
       name: "Barba Terapia",
@@ -27,6 +85,7 @@ async function main() {
       price: 55,
       durationMinutes: 35,
       isActive: true,
+      category: "BARBA" as const,
     },
     {
       name: "Combo Corte + Barba",
@@ -35,6 +94,7 @@ async function main() {
       price: 115,
       durationMinutes: 75,
       isActive: true,
+      category: "COMBO" as const,
     },
   ];
 
@@ -46,6 +106,7 @@ async function main() {
         price: service.price,
         durationMinutes: service.durationMinutes,
         isActive: service.isActive,
+        category: service.category,
       },
       create: service,
     });

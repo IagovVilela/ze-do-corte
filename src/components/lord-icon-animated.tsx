@@ -33,11 +33,13 @@ export function LordIconAnimated({
   const [icon, setIcon] = useState<object | null>(null);
   const [showFallback, setShowFallback] = useState(false);
   const [selfHover, setSelfHover] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setIcon(null);
     setShowFallback(false);
+    setPlayerReady(false);
 
     fetch(`/api/lordicon/icon?slot=${encodeURIComponent(slot)}`)
       .then(async (res) => {
@@ -59,10 +61,14 @@ export function LordIconAnimated({
   const shouldAnimate = !reduceMotion && (selfHover || siblingHover);
 
   useEffect(() => {
-    if (!icon || !playerRef.current) return;
+    if (!icon || !playerRef.current || !playerReady) return;
     if (shouldAnimate) playerRef.current.playFromBeginning();
     else playerRef.current.goToFirstFrame();
-  }, [shouldAnimate, icon]);
+  }, [shouldAnimate, icon, playerReady]);
+
+  const onPlayerReady = useCallback(() => {
+    setPlayerReady(true);
+  }, []);
 
   const onEnter = useCallback(() => {
     setSelfHover(true);
@@ -79,7 +85,7 @@ export function LordIconAnimated({
   if (!icon) {
     return (
       <span
-        className={className}
+        className={`animate-pulse rounded-md bg-white/10 ${className ?? ""}`}
         style={{ width: size, height: size }}
         aria-hidden
       />
@@ -100,7 +106,13 @@ export function LordIconAnimated({
       onFocus={onEnter}
       onBlur={onLeave}
     >
-      <Player ref={playerRef} icon={icon} size={size} colors={colors} />
+      <Player
+        ref={playerRef}
+        icon={icon}
+        size={size}
+        colors={colors}
+        onReady={onPlayerReady}
+      />
     </span>
   );
 }

@@ -37,7 +37,7 @@ export function getSlotEnd(start: Date, durationMinutes: number) {
   return addMinutes(start, durationMinutes);
 }
 
-/** Momento de fecho no mesmo dia civil do agendamento (seg–sex 20h, sáb 17h). */
+/** Momento do fechamento no mesmo dia civil do agendamento (seg–sex 20h, sáb 17h). */
 export function getShopClosingTime(slotDay: Date): Date {
   const close = new Date(slotDay);
   if (close.getDay() === 6) {
@@ -48,7 +48,7 @@ export function getShopClosingTime(slotDay: Date): Date {
   return close;
 }
 
-/** Domingo fechado; outros dias o serviço tem de terminar até ao fecho. */
+/** Domingo fechado; nos demais dias o serviço precisa terminar até o fechamento. */
 export function isSlotWithinBusinessHours(
   slotStart: Date,
   durationMinutes: number,

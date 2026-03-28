@@ -1,31 +1,64 @@
 # Histórico de mudanças (documentação)
 
-Registo **manual** de alterações relevantes ao comportamento, APIs ou operação do projeto. Não substitui o Git log; serve para leitura rápida em Markdown.
+Registro **manual** de alterações relevantes ao comportamento, APIs ou operação do projeto. Não substitui o Git log; serve para leitura rápida em Markdown.
 
-Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API, env, fluxo de utilizador), adicione uma entrada **no topo** com data (ISO) e bullets concisos.
+Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API, env, fluxo de usuário), adicione uma entrada **no topo** com data (ISO) e bullets concisos.
+
+---
+
+## 2026-03-28
+
+- **Resend — notificação ao barbeiro**: pacote **`resend`**; `src/lib/notify-barber-booking.ts` + env **`RESEND_API_KEY`**, **`RESEND_FROM_EMAIL`**. E-mail ao **`StaffMember.email`** quando o agendamento passa a estar atribuído a ele ( **`POST /api/appointments`** com `staffMemberId` ou **`PATCH /api/admin/appointments/[id]`** com nova atribuição). **`/agendar`**: lista **Profissional (opcional)** (`getBarbersForBooking`), disponibilidade com query **`staffMemberId`**; conflitos de horário por profissional em `appointment-slot-conflict.ts`. Documentação em `docs/operacao.md`, `.env.example`, `README.md`.
+- **Home — secção Equipe (`#equipe`)**: barbeiros com `STAFF`, `showOnWebsite` e texto `websiteBio`; foto de `profileImageUrl` (Meu perfil). Dados em `getPublicBarbers` (`src/lib/data.ts`), UI `home-barbers-grid.tsx`; link **Equipe** na navbar. Em **`/admin/equipe`**, por funcionário: descrição no site + “Mostrar na home” + **Guardar página inicial** (`PATCH /api/admin/staff/[id]` com `websiteBio` / `showOnWebsite`; só válido para `STAFF`).
+- **Serviços (`/admin/servicos`)**: enum **`ServiceCategory`** no Prisma; UI em **cartões** com filtro por tipo, busca por texto, **criar** (`POST /api/admin/services`), **editar** (`PATCH`), **excluir** (`DELETE` se não houver agendamentos); `src/lib/service-category.ts`. Seed e `data.ts` com categorias nos três serviços de exemplo.
+- **Unidades**: só **`OWNER`** altera nome, slug, endereço, cidade e telefone (`admin-units-manager.tsx` + `PATCH /api/admin/units/[id]`); **`ADMIN`** mantém criar unidade, ativar/desativar e definir padrão. Ver [admin-hierarquia.md](./admin-hierarquia.md).
+- **Dev no Windows**: script **`npm run dev:webpack`** (`next dev --webpack`) e secção em [operacao.md](./operacao.md) para erros do Turbopack (`Compaction failed`, `ENOENT` em `.next\dev`).
+- **Prisma + Turbopack (dev)**: `serverExternalPackages` passa a incluir **`@prisma/client`** para evitar cópia desatualizada do cliente dentro de **`.next/dev/node_modules`** após `prisma generate` (erro `Unknown field` em `StaffMember`). Nota em [operacao.md](./operacao.md).
+- **Perfil no painel + Cloudinary**: `StaffMember.phone`, `profileImageUrl`, `profileImagePublicId`; rota **`/admin/perfil`** (`admin-profile-form.tsx`); **`PATCH /api/auth/profile`** (nome, telefone, senha com confirmação da atual); **`POST` / `DELETE /api/auth/profile/avatar`** (multipart, JPEG/PNG/WebP até 4 MB). Pacote **`cloudinary`**, `src/lib/cloudinary-server.ts`, variáveis **`CLOUDINARY_CLOUD_NAME`**, **`CLOUDINARY_API_KEY`**, **`CLOUDINARY_API_SECRET`** (`.env.example`, `docs/operacao.md`). `StaffAccess` inclui `displayName`, `phone`, `profileImageUrl`; `admin-panel-nav` com atalho e miniatura. `next.config.ts`: `images.remotePatterns` para `res.cloudinary.com`, `serverExternalPackages` inclui `cloudinary`.
+- **Agendamento ↔ profissional (`staffMemberId`)**: campo opcional em `Appointment` + relação com `StaffMember`; papel **STAFF** vê só agendamentos em que é o profissional atribuído (lista paginada, métricas e gráficos do dashboard). **OWNER/ADMIN** atribuem na coluna **Profissional** em `/admin` ou via **`PATCH /api/admin/appointments/[id]`** (`{ "staffMemberId": "<id>" | null }`, mesmo `unitId` do barbeiro). Export Excel com coluna **Profissional**. `appointmentScopeWhere` em `src/lib/staff-access.ts`; rótulos em `src/lib/staff-display-names.ts`.
+- **Dashboard `/admin`**: gráfico de pizza (status no mês), barras horizontais por serviço (mês), tabela-resumo operacional; dados agregados em `getAdminDashboardSnapshot` (`statusSlicesMonth`, `servicesMonth`, `summaryRows`, `monthLabel`). API `GET /api/admin/dashboard` passa a incluir os mesmos campos no JSON.
+- **Admin /admin**: removido o bloco de desenvolvimento `AdminDevChecklist` (checklist azul); o ficheiro `admin-dev-checklist.tsx` foi eliminado. A configuração continua documentada em `docs/configurar-admin.md`.
+- **Senhas do painel**: comprimento mínimo **6** caracteres (`src/lib/password-policy.ts`); e-mail do painel com `staffEmailSchema` (aceita domínio sem TLD, ex. `user@intranet`). Login admin: formulário com `noValidate` e campo e-mail em `type="text"` para não bloquear o browser.
+- **Script `npm run create-owner`**: `scripts/create-owner.ts` + `dotenv` — cria ou atualiza um `StaffMember` com papel `OWNER` a partir de `CREATE_OWNER_EMAIL` / `CREATE_OWNER_PASSWORD` (fallback `SEED_OWNER_*`); invalida sessões. Documentado em [configurar-admin.md](./configurar-admin.md).
+- **Autenticação do painel sem Clerk**: login em **`/admin/login`** com e-mail + senha (`StaffMember.passwordHash` bcrypt); sessões na tabela **`Session`** e cookie HTTP-only (`src/lib/session-cookie.ts`, `src/lib/admin-auth.ts`). APIs **`POST /api/auth/login`** e **`POST /api/auth/logout`**; botão **Sair** em `admin-panel-nav.tsx`. Removidos `@clerk/nextjs`, `src/lib/clerk-config.ts` e a rota `src/app/sign-in`; **`/sign-in`** redireciona para **`/admin/login`** (`next.config.ts`). Proxy (`src/proxy.ts`) sem middleware Clerk. **POST `/api/admin/staff`** exige **`initialPassword`** (mín. 6); **PATCH `/api/admin/staff/[id]`** aceita **`newPassword`** e invalida sessões. Seed cria proprietário inicial com **`SEED_OWNER_EMAIL`** / **`SEED_OWNER_PASSWORD`**. Documentação e **`.env.example`** atualizados; dependência **`bcryptjs`** (+ tipos).
+
+## 2026-03-28
+
+- **Idioma pt-BR + rota Equipe**: textos da UI, comentários e documentação alinhados ao português do Brasil (`utilizador` → `usuário`, `ficheiro` → `arquivo`, `contacto` → `contato`, `equipa` → `equipe`, etc.). Rota do painel **`/admin/equipa`** renomeada para **`/admin/equipe`** (pasta `src/app/admin/equipe`).
+- **Clerk + Next.js 16**: `src/middleware.ts` substituído por **`src/proxy.ts`** (`clerkMiddleware`, mesma proteção `/admin` e bypass sem chave `pk_` válida). **`ClerkProvider`** apenas dentro de `<body>` em `src/app/layout.tsx`. Navbar com **`<Show when="signed-in" | "signed-out">`** (`src/components/navbar.tsx` async) + **`SignUpButton`** “Criar conta” (`navbar-client.tsx`).
+- **Script `npm run setup:admin`**: `prisma generate` + `db push` + `db:seed`; documentado em `docs/configurar-admin.md`.
+- **Documentação admin**: guia [configurar-admin.md](./configurar-admin.md) (BD, Clerk, e-mails, equipe, problemas frequentes); link em [operacao.md](./operacao.md).
+- **Painel admin — hierarquia**: três papéis (proprietário, administrador, funcionário) via `StaffMember`, `OWNER_EMAILS`, `ADMIN_EMAILS` e `src/lib/staff-access.ts`. Modelos Prisma: `BarbershopUnit`, `StaffMember`, `BarbershopSetting`; `Appointment.unitId` + unidade padrão no seed. Rotas `/admin/unidades`, `/admin/equipe`, `/admin/servicos`, `/admin/configuracao`; APIs `/api/admin/units`, `staff`, `services/[id]`, `settings`. Métricas: clientes distintos, faturamento mensal (concluídos); funcionário vê só sua unidade e não exporta. Documentação: `docs/admin-hierarquia.md`.
+- **Página /agendar**: cabeçalho alinhado à marca (`font-display`, gradiente suave); formulário reorganizado — serviço → data/horário → dados de contato → observações; inputs com borda/foco consistentes, select com seta custom; aviso quando não há slots; resumo lateral com `dl`, valor em destaque e `sticky` no desktop (`booking-form.tsx`, `agendar/page.tsx`).
+- **Motion (Framer)**: hover nos ícones de diferenciais (`home-differentials.tsx`) e no painel do estúdio (`hero-studio-panel.tsx`) usava `rotate: [0, ±n, ∓n, 0]` com `transition.type: "spring"` — a Motion só aceita dois keyframes com spring; passou a `type: "tween"` + `easeInOut` para evitar o erro em runtime.
+- **Lordicon**: sem `LORDICON_API_TOKEN`, os ícones animados passam a carregar Lottie do CDN público (`lordicon-cdn-ids.ts` + `getLordIconLottieForSlot`); com token permanece a pesquisa na API. `LordIconAnimated` usa `onReady` do `Player` para sincronizar `playFromBeginning` / `goToFirstFrame` e mostra placeholder durante o fetch.
+- **UI redes**: logotipos oficiais WhatsApp (verde `#25D366`) e Instagram (gradiente) em `src/components/icons/`; usados na navbar, rodapé e painel de contato.
+- **Instagram**: perfil oficial em `BARBER_CONTACT_LINKS.instagramHref` — `https://www.instagram.com/barbeariazedocorte.sjc/` (`instagramUser` para rótulo `@barbeariazedocorte.sjc`).
+- **Redes sociais (institucional)**: `BARBER_CONTACT_LINKS` em `src/lib/constants.ts` com `whatsappHref` (link direto WhatsApp) e `instagramHref` (URL completo); helpers em `src/lib/contact-links.ts`. Botões na seção **Contato** (`contact-visit-panel.tsx`), ícones na **navbar** e links no **rodapé** (`site-footer.tsx`).
+- **Windows**: `INICIAR_ZE_DO_CORTE.bat` — correção do parser CMD quando `prisma db push` falha (parênteses nas mensagens `echo` dentro do bloco `if` fechavam o bloco e geravam erro); `start` do Next.js passa a usar `ZDC_ROOT` com aspas para pastas com espaços (ex.: `Ze do corte`).
 
 ---
 
 ## 2026-03-26
 
-- **Hero**: painel lateral `HeroStudioPanel` — tipografia editorial (HOJE / no estúdio), inclinação 3D ao rato, spotlight âmbar com `useMotionTemplate`, anel cónico animado, filas com hover/focus, link Reservar com micro-interação; respeita `prefers-reduced-motion`.
-- **Localização**: endereço real em `BARBER_SHOP_ADDRESS` (`src/lib/constants.ts`) — R. Laurent Martins, 209, Jardim Esplanada, São José dos Campos - SP; mapa e contacto na home usam a mesma constante.
+- **Hero**: painel lateral `HeroStudioPanel` — tipografia editorial (HOJE / no estúdio), inclinação 3D ao mouse, spotlight âmbar com `useMotionTemplate`, anel cônico animado, filas com hover/focus, link Reservar com micro-interação; respeita `prefers-reduced-motion`.
+- **Localização**: endereço real em `BARBER_SHOP_ADDRESS` (`src/lib/constants.ts`) — R. Laurent Martins, 209, Jardim Esplanada, São José dos Campos - SP; mapa e contato na home usam a mesma constante.
 - **Marca**: logo da barbearia em `public/images/logo.jpeg`; componente `BrandLogo` na navbar e rodapé; `metadata.icons` no layout.
-- **Clerk opcional em desenvolvimento**: sem `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` válida (`pk_...`), a app não usa `ClerkProvider`; middleware não chama Clerk; navbar e `/admin` funcionam em modo local (banner de aviso no admin); APIs admin aceitam pedidos só em `NODE_ENV=development`. Produção sem chave: admin API retorna 503, layout admin redireciona. Ver `src/lib/clerk-config.ts`.
-- **Docker + Postgres local**: `docker-compose.yml` (Postgres 16, user `postgres`, password `ze_docorte_dev`, base `ze_do_corte`); `scripts/preparar-postgres.ps1` e `PREPARAR_BASE.bat` para subir o container, atualizar `DATABASE_URL` no `.env`, `prisma db push` e seed.
+- **Clerk opcional em desenvolvimento**: sem `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` válida (`pk_...`), a app não usa `ClerkProvider`; o **proxy** (`src/proxy.ts`) não invoca Clerk; navbar e `/admin` funcionam em modo local (banner de aviso no admin); APIs admin aceitam requisições só em `NODE_ENV=development`. Produção sem chave: admin API retorna 503, layout admin redireciona. Ver `src/lib/clerk-config.ts`.
+- **Docker + Postgres local**: `docker-compose.yml` (Postgres 16, user `postgres`, password `ze_docorte_dev`, banco `ze_do_corte`); `scripts/preparar-postgres.ps1` e `PREPARAR_BASE.bat` para subir o container, atualizar `DATABASE_URL` no `.env`, `prisma db push` e seed.
 - **Prisma seed**: `seed` configurado em `prisma.config.ts` (`migrations.seed`); `prisma/seed.ts` usa `@prisma/adapter-pg` como a app (`PrismaClient` exige adapter na v7).
-- **Resiliência BD**: `src/lib/data.ts` captura falhas de ligação (ex.: `ECONNREFUSED`, códigos Prisma **P1001** / **P1017**, `PrismaClientInitializationError`) e devolve lista vazia em `getServices()` em vez de derrubar a página; `ensureSeedServices` ignora o mesmo caso. Home e `/agendar` mostram `DatabaseUnavailableNotice` quando não há serviços.
-- **Documentação**: [operacao.md](./operacao.md) — secção de resolução do erro Prisma **P1001** (Postgres não acessível em `localhost:5432`); `INICIAR_ZE_DO_CORTE.bat` mostra dicas resumidas quando `db push` falha.
+- **Resiliência BD**: `src/lib/data.ts` captura falhas de conexão (ex.: `ECONNREFUSED`, códigos Prisma **P1001** / **P1017**, `PrismaClientInitializationError`) e devolve lista vazia em `getServices()` em vez de derrubar a página; `ensureSeedServices` ignora o mesmo caso. Home e `/agendar` mostram `DatabaseUnavailableNotice` quando não há serviços.
+- **Documentação**: [operacao.md](./operacao.md) — seção de resolução do erro Prisma **P1001** (Postgres não acessível em `localhost:5432`); `INICIAR_ZE_DO_CORTE.bat` mostra dicas resumidas quando `db push` falha.
 
 ---
 
 ## 2026-03-25
 
-- **Documentação**: pasta `docs/` com índice, [arquitetura](./arquitetura.md), [módulos e ficheiros](./modulos-e-arquivos.md), [operação](./operacao.md), [como documentar](./como-documentar.md) e este histórico; `README.md` na raiz e `AGENTS.md` referenciam a manutenção dos `.md`.
-- **Autenticação admin**: integração **Clerk**; `src/middleware.ts` protege `/admin`; `src/app/admin/layout.tsx` + `src/lib/admin-auth.ts` com lista `ADMIN_EMAILS`; APIs `GET /api/admin/dashboard` e `GET /api/admin/export` exigem sessão e e-mail autorizado.
+- **Documentação**: pasta `docs/` com índice, [arquitetura](./arquitetura.md), [módulos e arquivos](./modulos-e-arquivos.md), [operação](./operacao.md), [como documentar](./como-documentar.md) e este histórico; `README.md` na raiz e `AGENTS.md` referenciam a manutenção dos `.md`.
+- **Autenticação admin**: integração **Clerk**; proxy/middleware em `src/proxy.ts` protege `/admin`; `src/app/admin/layout.tsx` + `src/lib/admin-auth.ts` com lista `ADMIN_EMAILS`; APIs `GET /api/admin/dashboard` e `GET /api/admin/export` exigem sessão e e-mail autorizado.
 - **Painel admin**: métricas e gráfico passam a usar `src/lib/admin-dashboard.ts` (últimos 7 dias corretos); tabela com paginação `?page=`; botão de exportação Excel na UI.
-- **UX/UI**: fonte display (Bebas Neue), ajustes no Hero (scroll), `AnimatedSection`, formulário de agendamento, mapa na secção de contacto.
-- **Windows**: adicionado `INICIAR_ZE_DO_CORTE.bat` para arranque com Node/Prisma/`npm run dev`.
+- **UX/UI**: fonte display (Bebas Neue), ajustes no Hero (scroll), `AnimatedSection`, formulário de agendamento, mapa na seção de contato.
+- **Windows**: adicionado `INICIAR_ZE_DO_CORTE.bat` para inicialização com Node/Prisma/`npm run dev`.
 
 ---
 

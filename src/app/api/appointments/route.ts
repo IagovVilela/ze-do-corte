@@ -1,6 +1,9 @@
 import { parseISO } from "date-fns";
 import { NextResponse } from "next/server";
 
+import { buildAppointmentSlotConflictWhere } from "@/lib/appointment-slot-conflict";
+import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
+import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 import {
@@ -55,18 +58,47 @@ export async function POST(request: Request) {
       );
     }
 
+    const defaultUnitId = await getDefaultBarbershopUnitId();
+
+    let assignedStaff: {
+      id: string;
+      email: string;
+      displayName: string | null;
+    } | null = null;
+
+    if (payload.staffMemberId) {
+      if (!defaultUnitId) {
+        return NextResponse.json(
+          { message: "Não é possível escolher profissional sem unidade configurada." },
+          { status: 400 },
+        );
+      }
+      const staff = await prisma.staffMember.findFirst({
+        where: {
+          id: payload.staffMemberId,
+          role: "STAFF",
+          unitId: defaultUnitId,
+        },
+        select: { id: true, email: true, displayName: true },
+      });
+      if (!staff) {
+        return NextResponse.json(
+          { message: "Profissional inválido ou não pertence à unidade de agendamento." },
+          { status: 400 },
+        );
+      }
+      assignedStaff = staff;
+    }
+
     const conflict = await prisma.appointment.findFirst({
-      where: {
-        status: {
-          in: ["CONFIRMED", "COMPLETED"],
-        },
-        startsAt: {
-          lt: endsAt,
-        },
-        endsAt: {
-          gt: startsAt,
-        },
-      },
+      where: buildAppointmentSlotConflictWhere({
+        unitId: defaultUnitId,
+        rangeStart: startsAt,
+        rangeEnd: endsAt,
+        ...(assignedStaff
+          ? { assignedStaffMemberId: assignedStaff.id }
+          : {}),
+      }),
       select: { id: true },
     });
 
@@ -86,11 +118,26 @@ export async function POST(request: Request) {
         startsAt,
         endsAt,
         serviceId: payload.serviceId,
+        unitId: defaultUnitId,
+        staffMemberId: assignedStaff?.id ?? null,
       },
       include: {
         service: true,
       },
     });
+
+    if (assignedStaff) {
+      void notifyBarberNewAssignment({
+        barberEmail: assignedStaff.email,
+        barberDisplayName: assignedStaff.displayName,
+        clientName: payload.customerName,
+        clientPhone: payload.customerPhone,
+        clientEmail: payload.customerEmail?.trim() || null,
+        serviceName: appointment.service.name,
+        startsAt: appointment.startsAt,
+        notes: payload.notes ?? null,
+      });
+    }
 
     return NextResponse.json({ appointment }, { status: 201 });
   } catch (error) {

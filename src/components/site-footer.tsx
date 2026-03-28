@@ -3,7 +3,12 @@
 import { motion, useReducedMotion } from "framer-motion";
 
 import { BrandLogo } from "@/components/brand-logo";
+import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import { BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
+import {
+  getInstagramContactHref,
+  getWhatsappContactHref,
+} from "@/lib/contact-links";
 
 type SiteFooterProps = {
   showPitch?: boolean;
@@ -11,6 +16,10 @@ type SiteFooterProps = {
 
 export function SiteFooter({ showPitch = true }: SiteFooterProps) {
   const reduceMotion = useReducedMotion();
+  const wa = getWhatsappContactHref();
+  const ig = getInstagramContactHref();
+  const linkClass =
+    "inline-flex items-center gap-2 rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-brand-500/35 hover:text-white";
 
   return (
     <motion.footer
@@ -33,7 +42,25 @@ export function SiteFooter({ showPitch = true }: SiteFooterProps) {
           <BrandLogo size={48} className="h-12 w-12" />
           <p>© {new Date().getFullYear()} Zé do Corte. Todos os direitos reservados.</p>
         </motion.div>
-        {showPitch ? <p className="max-w-sm text-zinc-500">{BARBER_SLOGAN_SECONDARY}</p> : null}
+        <div className="flex flex-col items-center gap-3 md:items-end">
+          {showPitch ? <p className="max-w-sm text-zinc-500">{BARBER_SLOGAN_SECONDARY}</p> : null}
+          {(wa || ig) && (
+            <div className="flex flex-wrap items-center justify-center gap-2 md:justify-end">
+              {wa ? (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                  <WhatsappIcon className="h-4 w-4" aria-hidden />
+                  WhatsApp
+                </a>
+              ) : null}
+              {ig ? (
+                <a href={ig} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                  <InstagramIcon className="h-4 w-4" aria-hidden />
+                  Instagram
+                </a>
+              ) : null}
+            </div>
+          )}
+        </div>
       </div>
     </motion.footer>
   );

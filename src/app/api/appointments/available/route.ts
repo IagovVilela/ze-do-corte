@@ -1,6 +1,8 @@
 import { format, isValid, parseISO, startOfDay } from "date-fns";
 import { NextResponse } from "next/server";
 
+import { appointmentOverlapsSlot } from "@/lib/appointment-slot-conflict";
+import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSlotEnd, getSlotStart, isSlotWithinBusinessHours } from "@/lib/utils";
@@ -15,6 +17,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateValue = searchParams.get("date");
   const serviceId = searchParams.get("serviceId");
+  const unitIdParam = searchParams.get("unitId");
+  const staffMemberIdParam = searchParams.get("staffMemberId");
 
   if (!dateValue || !dateRegex.test(dateValue)) {
     return NextResponse.json(
@@ -46,6 +50,36 @@ export async function GET(request: Request) {
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
 
+  const resolvedUnitId =
+    unitIdParam && unitIdParam.length > 0
+      ? unitIdParam
+      : await getDefaultBarbershopUnitId();
+
+  let bookWithStaffId: string | null = null;
+  if (staffMemberIdParam && staffMemberIdParam.length > 0) {
+    if (!resolvedUnitId) {
+      return NextResponse.json(
+        { error: "Profissional só pode ser filtrado com unidade definida." },
+        { status: 400 },
+      );
+    }
+    const staffOk = await prisma.staffMember.findFirst({
+      where: {
+        id: staffMemberIdParam,
+        role: "STAFF",
+        unitId: resolvedUnitId,
+      },
+      select: { id: true },
+    });
+    if (!staffOk) {
+      return NextResponse.json(
+        { error: "Profissional inválido para esta unidade." },
+        { status: 400 },
+      );
+    }
+    bookWithStaffId = staffOk.id;
+  }
+
   const [service, appointments] = await Promise.all([
     prisma.service.findUnique({
       where: { id: serviceId },
@@ -53,6 +87,7 @@ export async function GET(request: Request) {
     }),
     prisma.appointment.findMany({
       where: {
+        ...(resolvedUnitId ? { unitId: resolvedUnitId } : {}),
         startsAt: {
           gte: dayStart,
           lt: dayEnd,
@@ -64,6 +99,7 @@ export async function GET(request: Request) {
       select: {
         startsAt: true,
         endsAt: true,
+        staffMemberId: true,
       },
     }),
   ]);
@@ -79,10 +115,8 @@ export async function GET(request: Request) {
   const slots = BUSINESS_HOURS.map((hour) => {
     const slotStart = getSlotStart(dayStart, hour);
     const slotEnd = getSlotEnd(slotStart, service.durationMinutes);
-    const overlaps = appointments.some(
-      (appointment) =>
-        appointment.startsAt.getTime() < slotEnd.getTime() &&
-        appointment.endsAt.getTime() > slotStart.getTime(),
+    const overlaps = appointments.some((appointment) =>
+      appointmentOverlapsSlot(appointment, slotStart, slotEnd, bookWithStaffId),
     );
     const withinHours = isSlotWithinBusinessHours(
       slotStart,

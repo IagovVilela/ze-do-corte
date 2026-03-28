@@ -58,11 +58,8 @@ if (-not (Test-Path $envFile)) {
     Set-Content -Path $envFile -Value @(
       $DbUrlLine,
       "",
-      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=",
-      "CLERK_SECRET_KEY=",
-      "NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in",
-      "NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-in",
-      "ADMIN_EMAILS="
+      "SEED_OWNER_EMAIL=admin@zdc.local",
+      "SEED_OWNER_PASSWORD=AlterarSenha123!"
     ) -Encoding UTF8
     Write-Host "      Criado .env minimo" -ForegroundColor Green
   }
