@@ -65,6 +65,9 @@ model StaffMember {
   sessions     Session[]
   /// Agendamentos em que este membro é o barbeiro/profissional responsável.
   appointments Appointment[]
+  /// Expediente semanal personalizado (`null` = segue só o horário da barbearia).
+  /// Formato: chaves "0"–"6" (Date.getDay). Ver `src/lib/staff-work-schedule.ts`.
+  workWeekJson Json?
 
   @@index([unitId])
   @@index([showOnWebsite, role])
@@ -125,10 +128,16 @@ model Appointment {
   /// Profissional (barbeiro) responsável; null = ainda não atribuído (visível só a dono/admin).
   staffMemberId String?
   staffMember   StaffMember?    @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
+  /// Registo de pagamento no balcão (null = ainda não marcado como pago).
+  paidAt          DateTime?
+  paymentMethod   String?         @db.VarChar(32)
+  /// URL secreta para o cliente alterar/cancelar sem login (`/minha-reserva/[token]`). Gerado na criação pública.
+  clientManageToken String?       @unique @db.VarChar(36)
 
   @@index([startsAt])
   @@index([status])
   @@index([serviceId])
   @@index([unitId])
   @@index([staffMemberId])
+  @@index([paidAt])
 }

@@ -6,6 +6,7 @@ import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSlotEnd, getSlotStart, isSlotWithinBusinessHours } from "@/lib/utils";
+import { isSlotWithinStaffSchedule } from "@/lib/work-week";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -56,6 +57,7 @@ export async function GET(request: Request) {
       : await getDefaultBarbershopUnitId();
 
   let bookWithStaffId: string | null = null;
+  let staffWorkWeekJson: unknown = null;
   if (staffMemberIdParam && staffMemberIdParam.length > 0) {
     if (!resolvedUnitId) {
       return NextResponse.json(
@@ -69,7 +71,7 @@ export async function GET(request: Request) {
         role: "STAFF",
         unitId: resolvedUnitId,
       },
-      select: { id: true },
+      select: { id: true, workWeekJson: true },
     });
     if (!staffOk) {
       return NextResponse.json(
@@ -78,6 +80,7 @@ export async function GET(request: Request) {
       );
     }
     bookWithStaffId = staffOk.id;
+    staffWorkWeekJson = staffOk.workWeekJson;
   }
 
   const [service, appointments] = await Promise.all([
@@ -122,8 +125,16 @@ export async function GET(request: Request) {
       slotStart,
       service.durationMinutes,
     );
+    const withinStaffSchedule =
+      !bookWithStaffId ||
+      isSlotWithinStaffSchedule(
+        staffWorkWeekJson,
+        slotStart,
+        service.durationMinutes,
+      );
     const available =
       withinHours &&
+      withinStaffSchedule &&
       !overlaps &&
       slotStart.getTime() > now.getTime();
     return {

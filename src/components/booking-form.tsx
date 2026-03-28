@@ -3,10 +3,12 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Link from "next/link";
 import { LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
+import { formatBrPhoneNational } from "@/lib/br-phone-format";
 import type { ServiceSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +43,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [bookingState, setBookingState] = useState<BookingState>("idle");
   const [message, setMessage] = useState("");
+  const [successManageToken, setSuccessManageToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!serviceId && services[0]) {
@@ -98,6 +101,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
 
     setBookingState("loading");
     setMessage("");
+    setSuccessManageToken(null);
 
     try {
       const response = await fetch("/api/appointments", {
@@ -105,7 +109,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName,
-          customerPhone,
+          customerPhone: formatBrPhoneNational(customerPhone),
           customerEmail,
           notes,
           serviceId,
@@ -115,13 +119,19 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
         }),
       });
 
-      const payload = (await response.json()) as { message?: string };
+      const payload = (await response.json()) as {
+        message?: string;
+        appointment?: { clientManageToken?: string | null };
+      };
       if (!response.ok) {
         throw new Error(payload.message ?? "Não foi possível agendar.");
       }
 
       setBookingState("success");
       setMessage("Agendamento confirmado com sucesso.");
+      setSuccessManageToken(
+        payload.appointment?.clientManageToken?.trim() || null,
+      );
       setCustomerName("");
       setCustomerPhone("");
       setCustomerEmail("");
@@ -330,11 +340,15 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                 <span className="text-sm font-medium text-zinc-200">Telefone</span>
                 <input
                   required
+                  type="tel"
                   value={customerPhone}
-                  onChange={(event) => setCustomerPhone(event.target.value)}
-                  className={inputClass}
+                  onChange={(event) =>
+                    setCustomerPhone(formatBrPhoneNational(event.target.value))
+                  }
+                  maxLength={15}
+                  className={cn(inputClass, "tabular-nums tracking-wide")}
                   placeholder="(12) 99999-9999"
-                  inputMode="tel"
+                  inputMode="numeric"
                   autoComplete="tel"
                 />
               </label>
@@ -435,22 +449,39 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
 
         <AnimatePresence mode="wait">
           {message ? (
-            <motion.p
+            <motion.div
               key={bookingState + message.slice(0, 12)}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25 }}
-              className={cn(
-                "rounded-xl border px-4 py-3 text-sm",
-                bookingState === "success" &&
-                  "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
-                bookingState === "error" &&
-                  "border-rose-400/40 bg-rose-500/10 text-rose-300",
-              )}
+              className="space-y-3"
             >
-              {message}
-            </motion.p>
+              <p
+                className={cn(
+                  "rounded-xl border px-4 py-3 text-sm",
+                  bookingState === "success" &&
+                    "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+                  bookingState === "error" &&
+                    "border-rose-400/40 bg-rose-500/10 text-rose-300",
+                )}
+              >
+                {message}
+              </p>
+              {bookingState === "success" && successManageToken ? (
+                <div className="rounded-xl border border-brand-500/25 bg-brand-500/10 px-4 py-3 text-sm text-brand-100">
+                  <p className="font-medium text-brand-50">
+                    Guarde o link para alterar ou cancelar depois (sem cadastro):
+                  </p>
+                  <Link
+                    href={`/minha-reserva/${encodeURIComponent(successManageToken)}`}
+                    className="mt-2 inline-block break-all text-xs text-brand-200 underline-offset-2 hover:underline"
+                  >
+                    Abrir página da minha reserva
+                  </Link>
+                </div>
+              ) : null}
+            </motion.div>
           ) : null}
         </AnimatePresence>
       </motion.aside>

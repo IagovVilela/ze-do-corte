@@ -94,6 +94,7 @@ Abra `http://localhost:3000`.
 
 - `/` — Institucional
 - `/agendar` — Agendamento
+- `/minha-reserva/[token]` — Alterar ou cancelar reserva sem login (link mostrado após confirmar em `/agendar`)
 - `/admin/login` — Login do painel (e-mail + senha)
 - `/admin` — Painel (sessão + permissões; sub-rotas: unidades, equipe, serviços, configuração). `/sign-in` redireciona para `/admin/login`.
 
@@ -103,6 +104,7 @@ Abra `http://localhost:3000`.
 - `GET /api/services`
 - `GET /api/appointments/available?serviceId=...&date=YYYY-MM-DD`
 - `POST /api/appointments`
+- `GET|PATCH /api/appointments/manage/[token]` — gestão pública (cancelar / remarcar)
 - `GET /api/admin/dashboard` — protegida (papéis do painel)
 - `GET /api/admin/export` — protegida; download XLSX (não disponível para funcionário)
 - `GET|POST /api/admin/units`, `PATCH|DELETE /api/admin/units/[id]`

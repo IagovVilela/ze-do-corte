@@ -85,7 +85,7 @@ export function staffAccessFromMember(member: StaffMember): StaffAccess | null {
 
 /**
  * Filtro de agendamentos no painel e exportações.
- * - OWNER / ADMIN: todos (ou por unidade se no futuro `unitIdsFilter` for preenchido).
+ * - OWNER / ADMIN: **sempre** todos os agendamentos (todas as unidades, inclusive `unitId` null).
  * - STAFF: só da sua unidade **e** com `staffMemberId` = próprio id (produção atribuída).
  *   Agendamentos sem profissional só aparecem para dono/admin até serem atribuídos.
  */
@@ -100,6 +100,9 @@ export function appointmentScopeWhere(
     return {
       AND: [{ unitId: { in: unitIds } }, { staffMemberId: access.userId }],
     };
+  }
+  if (access.role === "OWNER" || access.role === "ADMIN") {
+    return {};
   }
   if (access.unitIdsFilter?.length) {
     return { unitId: { in: access.unitIdsFilter } };

@@ -10,8 +10,16 @@ export function buildAppointmentSlotConflictWhere(args: {
   rangeStart: Date;
   rangeEnd: Date;
   assignedStaffMemberId?: string;
+  /** Ignorar este agendamento (ex.: remarcar o próprio horário). */
+  excludeAppointmentId?: string;
 }): Prisma.AppointmentWhereInput {
-  const { unitId, rangeStart, rangeEnd, assignedStaffMemberId } = args;
+  const {
+    unitId,
+    rangeStart,
+    rangeEnd,
+    assignedStaffMemberId,
+    excludeAppointmentId,
+  } = args;
   const base: Prisma.AppointmentWhereInput = {
     status: { in: ["CONFIRMED", "COMPLETED"] },
     startsAt: { lt: rangeEnd },
@@ -25,6 +33,11 @@ export function buildAppointmentSlotConflictWhere(args: {
       { staffMemberId: assignedStaffMemberId },
       { staffMemberId: null },
     ];
+  }
+  if (excludeAppointmentId) {
+    return {
+      AND: [base, { id: { not: excludeAppointmentId } }],
+    };
   }
   return base;
 }

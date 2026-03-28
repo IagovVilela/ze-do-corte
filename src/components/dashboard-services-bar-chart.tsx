@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,21 +13,34 @@ import {
 
 import type { DashboardServiceBar } from "@/lib/types";
 
+const BAR_COLORS = [
+  "#a855f7",
+  "#ec4899",
+  "#06b6d4",
+  "#84cc16",
+  "#f97316",
+  "#6366f1",
+  "#14b8a6",
+  "#eab308",
+  "#ef4444",
+  "#8b5cf6",
+];
+
 type Props = {
   data: DashboardServiceBar[];
-  monthLabel: string;
+  periodLabel: string;
 };
 
-export function DashboardServicesBarChart({ data, monthLabel }: Props) {
+export function DashboardServicesBarChart({ data, periodLabel }: Props) {
   const chartHeight = Math.max(220, Math.min(420, data.length * 42 + 72));
 
   return (
-    <div className="glass-card rounded-2xl p-5">
-      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-white">
-        Volume por serviço
+    <div className="glass-card rounded-2xl border border-fuchsia-500/10 p-5">
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-fuchsia-200/90">
+        Ranking de serviços
       </h3>
       <p className="mt-1 text-sm text-zinc-400">
-        Agendamentos no mês: <span className="text-zinc-300">{monthLabel}</span>
+        Quantidade no período: <span className="text-zinc-300">{periodLabel}</span>
       </p>
       <div className="mt-5" style={{ height: data.length ? chartHeight : 200 }}>
         {data.length > 0 ? (
@@ -66,17 +80,17 @@ export function DashboardServicesBarChart({ data, monthLabel }: Props) {
                   "Total",
                 ]}
               />
-              <Bar
-                dataKey="count"
-                fill="#a855f7"
-                radius={[0, 6, 6, 0]}
-                maxBarSize={22}
-              />
+              <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={24}>
+                {data.map((_, i) => (
+                  <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
-            Sem agendamentos por serviço neste mês.
+            Sem agendamentos por serviço neste período (por data de início). Experimente outro
+            intervalo nas abas acima.
           </div>
         )}
       </div>

@@ -1,6 +1,10 @@
 /** Apenas dígitos, máx. 11 (DDD + celular BR sem +55). */
 export function brPhoneDigits(value: string): string {
-  return value.replace(/\D/g, "").slice(0, 11);
+  let d = value.replace(/\D/g, "");
+  if (d.startsWith("55") && d.length > 11) {
+    d = d.slice(2);
+  }
+  return d.slice(0, 11);
 }
 
 /**
@@ -14,8 +18,11 @@ export function formatBrPhoneNational(value: string): string {
   const dd = d.slice(0, 2);
   const rest = d.slice(2);
 
-  if (d.length <= 2) {
-    return `(${dd}`;
+  if (d.length === 1) {
+    return `(${d}`;
+  }
+  if (d.length === 2) {
+    return `(${dd}) `;
   }
 
   if (rest.length <= 4) {

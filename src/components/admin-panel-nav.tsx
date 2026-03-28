@@ -37,6 +37,11 @@ export function AdminPanelNav({ access }: { access: StaffAccess }) {
   const items: NavItem[] = [
     { href: "/admin", label: "Visão geral", show: true },
     { href: "/admin/perfil", label: "Perfil", show: true },
+    {
+      href: "/admin/expediente",
+      label: "Meu expediente",
+      show: access.role === "STAFF",
+    },
     { href: "/admin/unidades", label: "Unidades", show: access.permissions.manageUnits },
     { href: "/admin/equipe", label: "Equipe", show: access.permissions.manageStaff !== "none" },
     {

@@ -48,6 +48,10 @@ Opcional. Com **`RESEND_API_KEY`** e **`RESEND_FROM_EMAIL`** definidos, o sistem
 
 Sem essas variáveis, o agendamento continua normal; apenas não há envio (aviso em log em desenvolvimento). O remetente deve ser um domínio **verificado** na [Resend](https://resend.com/) ou, para testes, `onboarding@resend.dev`. **Não commite** a API key.
 
+### Pagamento e gráficos no `/admin`
+
+Não há gateway online: **dono/admin** regista no balcão **data/hora do pagamento** (`paidAt`) e **método** opcional na lista de agendamentos ou com `PATCH /api/admin/appointments/[id]`. Os gráficos do painel respeitam o período escolhido (**Hoje**, **7 dias**, **Mês**, **3 meses** — query `chartRange`); a API **`GET /api/admin/dashboard?chartRange=`** devolve o mesmo conjunto de séries.
+
 ### Next.js dev: `Compaction failed` / `ENOENT` em `.next\dev\...\build-manifest.json`
 
 Sintomas: mensagens **Another write batch or compaction is already active**, **Persisting failed**, ou **no such file or directory** para ficheiros dentro de **`.next\dev`**.
@@ -65,6 +69,8 @@ Se os erros **continuarem**, use o bundler clássico em desenvolvimento: **`npm 
 ### Prisma: `Unknown field` no desenvolvimento (Turbopack)
 
 Depois de mudar o `schema.prisma`, rode **`npx prisma generate`** (e **`npx prisma db push`** se faltarem colunas no Postgres). Se o erro persistir com campos que já existem no schema, o Turbopack pode estar a usar um `@prisma/client` antigo em **`.next`**: apague a pasta **`.next`**, reinicie **`npm run dev`**. O **`next.config.ts`** inclui `@prisma/client` em **`serverExternalPackages`** para o runtime usar sempre o cliente gerado em **`node_modules`**.
+
+Exemplo típico: **`Unknown field 'workWeekJson'`** em **`/admin/expediente`** — o código e o schema estão alinhados; falta sincronizar o **cliente** (`generate`) e a **tabela** (`db push`), depois limpar **`.next`** e voltar a subir o dev server.
 
 ## Comandos npm (raiz do projeto)
 

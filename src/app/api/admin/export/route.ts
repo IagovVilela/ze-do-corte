@@ -41,12 +41,15 @@ export async function GET() {
       Cliente: appointment.clientName,
       Telefone: appointment.clientPhone,
       Servico: appointment.service.name,
+      ValorServico: Number(appointment.service.price).toFixed(2),
       Unidade: appointment.unitId ? (unitNames.get(appointment.unitId) ?? "") : "",
       Profissional: appointment.staffMemberId
         ? (staffLabels.get(appointment.staffMemberId) ?? "")
         : "",
       DataHora: formatDateTime(appointment.startsAt),
       Status: appointment.status,
+      PagoEm: appointment.paidAt ? formatDateTime(appointment.paidAt) : "",
+      MetodoPagamento: appointment.paymentMethod ?? "",
       Observacoes: appointment.notes ?? "",
       CriadoEm: formatDateTime(appointment.createdAt),
     }));

@@ -2,29 +2,38 @@ import "server-only";
 
 import {
   endOfDay,
-  endOfMonth,
   endOfWeek,
   format,
   startOfDay,
-  startOfMonth,
   startOfWeek,
-  subDays,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import type { AppointmentStatus } from "@prisma/client";
 
 import { unitNameMapByIds } from "@/lib/appointment-unit-names";
+import {
+  bucketKeyForAppointment,
+  bucketKeyForRevenueDay,
+  buildVolumeBucketKeys,
+  getDashboardPeriodMeta,
+  parseDashboardRange,
+  type DashboardRange,
+} from "@/lib/dashboard-period";
 import { prisma } from "@/lib/prisma";
 import { staffLabelMapByIds } from "@/lib/staff-display-names";
 import { appointmentScopeWhere, type StaffAccess } from "@/lib/staff-access";
 import type {
   AppointmentRow,
+  DashboardPaymentStackRow,
   DashboardPoint,
+  DashboardRevenuePoint,
   DashboardServiceBar,
   DashboardStatusSlice,
   DashboardSummaryRow,
 } from "@/lib/types";
+
+export type { DashboardRange } from "@/lib/dashboard-period";
 
 const STATUS_PIE_ORDER: AppointmentStatus[] = [
   "CONFIRMED",
@@ -45,23 +54,29 @@ const STATUS_PIE_COLOR: Record<AppointmentStatus, string> = {
 };
 
 export type AdminDashboardSnapshot = {
+  range: DashboardRange;
+  periodLabel: string;
+  seriesTitle: string;
   metrics: {
     totalToday: number;
     totalWeek: number;
     totalAppointments: number;
     distinctClients: number;
-    /** Soma dos serviços concluídos no mês corrente (escopo do usuário). */
+    /** Concluídos no mês civil corrente (valor dos serviços) — cartões superiores. */
     revenueMonth: number;
+    /** Concluídos sem pagamento registado (âmbito do utilizador). */
+    pendingPaymentTotal: number;
+    /** Soma recebida no período selecionado (`paidAt` no intervalo). */
+    receivedInPeriod: number;
+    /** Valor de serviços concluídos cujo `startsAt` cai no período. */
+    completedValueInPeriod: number;
   };
   series: DashboardPoint[];
-  /** Distribuição por status no mês corrente (escopo). */
-  statusSlicesMonth: DashboardStatusSlice[];
-  /** Top serviços por quantidade de agendamentos no mês corrente. */
-  servicesMonth: DashboardServiceBar[];
-  /** Linhas para tabela-resumo. */
+  statusSlices: DashboardStatusSlice[];
+  servicesInPeriod: DashboardServiceBar[];
+  revenueSeries: DashboardRevenuePoint[];
+  paymentStack: DashboardPaymentStackRow[];
   summaryRows: DashboardSummaryRow[];
-  /** Rótulo do mês para subtítulos (ex.: "março de 2026"). */
-  monthLabel: string;
   nextAppointment: {
     clientName: string;
     startsAt: Date;
@@ -72,18 +87,47 @@ function scope(access: StaffAccess) {
   return appointmentScopeWhere(access);
 }
 
+function seriesTitleFor(range: DashboardRange): string {
+  switch (range) {
+    case "day":
+      return "Volume por hora (inícios de agendamento)";
+    case "7d":
+      return "Volume por dia";
+    case "month":
+      return "Volume por dia";
+    case "3m":
+      return "Volume por semana";
+    default: {
+      const _e: never = range;
+      return _e;
+    }
+  }
+}
+
 export async function getAdminDashboardSnapshot(
   access: StaffAccess,
+  rangeRaw?: string,
 ): Promise<AdminDashboardSnapshot> {
+  const range = parseDashboardRange(rangeRaw);
   const now = new Date();
+  const meta = getDashboardPeriodMeta(range, now);
+  const whereBase = scope(access);
+
   const startToday = startOfDay(now);
   const endToday = endOfDay(now);
   const startWeek = startOfWeek(now, { weekStartsOn: 1 });
   const endWeek = endOfWeek(now, { weekStartsOn: 1 });
-  const lastSevenDays = subDays(startToday, 6);
-  const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
-  const whereBase = scope(access);
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const periodWhere = {
+    ...whereBase,
+    startsAt: {
+      gte: meta.from,
+      lte: meta.to,
+    },
+  };
 
   const monthWhere = {
     ...whereBase,
@@ -94,26 +138,38 @@ export async function getAdminDashboardSnapshot(
   };
 
   const [
-    appointmentsLastSeven,
+    periodRows,
+    paidInPeriodRows,
     todayCount,
     weekCount,
     totalCount,
     nextAppointment,
     distinctPhones,
-    completedMonth,
-    statusMonthCounts,
-    serviceMonthCounts,
+    completedMonthRows,
+    pendingPaymentCount,
   ] = await Promise.all([
+    prisma.appointment.findMany({
+      where: periodWhere,
+      select: {
+        startsAt: true,
+        status: true,
+        paidAt: true,
+        serviceId: true,
+        service: { select: { price: true } },
+      },
+    }),
     prisma.appointment.findMany({
       where: {
         ...whereBase,
-        startsAt: {
-          gte: lastSevenDays,
+        status: "COMPLETED",
+        paidAt: {
+          gte: meta.from,
+          lte: meta.to,
         },
       },
-      select: { startsAt: true },
-      orderBy: {
-        startsAt: "asc",
+      select: {
+        paidAt: true,
+        service: { select: { price: true } },
       },
     }),
     prisma.appointment.count({
@@ -159,57 +215,51 @@ export async function getAdminDashboardSnapshot(
       },
       include: { service: true },
     }),
-    prisma.appointment.groupBy({
-      by: ["status"],
-      where: monthWhere,
-      _count: { _all: true },
-    }),
-    prisma.appointment.groupBy({
-      by: ["serviceId"],
-      where: monthWhere,
-      _count: { _all: true },
+    prisma.appointment.count({
+      where: {
+        ...whereBase,
+        status: "COMPLETED",
+        paidAt: null,
+      },
     }),
   ]);
 
-  const byDayMap = new Map<string, number>();
-  for (let i = 0; i < 7; i += 1) {
-    const day = subDays(startToday, 6 - i);
-    byDayMap.set(format(day, "yyyy-MM-dd"), 0);
+  const bucketKeys = buildVolumeBucketKeys(meta);
+  const countMap = new Map(bucketKeys.map((b) => [b.key, 0]));
+  for (const row of periodRows) {
+    const k = bucketKeyForAppointment(meta, row.startsAt);
+    if (k && countMap.has(k)) {
+      countMap.set(k, (countMap.get(k) ?? 0) + 1);
+    }
   }
+  const series: DashboardPoint[] = bucketKeys.map((b) => ({
+    date: b.key,
+    dateLabel: b.label,
+    count: countMap.get(b.key) ?? 0,
+  }));
 
-  appointmentsLastSeven.forEach((appointment) => {
-    const key = format(appointment.startsAt, "yyyy-MM-dd");
-    byDayMap.set(key, (byDayMap.get(key) ?? 0) + 1);
-  });
+  const statusCountMap = new Map<AppointmentStatus, number>();
+  for (const st of STATUS_PIE_ORDER) statusCountMap.set(st, 0);
+  for (const row of periodRows) {
+    statusCountMap.set(
+      row.status,
+      (statusCountMap.get(row.status) ?? 0) + 1,
+    );
+  }
+  const statusSlices: DashboardStatusSlice[] = STATUS_PIE_ORDER.map((st) => ({
+    name: STATUS_PIE_LABEL[st],
+    value: statusCountMap.get(st) ?? 0,
+    color: STATUS_PIE_COLOR[st],
+  }));
 
-  const series: DashboardPoint[] = Array.from(byDayMap.entries()).map(
-    ([key, count]) => ({
-      date: key,
-      dateLabel: format(new Date(`${key}T00:00:00`), "dd/MM"),
-      count,
-    }),
-  );
-
-  const revenueMonth = access.permissions.viewRevenue
-    ? completedMonth.reduce(
-        (sum, row) => sum + Number(row.service.price),
-        0,
-      )
-    : 0;
-
-  const statusCountMap = new Map(
-    statusMonthCounts.map((row) => [row.status, row._count._all]),
-  );
-  const statusSlicesMonth: DashboardStatusSlice[] = STATUS_PIE_ORDER.map(
-    (st) => ({
-      name: STATUS_PIE_LABEL[st],
-      value: statusCountMap.get(st) ?? 0,
-      color: STATUS_PIE_COLOR[st],
-    }),
-  );
-
-  const monthTotal = statusSlicesMonth.reduce((s, x) => s + x.value, 0);
-  const serviceIds = [...new Set(serviceMonthCounts.map((r) => r.serviceId))];
+  const serviceCount = new Map<string, number>();
+  for (const row of periodRows) {
+    serviceCount.set(
+      row.serviceId,
+      (serviceCount.get(row.serviceId) ?? 0) + 1,
+    );
+  }
+  const serviceIds = [...serviceCount.keys()];
   const serviceRows =
     serviceIds.length > 0
       ? await prisma.service.findMany({
@@ -217,27 +267,64 @@ export async function getAdminDashboardSnapshot(
           select: { id: true, name: true },
         })
       : [];
-  const idToServiceName = new Map(
-    serviceRows.map((s) => [s.id, s.name] as const),
-  );
-  const servicesMonth: DashboardServiceBar[] = serviceMonthCounts
-    .map((row) => ({
-      name: idToServiceName.get(row.serviceId) ?? "Serviço",
-      count: row._count._all,
+  const idToName = new Map(serviceRows.map((s) => [s.id, s.name] as const));
+  const servicesInPeriod: DashboardServiceBar[] = [...serviceCount.entries()]
+    .map(([id, count]) => ({
+      name: idToName.get(id) ?? "Serviço",
+      count,
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  const topService = servicesMonth[0];
-  const monthLabelRaw = format(monthStart, "MMMM yyyy", { locale: ptBR });
-  const monthLabel =
-    monthLabelRaw.charAt(0).toUpperCase() + monthLabelRaw.slice(1);
+  const revenueMonth = access.permissions.viewRevenue
+    ? completedMonthRows.reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
+  const amountMap = new Map(bucketKeys.map((b) => [b.key, 0]));
+  for (const row of paidInPeriodRows) {
+    if (!row.paidAt) continue;
+    const k = bucketKeyForRevenueDay(meta, row.paidAt);
+    if (k && amountMap.has(k)) {
+      amountMap.set(
+        k,
+        (amountMap.get(k) ?? 0) + Number(row.service.price),
+      );
+    }
+  }
+  const revenueSeries: DashboardRevenuePoint[] = bucketKeys.map((b) => ({
+    date: b.key,
+    dateLabel: b.label,
+    amount: access.permissions.viewRevenue ? (amountMap.get(b.key) ?? 0) : 0,
+  }));
+
+  const completedInPeriod = periodRows.filter((r) => r.status === "COMPLETED");
+  const paidCompleted = completedInPeriod.filter((r) => r.paidAt !== null).length;
+  const unpaidCompleted = completedInPeriod.filter((r) => r.paidAt === null)
+    .length;
+  const paymentStack: DashboardPaymentStackRow[] = [
+    {
+      name: "Concluídos no período",
+      pagos: paidCompleted,
+      aReceber: unpaidCompleted,
+    },
+  ];
+
+  const receivedInPeriod = access.permissions.viewRevenue
+    ? paidInPeriodRows.reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
+  const completedValueInPeriod = access.permissions.viewRevenue
+    ? completedInPeriod.reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
+  const periodTotal = periodRows.length;
+  const topService = servicesInPeriod[0];
 
   const summaryRows: DashboardSummaryRow[] = [
     {
-      label: "Agendamentos no mês",
-      value: String(monthTotal),
-      hint: monthLabel,
+      label: "Agendamentos no período",
+      value: String(periodTotal),
+      hint: meta.periodLabel,
     },
     {
       label: "Total no histórico (seu acesso)",
@@ -247,18 +334,37 @@ export async function getAdminDashboardSnapshot(
 
   if (topService) {
     summaryRows.push({
-      label: "Serviço em destaque (mês)",
+      label: "Serviço em destaque (período)",
       value: topService.name,
       hint: `${topService.count} reserva(s)`,
     });
   }
 
   if (access.permissions.viewRevenue) {
-    summaryRows.push({
-      label: "Faturamento (concluídos no mês)",
-      value: `R$ ${revenueMonth.toFixed(2)}`,
-    });
+    summaryRows.push(
+      {
+        label: "Valor concluído no período",
+        value: `R$ ${completedValueInPeriod.toFixed(2)}`,
+        hint: "Por data do atendimento",
+      },
+      {
+        label: "Recebido no período",
+        value: `R$ ${receivedInPeriod.toFixed(2)}`,
+        hint: "Por data do pagamento registado",
+      },
+      {
+        label: "Faturamento (mês civil, concluídos)",
+        value: `R$ ${revenueMonth.toFixed(2)}`,
+        hint: format(monthStart, "MMMM yyyy", { locale: ptBR }),
+      },
+    );
   }
+
+  summaryRows.push({
+    label: "Concluídos sem pagamento registado",
+    value: String(pendingPaymentCount),
+    hint: "Em todo o histórico do seu acesso",
+  });
 
   summaryRows.push({
     label: "Clientes distintos (telefone)",
@@ -266,18 +372,25 @@ export async function getAdminDashboardSnapshot(
   });
 
   return {
+    range,
+    periodLabel: meta.periodLabel,
+    seriesTitle: seriesTitleFor(range),
     metrics: {
       totalToday: todayCount,
       totalWeek: weekCount,
       totalAppointments: totalCount,
       distinctClients: distinctPhones.length,
       revenueMonth,
+      pendingPaymentTotal: pendingPaymentCount,
+      receivedInPeriod,
+      completedValueInPeriod,
     },
     series,
-    statusSlicesMonth,
-    servicesMonth,
+    statusSlices,
+    servicesInPeriod,
+    revenueSeries,
+    paymentStack,
     summaryRows,
-    monthLabel,
     nextAppointment: nextAppointment
       ? {
           clientName: nextAppointment.clientName,
@@ -306,7 +419,6 @@ export async function getAdminAppointmentsPaginated(
       skip,
       take: safeSize,
       orderBy: { startsAt: "desc" },
-      // `select` + `unitNameMapByIds` — evita `include: { unit: true }` (cliente Prisma desatualizado quebra).
       select: {
         id: true,
         clientName: true,
@@ -316,6 +428,8 @@ export async function getAdminAppointmentsPaginated(
         status: true,
         unitId: true,
         staffMemberId: true,
+        paidAt: true,
+        paymentMethod: true,
         service: { select: { name: true } },
       },
     }),
@@ -341,6 +455,8 @@ export async function getAdminAppointmentsPaginated(
     assignedStaffLabel: item.staffMemberId
       ? (staffLabels.get(item.staffMemberId) ?? null)
       : null,
+    paidAt: item.paidAt?.toISOString() ?? null,
+    paymentMethod: item.paymentMethod,
   }));
 
   return { rows, total, page: safePage, pageSize: safeSize };

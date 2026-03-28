@@ -1,16 +1,12 @@
-import { parseISO } from "date-fns";
+import { randomUUID } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
-import { buildAppointmentSlotConflictWhere } from "@/lib/appointment-slot-conflict";
-import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
+import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-import {
-  getSlotEnd,
-  getSlotStart,
-  isSlotWithinBusinessHours,
-} from "@/lib/utils";
+import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 
 export async function POST(request: Request) {
   try {
@@ -36,78 +32,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const day = parseISO(payload.date);
-    if (Number.isNaN(day.getTime())) {
-      return NextResponse.json({ message: "Data inválida." }, { status: 400 });
-    }
-
-    const startsAt = getSlotStart(day, payload.time);
-    const endsAt = getSlotEnd(startsAt, service.durationMinutes);
-
-    if (startsAt.getDay() === 0) {
-      return NextResponse.json(
-        { message: "A barbearia não abre ao domingo." },
-        { status: 400 },
-      );
-    }
-
-    if (!isSlotWithinBusinessHours(startsAt, service.durationMinutes)) {
-      return NextResponse.json(
-        { message: "Horário fora do expediente para este serviço." },
-        { status: 400 },
-      );
-    }
-
     const defaultUnitId = await getDefaultBarbershopUnitId();
 
-    let assignedStaff: {
-      id: string;
-      email: string;
-      displayName: string | null;
-    } | null = null;
-
-    if (payload.staffMemberId) {
-      if (!defaultUnitId) {
-        return NextResponse.json(
-          { message: "Não é possível escolher profissional sem unidade configurada." },
-          { status: 400 },
-        );
-      }
-      const staff = await prisma.staffMember.findFirst({
-        where: {
-          id: payload.staffMemberId,
-          role: "STAFF",
-          unitId: defaultUnitId,
-        },
-        select: { id: true, email: true, displayName: true },
-      });
-      if (!staff) {
-        return NextResponse.json(
-          { message: "Profissional inválido ou não pertence à unidade de agendamento." },
-          { status: 400 },
-        );
-      }
-      assignedStaff = staff;
-    }
-
-    const conflict = await prisma.appointment.findFirst({
-      where: buildAppointmentSlotConflictWhere({
-        unitId: defaultUnitId,
-        rangeStart: startsAt,
-        rangeEnd: endsAt,
-        ...(assignedStaff
-          ? { assignedStaffMemberId: assignedStaff.id }
-          : {}),
-      }),
-      select: { id: true },
+    const slot = await assertPublicBookingSlot({
+      service,
+      dateStr: payload.date,
+      timeStr: payload.time,
+      defaultUnitId,
+      staffMemberId: payload.staffMemberId,
     });
 
-    if (conflict) {
+    if (!slot.ok) {
       return NextResponse.json(
-        { message: "Esse horário já foi reservado." },
-        { status: 409 },
+        { message: slot.message },
+        { status: slot.status },
       );
     }
+
+    const { startsAt, endsAt, assignedStaff } = slot;
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -120,6 +62,7 @@ export async function POST(request: Request) {
         serviceId: payload.serviceId,
         unitId: defaultUnitId,
         staffMemberId: assignedStaff?.id ?? null,
+        clientManageToken: randomUUID(),
       },
       include: {
         service: true,

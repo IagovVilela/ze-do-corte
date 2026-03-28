@@ -21,18 +21,19 @@ Funcionários (**STAFF**) **precisam** de **`unitId`** obrigatório. Sem unidade
 | **Serviços** — editar preços/descrição/duração | Sim | Sim | Não |
 | **Configuração** (textos `BarbershopSetting`) | Sim | Não | Não |
 | **Meu perfil** (`/admin/perfil` — nome, telefone, foto, senha) | Sim | Sim | Sim |
+| **Meu expediente** (`/admin/expediente` — `workWeekJson`) | Não | Não | Sim |
 
 ### Profissional por agendamento (`staffMemberId`)
 
 - Cada `Appointment` pode ter um **barbeiro** (`staffMemberId` → `StaffMember` com papel `STAFF`).
 - Reservas pelo site público entram **sem** profissional (`staffMemberId` nulo) até o **dono ou administrador** escolher o barbeiro na coluna **Profissional** em `/admin`.
 - **Funcionários** só veem agendamentos em que **são o profissional atribuído**; métricas e gráficos do painel usam o mesmo filtro (produção individual).
-- `PATCH /api/admin/appointments/[id]` com `{ "staffMemberId": "<id>" | null }` — só `OWNER` / `ADMIN`. O profissional tem de ser `STAFF` e da **mesma unidade** do agendamento.
+- `PATCH /api/admin/appointments/[id]` com `{ "staffMemberId": "<id>" | null }` — só `OWNER` / `ADMIN`. O profissional tem de ser `STAFF` e da **mesma unidade** do agendamento; o horário do agendamento tem de caber no **expediente** desse profissional se ele tiver `workWeekJson` personalizado.
 
 ### Agendamento público e unidades
 
 - Novos agendamentos recebem automaticamente a **unidade padrão** (`BarbershopUnit.isDefault`).
-- Conflitos de horário e slots disponíveis consideram apenas agendamentos **da mesma unidade** (ainda **não** por barbeiro).
+- Conflitos de horário e slots na unidade: sem `staffMemberId` na API, comportamento global da unidade; **com** `staffMemberId`, também se aplica o expediente personalizado do barbeiro (`workWeekJson`), se existir.
 - `GET /api/appointments/available` aceita `unitId` opcional; sem parâmetro usa a unidade padrão.
 
 ### Senhas e sessões

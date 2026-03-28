@@ -87,6 +87,7 @@ Reservas feitas pelo **site** ficam com **Profissional** em branco até um **pro
 |--------|------|--------|
 | Visão geral | `/admin` | Métricas e tabela de agendamentos |
 | Meu perfil | `/admin/perfil` | Nome de exibição, telefone, foto (Cloudinary se `CLOUDINARY_*` no `.env`) e alteração de senha |
+| Meu expediente | `/admin/expediente` | Só **funcionário**: dias/horários em que aceita agendamentos com o nome dele (não pode ultrapassar o horário da barbearia) |
 | Unidades | `/admin/unidades` | Unidade padrão = onde o site público agenda |
 | Equipe | `/admin/equipe` | Membros, papéis e senhas iniciais; por funcionário, bio e visibilidade na home |
 | Serviços | `/admin/servicos` | Preços e durações |

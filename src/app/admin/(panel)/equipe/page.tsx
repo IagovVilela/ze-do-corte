@@ -43,11 +43,7 @@ export default async function AdminEquipePage() {
     <main className="flex-1">
       <section className="container-max pt-6 pb-16">
         <AnimatedSection>
-          <SectionTitle
-            eyebrow="Acesso"
-            title="Equipe do painel"
-            subtitle="Cada membro precisa de e-mail e senha para entrar em /admin/login. Para barbeiros: foto em Meu perfil; texto e visibilidade na home em Página inicial abaixo."
-          />
+          <SectionTitle eyebrow="Acesso" title="Equipe do painel" />
           <div className="mt-8">
             <AdminStaffManager
               initialStaff={staffRows}

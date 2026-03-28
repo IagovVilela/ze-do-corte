@@ -365,7 +365,7 @@ export function AdminUnitsManager({
                             inputMode="numeric"
                             className={cn(input, "tabular-nums tracking-wide")}
                             value={draft.phone}
-                            maxLength={16}
+                            maxLength={15}
                             onChange={(e) =>
                               setDraft((d) => ({
                                 ...d,

@@ -27,6 +27,20 @@ export type DashboardPoint = {
   count: number;
 };
 
+/** Série de recebimentos (valor por bucket temporal). */
+export type DashboardRevenuePoint = {
+  date: string;
+  dateLabel: string;
+  amount: number;
+};
+
+/** Uma linha para gráfico de barras empilhadas (pagamentos). */
+export type DashboardPaymentStackRow = {
+  name: string;
+  pagos: number;
+  aReceber: number;
+};
+
 /** Fatia para gráfico de pizza (status no período). */
 export type DashboardStatusSlice = {
   name: string;
@@ -60,6 +74,8 @@ export type AppointmentRow = {
   /** Barbeiro atribuído (null = pendente de atribuição). */
   staffMemberId: string | null;
   assignedStaffLabel: string | null;
+  paidAt: string | null;
+  paymentMethod: string | null;
 };
 
 export type ContactInfo = {

@@ -5,14 +5,16 @@ import { requireStaffApiAuth } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireStaffApiAuth();
   if (!authResult.ok) {
     return authResult.response;
   }
 
   try {
-    const snapshot = await getAdminDashboardSnapshot(authResult.access);
+    const chartRange =
+      new URL(request.url).searchParams.get("chartRange") ?? undefined;
+    const snapshot = await getAdminDashboardSnapshot(authResult.access, chartRange);
     return NextResponse.json(snapshot);
   } catch (error) {
     console.error("Erro ao montar dashboard:", error);

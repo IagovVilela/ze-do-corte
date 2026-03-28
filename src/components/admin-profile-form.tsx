@@ -248,7 +248,7 @@ export function AdminProfileForm({
           autoComplete="tel"
           value={phone}
           onChange={(e) => setPhone(formatBrPhoneNational(e.target.value))}
-          maxLength={16}
+          maxLength={15}
           className="mt-1 w-full rounded-xl border border-white/15 bg-zinc-950/80 px-3 py-2 text-sm tabular-nums tracking-wide text-zinc-100 outline-none ring-brand-500/0 transition focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
           placeholder="(00) 00000-0000"
         />

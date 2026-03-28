@@ -37,7 +37,7 @@ export default async function Home() {
               <SectionTitle
                 eyebrow="Equipe"
                 title="Quem cuida do seu estilo"
-                description="Profissionais experientes, com a mesma obsessão por detalhe que você encontra em cada serviço."
+                description="Cada profissional tem um cartão com identidade visual própria; a apresentação e a foto são definidas pela equipe para refletir o estilo de cada um."
               />
               <HomeBarbersGrid barbers={barbers} />
             </AnimatedSection>

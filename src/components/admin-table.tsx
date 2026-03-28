@@ -26,6 +26,8 @@ type Props = {
   barbers?: BarberOption[];
   /** Só dono/admin podem alterar atribuição. */
   canAssignBarber?: boolean;
+  /** Registar / limpar pagamento (balcão). */
+  canManagePayment?: boolean;
   /** Título opcional acima da tabela. */
   title?: string;
   /** Subtítulo (ex.: total de registos). */
@@ -47,6 +49,56 @@ const statusLabel: Record<AppointmentRow["status"], string> = {
 const selectClass =
   "max-w-[200px] rounded-lg border border-white/15 bg-zinc-950/80 px-2 py-1.5 text-xs text-zinc-100 outline-none focus:border-brand-500/50 disabled:opacity-50";
 
+const PAYMENT_METHODS = [
+  { value: "", label: "Método" },
+  { value: "PIX", label: "PIX" },
+  { value: "Dinheiro", label: "Dinheiro" },
+  { value: "Cartão", label: "Cartão" },
+  { value: "Outro", label: "Outro" },
+] as const;
+
+function MarkPaidControls({
+  item,
+  saving,
+  onPatch,
+}: {
+  item: AppointmentRow;
+  saving: boolean;
+  onPatch: (id: string, body: Record<string, unknown>) => void;
+}) {
+  const [method, setMethod] = useState("");
+  return (
+    <>
+      <select
+        className={selectClass}
+        disabled={saving}
+        value={method}
+        onChange={(e) => setMethod(e.target.value)}
+        aria-label={`Método ao marcar pago — ${item.clientName}`}
+      >
+        {PAYMENT_METHODS.map((m) => (
+          <option key={m.value || "empty"} value={m.value}>
+            {m.label}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() =>
+          onPatch(item.id, {
+            paidAt: new Date().toISOString(),
+            paymentMethod: method.trim() || null,
+          })
+        }
+        className="rounded-lg bg-emerald-600/80 px-2 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+      >
+        Marcar como pago
+      </button>
+    </>
+  );
+}
+
 function barbersForRow(
   barbers: BarberOption[],
   unitId: string | null,
@@ -62,6 +114,7 @@ export function AdminTable({
   showBarberColumn = false,
   barbers = [],
   canAssignBarber = false,
+  canManagePayment = false,
   title = "Agendamentos",
   subtitle,
 }: Props) {
@@ -69,15 +122,14 @@ export function AdminTable({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function assignStaff(appointmentId: string, value: string) {
+  async function patchAppointment(appointmentId: string, body: Record<string, unknown>) {
     setError(null);
-    const staffMemberId = value === "" ? null : value;
     setSavingId(appointmentId);
     try {
       const res = await fetch(`/api/admin/appointments/${appointmentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ staffMemberId }),
+        body: JSON.stringify(body),
       });
       const payload = (await res.json()) as { message?: string };
       if (!res.ok) {
@@ -90,6 +142,15 @@ export function AdminTable({
     } finally {
       setSavingId(null);
     }
+  }
+
+  async function assignStaff(appointmentId: string, value: string) {
+    const staffMemberId = value === "" ? null : value;
+    await patchAppointment(appointmentId, { staffMemberId });
+  }
+
+  function canRecordPaymentForRow(status: AppointmentRow["status"]) {
+    return status === "CONFIRMED" || status === "COMPLETED";
   }
 
   return (
@@ -111,7 +172,7 @@ export function AdminTable({
         ) : null}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px]">
+        <table className="w-full min-w-[1040px]">
           <thead className="bg-white/5 text-left text-xs uppercase tracking-[0.22em] text-zinc-400">
             <tr>
               <th className="px-5 py-4">Cliente</th>
@@ -124,6 +185,9 @@ export function AdminTable({
               <th className="px-5 py-4">Hora</th>
               <th className="px-5 py-4">Contato</th>
               <th className="px-5 py-4">Status</th>
+              {canManagePayment ? (
+                <th className="px-5 py-4 min-w-[200px]">Pagamento</th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 text-sm text-zinc-200">
@@ -178,6 +242,69 @@ export function AdminTable({
                     {statusLabel[item.status]}
                   </span>
                 </td>
+                {canManagePayment ? (
+                  <td className="px-5 py-4 align-top">
+                    {item.status === "CANCELLED" ? (
+                      <span className="text-zinc-500">—</span>
+                    ) : canRecordPaymentForRow(item.status) ? (
+                      <div className="flex max-w-[220px] flex-col gap-2">
+                        {item.paidAt ? (
+                          <>
+                            <span className="text-xs text-emerald-300/90">
+                              Pago{" "}
+                              {format(new Date(item.paidAt), "dd/MM HH:mm", {
+                                locale: ptBR,
+                              })}
+                            </span>
+                            <select
+                              className={selectClass}
+                              disabled={savingId === item.id}
+                              value={item.paymentMethod ?? ""}
+                              onChange={(e) =>
+                                void patchAppointment(item.id, {
+                                  paymentMethod: e.target.value || null,
+                                })
+                              }
+                              aria-label={`Método de pagamento — ${item.clientName}`}
+                            >
+                              {PAYMENT_METHODS.map((m) => (
+                                <option key={m.value || "empty"} value={m.value}>
+                                  {m.label}
+                                </option>
+                              ))}
+                              {item.paymentMethod &&
+                              !PAYMENT_METHODS.some(
+                                (m) => m.value === item.paymentMethod,
+                              ) ? (
+                                <option value={item.paymentMethod}>
+                                  {item.paymentMethod}
+                                </option>
+                              ) : null}
+                            </select>
+                            <button
+                              type="button"
+                              disabled={savingId === item.id}
+                              onClick={() =>
+                                void patchAppointment(item.id, { paidAt: null })
+                              }
+                              className="rounded-lg border border-white/15 px-2 py-1 text-left text-xs text-zinc-400 hover:border-rose-500/30 hover:text-rose-300"
+                            >
+                              Limpar pagamento
+                            </button>
+                          </>
+                        ) : (
+                          <MarkPaidControls
+                            item={item}
+                            saving={savingId === item.id}
+                            onPatch={patchAppointment}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-zinc-500">—</span>
+                    )}
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
