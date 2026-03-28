@@ -2,11 +2,15 @@
   "name": "ze-do-corte",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
+    "start:prod": "prisma migrate deploy && next start --hostname 0.0.0.0",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -24,6 +28,7 @@
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "framer-motion": "^12.38.0",
     "lottie-web": "^5.13.0",
     "lucide-react": "^1.7.0",
@@ -35,6 +40,7 @@
     "recharts": "^3.8.1",
     "resend": "^6.9.4",
     "server-only": "^0.0.1",
+    "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
@@ -44,6 +50,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "@types/xlsx": "^0.0.35",
     "dotenv": "^17.3.1",
     "eslint": "^9",

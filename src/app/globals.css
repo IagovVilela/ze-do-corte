@@ -116,6 +116,67 @@ body {
   font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Checkboxes nativos — estilo único (marca âmbar, cantos arredondados) */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  margin: 0;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.35rem;
+  background: rgba(9, 10, 13, 0.85);
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: rgba(252, 211, 77, 0.45);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.12);
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(245, 158, 11, 0.55);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"]:checked {
+  border-color: rgba(252, 211, 77, 0.75);
+  background-color: var(--brand);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23090a0d' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.2 6.6 11.3 12.7 4.2'/%3E%3C/svg%3E");
+  background-size: 0.7rem auto;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+input[type="checkbox"]:checked:hover:not(:disabled) {
+  border-color: rgba(254, 243, 199, 0.85);
+  filter: brightness(1.06);
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+input[type="checkbox"]:indeterminate {
+  border-color: rgba(252, 211, 77, 0.6);
+  background-color: rgba(245, 158, 11, 0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23fef3c7' stroke-width='2.25' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E");
+  background-size: 0.65rem auto;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .container-max {
   width: 100%;
   max-width: 1200px;

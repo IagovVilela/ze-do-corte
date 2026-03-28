@@ -24,8 +24,9 @@ export const metadata: Metadata = {
   title: `Zé do Corte | ${BARBER_SLOGAN_PRIMARY}`,
   description: `${BARBER_SLOGAN_PRIMARY}. ${BARBER_SLOGAN_SECONDARY} Agendamento online em São José dos Campos.`,
   icons: {
-    icon: "/images/logo.jpeg",
+    icon: [{ url: "/images/logo.jpeg", type: "image/jpeg" }],
     apple: "/images/logo.jpeg",
+    shortcut: "/images/logo.jpeg",
   },
 };
 

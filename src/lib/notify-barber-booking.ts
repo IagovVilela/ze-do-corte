@@ -4,7 +4,12 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Resend } from "resend";
 
-export type BarberBookingEmailPayload = {
+import { prisma } from "@/lib/prisma";
+import { sendStaffBookingPush } from "@/lib/push-notify-staff";
+import { isWebPushConfigured } from "@/lib/web-push-config";
+
+export type BarberBookingNotifyPayload = {
+  staffMemberId: string;
   barberEmail: string;
   barberDisplayName: string | null;
   clientName: string;
@@ -16,12 +21,28 @@ export type BarberBookingEmailPayload = {
 };
 
 /**
- * Envia e-mail ao barbeiro quando um agendamento fica atribuído a ele.
- * Falhas são registadas em log e não interrompem o fluxo da API.
+ * Avisa o profissional de um novo agendamento atribuído:
+ * — Se existir pelo menos uma subscrição Web Push e VAPID estiver configurado → só push (sem e-mail).
+ * — Caso contrário → e-mail via Resend (comportamento anterior), se as variáveis Resend existirem.
  */
 export async function notifyBarberNewAssignment(
-  payload: BarberBookingEmailPayload,
+  payload: BarberBookingNotifyPayload,
 ): Promise<void> {
+  const pushCount = await prisma.staffPushSubscription.count({
+    where: { staffMemberId: payload.staffMemberId },
+  });
+
+  if (pushCount > 0 && isWebPushConfigured()) {
+    const whenShort = format(payload.startsAt, "dd/MM/yyyy HH:mm");
+    const greet = payload.barberDisplayName?.trim() || "Olá";
+    await sendStaffBookingPush(payload.staffMemberId, {
+      title: `Novo agendamento — ${whenShort}`,
+      body: `${greet}, ${payload.clientName} · ${payload.serviceName}`,
+      url: "/admin",
+    });
+    return;
+  }
+
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RESEND_FROM_EMAIL?.trim();
   if (!apiKey || !from) {
@@ -39,8 +60,7 @@ export async function notifyBarberNewAssignment(
     { locale: ptBR },
   );
   const whenShort = format(payload.startsAt, "dd/MM/yyyy HH:mm");
-  const greet =
-    payload.barberDisplayName?.trim() || "Olá";
+  const greet = payload.barberDisplayName?.trim() || "Olá";
 
   const lines = [
     `${greet},`,

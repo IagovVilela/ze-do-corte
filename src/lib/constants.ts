@@ -10,6 +10,12 @@ export const BARBER_SHOP_ADDRESS =
   "R. Laurent Martins, 209 - Jardim Esplanada, São José dos Campos - SP, 12242-431, Brasil";
 
 /**
+ * Fuso IANA dos gráficos do painel (`/admin`): buckets por dia/semana/hora seguem o calendário
+ * local da barbearia, não o do servidor (ex.: UTC na Railway).
+ */
+export const BARBER_TIMEZONE = "America/Sao_Paulo";
+
+/**
  * Horário de funcionamento (calendário completo — UI e referência para regras de agendamento).
  * Seg–sex: 09h–20h · Sábado: 09h–17h · Domingo: fechado.
  */

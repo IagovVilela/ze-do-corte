@@ -61,6 +61,27 @@ export type DashboardSummaryRow = {
   hint?: string;
 };
 
+/**
+ * Telemetria por unidade (OWNER/ADMIN).
+ * Campos `appointmentsToday` / `today*` / `receivedToday` / `completedValueToday` significam
+ * “hoje” ou “período dos gráficos” conforme `unitTelemetryScope` no snapshot; `appointmentsWeek`
+ * só é usado no modo hoje+semana.
+ */
+export type DashboardUnitTelemetryRow = {
+  unitId: string;
+  unitName: string;
+  isActive: boolean;
+  appointmentsToday: number;
+  appointmentsWeek: number;
+  todayConfirmed: number;
+  todayCompleted: number;
+  todayCancelled: number;
+  /** Soma dos serviços com `paidAt` hoje (não cancelados); só com permissão de faturamento. */
+  receivedToday: number | null;
+  /** Valor de serviços concluídos com início hoje. */
+  completedValueToday: number | null;
+};
+
 export type AppointmentRow = {
   id: string;
   clientName: string;

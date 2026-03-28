@@ -12,6 +12,7 @@ Funcionários (**STAFF**) **precisam** de **`unitId`** obrigatório. Sem unidade
 | Clientes (contagem por telefone distinto) | Sim | Sim | Só clientes dos seus agendamentos atribuídos |
 | Faturamento (mês, serviços `COMPLETED`) | Sim | Sim | Não |
 | Gráfico 7 dias / próximo horário | Sim | Sim | Sim (só dados dos agendamentos atribuídos a si) |
+| **Telemetria por unidade** (hoje / semana por loja no `/admin`) | Sim | Sim | Não |
 | **Atribuir barbeiro** na lista de agendamentos | Sim | Sim | Não |
 | Exportar Excel | Sim | Sim | Não |
 | **Unidades** — criar, ativar/inativar, definir padrão | Sim | Sim | Não |

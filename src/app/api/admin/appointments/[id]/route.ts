@@ -180,6 +180,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       if (nextStaffId !== previousStaffId) {
         notifyPayload = {
+          staffMemberId: staff.id,
           barberEmail: staff.email,
           barberDisplayName: staff.displayName,
           clientName: appointment.clientName,

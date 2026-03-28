@@ -1,5 +1,7 @@
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
+import { AdminAppointmentFiltersForm } from "@/components/admin-appointment-filters-form";
 import { AdminExportButton } from "@/components/admin-export-button";
 import { AdminPagination } from "@/components/admin-pagination";
 import { AdminTable } from "@/components/admin-table";
@@ -10,6 +12,8 @@ import { DashboardRevenueLine } from "@/components/dashboard-revenue-line";
 import { DashboardServicesBarChart } from "@/components/dashboard-services-bar-chart";
 import { DashboardStatusPie } from "@/components/dashboard-status-pie";
 import { DashboardSummaryTable } from "@/components/dashboard-summary-table";
+import { DashboardTelemetryScopeTabs } from "@/components/dashboard-telemetry-scope-tabs";
+import { DashboardUnitTelemetry } from "@/components/dashboard-unit-telemetry";
 import { DashboardVolumeArea } from "@/components/dashboard-volume-area";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
@@ -18,11 +22,16 @@ import {
   getAdminAppointmentsPaginated,
   getAdminDashboardSnapshot,
 } from "@/lib/admin-dashboard";
+import {
+  hasActiveListFilters,
+  parseAdminListFilters,
+  parseTelemetryScope,
+} from "@/lib/admin-list-url";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ page?: string; chartRange?: string }>;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminPage({
   searchParams,
@@ -34,12 +43,16 @@ export default async function AdminPage({
     return null;
   }
 
-  const { page: pageRaw, chartRange } = await searchParams;
-  const page = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+  const sp = await searchParams;
+  const page = Math.max(1, Number.parseInt(String(sp.page ?? "1"), 10) || 1);
+  const chartRange = typeof sp.chartRange === "string" ? sp.chartRange : undefined;
+  const listFilters = parseAdminListFilters(sp);
+  const telemetryScope = parseTelemetryScope(sp);
 
-  const [snapshot, { rows, total, pageSize }, barberRows] = await Promise.all([
-    getAdminDashboardSnapshot(access, chartRange),
-    getAdminAppointmentsPaginated(access, page),
+  const showUnitColumn = access.role !== "STAFF";
+  const [snapshot, { rows, total, pageSize }, barberRows, unitRows] = await Promise.all([
+    getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
+    getAdminAppointmentsPaginated(access, page, undefined, listFilters),
     access.role === "STAFF"
       ? Promise.resolve([] as const)
       : prisma.staffMember.findMany({
@@ -47,6 +60,13 @@ export default async function AdminPage({
           select: { id: true, displayName: true, email: true, unitId: true },
           orderBy: [{ displayName: "asc" }, { email: "asc" }],
         }),
+    showUnitColumn
+      ? prisma.barbershopUnit.findMany({
+          where: { isActive: true },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([] as { id: string; name: string }[]),
   ]);
 
   const {
@@ -61,8 +81,8 @@ export default async function AdminPage({
     seriesTitle,
     revenueSeries,
     paymentStack,
+    unitTelemetry,
   } = snapshot;
-  const showUnitColumn = access.role !== "STAFF";
   const showBarberColumn = access.role !== "STAFF";
   const canAssignBarber = access.role === "OWNER" || access.role === "ADMIN";
   const canManagePayment = canAssignBarber;
@@ -74,10 +94,14 @@ export default async function AdminPage({
     unitId: b.unitId,
   }));
 
+  const listSubtitle = hasActiveListFilters(listFilters)
+    ? `${total} registo(s) no total · página ${page} · filtros ativos`
+    : `${total} registo(s) no total · página ${page}`;
+
   const overviewSubtitle =
     access.role === "STAFF"
       ? "Só vê agendamentos atribuídos a você. Peça ao administrador para associar reservas novas."
-      : "Métricas e agendamentos do negócio. Atribua um profissional na lista quando a reserva ainda estiver sem barbeiro. Pagamentos: marque como pago após receber no balcão.";
+      : undefined;
 
   return (
     <main className="flex-1">
@@ -176,9 +200,35 @@ export default async function AdminPage({
 
       <section className="container-max pb-6">
         <AnimatedSection delay={0.04}>
-          <DashboardPeriodTabs current={range} page={page} />
+          <DashboardPeriodTabs
+            current={range}
+            page={page}
+            listFilters={listFilters}
+            telemetryScope={telemetryScope}
+          />
         </AnimatedSection>
       </section>
+
+      {unitTelemetry ? (
+        <section className="container-max pb-10">
+          <AnimatedSection delay={0.045}>
+            <DashboardUnitTelemetry
+              rows={unitTelemetry}
+              showRevenue={showRevenue}
+              scope={telemetryScope}
+              chartPeriodLabel={periodLabel}
+              filtersSlot={
+                <DashboardTelemetryScopeTabs
+                  current={telemetryScope}
+                  chartRange={range}
+                  page={page}
+                  listFilters={listFilters}
+                />
+              }
+            />
+          </AnimatedSection>
+        </section>
+      ) : null}
 
       <section className="container-max pb-10">
         <div className="grid gap-6 lg:grid-cols-2">
@@ -219,7 +269,25 @@ export default async function AdminPage({
 
       <section className="container-max pb-10">
         <AnimatedSection delay={0.12}>
-          <DashboardSummaryTable rows={summaryRows} />
+          <DashboardSummaryTable
+            rows={summaryRows}
+            description={
+              hasActiveListFilters(listFilters)
+                ? "Indicadores, gráficos e lista usam os filtros abaixo e o período das abas."
+                : "Indicadores consolidados conforme seu papel e unidades. Filtros abaixo aplicam-se também aos gráficos e à lista."
+            }
+            filtersSlot={
+              <AdminAppointmentFiltersForm
+                chartRange={range}
+                filters={listFilters}
+                units={unitRows}
+                barbers={barberOptions}
+                showStaffFilter={showBarberColumn}
+                showUnitFilter={showUnitColumn}
+                telemetryScope={telemetryScope}
+              />
+            }
+          />
         </AnimatedSection>
       </section>
 
@@ -233,13 +301,15 @@ export default async function AdminPage({
             canAssignBarber={canAssignBarber}
             canManagePayment={canManagePayment}
             title="Lista de agendamentos"
-            subtitle={`${total} registo(s) no total · página ${page}`}
+            subtitle={listSubtitle}
             footer={
               <AdminPagination
                 page={page}
                 pageSize={pageSize}
                 total={total}
                 chartRange={range}
+                listFilters={listFilters}
+                telemetryScope={telemetryScope}
               />
             }
           />

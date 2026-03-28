@@ -7,6 +7,7 @@
 | [arquitetura.md](./arquitetura.md) | Stack, fluxos (público, agendamento, admin), autenticação, dados |
 | [modulos-e-arquivos.md](./modulos-e-arquivos.md) | Mapa de pastas, arquivos-chave e responsabilidades |
 | [operacao.md](./operacao.md) | Como subir o projeto, variáveis de ambiente, scripts e `INICIAR_ZE_DO_CORTE.bat` |
+| [railway.md](./railway.md) | Deploy na Railway (Postgres, variáveis, migrações, seed) |
 | [historico-de-mudancas.md](./historico-de-mudancas.md) | Registro cronológico de alterações relevantes (atualizar ao mudar comportamento) |
 | [admin-hierarquia.md](./admin-hierarquia.md) | Papéis do painel (proprietário, admin, funcionário), permissões e unidades |
 | [configurar-admin.md](./configurar-admin.md) | Passo a passo: BD, seed do proprietário, login `/admin/login`, equipe, troubleshooting |

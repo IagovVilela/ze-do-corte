@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
 
 type BrandLogoProps = {
@@ -8,15 +6,25 @@ type BrandLogoProps = {
   priority?: boolean;
 };
 
+/**
+ * Marca em `public/images/logo.jpeg` — `<img>` nativo (evita edge cases do otimizador com certos assets).
+ */
 export function BrandLogo({ size = 40, className, priority = false }: BrandLogoProps) {
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element -- asset estático em public/
+    <img
       src="/images/logo.jpeg"
-      alt="Zé do Corte — Barbearia"
+      alt=""
       width={size}
       height={size}
-      priority={priority}
-      className={cn("shrink-0 rounded-lg object-contain ring-1 ring-white/10", className)}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
+      decoding="async"
+      className={cn(
+        "shrink-0 rounded-xl object-contain object-center ring-1 ring-white/15",
+        className,
+      )}
+      aria-hidden
     />
   );
 }

@@ -48,6 +48,14 @@ Opcional. Com **`RESEND_API_KEY`** e **`RESEND_FROM_EMAIL`** definidos, o sistem
 
 Sem essas variáveis, o agendamento continua normal; apenas não há envio (aviso em log em desenvolvimento). O remetente deve ser um domínio **verificado** na [Resend](https://resend.com/) ou, para testes, `onboarding@resend.dev`. **Não commite** a API key.
 
+**Regra com Web Push:** se o profissional tiver **pelo menos uma** subscrição push ativa na base **e** VAPID estiver configurado (ver abaixo), o sistema **não envia e-mail** para esse aviso — usa só notificação no browser.
+
+### Web Push (notificação ao barbeiro no navegador)
+
+Opcional. Com **`NEXT_PUBLIC_VAPID_PUBLIC_KEY`**, **`VAPID_PRIVATE_KEY`** e (recomendado) **`VAPID_SUBJECT`** (ex.: `mailto:contacto@seudominio.com`), o profissional pode ativar notificações em **`/admin/perfil`**; o ficheiro **`public/sw.js`** trata do evento push.
+
+Gere um par de chaves: `npx web-push generate-vapid-keys`. A chave **pública** vai em `NEXT_PUBLIC_*`; a **privada** só no servidor (`VAPID_PRIVATE_KEY`). **Não commite** a privada.
+
 ### Pagamento e gráficos no `/admin`
 
 Não há gateway online: **dono/admin** regista no balcão **data/hora do pagamento** (`paidAt`) e **método** opcional na lista de agendamentos ou com `PATCH /api/admin/appointments/[id]`. Os gráficos do painel respeitam o período escolhido (**Hoje**, **7 dias**, **Mês**, **3 meses** — query `chartRange`); a API **`GET /api/admin/dashboard?chartRange=`** devolve o mesmo conjunto de séries.
@@ -79,6 +87,7 @@ Exemplo típico: **`Unknown field 'workWeekJson'`** em **`/admin/expediente`** �
 | `npm run dev` | Servidor de desenvolvimento (http://localhost:3000), Turbopack |
 | `npm run dev:webpack` | Mesmo que acima com **webpack** (se o Turbopack falhar no Windows) |
 | `npm run build` / `npm start` | Produção local |
+| `npm run start:prod` | Produção com **`prisma migrate deploy`** (Railway, etc.) |
 | `npm run lint` | ESLint |
 | `npx prisma generate` | Gera cliente Prisma (também em `postinstall`) |
 | `npm run db:push` | Sincroniza schema com o banco |
@@ -107,7 +116,9 @@ Não substitui a configuração manual de segredos no `.env` (URL do banco, senh
 
 Exige `DATABASE_URL` no ambiente de build se a compilação importar Prisma. Não são necessárias chaves de terceiros para o login do painel.
 
-Deploy resumido: [README.md](../README.md), seção **Deploy**.
+Comando de arranque em hospedagem com migrações: **`npm run start:prod`** (`prisma migrate deploy` + `next start --hostname 0.0.0.0`). Detalhes para **Railway**: [railway.md](./railway.md).
+
+Deploy resumido: [README.md](../README.md).
 
 ## Configurar o painel administrativo
 

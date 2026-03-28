@@ -201,7 +201,6 @@ export function AdminWorkScheduleForm({
                                 },
                           )
                         }
-                        className="accent-brand-500"
                         title="Folga (sem atendimento)"
                       />
                     </td>
@@ -317,7 +316,6 @@ export function AdminWorkScheduleForm({
                               },
                         )
                       }
-                      className="accent-brand-500"
                     />
                     Folga (sem atendimento)
                   </label>

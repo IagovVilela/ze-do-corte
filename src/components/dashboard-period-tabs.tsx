@@ -3,6 +3,8 @@
 import Link from "next/link";
 
 import type { DashboardRange } from "@/lib/admin-dashboard";
+import type { AdminListFiltersParsed, TelemetryScope } from "@/lib/admin-list-url";
+import { buildAdminPageHref } from "@/lib/admin-list-url";
 import { cn } from "@/lib/utils";
 
 const OPTIONS: { range: DashboardRange; label: string }[] = [
@@ -15,15 +17,24 @@ const OPTIONS: { range: DashboardRange; label: string }[] = [
 type Props = {
   current: DashboardRange;
   page: number;
+  listFilters?: AdminListFiltersParsed;
+  telemetryScope?: TelemetryScope;
 };
 
-export function DashboardPeriodTabs({ current, page }: Props) {
+export function DashboardPeriodTabs({
+  current,
+  page,
+  listFilters,
+  telemetryScope,
+}: Props) {
   function hrefFor(range: DashboardRange): string {
-    const p = new URLSearchParams();
-    if (page > 1) p.set("page", String(page));
-    if (range !== "month") p.set("chartRange", range);
-    const q = p.toString();
-    return q ? `/admin?${q}` : "/admin";
+    return buildAdminPageHref({
+      page: page > 1 ? page : undefined,
+      chartRange: range,
+      filters: listFilters,
+      telemetryScope:
+        telemetryScope === "chartPeriod" ? "chartPeriod" : undefined,
+    });
   }
 
   return (

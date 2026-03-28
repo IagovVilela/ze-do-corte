@@ -353,7 +353,6 @@ export function AdminServicesManager({ initialServices }: Props) {
               onChange={(e) =>
                 setNewForm((f) => ({ ...f, isActive: e.target.checked }))
               }
-              className="accent-brand-500"
             />
             Ativo no site e no agendamento
           </label>
@@ -586,7 +585,6 @@ export function AdminServicesManager({ initialServices }: Props) {
                             d ? { ...d, isActive: e.target.checked } : d,
                           )
                         }
-                        className="accent-brand-500"
                       />
                       Ativo
                     </label>

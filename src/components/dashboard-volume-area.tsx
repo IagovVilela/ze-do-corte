@@ -18,6 +18,28 @@ type Props = {
   subtitle: string;
 };
 
+function VolumeTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ value?: number; payload?: DashboardPoint }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const value = Number(payload[0]?.value ?? 0);
+  const day = payload[0]?.payload?.dateLabel ?? label;
+  return (
+    <div className="rounded-xl border border-white/20 bg-[#11131a] px-3 py-2 text-sm shadow-lg">
+      <p className="font-medium text-zinc-100">{day}</p>
+      <p className="mt-1 text-zinc-300">
+        {value === 1 ? "1 reserva" : `${value} reservas`}
+      </p>
+    </div>
+  );
+}
+
 export function DashboardVolumeArea({ data, title, subtitle }: Props) {
   return (
     <div className="glass-card rounded-2xl p-5">
@@ -43,14 +65,7 @@ export function DashboardVolumeArea({ data, title, subtitle }: Props) {
               interval="preserveStartEnd"
             />
             <YAxis allowDecimals={false} tick={{ fill: "#a1a1aa", fontSize: 11 }} width={36} />
-            <Tooltip
-              contentStyle={{
-                borderRadius: "0.75rem",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "#11131a",
-              }}
-              labelStyle={{ color: "#f4f4f5" }}
-            />
+            <Tooltip content={<VolumeTooltip />} />
             <Area
               type="monotone"
               dataKey="count"

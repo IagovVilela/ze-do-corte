@@ -370,7 +370,6 @@ export function AdminStaffManager({
                             onChange={(e) =>
                               updateStaffLocal(s.id, { showOnWebsite: e.target.checked })
                             }
-                            className="accent-brand-500"
                           />
                           Mostrar na home
                         </label>

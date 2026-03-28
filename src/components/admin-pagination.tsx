@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import type { DashboardRange } from "@/lib/admin-dashboard";
+import type { AdminListFiltersParsed, TelemetryScope } from "@/lib/admin-list-url";
+import { buildAdminPageHref } from "@/lib/admin-list-url";
 
 type Props = {
   page: number;
@@ -8,17 +10,34 @@ type Props = {
   total: number;
   /** Preserva o período dos gráficos ao mudar de página (`month` = URL sem query). */
   chartRange?: DashboardRange;
+  /** Filtros da tabela de agendamentos. */
+  listFilters?: AdminListFiltersParsed;
+  telemetryScope?: TelemetryScope;
 };
 
-function adminListHref(targetPage: number, chartRange: DashboardRange | undefined) {
-  const p = new URLSearchParams();
-  if (targetPage > 1) p.set("page", String(targetPage));
-  if (chartRange && chartRange !== "month") p.set("chartRange", chartRange);
-  const q = p.toString();
-  return q ? `/admin?${q}` : "/admin";
+function adminListHref(
+  targetPage: number,
+  chartRange: DashboardRange | undefined,
+  listFilters: AdminListFiltersParsed | undefined,
+  telemetryScope: TelemetryScope | undefined,
+) {
+  return buildAdminPageHref({
+    page: targetPage,
+    chartRange,
+    filters: listFilters,
+    telemetryScope:
+      telemetryScope === "chartPeriod" ? "chartPeriod" : undefined,
+  });
 }
 
-export function AdminPagination({ page, pageSize, total, chartRange }: Props) {
+export function AdminPagination({
+  page,
+  pageSize,
+  total,
+  chartRange,
+  listFilters,
+  telemetryScope,
+}: Props) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const prev = page > 1 ? page - 1 : null;
   const next = page < totalPages ? page + 1 : null;
@@ -32,7 +51,7 @@ export function AdminPagination({ page, pageSize, total, chartRange }: Props) {
       <div className="flex gap-2">
         {prev !== null ? (
           <Link
-            href={adminListHref(prev, chartRange)}
+            href={adminListHref(prev, chartRange, listFilters, telemetryScope)}
             className="rounded-full border border-white/15 px-4 py-2 font-medium text-zinc-200 transition hover:bg-white/10"
           >
             Anterior
@@ -44,7 +63,7 @@ export function AdminPagination({ page, pageSize, total, chartRange }: Props) {
         )}
         {next !== null ? (
           <Link
-            href={adminListHref(next, chartRange)}
+            href={adminListHref(next, chartRange, listFilters, telemetryScope)}
             className="rounded-full border border-white/15 px-4 py-2 font-medium text-zinc-200 transition hover:bg-white/10"
           >
             Próxima

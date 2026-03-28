@@ -12,6 +12,8 @@ import { ptBR } from "date-fns/locale";
 import type { AppointmentStatus } from "@prisma/client";
 
 import { unitNameMapByIds } from "@/lib/appointment-unit-names";
+import { appointmentListWhere } from "@/lib/admin-appointment-list-where";
+import type { AdminListFiltersParsed, TelemetryScope } from "@/lib/admin-list-url";
 import {
   bucketKeyForAppointment,
   bucketKeyForRevenueDay,
@@ -22,7 +24,7 @@ import {
 } from "@/lib/dashboard-period";
 import { prisma } from "@/lib/prisma";
 import { staffLabelMapByIds } from "@/lib/staff-display-names";
-import { appointmentScopeWhere, type StaffAccess } from "@/lib/staff-access";
+import { type StaffAccess } from "@/lib/staff-access";
 import type {
   AppointmentRow,
   DashboardPaymentStackRow,
@@ -31,6 +33,7 @@ import type {
   DashboardServiceBar,
   DashboardStatusSlice,
   DashboardSummaryRow,
+  DashboardUnitTelemetryRow,
 } from "@/lib/types";
 
 export type { DashboardRange } from "@/lib/dashboard-period";
@@ -70,6 +73,8 @@ export type AdminDashboardSnapshot = {
     receivedInPeriod: number;
     /** Valor de serviços concluídos cujo `startsAt` cai no período. */
     completedValueInPeriod: number;
+    /** Soma do preço do serviço para CONFIRMED + COMPLETED no período (`startsAt`), exclui cancelados. */
+    scheduledValueInPeriod: number;
   };
   series: DashboardPoint[];
   statusSlices: DashboardStatusSlice[];
@@ -81,10 +86,216 @@ export type AdminDashboardSnapshot = {
     clientName: string;
     startsAt: Date;
   } | null;
+  /** Só OWNER/ADMIN: métricas separadas por unidade (hoje / semana). */
+  unitTelemetry: DashboardUnitTelemetryRow[] | null;
+  /** Janela usada para montar `unitTelemetry` (URL `telemetryScope=`). */
+  unitTelemetryScope: TelemetryScope;
 };
 
-function scope(access: StaffAccess) {
-  return appointmentScopeWhere(access);
+function buildDashboardUnitTelemetryChartPeriod(opts: {
+  units: { id: string; name: string; isActive: boolean }[];
+  periodRows: {
+    unitId: string | null;
+    status: AppointmentStatus;
+    service: { price: { toString(): string } };
+  }[];
+  paidInPeriodRows: {
+    unitId: string | null;
+    service: { price: { toString(): string } };
+  }[];
+  viewRevenue: boolean;
+}): DashboardUnitTelemetryRow[] {
+  function rowsForUnit(unitId: string | null) {
+    return opts.periodRows.filter((r) => r.unitId === unitId);
+  }
+
+  function aggregate(pr: (typeof opts.periodRows)[number][]) {
+    let confirmed = 0;
+    let completed = 0;
+    let cancelled = 0;
+    for (const r of pr) {
+      if (r.status === "CONFIRMED") confirmed += 1;
+      if (r.status === "COMPLETED") completed += 1;
+      if (r.status === "CANCELLED") cancelled += 1;
+    }
+    const completedValue = opts.viewRevenue
+      ? pr
+          .filter((r) => r.status === "COMPLETED")
+          .reduce((s, r) => s + Number(r.service.price), 0)
+      : 0;
+    return {
+      total: pr.length,
+      confirmed,
+      completed,
+      cancelled,
+      completedValue,
+    };
+  }
+
+  const rows: DashboardUnitTelemetryRow[] = opts.units.map((u) => {
+    const pr = rowsForUnit(u.id);
+    const a = aggregate(pr);
+    const received = opts.viewRevenue
+      ? opts.paidInPeriodRows
+          .filter((r) => r.unitId === u.id)
+          .reduce((s, r) => s + Number(r.service.price), 0)
+      : 0;
+    return {
+      unitId: u.id,
+      unitName: u.name,
+      isActive: u.isActive,
+      appointmentsToday: a.total,
+      appointmentsWeek: 0,
+      todayConfirmed: a.confirmed,
+      todayCompleted: a.completed,
+      todayCancelled: a.cancelled,
+      receivedToday: opts.viewRevenue ? received : null,
+      completedValueToday: opts.viewRevenue ? a.completedValue : null,
+    };
+  });
+
+  const prNull = rowsForUnit(null);
+  const aNull = aggregate(prNull);
+  const receivedNull = opts.viewRevenue
+    ? opts.paidInPeriodRows
+        .filter((r) => r.unitId === null)
+        .reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
+  if (aNull.total > 0) {
+    rows.push({
+      unitId: "",
+      unitName: "Sem unidade",
+      isActive: true,
+      appointmentsToday: aNull.total,
+      appointmentsWeek: 0,
+      todayConfirmed: aNull.confirmed,
+      todayCompleted: aNull.completed,
+      todayCancelled: aNull.cancelled,
+      receivedToday: opts.viewRevenue ? receivedNull : null,
+      completedValueToday: opts.viewRevenue ? aNull.completedValue : null,
+    });
+  }
+
+  return rows;
+}
+
+function buildDashboardUnitTelemetry(opts: {
+  units: { id: string; name: string; isActive: boolean }[];
+  todayRows: {
+    unitId: string | null;
+    status: AppointmentStatus;
+    paidAt: Date | null;
+    service: { price: { toString(): string } };
+  }[];
+  weekRows: { unitId: string | null }[];
+  startToday: Date;
+  endToday: Date;
+  viewRevenue: boolean;
+}): DashboardUnitTelemetryRow[] {
+  const weekByUnit = new Map<string | null, number>();
+  for (const r of opts.weekRows) {
+    const k = r.unitId;
+    weekByUnit.set(k, (weekByUnit.get(k) ?? 0) + 1);
+  }
+
+  type Agg = {
+    total: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    received: number;
+    completedValue: number;
+  };
+  const todayAgg = new Map<string | null, Agg>();
+
+  function ensureAgg(unitId: string | null): Agg {
+    let a = todayAgg.get(unitId);
+    if (!a) {
+      a = {
+        total: 0,
+        confirmed: 0,
+        completed: 0,
+        cancelled: 0,
+        received: 0,
+        completedValue: 0,
+      };
+      todayAgg.set(unitId, a);
+    }
+    return a;
+  }
+
+  for (const r of opts.todayRows) {
+    const a = ensureAgg(r.unitId);
+    a.total += 1;
+    if (r.status === "CONFIRMED") a.confirmed += 1;
+    if (r.status === "COMPLETED") a.completed += 1;
+    if (r.status === "CANCELLED") a.cancelled += 1;
+    if (opts.viewRevenue) {
+      const price = Number(r.service.price);
+      if (
+        r.paidAt &&
+        r.paidAt >= opts.startToday &&
+        r.paidAt <= opts.endToday &&
+        r.status !== "CANCELLED"
+      ) {
+        a.received += price;
+      }
+      if (r.status === "COMPLETED") {
+        a.completedValue += price;
+      }
+    }
+  }
+
+  const rows: DashboardUnitTelemetryRow[] = opts.units.map((u) => {
+    const a = todayAgg.get(u.id) ?? {
+      total: 0,
+      confirmed: 0,
+      completed: 0,
+      cancelled: 0,
+      received: 0,
+      completedValue: 0,
+    };
+    return {
+      unitId: u.id,
+      unitName: u.name,
+      isActive: u.isActive,
+      appointmentsToday: a.total,
+      appointmentsWeek: weekByUnit.get(u.id) ?? 0,
+      todayConfirmed: a.confirmed,
+      todayCompleted: a.completed,
+      todayCancelled: a.cancelled,
+      receivedToday: opts.viewRevenue ? a.received : null,
+      completedValueToday: opts.viewRevenue ? a.completedValue : null,
+    };
+  });
+
+  const nullAgg = todayAgg.get(null);
+  const nullWeek = weekByUnit.get(null) ?? 0;
+  if (nullWeek > 0 || (nullAgg && nullAgg.total > 0)) {
+    const a = nullAgg ?? {
+      total: 0,
+      confirmed: 0,
+      completed: 0,
+      cancelled: 0,
+      received: 0,
+      completedValue: 0,
+    };
+    rows.push({
+      unitId: "",
+      unitName: "Sem unidade",
+      isActive: true,
+      appointmentsToday: a.total,
+      appointmentsWeek: nullWeek,
+      todayConfirmed: a.confirmed,
+      todayCompleted: a.completed,
+      todayCancelled: a.cancelled,
+      receivedToday: opts.viewRevenue ? a.received : null,
+      completedValueToday: opts.viewRevenue ? a.completedValue : null,
+    });
+  }
+
+  return rows;
 }
 
 function seriesTitleFor(range: DashboardRange): string {
@@ -107,11 +318,17 @@ function seriesTitleFor(range: DashboardRange): string {
 export async function getAdminDashboardSnapshot(
   access: StaffAccess,
   rangeRaw?: string,
+  listFilters: AdminListFiltersParsed = {},
+  telemetryScope: TelemetryScope = "todayWeek",
 ): Promise<AdminDashboardSnapshot> {
   const range = parseDashboardRange(rangeRaw);
   const now = new Date();
   const meta = getDashboardPeriodMeta(range, now);
-  const whereBase = scope(access);
+  const whereBase = appointmentListWhere(access, listFilters);
+  const telemetryUnitWhere =
+    listFilters.unit !== undefined
+      ? { id: listFilters.unit }
+      : undefined;
 
   const startToday = startOfDay(now);
   const endToday = endOfDay(now);
@@ -120,6 +337,11 @@ export async function getAdminDashboardSnapshot(
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const showUnitTelemetry =
+    access.role === "OWNER" || access.role === "ADMIN";
+  const needClassicUnitTelemetry =
+    showUnitTelemetry && telemetryScope === "todayWeek";
 
   const periodWhere = {
     ...whereBase,
@@ -147,28 +369,39 @@ export async function getAdminDashboardSnapshot(
     distinctPhones,
     completedMonthRows,
     pendingPaymentCount,
+    telemetryUnits,
+    telemetryTodayRows,
+    telemetryWeekRows,
   ] = await Promise.all([
     prisma.appointment.findMany({
       where: periodWhere,
       select: {
+        id: true,
         startsAt: true,
         status: true,
         paidAt: true,
         serviceId: true,
+        unitId: true,
+        clientPhone: true,
         service: { select: { price: true } },
       },
     }),
     prisma.appointment.findMany({
       where: {
         ...whereBase,
-        status: "COMPLETED",
+        /** Pagamento no balcão pode ser registado em CONFIRMED ou COMPLETED — recebimentos seguem `paidAt`. */
+        status: { not: "CANCELLED" },
         paidAt: {
+          not: null,
           gte: meta.from,
           lte: meta.to,
         },
       },
       select: {
+        id: true,
+        status: true,
         paidAt: true,
+        unitId: true,
         service: { select: { price: true } },
       },
     }),
@@ -222,6 +455,45 @@ export async function getAdminDashboardSnapshot(
         paidAt: null,
       },
     }),
+    showUnitTelemetry
+      ? prisma.barbershopUnit.findMany({
+          where: telemetryUnitWhere,
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, isActive: true },
+        })
+      : Promise.resolve(
+          [] as { id: string; name: string; isActive: boolean }[],
+        ),
+    needClassicUnitTelemetry
+      ? prisma.appointment.findMany({
+          where: {
+            ...whereBase,
+            startsAt: { gte: startToday, lte: endToday },
+          },
+          select: {
+            unitId: true,
+            status: true,
+            paidAt: true,
+            service: { select: { price: true } },
+          },
+        })
+      : Promise.resolve(
+          [] as {
+            unitId: string | null;
+            status: AppointmentStatus;
+            paidAt: Date | null;
+            service: { price: { toString(): string } };
+          }[],
+        ),
+    needClassicUnitTelemetry
+      ? prisma.appointment.findMany({
+          where: {
+            ...whereBase,
+            startsAt: { gte: startWeek, lte: endWeek },
+          },
+          select: { unitId: true },
+        })
+      : Promise.resolve([] as { unitId: string | null }[]),
   ]);
 
   const bucketKeys = buildVolumeBucketKeys(meta);
@@ -297,15 +569,33 @@ export async function getAdminDashboardSnapshot(
     amount: access.permissions.viewRevenue ? (amountMap.get(b.key) ?? 0) : 0,
   }));
 
-  const completedInPeriod = periodRows.filter((r) => r.status === "COMPLETED");
-  const paidCompleted = completedInPeriod.filter((r) => r.paidAt !== null).length;
-  const unpaidCompleted = completedInPeriod.filter((r) => r.paidAt === null)
-    .length;
+  /**
+   * Empilhado alinhado ao gráfico de recebimentos: inclui confirmados/concluídos com início no
+   * período **e** os que só entram por `paidAt` no período (início noutro mês/dia).
+   */
+  const stackById = new Map<
+    string,
+    { paidAt: Date | null; status: AppointmentStatus }
+  >();
+  for (const r of periodRows) {
+    if (r.status === "CONFIRMED" || r.status === "COMPLETED") {
+      stackById.set(r.id, { paidAt: r.paidAt, status: r.status });
+    }
+  }
+  for (const r of paidInPeriodRows) {
+    if (r.status !== "CONFIRMED" && r.status !== "COMPLETED") continue;
+    if (!stackById.has(r.id)) {
+      stackById.set(r.id, { paidAt: r.paidAt, status: r.status });
+    }
+  }
+  const stackList = [...stackById.values()];
+  const paidInStack = stackList.filter((r) => r.paidAt !== null).length;
+  const unpaidInStack = stackList.filter((r) => r.paidAt === null).length;
   const paymentStack: DashboardPaymentStackRow[] = [
     {
-      name: "Concluídos no período",
-      pagos: paidCompleted,
-      aReceber: unpaidCompleted,
+      name: "Confirmados e concluídos no período",
+      pagos: paidInStack,
+      aReceber: unpaidInStack,
     },
   ];
 
@@ -313,63 +603,157 @@ export async function getAdminDashboardSnapshot(
     ? paidInPeriodRows.reduce((s, r) => s + Number(r.service.price), 0)
     : 0;
 
+  const completedInPeriod = periodRows.filter((r) => r.status === "COMPLETED");
   const completedValueInPeriod = access.permissions.viewRevenue
     ? completedInPeriod.reduce((s, r) => s + Number(r.service.price), 0)
     : 0;
 
+  const scheduledValueInPeriod = access.permissions.viewRevenue
+    ? periodRows
+        .filter(
+          (r) => r.status === "CONFIRMED" || r.status === "COMPLETED",
+        )
+        .reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
+  const unpaidActiveInPeriod = periodRows.filter(
+    (r) =>
+      (r.status === "CONFIRMED" || r.status === "COMPLETED") &&
+      r.paidAt === null,
+  );
+  const unpaidValueInPeriod = access.permissions.viewRevenue
+    ? unpaidActiveInPeriod.reduce((s, r) => s + Number(r.service.price), 0)
+    : 0;
+
   const periodTotal = periodRows.length;
+  const nConfirmed = statusCountMap.get("CONFIRMED") ?? 0;
+  const nCompleted = statusCountMap.get("COMPLETED") ?? 0;
+  const nCancelled = statusCountMap.get("CANCELLED") ?? 0;
+  const activeInPeriod = nConfirmed + nCompleted;
+  const distinctPhonesInPeriod = new Set(
+    periodRows
+      .map((r) => r.clientPhone?.trim())
+      .filter((p): p is string => Boolean(p && p.length > 0)),
+  ).size;
+  const avgTicketActivePeriod =
+    access.permissions.viewRevenue && activeInPeriod > 0
+      ? scheduledValueInPeriod / activeInPeriod
+      : 0;
+
   const topService = servicesInPeriod[0];
 
   const summaryRows: DashboardSummaryRow[] = [
     {
-      label: "Agendamentos no período",
+      label: "Reservas no período",
       value: String(periodTotal),
-      hint: meta.periodLabel,
-    },
-    {
-      label: "Total no histórico (seu acesso)",
-      value: String(totalCount),
+      hint: `${meta.periodLabel} · ${nConfirmed} confirm., ${nCompleted} concl., ${nCancelled} cancel.`,
     },
   ];
 
+  if (periodTotal > 0) {
+    const cancelPct = (100 * nCancelled) / periodTotal;
+    summaryRows.push({
+      label: "Taxa de cancelamento (período)",
+      value: `${cancelPct.toFixed(cancelPct < 10 && cancelPct > 0 ? 1 : 0)}%`,
+      hint: `${nCancelled} de ${periodTotal} reserva(s) no período`,
+    });
+  }
+
+  if (activeInPeriod > 0) {
+    const donePct = (100 * nCompleted) / activeInPeriod;
+    summaryRows.push({
+      label: "Concluídos entre agendados ativos",
+      value: `${donePct.toFixed(donePct < 10 && donePct > 0 ? 1 : 0)}%`,
+      hint: "Confirmados + concluídos no período (exclui cancelados)",
+    });
+  }
+
   if (topService) {
     summaryRows.push({
-      label: "Serviço em destaque (período)",
+      label: "Serviço mais reservado",
       value: topService.name,
-      hint: `${topService.count} reserva(s)`,
+      hint: `${topService.count} vez(es) no período`,
     });
   }
 
   if (access.permissions.viewRevenue) {
     summaryRows.push(
       {
-        label: "Valor concluído no período",
-        value: `R$ ${completedValueInPeriod.toFixed(2)}`,
-        hint: "Por data do atendimento",
+        label: "Valor agendado (ativo no período)",
+        value: `R$ ${scheduledValueInPeriod.toFixed(2)}`,
+        hint: "Soma dos preços: confirmados + concluídos; data de início no período",
       },
       {
         label: "Recebido no período",
         value: `R$ ${receivedInPeriod.toFixed(2)}`,
-        hint: "Por data do pagamento registado",
+        hint: "Soma dos serviços com data de pagamento registrada no intervalo",
       },
       {
-        label: "Faturamento (mês civil, concluídos)",
+        label: "Ainda sem pagamento registado (período)",
+        value: `R$ ${unpaidValueInPeriod.toFixed(2)}`,
+        hint: `${unpaidActiveInPeriod.length} reserva(s) ativa(s) no período sem pagamento registrado`,
+      },
+      {
+        label: "Ticket médio (reserva ativa)",
+        value: `R$ ${avgTicketActivePeriod.toFixed(2)}`,
+        hint: "Média do preço do serviço por reserva não cancelada no período",
+      },
+      {
+        label: "Faturamento do mês civil (concluídos)",
         value: `R$ ${revenueMonth.toFixed(2)}`,
-        hint: format(monthStart, "MMMM yyyy", { locale: ptBR }),
+        hint: `Só concluídos com início em ${format(monthStart, "MMMM yyyy", { locale: ptBR })}`,
       },
     );
   }
 
   summaryRows.push({
-    label: "Concluídos sem pagamento registado",
+    label: "Concluídos sem pagamento (histórico)",
     value: String(pendingPaymentCount),
-    hint: "Em todo o histórico do seu acesso",
+    hint: "Em todo o histórico visível para você — priorize marcar como pago",
   });
 
   summaryRows.push({
-    label: "Clientes distintos (telefone)",
-    value: String(distinctPhones.length),
+    label: "Clientes distintos no período",
+    value: String(distinctPhonesInPeriod),
+    hint: "Telefones únicos com início no período das abas",
   });
+
+  summaryRows.push({
+    label: "Clientes distintos (histórico)",
+    value: String(distinctPhones.length),
+    hint: "Telefones únicos em todas as reservas do seu acesso",
+  });
+
+  summaryRows.push({
+    label: "Total de reservas (histórico)",
+    value: String(totalCount),
+    hint: "Contagem no âmbito do seu papel e filtros atuais",
+  });
+
+  const unitTelemetry = showUnitTelemetry
+    ? telemetryScope === "chartPeriod"
+      ? buildDashboardUnitTelemetryChartPeriod({
+          units: telemetryUnits,
+          periodRows: periodRows.map((r) => ({
+            unitId: r.unitId,
+            status: r.status,
+            service: r.service,
+          })),
+          paidInPeriodRows: paidInPeriodRows.map((r) => ({
+            unitId: r.unitId,
+            service: r.service,
+          })),
+          viewRevenue: access.permissions.viewRevenue,
+        })
+      : buildDashboardUnitTelemetry({
+          units: telemetryUnits,
+          todayRows: telemetryTodayRows,
+          weekRows: telemetryWeekRows,
+          startToday,
+          endToday,
+          viewRevenue: access.permissions.viewRevenue,
+        })
+    : null;
 
   return {
     range,
@@ -384,6 +768,7 @@ export async function getAdminDashboardSnapshot(
       pendingPaymentTotal: pendingPaymentCount,
       receivedInPeriod,
       completedValueInPeriod,
+      scheduledValueInPeriod,
     },
     series,
     statusSlices,
@@ -397,6 +782,8 @@ export async function getAdminDashboardSnapshot(
           startsAt: nextAppointment.startsAt,
         }
       : null,
+    unitTelemetry,
+    unitTelemetryScope: showUnitTelemetry ? telemetryScope : "todayWeek",
   };
 }
 
@@ -407,11 +794,12 @@ export async function getAdminAppointmentsPaginated(
   access: StaffAccess,
   page: number,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  listFilters: AdminListFiltersParsed = {},
 ): Promise<{ rows: AppointmentRow[]; total: number; page: number; pageSize: number }> {
   const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
   const safePage = Math.max(1, page);
   const skip = (safePage - 1) * safeSize;
-  const whereBase = scope(access);
+  const whereBase = appointmentListWhere(access, listFilters);
 
   const [items, total] = await Promise.all([
     prisma.appointment.findMany({

@@ -1,14 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 import type { DashboardSummaryRow } from "@/lib/types";
 
 type Props = {
   rows: DashboardSummaryRow[];
+  /** Texto sob o título (contexto dos filtros / período). */
+  description?: string;
+  /** Formulário GET de filtros (mesmos parâmetros que a lista). */
+  filtersSlot?: ReactNode;
 };
 
-export function DashboardSummaryTable({ rows }: Props) {
+export function DashboardSummaryTable({
+  rows,
+  description = "Indicadores consolidados conforme seu papel e unidades.",
+  filtersSlot,
+}: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -20,10 +29,9 @@ export function DashboardSummaryTable({ rows }: Props) {
         <h3 className="font-display text-lg font-normal uppercase tracking-wide text-white">
           Resumo operacional
         </h3>
-        <p className="mt-0.5 text-sm text-zinc-400">
-          Indicadores consolidados conforme seu papel e unidades.
-        </p>
+        <p className="mt-0.5 text-sm text-zinc-400">{description}</p>
       </div>
+      {filtersSlot ? <div>{filtersSlot}</div> : null}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[320px] text-left text-sm">
           <thead className="bg-white/[0.04] text-xs uppercase tracking-wider text-zinc-500">

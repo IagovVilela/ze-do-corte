@@ -71,6 +71,7 @@ export async function POST(request: Request) {
 
     if (assignedStaff) {
       void notifyBarberNewAssignment({
+        staffMemberId: assignedStaff.id,
         barberEmail: assignedStaff.email,
         barberDisplayName: assignedStaff.displayName,
         clientName: payload.customerName,

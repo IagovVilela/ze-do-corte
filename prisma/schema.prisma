@@ -68,9 +68,23 @@ model StaffMember {
   /// Expediente semanal personalizado (`null` = segue só o horário da barbearia).
   /// Formato: chaves "0"–"6" (Date.getDay). Ver `src/lib/staff-work-schedule.ts`.
   workWeekJson Json?
+  pushSubscriptions StaffPushSubscription[]
 
   @@index([unitId])
   @@index([showOnWebsite, role])
+}
+
+/// Web Push (navegador) — um registo por endpoint/dispositivo; ver `src/lib/notify-barber-booking.ts`.
+model StaffPushSubscription {
+  id            String      @id @default(cuid())
+  staffMemberId String
+  staffMember   StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  endpoint      String      @unique
+  p256dh        String
+  auth          String
+  createdAt     DateTime    @default(now())
+
+  @@index([staffMemberId])
 }
 
 model Session {

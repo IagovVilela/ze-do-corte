@@ -1,0 +1,11 @@
+# Railway — configuração como código
+# https://docs.railway.com/guides/config-as-code
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+# Migrações antes de servir tráfego; Next escuta em 0.0.0.0 (Railway define PORT).
+startCommand = "npm run start:prod"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

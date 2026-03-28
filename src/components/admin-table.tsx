@@ -18,6 +18,8 @@ export type BarberOption = {
 type Props = {
   appointments: AppointmentRow[];
   footer?: ReactNode;
+  /** Barra de filtros (ex.: formulário GET) entre o título e a tabela. */
+  filtersSlot?: ReactNode;
   /** Administradores / proprietário veem a coluna quando há várias unidades. */
   showUnitColumn?: boolean;
   /** Dono/admin veem coluna de profissional (barbeiro) atribuído. */
@@ -117,6 +119,7 @@ export function AdminTable({
   canManagePayment = false,
   title = "Agendamentos",
   subtitle,
+  filtersSlot,
 }: Props) {
   const router = useRouter();
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -171,6 +174,7 @@ export function AdminTable({
           <p className="mt-2 text-sm text-rose-300">{error}</p>
         ) : null}
       </div>
+      {filtersSlot}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1040px]">
           <thead className="bg-white/5 text-left text-xs uppercase tracking-[0.22em] text-zinc-400">

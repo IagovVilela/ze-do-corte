@@ -27,8 +27,9 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
         Recebimentos
       </h3>
       <p className="mt-1 text-sm text-zinc-400">
-        Soma por período conforme a <span className="text-zinc-300">data do pagamento</span>{" "}
-        registada · {periodLabel}
+        Soma por <span className="text-zinc-300">data do pagamento</span> registrada (após
+        &quot;Marcar como pago&quot;) — inclui reservas <span className="text-zinc-300">confirmadas</span>{" "}
+        ou <span className="text-zinc-300">concluídas</span> · {periodLabel}
       </p>
       <div className="mt-5 h-56">
         {hasAny ? (
@@ -69,8 +70,9 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
-            Sem pagamentos registados neste período (por data do pagamento). Concluídos sem
-            &quot;Marcar como pago&quot; não entram aqui.
+            Sem pagamentos registados neste intervalo (use &quot;Marcar como pago&quot; na lista).
+            Só entram registos cuja <span className="text-zinc-400">data do pagamento</span> cai no
+            período das abas.
           </div>
         )}
       </div>

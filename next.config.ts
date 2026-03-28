@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
    * Turbopack pode copiar um `@prisma/client` antigo para `.next/dev/node_modules` após `prisma generate`,
    * gerando "Unknown field" em runtime. Externalizar força o uso do cliente em `node_modules`.
    */
-  serverExternalPackages: ["@prisma/client", "bcryptjs", "cloudinary"],
+  serverExternalPackages: ["@prisma/client", "bcryptjs", "cloudinary", "web-push"],
   images: {
     remotePatterns: [
       {

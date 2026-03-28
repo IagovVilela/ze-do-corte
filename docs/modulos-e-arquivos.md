@@ -11,6 +11,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `INICIAR_ZE_DO_CORTE.bat` | Inicialização assistida no Windows (Node, Prisma, `npm run dev`) |
 | `PREPARAR_BASE.bat` | Docker Postgres + `.env` + `prisma db push` + seed |
 | `docker-compose.yml` | Serviço `postgres:16` para desenvolvimento local |
+| `railway.toml` | Deploy Railway: Nixpacks + `startCommand` (`npm run start:prod`) |
+| `nixpacks.toml` | Node 20 e `npm ci` para build na Railway |
+| `prisma/migrations/` | Migrações versionadas (`migrate deploy` em produção) |
 | `scripts/preparar-postgres.ps1` | Script chamado pelo `PREPARAR_BASE.bat` |
 | `scripts/create-owner.ts` | `npm run create-owner` — upsert de `StaffMember` OWNER + senha |
 | `INICIAR_APLICACAO.bat` | Legado: outro projeto Laravel em `reviews-platform` (não é este app) |
@@ -22,7 +25,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/` | `src/app/page.tsx` | Institucional, serviços do DB; secção **Equipe** (`#equipe`) se houver barbeiros em destaque |
 | `/agendar` | `src/app/agendar/page.tsx` | Agendamento |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
-| `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + tabela + paginação `?page=` |
+| `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
 | `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio, “Mostrar na home”, **expediente** (`workWeekJson`) para OWNER/ADMIN (`admin-staff-manager.tsx`) |
 | `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
@@ -41,7 +44,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Slots disponíveis | `src/app/api/appointments/available/route.ts` — query opcional `staffMemberId` |
 | Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; `clientManageToken`; notificação Resend se configurada |
 | Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` + `PATCH` (`cancel` / `reschedule`) |
-| Dashboard JSON | `src/app/api/admin/dashboard/route.ts` |
+| Dashboard JSON | `src/app/api/admin/dashboard/route.ts` — `chartRange`, `telemetryScope=chart`, filtros `status` / `staff` / `unit` / `q` |
 | Export Excel | `src/app/api/admin/export/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
 | Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
@@ -53,6 +56,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Perfil (dados + senha) | `src/app/api/auth/profile/route.ts` — `PATCH` (próprio usuário) |
 | Expediente (funcionário) | `src/app/api/auth/work-schedule/route.ts` — `GET`, `PATCH` (só **STAFF**) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
+| Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
 
 ## Biblioteca (`src/lib`)
 
@@ -74,7 +78,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `barbershop-unit.ts` | Resolução da unidade padrão para agendamentos públicos |
 | `slug.ts` | `slugify` para slugs de unidades |
 | `service-category.ts` | Tipos e rótulos pt-BR do enum `ServiceCategory` (Prisma) |
-| `admin-dashboard.ts` | Métricas (clientes, faturamento) + lista paginada com âmbito por papel |
+| `admin-dashboard.ts` | **`getAdminDashboardSnapshot`** com **`appointmentListWhere`** (filtros URL) + lista paginada; **`unitTelemetry`** (OWNER/ADMIN); resumo com valor **confirmados + concluídos** no período |
+| `admin-list-url.ts` | Parse de `status` / `staff` / `unit` / `q`, `telemetryScope`, `parseTelemetryScope`, `buildAdminPageHref` (URLs `/admin?…`, seguro para cliente) |
+| `admin-appointment-list-where.ts` | `appointmentListWhere` — junta `appointmentScopeWhere` com filtros da lista (só servidor) |
 | `cloudinary-server.ts` | Upload/remoção de avatar no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
 | `appointment-slot-conflict.ts` | Regras de sobreposição de horário (agendamento geral vs. por profissional); `excludeAppointmentId` na remarcação |
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos) — `POST /api/appointments` e gestão pública |
@@ -90,10 +96,10 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-studio-panel.tsx` (painel 3D / spotlight), `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx` (cartões da equipe na home) |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx`, `admin-table.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
-| Logo marca | `brand-logo.tsx` + arquivo estático [`public/images/logo.jpeg`](../public/images/logo.jpeg) |
+| Logo marca | `brand-logo.tsx` + [`public/images/logo.jpeg`](../public/images/logo.jpeg) (favicon + UI; também notificações push em `public/sw.js`) |
 | Ícones de marca (WhatsApp / Instagram) | `src/components/icons/whatsapp-icon.tsx`, `instagram-icon.tsx`, `index.ts` |
 
 ## Prisma

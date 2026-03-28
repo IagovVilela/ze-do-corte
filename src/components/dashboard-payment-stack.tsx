@@ -28,7 +28,10 @@ export function DashboardPaymentStack({ data, periodLabel }: Props) {
         Pagamentos (concluídos)
       </h3>
       <p className="mt-1 text-sm text-zinc-400">
-        No período: <span className="text-zinc-300">{periodLabel}</span>
+        <span className="text-zinc-300">Confirmadas ou concluídas</span> com{" "}
+        <span className="text-zinc-300">início</span> ou{" "}
+        <span className="text-zinc-300">pagamento registado</span> no período ·{" "}
+        <span className="text-zinc-300">{periodLabel}</span>
       </p>
       <div className="mt-5 h-48">
         {total > 0 ? (
@@ -69,8 +72,8 @@ export function DashboardPaymentStack({ data, periodLabel }: Props) {
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
-            Nenhum atendimento concluído com início neste período. Alargue o intervalo nas abas se
-            precisar.
+            Nenhuma reserva confirmada ou concluída com início ou pagamento neste período. Alargue
+            o intervalo (Hoje / 7 dias / Mês / 3 meses) se precisar.
           </div>
         )}
       </div>

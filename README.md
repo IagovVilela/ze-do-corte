@@ -4,6 +4,8 @@
 
 Referências em Markdown (arquitetura, mapa de arquivos, operação, histórico de mudanças e como manter os docs): **[`docs/README.md`](./docs/README.md)**.
 
+**Deploy na Railway:** **[`docs/railway.md`](./docs/railway.md)** (`railway.toml`, `nixpacks.toml`, migrações Prisma, seed do proprietário).
+
 ---
 
 Sistema completo para barbearia com:
@@ -50,7 +52,8 @@ Se não usou o `PREPARAR_BASE.bat`, preencha no `.env`:
 | `SEED_OWNER_PASSWORD` | (Seed) Senha inicial (mín. 6 caracteres) para esse proprietário |
 | `LORDICON_API_TOKEN` | (Opcional) Token Bearer da [API Lordicon](https://lordicon.com/docs/api/documentation) — só no servidor; com token, `/api/lordicon/icon` escolhe ícones via API. **Sem token**, o mesmo endpoint serve Lottie público a partir do [CDN Lordicon](https://cdn.lordicon.com) (`src/lib/lordicon-cdn-ids.ts`). **Nunca** uses prefixo `NEXT_PUBLIC_` nem commits este valor. |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | (Opcional) [Cloudinary](https://cloudinary.com/) — fotos de perfil em **`/admin/perfil`**. Sem estas variáveis, nome/telefone/senha funcionam; upload de foto retorna indisponível. **Não commite** a API Secret. |
-| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | (Opcional) [Resend](https://resend.com/) — e-mail ao barbeiro quando um agendamento fica atribuído a ele (cliente escolhe em **`/agendar`** ou dono/admin atribui no painel). **Não commite** a API key. |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | (Opcional) [Resend](https://resend.com/) — e-mail ao barbeiro quando um agendamento fica atribuído a ele (cliente escolhe em **`/agendar`** ou dono/admin atribui no painel), **exceto** se o profissional tiver Web Push ativo (ver abaixo). **Não commite** a API key. |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | (Opcional) [Web Push](https://developer.mozilla.org/en-US/docs/Web/API/Push_API) — notificação no browser em **`/admin/perfil`**. Com subscrição ativa, o aviso de novo agendamento **não** usa e-mail. Gere chaves com `npx web-push generate-vapid-keys`. **Não commite** a chave privada. |
 
 **Admin:** após `npm run db:seed`, acesse **`/admin/login`** com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD`. Novos membros e senhas iniciais em **`/admin/equipe`**. Guia: **`docs/configurar-admin.md`**. Papéis: **`docs/admin-hierarquia.md`**.
 
@@ -89,6 +92,10 @@ Abra `http://localhost:3000`.
 2. Provisione PostgreSQL (ex.: [Neon](https://neon.tech), [Vercel Postgres](https://vercel.com/storage/postgres), Railway) e defina `DATABASE_URL` nas Environment Variables do projeto.
 3. Após o deploy, aplique o schema ao banco (`prisma migrate deploy` ou `db push`) e execute o seed **uma vez** com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` **fortes**, ou crie o primeiro `StaffMember` manualmente com `passwordHash` bcrypt.
 4. Login do painel: **`/admin/login`** (não há cadastro público automático).
+
+### Deploy na Railway
+
+Guia dedicado: **[`docs/railway.md`](./docs/railway.md)** — Postgres na plataforma, `railway.toml`, `npm run start:prod` e seed com `railway run`.
 
 ## Rotas principais
 
