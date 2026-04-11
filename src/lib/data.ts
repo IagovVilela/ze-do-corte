@@ -100,7 +100,7 @@ export async function getServices() {
 
 /** Barbeiros (`STAFF`) da unidade padrão — opções no formulário de agendamento. */
 export async function getBarbersForBooking(): Promise<
-  { id: string; name: string }[]
+  { id: string; name: string; imageUrl: string | null }[]
 > {
   try {
     const unitId = await getDefaultBarbershopUnitId();
@@ -108,7 +108,7 @@ export async function getBarbersForBooking(): Promise<
 
     const rows = await prisma.staffMember.findMany({
       where: { role: "STAFF", unitId },
-      select: { id: true, displayName: true, email: true },
+      select: { id: true, displayName: true, email: true, profileImageUrl: true },
       orderBy: [{ displayName: "asc" }, { email: "asc" }],
     });
 
@@ -117,7 +117,7 @@ export async function getBarbersForBooking(): Promise<
         r.displayName?.trim() ||
         (r.email.includes("@") ? r.email.split("@")[0] : r.email) ||
         "Profissional";
-      return { id: r.id, name };
+      return { id: r.id, name, imageUrl: r.profileImageUrl ?? null };
     });
   } catch (error) {
     if (isDatabaseConnectionError(error)) {

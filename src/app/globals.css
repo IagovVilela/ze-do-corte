@@ -32,6 +32,14 @@
   --color-brand-700: #a16207;
   --color-brand-900: #713f12;
   --color-brand-950: #090a0d;
+
+  /* Fundos com tom dourado visível — substitui bg-brand-500/opacity que
+     ficava "marrom" em telas mobile com gamut sRGB reduzido. */
+  --color-brand-surface-5: #18150a;
+  --color-brand-surface-10: #252010;
+  --color-brand-surface-15: #332c12;
+  --color-brand-surface-20: #413814;
+  --color-brand-surface-25: #4f4416;
 }
 
 * {
@@ -85,7 +93,7 @@ body {
 
 body {
   background:
-    radial-gradient(1000px 500px at 10% -20%, rgba(234, 179, 8, 0.22), transparent 65%),
+    radial-gradient(1000px 500px at 10% -20%, rgba(250, 204, 21, 0.18), transparent 65%),
     radial-gradient(800px 500px at 85% -10%, rgba(59, 130, 246, 0.16), transparent 70%),
     var(--background);
   color: var(--foreground);

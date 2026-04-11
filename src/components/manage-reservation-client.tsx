@@ -285,7 +285,7 @@ export function ManageReservationClient({ token }: Props) {
                       className={cn(
                         "rounded-xl border px-3 py-2 text-xs font-medium transition",
                         active
-                          ? "border-brand-500/50 bg-brand-500/20 text-brand-100"
+                          ? "border-brand-500/50 bg-brand-surface-20 text-brand-100"
                           : "border-white/10 text-zinc-400 hover:border-white/20",
                       )}
                     >
@@ -313,7 +313,7 @@ export function ManageReservationClient({ token }: Props) {
                           className={cn(
                             "rounded-full border px-3 py-1.5 text-sm transition",
                             active
-                              ? "border-brand-500 bg-brand-500/20 text-brand-100"
+                              ? "border-brand-500 bg-brand-surface-20 text-brand-100"
                               : "border-white/15 text-zinc-300 hover:border-white/30",
                           )}
                         >

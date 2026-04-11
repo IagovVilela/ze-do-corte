@@ -25,7 +25,7 @@ const visibleDates = Array.from({ length: 14 }).map((_, index) =>
 
 type BookingFormProps = {
   services: ServiceSummary[];
-  barbers: { id: string; name: string }[];
+  barbers: { id: string; name: string; imageUrl: string | null }[];
 };
 
 export function BookingForm({ services, barbers }: BookingFormProps) {
@@ -205,34 +205,146 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
             </label>
 
             {barbers.length > 0 ? (
-              <label className="mt-4 block space-y-2">
-                <span className="text-sm font-medium text-zinc-200">
-                  Profissional (opcional)
-                </span>
-                <select
-                  value={staffMemberId}
-                  onChange={(event) => setStaffMemberId(event.target.value)}
-                  className={cn(
-                    inputClass,
-                    "min-w-0 max-w-full cursor-pointer appearance-none bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat pr-11",
-                  )}
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-                  }}
+              <div className="mt-4 space-y-3">
+                <div>
+                  <span className="text-sm font-medium text-zinc-200">
+                    Profissional (opcional)
+                  </span>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Toque no profissional desejado. A agenda será filtrada para ele.
+                  </p>
+                </div>
+                <div
+                  className="flex flex-wrap gap-2.5"
+                  role="radiogroup"
+                  aria-label="Escolher profissional"
                 >
-                  <option value="" className="bg-zinc-900">
-                    Qualquer disponível
-                  </option>
-                  {barbers.map((b) => (
-                    <option key={b.id} value={b.id} className="bg-zinc-900">
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-xs text-zinc-500">
-                  Se escolher um nome, o horário respeita a agenda desse profissional e ele recebe um e-mail na confirmação.
-                </span>
-              </label>
+                  {/* Opção "qualquer disponível" */}
+                  <motion.button
+                    type="button"
+                    role="radio"
+                    aria-checked={staffMemberId === ""}
+                    onClick={() => setStaffMemberId("")}
+                    whileTap={{ scale: 0.96 }}
+                    className={cn(
+                      "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
+                      staffMemberId === ""
+                        ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(234,179,8,0.35)]"
+                        : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex size-14 items-center justify-center rounded-full border-2 transition-colors",
+                        staffMemberId === ""
+                          ? "border-brand-500/60 bg-brand-surface-20 text-brand-300"
+                          : "border-zinc-700 bg-zinc-800 text-zinc-500 group-hover:border-zinc-600",
+                      )}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <span
+                      className={cn(
+                        "text-center text-[11px] font-medium leading-tight transition-colors",
+                        staffMemberId === "" ? "text-brand-200" : "text-zinc-400",
+                      )}
+                    >
+                      Qualquer
+                    </span>
+                    {staffMemberId === "" && (
+                      <motion.div
+                        layoutId="barber-check"
+                        className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-brand-500 text-zinc-950 shadow-md"
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </motion.div>
+                    )}
+                  </motion.button>
+
+                  {/* Cards dos barbeiros */}
+                  {barbers.map((b) => {
+                    const isSelected = staffMemberId === b.id;
+                    return (
+                      <motion.button
+                        key={b.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => setStaffMemberId(b.id)}
+                        whileTap={{ scale: 0.96 }}
+                        className={cn(
+                          "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
+                          isSelected
+                            ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(234,179,8,0.35)]"
+                            : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
+                        )}
+                      >
+                        {b.imageUrl ? (
+                          <img
+                            src={b.imageUrl}
+                            alt={b.name}
+                            className={cn(
+                              "size-14 rounded-full border-2 object-cover transition-all",
+                              isSelected
+                                ? "border-brand-500/60 shadow-md shadow-brand-500/20"
+                                : "border-zinc-700 group-hover:border-zinc-600",
+                            )}
+                          />
+                        ) : (
+                          <div
+                            className={cn(
+                              "flex size-14 items-center justify-center rounded-full border-2 text-lg font-bold transition-colors",
+                              isSelected
+                                ? "border-brand-500/60 bg-brand-surface-20 text-brand-300"
+                                : "border-zinc-700 bg-zinc-800 text-zinc-500 group-hover:border-zinc-600",
+                            )}
+                          >
+                            {b.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span
+                          className={cn(
+                            "w-full truncate text-center text-[11px] font-medium leading-tight transition-colors",
+                            isSelected ? "text-brand-200" : "text-zinc-400",
+                          )}
+                          title={b.name}
+                        >
+                          {b.name.split(" ")[0]}
+                        </span>
+                        {isSelected && (
+                          <motion.div
+                            layoutId="barber-check"
+                            className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-brand-500 text-zinc-950 shadow-md"
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
             ) : null}
           </div>
 
@@ -261,7 +373,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                     className={cn(
                       "min-w-[4.75rem] max-w-[5.5rem] shrink-0 snap-start rounded-xl border px-2 py-2 text-left transition sm:min-w-[5.25rem] sm:max-w-none sm:px-3 sm:py-2.5",
                       isActive
-                        ? "border-brand-500 bg-brand-500/20 text-brand-50 shadow-[0_0_20px_-8px_rgba(234,179,8,0.5)]"
+                        ? "border-brand-500 bg-brand-surface-20 text-brand-50 shadow-[0_0_20px_-8px_rgba(234,179,8,0.5)]"
                         : "border-white/10 bg-zinc-950/40 hover:border-zinc-500",
                     )}
                   >
@@ -306,7 +418,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                     className={cn(
                       "min-w-0 rounded-lg border px-1.5 py-2 text-center text-xs font-medium transition sm:rounded-xl sm:px-2 sm:text-sm",
                       isSelected &&
-                        "border-brand-500 bg-brand-500/20 text-brand-50 ring-1 ring-brand-500/30",
+                        "border-brand-500 bg-brand-surface-20 text-brand-50 ring-1 ring-brand-500/30",
                       !isSelected && isAvailable && "border-white/10 bg-zinc-950/50 hover:border-zinc-500",
                       !isAvailable &&
                         "cursor-not-allowed border-zinc-800/80 bg-zinc-950/30 text-zinc-600 line-through decoration-zinc-600",
@@ -469,7 +581,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                 {message}
               </p>
               {bookingState === "success" && successManageToken ? (
-                <div className="rounded-xl border border-brand-500/25 bg-brand-500/10 px-4 py-3 text-sm text-brand-100">
+                <div className="rounded-xl border border-brand-500/25 bg-brand-surface-10 px-4 py-3 text-sm text-brand-100">
                   <p className="font-medium text-brand-50">
                     Guarde o link para alterar ou cancelar depois (sem cadastro):
                   </p>

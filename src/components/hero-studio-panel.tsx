@@ -73,7 +73,7 @@ export function HeroStudioPanel() {
 
   const gradX = useTransform(mx, (v) => `${v * 100}%`);
   const gradY = useTransform(my, (v) => `${v * 100}%`);
-  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${gradX} ${gradY}, rgba(234, 179, 8, 0.24), transparent 52%)`;
+  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${gradX} ${gradY}, rgba(250, 204, 21, 0.22), transparent 52%)`;
 
   const handleMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -106,7 +106,7 @@ export function HeroStudioPanel() {
           className="pointer-events-none absolute -inset-[1px] z-0 rounded-[1.35rem] opacity-25"
           style={{
             background:
-              "conic-gradient(from 0deg, transparent, rgba(234,179,8,0.36), transparent 40%)",
+              "conic-gradient(from 0deg, transparent, rgba(250,204,21,0.34), transparent 40%)",
           }}
           animate={{ rotate: 360 }}
           transition={{ duration: 14, repeat: Infinity, ease: "linear" }}

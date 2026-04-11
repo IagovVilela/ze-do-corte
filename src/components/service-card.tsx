@@ -25,7 +25,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
     >
       <div className="flex items-start justify-between gap-4">
         <h3 className="text-xl font-semibold text-zinc-50">{service.name}</h3>
-        <span className="rounded-full border border-brand-500/50 bg-brand-500/20 px-3 py-1 text-sm text-brand-300">
+        <span className="rounded-full border border-brand-600/60 bg-brand-surface-20 px-3 py-1 text-sm text-brand-300">
           {service.durationMinutes} min
         </span>
       </div>
