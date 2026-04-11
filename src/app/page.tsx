@@ -18,8 +18,8 @@ export default async function Home() {
 
   return (
     <HomeEntrance>
-      <div className="relative overflow-hidden">
-        <Navbar />
+      <Navbar />
+      <div className="relative overflow-x-clip">
         <main className="pb-24">
           <Hero />
 

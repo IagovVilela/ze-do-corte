@@ -3,11 +3,12 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
+import { AnimatedText } from "@/components/animated-text";
+
 import {
   fadeUpSmall,
   scaleInLine,
   staggerContainer,
-  titleWord,
 } from "@/lib/motion-presets";
 
 type SectionTitleProps = {
@@ -18,12 +19,6 @@ type SectionTitleProps = {
   center?: boolean;
 };
 
-const titleListVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.05, delayChildren: 0.02 },
-  },
-};
 
 export function SectionTitle({
   eyebrow,
@@ -71,22 +66,14 @@ export function SectionTitle({
       {typeof title === "string" ? (
         <motion.h2
           className="font-display text-3xl font-normal uppercase leading-[1.12] tracking-wide text-white sm:text-4xl md:text-5xl"
-          variants={titleListVariants}
+          variants={fadeUpSmall}
         >
-          {title.trim().split(/\s+/).map((word, i, arr) => (
-            <span
-              key={`${word}-${i}`}
-              className="inline-block overflow-hidden align-baseline"
-            >
-              <motion.span
-                className="inline-block font-display uppercase tracking-wide"
-                variants={titleWord}
-              >
-                {word}
-                {i < arr.length - 1 ? "\u00A0" : ""}
-              </motion.span>
-            </span>
-          ))}
+          <AnimatedText
+            variant="reveal"
+            className="font-display uppercase tracking-wide"
+          >
+            {title}
+          </AnimatedText>
         </motion.h2>
       ) : (
         <motion.h2
