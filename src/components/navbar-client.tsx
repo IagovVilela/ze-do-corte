@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -157,7 +158,7 @@ function MobileMenuOverlay({
       {open ? (
         <motion.div
           key="nav-mobile-root"
-          className="fixed inset-0 z-50 md:hidden"
+          className="fixed inset-0 z-[200] isolate md:hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -166,7 +167,7 @@ function MobileMenuOverlay({
           <motion.button
             type="button"
             aria-label="Fechar menu"
-            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-md"
+            className="absolute inset-0 bg-zinc-950/95 backdrop-blur-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -179,22 +180,22 @@ function MobileMenuOverlay({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`${menuId}-label`}
-            className="pointer-events-none absolute inset-0 flex flex-col"
+            className="pointer-events-none absolute inset-0 flex flex-col bg-zinc-950"
             initial={instant ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={instant ? { opacity: 0 } : { opacity: 0, transition: { duration: 0.22 } }}
           >
             {/* Camadas decorativas (não bloqueiam cliques nos filhos com pointer-events) */}
             <div
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-10%,rgba(234,179,8,0.2),transparent_58%),radial-gradient(ellipse_80%_55%_at_110%_40%,rgba(59,130,246,0.07),transparent_55%),radial-gradient(ellipse_60%_45%_at_-10%_80%,rgba(234,179,8,0.06),transparent_50%)]"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-10%,rgba(250,204,21,0.14),transparent_58%),radial-gradient(ellipse_80%_55%_at_110%_40%,rgba(59,130,246,0.06),transparent_55%),radial-gradient(ellipse_60%_45%_at_-10%_80%,rgba(250,204,21,0.05),transparent_50%)]"
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent"
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-300/50 to-transparent"
               aria-hidden
             />
 
-            <div className="pointer-events-auto relative flex min-h-[100dvh] flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <div className="pointer-events-auto relative flex min-h-[100dvh] flex-col bg-zinc-950/80 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
               <div className="flex items-start justify-between gap-3">
                 <motion.div
                   className="flex min-w-0 items-center gap-3 pt-1"
@@ -267,7 +268,7 @@ function MobileMenuOverlay({
                   <NavbarSocialLinks className="flex items-center gap-2" />
                 </div>
                 <div
-                  className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border-brand-400/35 [&_a]:bg-gradient-to-r [&_a]:from-brand-500 [&_a]:to-brand-600 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_12px_40px_-12px_rgba(234,179,8,0.45)] [&_a]:transition [&_a]:hover:brightness-110"
+                  className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-brand-300/50 [&_a]:bg-gradient-to-r [&_a]:from-brand-300 [&_a]:via-brand-400 [&_a]:to-brand-500 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_14px_44px_-10px_rgba(250,204,21,0.55)] [&_a]:transition [&_a]:hover:brightness-[1.07]"
                   onClick={close}
                 >
                   {trailing}
@@ -284,15 +285,21 @@ function MobileMenuOverlay({
 export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
   const reduceMotion = useReducedMotion();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
   const menuId = useId();
 
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
   return (
-    <motion.header
-      initial={reduceMotion ? false : { y: -32, opacity: 0 }}
-      animate={reduceMotion ? false : { y: 0, opacity: 1 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="sticky top-0 z-40 border-b border-white/10 bg-brand-950/80 backdrop-blur-xl"
-    >
+    <header className="sticky top-0 z-40">
+      <motion.div
+        initial={reduceMotion ? false : { y: -32, opacity: 0 }}
+        animate={reduceMotion ? false : { y: 0, opacity: 1 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="border-b border-white/10 bg-brand-950/80 backdrop-blur-xl"
+      >
       <div className="container-max flex min-h-14 items-center justify-between gap-2 py-2 sm:h-16 sm:py-0 md:gap-3">
         <Link
           href="/"
@@ -346,15 +353,21 @@ export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
           </motion.button>
         </div>
       </div>
+      </motion.div>
 
-      <MobileMenuOverlay
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        trailing={trailing}
-        menuId={menuId}
-        reduceMotion={reduceMotion}
-      />
-    </motion.header>
+      {portalReady
+        ? createPortal(
+            <MobileMenuOverlay
+              open={mobileOpen}
+              onClose={() => setMobileOpen(false)}
+              trailing={trailing}
+              menuId={menuId}
+              reduceMotion={reduceMotion}
+            />,
+            document.body,
+          )
+        : null}
+    </header>
   );
 }
 

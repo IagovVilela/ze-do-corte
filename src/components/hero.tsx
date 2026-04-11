@@ -84,7 +84,7 @@ export function Hero() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/agendar"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 transition hover:bg-brand-300"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(250,204,21,0.5)] transition hover:brightness-110"
               >
                 <CalendarClock className="h-4 w-4" aria-hidden />
                 Agendar agora
@@ -191,7 +191,7 @@ export function Hero() {
             >
               <Link
                 href="/agendar"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-black/40 transition hover:bg-brand-300"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(250,204,21,0.5)] transition hover:brightness-110"
               >
                 <motion.span
                   animate={{ y: [0, -2, 0] }}
