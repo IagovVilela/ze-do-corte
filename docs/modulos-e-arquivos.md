@@ -18,6 +18,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `scripts/preparar-postgres.ps1` | Script chamado pelo `PREPARAR_BASE.bat` |
 | `scripts/create-owner.ts` | `npm run create-owner` — upsert de `StaffMember` OWNER + senha |
 | `scripts/ensure-owner.ts` | Arranque em produção: cria OWNER se `SEED_OWNER_*` (chamado por `start:prod`) |
+| `src/lib/ensure-owner-with-prisma.ts` | Lógica idempotente OWNER a partir de `SEED_OWNER_*` (script + `instrumentation`) |
+| `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
 | `INICIAR_APLICACAO.bat` | Legado: outro projeto Laravel em `reviews-platform` (não é este app) |
 
 ## App Router — páginas

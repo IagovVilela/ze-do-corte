@@ -21,7 +21,7 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
 
 ## Fluxo administrativo
 
-- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie.
+- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`).
 - **`/admin/perfil`** — utilizador autenticado altera `displayName`, `phone`, senha (`PATCH /api/auth/profile`) e foto (`POST`/`DELETE /api/auth/profile/avatar` → Cloudinary quando configurado); a foto alimenta o cartão na home para quem é barbeiro em destaque. Opcionalmente ativa **Web Push** (VAPID + `public/sw.js`) para receber aviso de agendamento atribuído sem e-mail.
 - **`/admin/expediente`** — só **STAFF**: define o próprio `workWeekJson` via `PATCH /api/auth/work-schedule`; `null` segue só o horário global da barbearia nos slots públicos.
 - **`/admin/equipe`** — gestão de membros; para **STAFF**, texto e visibilidade na home (`PATCH /api/admin/staff/[id]`) e **expediente** por funcionário para **OWNER/ADMIN** (`GET`/`PATCH /api/admin/staff/[id]/work-schedule`).

@@ -6,13 +6,16 @@
  *   Idempotente: se o utilizador já existir com senha, não altera.
  * - Fora de produção: se faltarem variáveis, sai em silêncio (use `npm run db:seed` para dados completos).
  *
+ * Em produção o Next também executa a mesma lógica em `src/instrumentation.ts` (reforço se o start
+ * for só `next start` sem este script).
+ *
  * Não usa `dotenv`: variáveis vêm do ambiente (Railway) ou do `.env` local quando corres `npm run ensure-owner`.
  */
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { resolveDatabaseUrlForCli } from "../prisma/database-url";
-import { hashPassword } from "../src/lib/password";
+import { ensureOwnerWithPrisma } from "../src/lib/ensure-owner-with-prisma";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 
 /**
@@ -56,34 +59,8 @@ async function main() {
     adapter: new PrismaPg({ connectionString }),
   });
 
-  const ownerEmail = emailRaw.toLowerCase();
-  console.log(`[ensure-owner] A processar OWNER para e-mail: ${ownerEmail}`);
-  const ownerHash = await hashPassword(password);
-
   try {
-    const existing = await prisma.staffMember.findUnique({
-      where: { email: ownerEmail },
-    });
-    if (!existing) {
-      await prisma.staffMember.create({
-        data: {
-          email: ownerEmail,
-          displayName: "Proprietário",
-          role: "OWNER",
-          passwordHash: ownerHash,
-          unitId: null,
-        },
-      });
-      console.log(`[ensure-owner] Criado OWNER: ${ownerEmail}`);
-    } else if (!existing.passwordHash) {
-      await prisma.staffMember.update({
-        where: { email: ownerEmail },
-        data: { passwordHash: ownerHash },
-      });
-      console.log(`[ensure-owner] Senha definida para: ${ownerEmail}`);
-    } else {
-      console.log(`[ensure-owner] Proprietário já existe: ${ownerEmail}`);
-    }
+    await ensureOwnerWithPrisma(prisma);
   } finally {
     await prisma.$disconnect();
   }

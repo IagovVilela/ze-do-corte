@@ -41,6 +41,7 @@ As migrações criam as tabelas **vazias**. O painel precisa de um proprietário
 
 1. No serviço da **app**, defina **`SEED_OWNER_EMAIL`** e **`SEED_OWNER_PASSWORD`** (mín. 6 caracteres).
 2. Em cada arranque, `npm run start:prod` executa `prisma migrate deploy`, depois **`tsx scripts/ensure-owner.ts`**, depois o Next. O script cria o OWNER **uma vez** (idempotente); se o utilizador já existir com senha, não altera.
+3. **Reforço:** com `NODE_ENV=production`, o Next executa a mesma lógica em **`src/instrumentation.ts`** ao iniciar o servidor — útil se o **Start Command** tiver sido alterado para só `next start` (sem o script). Mantenha `SEED_OWNER_*` no serviço da app.
 
 Se em produção **não** definir `SEED_OWNER_*`, o deploy continua; verá um aviso nos logs e pode usar o seed manual abaixo ou `DATABASE_PUBLIC_URL` no PC.
 

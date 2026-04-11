@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-04-11
+
+- **OWNER no deploy (reforço)**: lógica partilhada em **`src/lib/ensure-owner-with-prisma.ts`**. Em **`NODE_ENV=production`**, **`src/instrumentation.ts`** chama a mesma rotina no arranque do Next (idempotente), além de **`tsx scripts/ensure-owner.ts`** no `start:prod` — cobre o caso em que o serviço na Railway usa só **`next start`** sem o script. Tratamento de corrida **`P2002`** na criação.
+
 ## 2026-03-28
 
 - **`ensure-owner`**: ligação à base passa a priorizar **`DATABASE_URL`** (como a API), não `DATABASE_PUBLIC_URL`, para o OWNER ser criado na mesma base que o login; `trim` em senha; logs de diagnóstico.
