@@ -8,7 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-04-11
 
-- **Site público — mobile**: navbar com **menu hambúrguer** abaixo de `md` (`src/components/navbar-client.tsx`); links, redes e Painel num painel lateral; evita quebra e sobreposição no telemóvel.
+- **Site público — mobile**: navbar com **menu hambúrguer** abaixo de `md` (`src/components/navbar-client.tsx`); **ecrã completo** com `AnimatePresence`, gradientes, links grandes (`font-display` + sublinhado animado), ícone menu/X com transição, **Painel** em destaque com gradiente amarelo; respeita `prefers-reduced-motion`.
 - **Paleta marca**: tokens **`brand-*`** e gradiente **`.heading-gradient`** alinhados a **amarelo/dourado** (removido rosa `#fb7185` do título); fundo e realces em `globals.css`. Texto do hero: **«Experiências únicas para»** (concordância) + constante `BARBER_SLOGAN_SECONDARY`.
 - **OWNER no deploy (reforço)**: lógica partilhada em **`src/lib/ensure-owner-with-prisma.ts`**. Em **`NODE_ENV=production`**, **`src/instrumentation.ts`** chama a mesma rotina no arranque do Next (idempotente), além de **`tsx scripts/ensure-owner.ts`** no `start:prod` — cobre o caso em que o serviço na Railway usa só **`next start`** sem o script. Tratamento de corrida **`P2002`** na criação.
 
