@@ -64,6 +64,14 @@ railway run npm run create-owner
 - O histórico está em `prisma/migrations/`. Novas alterações ao schema: em desenvolvimento use `npx prisma migrate dev`; em produção o `start:prod` executa `prisma migrate deploy`.
 - Se a base **já existia** só com `db push` (sem tabela `_prisma_migrations`), não aplique a migração inicial em cima dela sem um [baseline](https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate/baselining) — prefira base nova na Railway para o primeiro deploy.
 
+### Aplicar migrações manualmente na base da Railway (no seu PC)
+
+1. Instale a [Railway CLI](https://docs.railway.com/guides/cli) e faça login: `railway login`.
+2. Na pasta do repositório: `railway link` (escolha o projeto e o **serviço da app** que tem `DATABASE_URL` referenciando o Postgres).
+3. Execute: **`npm run railway:migrate`** (equivale a `railway run npx prisma migrate deploy` — usa o `DATABASE_URL` do ambiente ligado).
+
+Isto só funciona depois do login e do `link`; não é possível automatizar o login no teu nome a partir do repositório.
+
 ## 7. Ficheiros de configuração no repositório
 
 | Ficheiro | Função |

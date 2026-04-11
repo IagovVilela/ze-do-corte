@@ -16,6 +16,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "railway:migrate": "railway run npx prisma migrate deploy",
     "setup:admin": "prisma generate && prisma db push && prisma db seed",
     "create-owner": "tsx scripts/create-owner.ts",
     "postinstall": "prisma generate"
