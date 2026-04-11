@@ -1,8 +1,12 @@
 # Railway — configuração como código
 # https://docs.railway.com/guides/config-as-code
+#
+# Builder DOCKERFILE: `Dockerfile` na raiz fixa Node 24 (Prisma 7).
+# Sem isto, Railpack/Nixpacks gerado pode usar Node 18 e ignorar nixpacks.toml.
 
 [build]
-builder = "nixpacks"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 # Migrações antes de servir tráfego; Next escuta em 0.0.0.0 (Railway define PORT).

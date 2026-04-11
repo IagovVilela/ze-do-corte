@@ -4,7 +4,7 @@
 
 Referências em Markdown (arquitetura, mapa de arquivos, operação, histórico de mudanças e como manter os docs): **[`docs/README.md`](./docs/README.md)**.
 
-**Deploy na Railway:** **[`docs/railway.md`](./docs/railway.md)** (`railway.toml`, `nixpacks.toml`, migrações Prisma, seed do proprietário).
+**Deploy na Railway:** **[`docs/railway.md`](./docs/railway.md)** (`Dockerfile` com Node 24, `railway.toml`, migrações Prisma, seed do proprietário).
 
 ---
 

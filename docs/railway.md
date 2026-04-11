@@ -17,8 +17,8 @@ Guia para publicar **Zé do Corte** (Next.js + PostgreSQL + Prisma) na [Railway]
 ## 2. Serviço da aplicação
 
 1. **New** → **GitHub Repo** (ou deploy a partir do mesmo repo) e selecione este repositório.
-2. A Railway deteta **Nixpacks**; o repositório inclui `nixpacks.toml` (Node 20, `npm ci`) e `railway.toml`:
-   - **Build:** `npm run build` (o `postinstall` executa `prisma generate`).
+2. O repositório inclui **`Dockerfile`** (Node **24** oficial) e `railway.toml` com **`builder = "DOCKERFILE"`** — evita Railpack/Nixpacks gerados usarem **Node 18** e ignorarem `nixpacks.toml` (Prisma 7 quebra). Opcionalmente existe `nixpacks.toml` para referência local.
+   - **Build:** `npm ci` + `npm run build` (o `postinstall` executa `prisma generate`).
    - **Start:** `npm run start:prod` → `prisma migrate deploy` e depois `next start --hostname 0.0.0.0` (a Railway define `PORT`).
 
 ## 3. Variáveis de ambiente (aplicação)
@@ -68,8 +68,9 @@ railway run npm run create-owner
 
 | Ficheiro | Função |
 |----------|--------|
-| `railway.toml` | Builder Nixpacks e `startCommand` (`npm run start:prod`). |
-| `nixpacks.toml` | Node 20 e `npm ci` na fase de instalação. |
+| `railway.toml` | Builder **DOCKERFILE** e `startCommand` (`npm run start:prod`). |
+| `Dockerfile` | Node **24** (`node:24-bookworm-slim`), build Next + `start:prod`. |
+| `nixpacks.toml` | (Opcional) Referência Node 24 se usares Nixpacks fora do Docker. |
 | `prisma/migrations/` | Schema inicial + `migration_lock.toml`. |
 
 ## 8. Resolução de problemas
