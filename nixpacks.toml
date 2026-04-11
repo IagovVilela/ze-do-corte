@@ -1,7 +1,8 @@
 # Railway / Nixpacks — https://nixpacks.com/docs/configuration/file
+# Prisma 7.x exige Node 20.19+, 22.12+ ou 24+; o major "20" no Nixpacks costuma resolver para 20.18.x e falha no postinstall.
 
 [variables]
-NIXPACKS_NODE_VERSION = "20"
+NIXPACKS_NODE_VERSION = "22"
 
 [phases.install]
 cmds = ["npm ci"]

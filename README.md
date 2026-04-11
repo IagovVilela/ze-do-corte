@@ -24,7 +24,7 @@ Sistema completo para barbearia com:
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js 20.19+ (recomendado 22 LTS — alinhado ao `nixpacks.toml` na Railway)
 - PostgreSQL **ou** [Docker Desktop](https://www.docker.com/products/docker-desktop/) para subir Postgres local via `PREPARAR_BASE.bat`
 
 ## Configuração rápida
