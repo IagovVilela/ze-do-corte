@@ -11,11 +11,13 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `INICIAR_ZE_DO_CORTE.bat` | Inicialização assistida no Windows (Node, Prisma, `npm run dev`) |
 | `PREPARAR_BASE.bat` | Docker Postgres + `.env` + `prisma db push` + seed |
 | `docker-compose.yml` | Serviço `postgres:16` para desenvolvimento local |
-| `railway.toml` | Deploy Railway: Nixpacks + `startCommand` (`npm run start:prod`) |
-| `nixpacks.toml` | Node 20 e `npm ci` para build na Railway |
+| `railway.toml` | Deploy Railway: builder Dockerfile + `startCommand` (`npm run start:prod`) |
+| `Dockerfile` | Node 24, build Next; `start:prod` = migrate + `ensure-owner` + next |
+| `nixpacks.toml` | (Opcional) referência Node para builds sem Dockerfile |
 | `prisma/migrations/` | Migrações versionadas (`migrate deploy` em produção) |
 | `scripts/preparar-postgres.ps1` | Script chamado pelo `PREPARAR_BASE.bat` |
 | `scripts/create-owner.ts` | `npm run create-owner` — upsert de `StaffMember` OWNER + senha |
+| `scripts/ensure-owner.ts` | Arranque em produção: cria OWNER se `SEED_OWNER_*` (chamado por `start:prod`) |
 | `INICIAR_APLICACAO.bat` | Legado: outro projeto Laravel em `reviews-platform` (não é este app) |
 
 ## App Router — páginas

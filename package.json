@@ -10,7 +10,7 @@
     "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "start:prod": "prisma migrate deploy && next start --hostname 0.0.0.0",
+    "start:prod": "prisma migrate deploy && tsx scripts/ensure-owner.ts && next start --hostname 0.0.0.0",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -19,6 +19,7 @@
     "railway:migrate": "railway run npx prisma migrate deploy",
     "setup:admin": "prisma generate && prisma db push && prisma db seed",
     "create-owner": "tsx scripts/create-owner.ts",
+    "ensure-owner": "tsx scripts/ensure-owner.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -41,6 +42,8 @@
     "recharts": "^3.8.1",
     "resend": "^6.9.4",
     "server-only": "^0.0.1",
+    "dotenv": "^17.3.1",
+    "tsx": "^4.20.6",
     "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6"
@@ -53,11 +56,9 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "@types/xlsx": "^0.0.35",
-    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "tsx": "^4.20.6",
     "typescript": "^5"
   },
   "prisma": {

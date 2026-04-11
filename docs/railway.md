@@ -35,12 +35,21 @@ Copie o restante a partir de [`.env.example`](../.env.example).
 
 ## 4. Primeiro utilizador (OWNER)
 
-As migrações criam as tabelas **vazias**. O painel precisa de um proprietário:
+As migrações criam as tabelas **vazias**. O painel precisa de um proprietário.
 
-**Opção A — seed (recomendado para primeira carga)**
+### Automático no deploy (recomendado na Railway)
 
-1. Defina `SEED_OWNER_EMAIL` e `SEED_OWNER_PASSWORD` (senha forte, mín. 6 caracteres) nas variáveis do serviço.
-2. No terminal local (com [Railway CLI](https://docs.railway.com/guides/cli) ligado ao projeto):
+1. No serviço da **app**, defina **`SEED_OWNER_EMAIL`** e **`SEED_OWNER_PASSWORD`** (mín. 6 caracteres).
+2. Em cada arranque, `npm run start:prod` executa `prisma migrate deploy`, depois **`tsx scripts/ensure-owner.ts`**, depois o Next. O script cria o OWNER **uma vez** (idempotente); se o utilizador já existir com senha, não altera.
+
+Se em produção **não** definir `SEED_OWNER_*`, o deploy continua; verá um aviso nos logs e pode usar o seed manual abaixo ou `DATABASE_PUBLIC_URL` no PC.
+
+### Manual (seed completo ou só dono)
+
+**Opção A — seed (dados de exemplo + unidade + serviços)**
+
+1. Defina `SEED_OWNER_EMAIL` e `SEED_OWNER_PASSWORD` nas variáveis.
+2. No terminal local (com [Railway CLI](https://docs.railway.com/guides/cli) ligado ao projeto) **ou** com `DATABASE_PUBLIC_URL` no `.env`:
 
 ```bash
 railway run npm run db:seed
