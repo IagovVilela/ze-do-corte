@@ -15,10 +15,23 @@ import { resolveDatabaseUrlForCli } from "../prisma/database-url";
 import { hashPassword } from "../src/lib/password";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 
+/**
+ * Mesmo critério que `src/lib/prisma.ts`: na Railway o serviço da app tem `DATABASE_URL`
+ * (rede interna). Não preferir `DATABASE_PUBLIC_URL` aqui — senão o script podia escrever noutro
+ * destino que o login da API (que só usa `DATABASE_URL`).
+ */
+function connectionStringForEnsureOwner(): string {
+  const internal = process.env.DATABASE_URL?.trim();
+  if (internal) {
+    return internal;
+  }
+  return resolveDatabaseUrlForCli();
+}
+
 async function main() {
   const isProd = process.env.NODE_ENV === "production";
   const emailRaw = process.env.SEED_OWNER_EMAIL?.trim();
-  const password = process.env.SEED_OWNER_PASSWORD;
+  const password = process.env.SEED_OWNER_PASSWORD?.trim();
 
   if (!emailRaw || !password) {
     if (isProd) {
@@ -35,12 +48,16 @@ async function main() {
     );
   }
 
-  const connectionString = resolveDatabaseUrlForCli();
+  const connectionString = connectionStringForEnsureOwner();
+  console.log(
+    `[ensure-owner] Ligação: ${process.env.DATABASE_URL?.trim() ? "DATABASE_URL (igual à app)" : "fallback (ex.: DATABASE_PUBLIC_URL no PC)"}`,
+  );
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString }),
   });
 
   const ownerEmail = emailRaw.toLowerCase();
+  console.log(`[ensure-owner] A processar OWNER para e-mail: ${ownerEmail}`);
   const ownerHash = await hashPassword(password);
 
   try {

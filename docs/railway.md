@@ -97,6 +97,6 @@ Isto só funciona depois do login e do `link`; não é possível automatizar o l
 - **Login não persiste:** confirme HTTPS, mesmo domínio e que não há bloqueio a cookies de terceiros (first-party na Railway costuma funcionar com `SameSite=Lax`).
 - **`Can't reach database server at postgres.railway.internal` (seed ou Prisma no PC):** o host **`*.railway.internal`** só existe **dentro** da rede da Railway. O comando **`railway run`** executa o teu Node **no PC** e só injeta variáveis — **não** coloca o processo dentro da cloud, por isso o URL interno continua inacessível.
   - **Solução:** no serviço **Postgres** → **Networking** / **TCP Proxy** (ou variável pública que o painel mostrar), copie o **URL público** e no `.env` local defina **`DATABASE_PUBLIC_URL`** (ver `.env.example`). O Prisma (`prisma.config.ts`, seed, `create-owner`) usa **`DATABASE_PUBLIC_URL` em preferência a `DATABASE_URL`** para CLI local. Depois: **`npm run db:seed`** ou **`npm run create-owner`**.
-  - Na Railway **não** defines `DATABASE_PUBLIC_URL` no serviço da app (só `DATABASE_URL` interno); assim o deploy em produção não é afetado.
+  - Na Railway **não** defines `DATABASE_PUBLIC_URL` no serviço da app (só `DATABASE_URL` interno). O script **`ensure-owner`** usa **só `DATABASE_URL`** quando existe (igual a `src/lib/prisma.ts`), para o dono ser criado na **mesma** base onde o login lê. `DATABASE_PUBLIC_URL` no `.env` local continua a servir para `npm run db:seed` no PC.
 
 Para operação geral (scripts, Docker local, etc.), veja [operacao.md](./operacao.md).

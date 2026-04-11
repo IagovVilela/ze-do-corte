@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-03-28
 
+- **`ensure-owner`**: ligação à base passa a priorizar **`DATABASE_URL`** (como a API), não `DATABASE_PUBLIC_URL`, para o OWNER ser criado na mesma base que o login; `trim` em senha; logs de diagnóstico.
 - **Deploy — OWNER automático**: `scripts/ensure-owner.ts` + `start:prod` (`prisma migrate deploy` → ensure-owner → `next start`). Em **produção**, com `SEED_OWNER_EMAIL` e `SEED_OWNER_PASSWORD` no ambiente, cria o proprietário no arranque (idempotente). Script `npm run ensure-owner`.
 - **Postgres Railway no PC**: variável opcional **`DATABASE_PUBLIC_URL`** (URL TCP público do plugin Postgres) — `prisma.config.ts`, `prisma/seed.ts`, `scripts/create-owner.ts` e `prisma/database-url.ts` usam-na em preferência a `DATABASE_URL` para seed/migrate/create-owner fora da cloud (`railway run` é local). Docs e `.env.example` corrigidos (mito do `railway run`).
 - **Docs Railway**: secção em `docs/railway.md` sobre erro **`postgres.railway.internal`** ao correr seed/Prisma no PC; nota em `.env.example`.
