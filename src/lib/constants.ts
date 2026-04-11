@@ -3,7 +3,7 @@ export const HERO_VIDEO_SRC = "/images/videoPrincipal.mp4";
 
 /** Slogans oficiais da marca (usar no site e materiais). */
 export const BARBER_SLOGAN_PRIMARY = "Estilo e confiança";
-export const BARBER_SLOGAN_SECONDARY = "Experiências única para homens únicos";
+export const BARBER_SLOGAN_SECONDARY = "Experiências únicas para homens únicos";
 
 /** Endereço físico da barbearia (contato e mapas). */
 export const BARBER_SHOP_ADDRESS =

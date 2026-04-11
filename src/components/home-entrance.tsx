@@ -107,7 +107,7 @@ export function HomeEntrance({ children }: Props) {
               className="pointer-events-none absolute inset-0 opacity-70"
               style={{
                 background:
-                  "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.2), transparent), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(59, 130, 246, 0.08), transparent), radial-gradient(ellipse 50% 50% at 0% 80%, rgba(245, 158, 11, 0.06), transparent)",
+                  "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(234, 179, 8, 0.2), transparent), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(59, 130, 246, 0.08), transparent), radial-gradient(ellipse 50% 50% at 0% 80%, rgba(234, 179, 8, 0.07), transparent)",
               }}
             />
             <motion.div

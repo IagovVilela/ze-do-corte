@@ -24,7 +24,7 @@ const h1LineVariants = {
 };
 
 /** Parte em caps do H1; o destaque em gradiente é `BARBER_HERO_TITLE_ACCENT`. */
-const BARBER_HERO_TITLE_LEAD_WORDS = ["Experiências", "única", "para"] as const;
+const BARBER_HERO_TITLE_LEAD_WORDS = ["Experiências", "únicas", "para"] as const;
 const BARBER_HERO_TITLE_ACCENT = "homens únicos";
 
 export function Hero() {

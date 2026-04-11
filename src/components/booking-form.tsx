@@ -261,7 +261,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                     className={cn(
                       "min-w-[4.75rem] max-w-[5.5rem] shrink-0 snap-start rounded-xl border px-2 py-2 text-left transition sm:min-w-[5.25rem] sm:max-w-none sm:px-3 sm:py-2.5",
                       isActive
-                        ? "border-brand-500 bg-brand-500/20 text-brand-50 shadow-[0_0_20px_-8px_rgba(245,158,11,0.5)]"
+                        ? "border-brand-500 bg-brand-500/20 text-brand-50 shadow-[0_0_20px_-8px_rgba(234,179,8,0.5)]"
                         : "border-white/10 bg-zinc-950/40 hover:border-zinc-500",
                     )}
                   >

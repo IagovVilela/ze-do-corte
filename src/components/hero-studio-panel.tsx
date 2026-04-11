@@ -73,7 +73,7 @@ export function HeroStudioPanel() {
 
   const gradX = useTransform(mx, (v) => `${v * 100}%`);
   const gradY = useTransform(my, (v) => `${v * 100}%`);
-  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${gradX} ${gradY}, rgba(245, 158, 11, 0.22), transparent 52%)`;
+  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${gradX} ${gradY}, rgba(234, 179, 8, 0.24), transparent 52%)`;
 
   const handleMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -106,7 +106,7 @@ export function HeroStudioPanel() {
           className="pointer-events-none absolute -inset-[1px] z-0 rounded-[1.35rem] opacity-25"
           style={{
             background:
-              "conic-gradient(from 0deg, transparent, rgba(245,158,11,0.35), transparent 40%)",
+              "conic-gradient(from 0deg, transparent, rgba(234,179,8,0.36), transparent 40%)",
           }}
           animate={{ rotate: 360 }}
           transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
@@ -154,7 +154,7 @@ export function HeroStudioPanel() {
             </div>
             <motion.div
               className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5"
-              whileHover={{ scale: 1.08, borderColor: "rgba(245,158,11,0.45)" }}
+              whileHover={{ scale: 1.08, borderColor: "rgba(234,179,8,0.48)" }}
               transition={{ type: "spring", stiffness: 400, damping: 22 }}
             >
               <Scissors className="h-5 w-5 text-brand-300" aria-hidden />

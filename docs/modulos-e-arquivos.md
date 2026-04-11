@@ -96,7 +96,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 
 | Componente | Pasta |
 |------------|-------|
-| Navbar (ícones redes, link Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
+| Navbar (menu hambúrguer em ecrã pequeno, redes, Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
 | Hero, seções animadas | `hero.tsx`, `hero-studio-panel.tsx` (painel 3D / spotlight), `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx` (cartões da equipe na home) |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |

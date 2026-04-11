@@ -112,7 +112,7 @@ export function HeroBackdropVideo({ scrollTargetRef }: HeroBackdropVideoProps) {
         className="absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 90% 60% at 20% 20%, rgba(245,158,11,0.12), transparent 55%)",
+            "radial-gradient(ellipse 90% 60% at 20% 20%, rgba(234,179,8,0.14), transparent 55%)",
         }}
       />
     </div>
