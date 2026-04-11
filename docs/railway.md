@@ -5,7 +5,7 @@ Guia para publicar **Zé do Corte** (Next.js + PostgreSQL + Prisma) na [Railway]
 ## Pré-requisitos
 
 - Conta na Railway e repositório Git (GitHub/GitLab) ligado ao projeto.
-- **Node.js 20.19+** (ou 22 / 24) — Prisma 7 exige isso; `nixpacks.toml` usa **Node 22** para o build na Railway não ficar preso a 20.18.x.
+- **Node.js** compatível com Prisma 7 (`^20.19`, `^22.12` ou `>=24`); `nixpacks.toml` usa **Node 24** porque os majors `20`/`22` no Nixpacks costumam resolver para versões **abaixo** do mínimo (ex.: 20.18, 22.11) e o `postinstall` do Prisma falha.
 
 ## 1. Base de dados PostgreSQL
 
