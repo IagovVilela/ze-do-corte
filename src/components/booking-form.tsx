@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Copy, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
@@ -44,6 +44,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
   const [bookingState, setBookingState] = useState<BookingState>("idle");
   const [message, setMessage] = useState("");
   const [successManageToken, setSuccessManageToken] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     if (!serviceId && services[0]) {
@@ -585,12 +586,39 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                   <p className="font-medium text-brand-50">
                     Guarde o link para alterar ou cancelar depois (sem cadastro):
                   </p>
-                  <Link
-                    href={`/minha-reserva/${encodeURIComponent(successManageToken)}`}
-                    className="mt-2 inline-block break-all text-xs text-brand-200 underline-offset-2 hover:underline"
-                  >
-                    Abrir página da minha reserva
-                  </Link>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <Link
+                      href={`/minha-reserva/${encodeURIComponent(successManageToken)}`}
+                      className="inline-block break-all text-xs font-medium text-brand-400 underline-offset-2 hover:underline"
+                    >
+                      Abrir página da minha reserva
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = new URL(
+                          `/minha-reserva/${encodeURIComponent(successManageToken)}`,
+                          window.location.origin
+                        ).toString();
+                        navigator.clipboard.writeText(url);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2000);
+                      }}
+                      className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-400/30 bg-brand-500/10 px-2.5 py-1.5 text-xs font-semibold text-brand-300 transition-colors hover:bg-brand-500/20 active:bg-brand-500/30"
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="size-3.5" />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-3.5" />
+                          Copiar link
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </motion.div>

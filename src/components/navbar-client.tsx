@@ -8,11 +8,14 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 
 import { BrandLogo } from "@/components/brand-logo";
+import { AnimatedText } from "@/components/animated-text";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import {
   getInstagramContactHref,
   getWhatsappContactHref,
 } from "@/lib/contact-links";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
+import { cn } from "@/lib/utils";
 
 const publicLinks = [
   { href: "/", label: "Início" },
@@ -287,18 +290,38 @@ export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const menuId = useId();
+  const { direction, pastTop } = useScrollDirection({ threshold: 14, topMargin: 72 });
+
+  /** Esconder quando rola para baixo E não está no topo E menu mobile fechado. */
+  const hidden = direction === "down" && pastTop && !mobileOpen;
 
   useEffect(() => {
     setPortalReady(true);
   }, []);
 
   return (
-    <header className="sticky top-0 z-40">
+    <header className="fixed inset-x-0 top-0 z-50">
       <motion.div
         initial={reduceMotion ? false : { y: -32, opacity: 0 }}
-        animate={reduceMotion ? false : { y: 0, opacity: 1 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="border-b border-white/10 bg-brand-950/80 backdrop-blur-xl"
+        animate={
+          reduceMotion
+            ? false
+            : {
+                y: hidden ? "-100%" : 0,
+                opacity: 1,
+              }
+        }
+        transition={
+          hidden
+            ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
+            : { duration: 0.45, ease: [0.16, 1, 0.3, 1] }
+        }
+        className={cn(
+          "transition-[background-color,border-color,backdrop-filter] duration-300",
+          pastTop
+            ? "border-b border-white/10 bg-brand-950/85 backdrop-blur-xl shadow-lg shadow-black/10"
+            : "border-b border-transparent bg-brand-950/40 backdrop-blur-sm",
+        )}
       >
       <div className="container-max flex min-h-14 items-center justify-between gap-2 py-2 sm:h-16 sm:py-0 md:gap-3">
         <Link
