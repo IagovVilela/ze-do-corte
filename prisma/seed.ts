@@ -1,13 +1,13 @@
+import "dotenv/config";
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+import { resolveDatabaseUrlForCli } from "./database-url";
 import { hashPassword } from "../src/lib/password";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL nao definida. Use o .env ou PREPARAR_BASE.bat.");
-}
+const connectionString = resolveDatabaseUrlForCli();
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),

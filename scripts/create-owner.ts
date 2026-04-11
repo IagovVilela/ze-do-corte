@@ -15,12 +15,20 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+import { resolveDatabaseUrlForCli } from "../prisma/database-url";
+
 import { hashPassword } from "../src/lib/password";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error("Erro: DATABASE_URL não definida. Configure o .env na raiz do projeto.");
+let connectionString: string;
+try {
+  connectionString = resolveDatabaseUrlForCli();
+} catch (e) {
+  console.error(
+    "Erro:",
+    e instanceof Error ? e.message : e,
+    "\nConfigure DATABASE_URL ou DATABASE_PUBLIC_URL no .env (ver docs/railway.md).",
+  );
   process.exit(1);
 }
 

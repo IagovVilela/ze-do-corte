@@ -86,5 +86,8 @@ Isto só funciona depois do login e do `link`; não é possível automatizar o l
 - **Build falha no Prisma:** confirme `DATABASE_URL` disponível só se o build precisar de DB (neste projeto o build do Next não deve exigir conexão; se mudar, garanta variável no serviço).
 - **502 / app não sobe:** veja **Deployments** → logs; confira se `prisma migrate deploy` concluiu (erros de SQL ou BD inacessível).
 - **Login não persiste:** confirme HTTPS, mesmo domínio e que não há bloqueio a cookies de terceiros (first-party na Railway costuma funcionar com `SameSite=Lax`).
+- **`Can't reach database server at postgres.railway.internal` (seed ou Prisma no PC):** o host **`*.railway.internal`** só existe **dentro** da rede da Railway. O comando **`railway run`** executa o teu Node **no PC** e só injeta variáveis — **não** coloca o processo dentro da cloud, por isso o URL interno continua inacessível.
+  - **Solução:** no serviço **Postgres** → **Networking** / **TCP Proxy** (ou variável pública que o painel mostrar), copie o **URL público** e no `.env` local defina **`DATABASE_PUBLIC_URL`** (ver `.env.example`). O Prisma (`prisma.config.ts`, seed, `create-owner`) usa **`DATABASE_PUBLIC_URL` em preferência a `DATABASE_URL`** para CLI local. Depois: **`npm run db:seed`** ou **`npm run create-owner`**.
+  - Na Railway **não** defines `DATABASE_PUBLIC_URL` no serviço da app (só `DATABASE_URL` interno); assim o deploy em produção não é afetado.
 
 Para operação geral (scripts, Docker local, etc.), veja [operacao.md](./operacao.md).
