@@ -15,7 +15,7 @@ export default async function AdminPanelLayout({ children }: { children: ReactNo
   return (
     <>
       <Navbar />
-      <div className="container-max pt-4">
+      <div className="container-max pt-20 sm:pt-24">
         <AdminPanelNav access={access} />
       </div>
       {children}
