@@ -129,7 +129,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     service: appointment.service,
     dateStr: parsed.data.date,
     timeStr: parsed.data.time,
-    defaultUnitId: appointment.unitId,
+    unitId: appointment.unitId,
     staffMemberId: appointment.staffMemberId ?? undefined,
     excludeAppointmentId: appointment.id,
   });
