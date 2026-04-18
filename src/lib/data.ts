@@ -171,3 +171,31 @@ export async function getPublicBarbers(): Promise<PublicBarber[]> {
     throw error;
   }
 }
+
+/** Unidades ativas da barbearia para exibir na página inicial. */
+export async function getPublicBarbershopUnits() {
+  try {
+    const units = await prisma.barbershopUnit.findMany({
+      where: { isActive: true },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        addressLine: true,
+        city: true,
+        isDefault: true,
+      },
+    });
+    return units;
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[data] getPublicBarbershopUnits: base indisponível — a devolver lista vazia.",
+        );
+      }
+      return [];
+    }
+    throw error;
+  }
+}

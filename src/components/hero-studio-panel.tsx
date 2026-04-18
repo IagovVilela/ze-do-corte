@@ -213,19 +213,10 @@ export function HeroStudioPanel() {
             </p>
             <Link
               href="/agendar"
-              className="group inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-brand-300"
+              className="group inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-xs font-bold text-zinc-950 transition hover:bg-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
-              <span className="border-b border-transparent transition group-hover:border-brand-300">
-                Reservar
-              </span>
-              <motion.span
-                aria-hidden
-                className="inline-flex"
-                whileHover={{ x: 3, y: -3 }}
-                transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              >
-                <ArrowUpRight className="h-4 w-4" />
-              </motion.span>
+              <span className="transition">Reservar</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </Link>
           </motion.div>
         </div>

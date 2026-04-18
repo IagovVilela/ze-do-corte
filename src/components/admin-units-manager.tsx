@@ -44,6 +44,7 @@ export function AdminUnitsManager({
 
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
+  const [addressLine, setAddressLine] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<UnitDraft>({
@@ -121,6 +122,7 @@ export function AdminUnitsManager({
         body: JSON.stringify({
           name,
           city: city || null,
+          addressLine: addressLine || null,
           isDefault: false,
           isActive: true,
         }),
@@ -130,6 +132,7 @@ export function AdminUnitsManager({
       setMessage("Unidade criada.");
       setName("");
       setCity("");
+      setAddressLine("");
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro.");
@@ -224,6 +227,15 @@ export function AdminUnitsManager({
               className={input}
               value={city}
               onChange={(e) => setCity(e.target.value)}
+            />
+          </label>
+          <label className="space-y-1 text-sm sm:col-span-2">
+            <span className="text-zinc-400">Endereço (linha)</span>
+            <input
+              className={input}
+              value={addressLine}
+              onChange={(e) => setAddressLine(e.target.value)}
+              placeholder="Rua, número, bairro…"
             />
           </label>
         </div>

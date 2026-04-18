@@ -9,12 +9,12 @@ import { Navbar } from "@/components/navbar";
 import { SectionTitle } from "@/components/section-title";
 import { SiteFooter } from "@/components/site-footer";
 import { BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
-import { getPublicBarbers, getServices } from "@/lib/data";
+import { getPublicBarbers, getServices, getPublicBarbershopUnits } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [services, barbers] = await Promise.all([getServices(), getPublicBarbers()]);
+  const [services, barbers, units] = await Promise.all([getServices(), getPublicBarbers(), getPublicBarbershopUnits()]);
 
   return (
     <HomeEntrance>
@@ -58,7 +58,7 @@ export default async function Home() {
               title="Venha conhecer a Zé do Corte"
               description={`${BARBER_SLOGAN_SECONDARY} Ambiente moderno e atendimento humanizado em São José dos Campos.`}
             />
-            <HomeContactGrid />
+            <HomeContactGrid units={units} />
           </AnimatedSection>
         </main>
         <SiteFooter />

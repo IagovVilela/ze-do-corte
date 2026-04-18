@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { AdminProfileForm } from "@/components/admin-profile-form";
-import { AdminPushNotifications } from "@/components/admin-push-notifications";
 import { AnimatedSection } from "@/components/animated-section";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
@@ -28,9 +27,6 @@ export default async function AdminPerfilPage() {
               profileImageUrl={access.profileImageUrl}
               avatarUploadEnabled={isCloudinaryConfigured()}
             />
-            <div className="mt-8">
-              <AdminPushNotifications />
-            </div>
           </div>
         </AnimatedSection>
       </section>

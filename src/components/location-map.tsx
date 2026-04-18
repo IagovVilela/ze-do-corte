@@ -1,7 +1,12 @@
 import { BARBER_SHOP_ADDRESS } from "@/lib/constants";
 
-export function LocationMap() {
-  const encoded = encodeURIComponent(BARBER_SHOP_ADDRESS);
+type Props = {
+  query?: string;
+};
+
+export function LocationMap({ query }: Props) {
+  const address = query || BARBER_SHOP_ADDRESS;
+  const encoded = encodeURIComponent(address);
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
 
   return (
