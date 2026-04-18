@@ -25,7 +25,7 @@ export async function assertPublicBookingSlot(options: {
   service: Pick<Service, "durationMinutes">;
   dateStr: string;
   timeStr: string;
-  defaultUnitId: string | null;
+  unitId: string | null;
   staffMemberId?: string | undefined;
   excludeAppointmentId?: string;
 }): Promise<
@@ -41,7 +41,7 @@ export async function assertPublicBookingSlot(options: {
     service,
     dateStr,
     timeStr,
-    defaultUnitId,
+    unitId,
     staffMemberId,
     excludeAppointmentId,
   } = options;
@@ -73,7 +73,7 @@ export async function assertPublicBookingSlot(options: {
   let assignedStaff: AssignedStaffForNotify | null = null;
 
   if (staffMemberId) {
-    if (!defaultUnitId) {
+    if (!unitId) {
       return {
         ok: false,
         message: "Não é possível escolher profissional sem unidade configurada.",
@@ -84,7 +84,7 @@ export async function assertPublicBookingSlot(options: {
       where: {
         id: staffMemberId,
         role: "STAFF",
-        unitId: defaultUnitId,
+        unitId: unitId,
       },
       select: { id: true, email: true, displayName: true, workWeekJson: true },
     });
@@ -117,7 +117,7 @@ export async function assertPublicBookingSlot(options: {
 
   const conflict = await prisma.appointment.findFirst({
     where: buildAppointmentSlotConflictWhere({
-      unitId: defaultUnitId,
+      unitId: unitId,
       rangeStart: startsAt,
       rangeEnd: endsAt,
       ...(assignedStaff

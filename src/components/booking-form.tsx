@@ -25,10 +25,13 @@ const visibleDates = Array.from({ length: 14 }).map((_, index) =>
 
 type BookingFormProps = {
   services: ServiceSummary[];
-  barbers: { id: string; name: string; imageUrl: string | null }[];
+  barbers: { id: string; name: string; imageUrl: string | null; unitId: string | null }[];
+  units: { id: string; name: string; isDefault: boolean }[];
 };
 
-export function BookingForm({ services, barbers }: BookingFormProps) {
+export function BookingForm({ services, barbers, units }: BookingFormProps) {
+  const defaultUnitId = units.find((u) => u.isDefault)?.id ?? units[0]?.id ?? "";
+  const [unitId, setUnitId] = useState(defaultUnitId);
   const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
   const [staffMemberId, setStaffMemberId] = useState("");
   const [selectedDate, setSelectedDate] = useState(
@@ -52,6 +55,11 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
     }
   }, [serviceId, services]);
 
+  const filteredBarbers = useMemo(
+    () => barbers.filter((b) => !b.unitId || b.unitId === unitId),
+    [barbers, unitId]
+  );
+
   const selectedService = useMemo(
     () => services.find((service) => service.id === serviceId),
     [serviceId, services],
@@ -63,7 +71,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
   }, [barbers, staffMemberId]);
 
   useEffect(() => {
-    if (!serviceId || !selectedDate) return;
+    if (!serviceId || !selectedDate || !unitId) return;
 
     const fetchAvailability = async () => {
       setLoadingSlots(true);
@@ -74,7 +82,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
             ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
             : "";
         const response = await fetch(
-          `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}${staffQ}`,
+          `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}${staffQ}`,
         );
         if (!response.ok) {
           throw new Error("Falha na disponibilidade");
@@ -89,7 +97,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
     };
 
     void fetchAvailability();
-  }, [serviceId, selectedDate, staffMemberId]);
+  }, [serviceId, selectedDate, staffMemberId, unitId]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -116,6 +124,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
           serviceId,
           date: selectedDate,
           time: selectedTime,
+          unitId: unitId,
           ...(staffMemberId ? { staffMemberId } : {}),
         }),
       });
@@ -144,7 +153,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
           ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
           : "";
       const refresh = await fetch(
-        `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}${staffQ}`,
+        `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}${staffQ}`,
       );
       const refreshed = (await refresh.json()) as AvailableApiResponse;
       setAvailableSlots(refreshed.availableSlots);
@@ -182,8 +191,34 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
         <div className="space-y-6">
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Serviço e horário
+              Unidade, Serviço e Horário
             </p>
+            {units.length > 1 ? (
+              <label className="mb-4 block space-y-2">
+                <span className="text-sm font-medium text-zinc-200">Unidade</span>
+                <select
+                  value={unitId}
+                  onChange={(event) => {
+                    setUnitId(event.target.value);
+                    setStaffMemberId("");
+                    setSelectedTime("");
+                  }}
+                  className={cn(
+                    inputClass,
+                    "min-w-0 max-w-full cursor-pointer truncate appearance-none bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat pr-11",
+                  )}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                  }}
+                >
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id} className="bg-zinc-900">
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label className="block space-y-2">
               <span className="text-sm font-medium text-zinc-200">Serviço</span>
               <select
@@ -205,7 +240,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
               </select>
             </label>
 
-            {barbers.length > 0 ? (
+            {filteredBarbers.length > 0 ? (
               <div className="mt-4 space-y-3">
                 <div>
                   <span className="text-sm font-medium text-zinc-200">
@@ -281,7 +316,7 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
                   </motion.button>
 
                   {/* Cards dos barbeiros */}
-                  {barbers.map((b) => {
+                  {filteredBarbers.map((b) => {
                     const isSelected = staffMemberId === b.id;
                     return (
                       <motion.button
@@ -522,7 +557,15 @@ export function BookingForm({ services, barbers }: BookingFormProps) {
             <dt className="text-zinc-500">Serviço</dt>
             <dd className="font-medium text-zinc-100">{selectedService?.name ?? "—"}</dd>
           </div>
-          {barbers.length > 0 ? (
+          {units.length > 1 ? (
+            <div className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-3">
+              <dt className="text-zinc-500">Unidade</dt>
+              <dd className="font-medium text-zinc-100">
+                {units.find((u) => u.id === unitId)?.name ?? "—"}
+              </dd>
+            </div>
+          ) : null}
+          {filteredBarbers.length > 0 ? (
             <div className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-3">
               <dt className="text-zinc-500">Profissional</dt>
               <dd className="font-medium text-zinc-100">

@@ -32,13 +32,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const defaultUnitId = await getDefaultBarbershopUnitId();
-
     const slot = await assertPublicBookingSlot({
       service,
       dateStr: payload.date,
       timeStr: payload.time,
-      defaultUnitId,
+      unitId: payload.unitId,
       staffMemberId: payload.staffMemberId,
     });
 
@@ -60,7 +58,7 @@ export async function POST(request: Request) {
         startsAt,
         endsAt,
         serviceId: payload.serviceId,
-        unitId: defaultUnitId,
+        unitId: payload.unitId,
         staffMemberId: assignedStaff?.id ?? null,
         clientManageToken: randomUUID(),
       },
