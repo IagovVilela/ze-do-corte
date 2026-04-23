@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function AdminProfileForm({
-  email,
+  email: initialEmail,
   displayName: initialDisplayName,
   phone: initialPhone,
   profileImageUrl: initialUrl,
@@ -25,13 +25,15 @@ export function AdminProfileForm({
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [userEmail, setUserEmail] = useState(initialEmail);
   const [displayName, setDisplayName] = useState(initialDisplayName ?? "");
   const [phone, setPhone] = useState(() => formatBrPhoneNational(initialPhone ?? ""));
   const [profileImageUrl, setProfileImageUrl] = useState(initialUrl);
 
   useEffect(() => {
+    setUserEmail(initialEmail);
     setPhone(formatBrPhoneNational(initialPhone ?? ""));
-  }, [initialPhone]);
+  }, [initialEmail, initialPhone]);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,6 +67,7 @@ export function AdminProfileForm({
     }
 
     const body: Record<string, unknown> = {
+      email: userEmail.trim(),
       displayName: displayName.trim() || null,
       phone: formatBrPhoneNational(phone) || null,
     };
@@ -171,7 +174,7 @@ export function AdminProfileForm({
               />
             ) : (
               <span className="flex h-full w-full items-center justify-center text-2xl font-medium text-zinc-500">
-                {(displayName || email).slice(0, 1).toUpperCase()}
+                {(displayName || userEmail).slice(0, 1).toUpperCase()}
               </span>
             )}
           </div>
@@ -220,15 +223,16 @@ export function AdminProfileForm({
       >
         <h2 className="text-sm font-semibold text-zinc-200">Seus dados</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          O e-mail de login só pode ser alterado por um administrador na Equipe.
+          Mantenha seus dados atualizados.
         </p>
 
         <label className="mt-5 block text-xs font-medium text-zinc-400">E-mail</label>
         <input
-          type="text"
-          readOnly
-          value={email}
-          className="mt-1 w-full cursor-not-allowed rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-500"
+          type="email"
+          required
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-white/15 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none ring-brand-500/0 transition focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
         />
 
         <label className="mt-4 block text-xs font-medium text-zinc-400">Nome de exibição</label>

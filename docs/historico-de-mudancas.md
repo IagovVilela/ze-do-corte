@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-04-23
+
+- **Perfil no painel — edição de e-mail**: usuários agora podem alterar seu próprio e-mail de login na página de perfil (`/admin/perfil`). A API (`PATCH /api/auth/profile`) agora aceita a alteração e valida se o novo e-mail já não está em uso por outro membro da equipe. A restrição anterior (que exigia um administrador na Equipe para alterar o e-mail) foi removida do componente `admin-profile-form.tsx`.
+
 ## 2026-04-11
 
 - **Agendamento — cards de profissional**: dropdown de seleção de barbeiro em `/agendar` e resumo lateral substituído por **cards visuais** com foto (Cloudinary), fallback com inicial do nome, e badge ✓ animado (Framer Motion `layoutId`); inclui opção "Qualquer disponível" com ícone de grupo. `getBarbersForBooking` em `data.ts` agora retorna `imageUrl`. Componente `booking-form.tsx`; tipo de props atualizado para `{ id, name, imageUrl }`.

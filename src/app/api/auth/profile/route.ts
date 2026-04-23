@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 const patchSchema = z
   .object({
+    email: z.string().trim().email("E-mail inválido.").optional(),
     displayName: z.string().trim().max(120).optional().nullable(),
     phone: z.string().trim().max(24).optional().nullable(),
     currentPassword: z.string().optional(),
@@ -46,7 +47,7 @@ export async function PATCH(request: Request) {
   }
 
   const hasProfileFields =
-    parsed.data.displayName !== undefined || parsed.data.phone !== undefined;
+    parsed.data.email !== undefined || parsed.data.displayName !== undefined || parsed.data.phone !== undefined;
   const hasPasswordChange = Boolean(parsed.data.newPassword);
 
   if (!hasProfileFields && !hasPasswordChange) {
@@ -55,10 +56,20 @@ export async function PATCH(request: Request) {
 
   const member = await prisma.staffMember.findUnique({
     where: { id: auth.access.userId },
-    select: { id: true, passwordHash: true },
+    select: { id: true, email: true, passwordHash: true },
   });
   if (!member) {
     return NextResponse.json({ message: "Usuário não encontrado." }, { status: 404 });
+  }
+
+  if (parsed.data.email && parsed.data.email !== member.email) {
+    const existing = await prisma.staffMember.findUnique({
+      where: { email: parsed.data.email },
+      select: { id: true },
+    });
+    if (existing) {
+      return NextResponse.json({ message: "Este e-mail já está em uso." }, { status: 400 });
+    }
   }
 
   if (hasPasswordChange) {
@@ -77,6 +88,7 @@ export async function PATCH(request: Request) {
   const updated = await prisma.staffMember.update({
     where: { id: member.id },
     data: {
+      ...(parsed.data.email !== undefined ? { email: parsed.data.email } : {}),
       ...(parsed.data.displayName !== undefined
         ? { displayName: parsed.data.displayName?.trim() || null }
         : {}),
