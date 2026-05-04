@@ -17,6 +17,12 @@ const createSchema = z.object({
   price: z.number().min(0).max(999_999),
   isActive: z.boolean().optional().default(true),
   category: categoryZ.optional().default("OUTRO"),
+  unitOverrides: z.array(z.object({
+    unitId: z.string().min(1),
+    price: z.number().min(0).max(999_999).nullable(),
+    durationMinutes: z.number().int().min(5).max(480).nullable(),
+    isActive: z.boolean(),
+  })).optional(),
 });
 
 export async function GET() {
@@ -28,6 +34,7 @@ export async function GET() {
 
   const services = await prisma.service.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],
+    include: { unitOverrides: true },
   });
 
   return NextResponse.json({
@@ -39,6 +46,12 @@ export async function GET() {
       durationMinutes: s.durationMinutes,
       price: Number(s.price),
       isActive: s.isActive,
+      unitOverrides: s.unitOverrides.map(o => ({
+        unitId: o.unitId,
+        price: o.price ? Number(o.price) : null,
+        durationMinutes: o.durationMinutes,
+        isActive: o.isActive,
+      })),
     })),
   });
 }
@@ -76,7 +89,18 @@ export async function POST(request: Request) {
         price: parsed.data.price,
         isActive: parsed.data.isActive,
         category,
+        ...(parsed.data.unitOverrides && parsed.data.unitOverrides.length > 0 ? {
+          unitOverrides: {
+            create: parsed.data.unitOverrides.map(o => ({
+              unitId: o.unitId,
+              price: o.price,
+              durationMinutes: o.durationMinutes,
+              isActive: o.isActive,
+            }))
+          }
+        } : {})
       },
+      include: { unitOverrides: true },
     });
     return NextResponse.json(
       {
@@ -88,6 +112,12 @@ export async function POST(request: Request) {
           durationMinutes: service.durationMinutes,
           price: Number(service.price),
           isActive: service.isActive,
+          unitOverrides: service.unitOverrides.map(o => ({
+            unitId: o.unitId,
+            price: o.price ? Number(o.price) : null,
+            durationMinutes: o.durationMinutes,
+            isActive: o.isActive,
+          })),
         },
       },
       { status: 201 },

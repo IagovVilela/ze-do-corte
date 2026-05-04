@@ -6,6 +6,12 @@ export type ServiceSummary = {
   description: string;
   durationMinutes: number;
   price: number;
+  unitOverrides?: {
+    unitId: string;
+    price: number | null;
+    durationMinutes: number | null;
+    isActive: boolean;
+  }[];
 };
 
 /** Barbeiro exibido na home (`getPublicBarbers`). Sem e-mail. */

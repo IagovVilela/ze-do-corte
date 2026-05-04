@@ -76,6 +76,9 @@ export async function getServices() {
     const services = await prisma.service.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "asc" },
+      include: {
+        unitOverrides: true,
+      },
     });
 
     return services.map((service) => ({
@@ -84,6 +87,12 @@ export async function getServices() {
       description: service.description,
       durationMinutes: service.durationMinutes,
       price: Number(service.price),
+      unitOverrides: service.unitOverrides.map((o) => ({
+        unitId: o.unitId,
+        price: o.price ? Number(o.price) : null,
+        durationMinutes: o.durationMinutes,
+        isActive: o.isActive,
+      })),
     }));
   } catch (error) {
     if (isDatabaseConnectionError(error)) {

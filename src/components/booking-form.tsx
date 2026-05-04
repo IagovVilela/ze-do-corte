@@ -60,9 +60,27 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
     [barbers, unitId]
   );
 
+  const filteredServices = useMemo(() => {
+    return services.map(service => {
+      const override = service.unitOverrides?.find(o => o.unitId === unitId);
+      return {
+        ...service,
+        isActive: override ? override.isActive : true,
+        price: (override && override.price !== null) ? override.price : service.price,
+        durationMinutes: (override && override.durationMinutes !== null) ? override.durationMinutes : service.durationMinutes,
+      };
+    }).filter(s => s.isActive);
+  }, [services, unitId]);
+
+  useEffect(() => {
+    if (filteredServices.length > 0 && !filteredServices.find(s => s.id === serviceId)) {
+      setServiceId(filteredServices[0].id);
+    }
+  }, [serviceId, filteredServices]);
+
   const selectedService = useMemo(
-    () => services.find((service) => service.id === serviceId),
-    [serviceId, services],
+    () => filteredServices.find((service) => service.id === serviceId),
+    [serviceId, filteredServices],
   );
 
   const selectedBarberName = useMemo(() => {
@@ -232,7 +250,7 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
                 }}
               >
-                {services.map((service) => (
+                {filteredServices.map((service) => (
                   <option key={service.id} value={service.id} className="bg-zinc-900">
                     {service.name} • R$ {service.price.toFixed(2)}
                   </option>

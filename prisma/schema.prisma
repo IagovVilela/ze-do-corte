@@ -39,6 +39,7 @@ model BarbershopUnit {
   updatedAt    DateTime        @updatedAt
   appointments Appointment[]
   staffMembers StaffMember[]
+  unitServices BarbershopUnitService[]
 }
 
 model StaffMember {
@@ -119,9 +120,30 @@ model Service {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   appointments    Appointment[]
+  unitOverrides   BarbershopUnitService[]
 
   @@unique([name])
   @@index([category])
+}
+
+model BarbershopUnitService {
+  id              String         @id @default(cuid())
+  unitId          String
+  unit            BarbershopUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  serviceId       String
+  service         Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  /// Preço específico para esta unidade (se nulo, usa o valor padrão do Service)
+  price           Decimal?       @db.Decimal(10, 2)
+  /// Duração específica para esta unidade (se nulo, usa o valor padrão do Service)
+  durationMinutes Int?
+  /// Permite desativar um serviço especificamente para uma unidade
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([unitId, serviceId])
+  @@index([unitId])
+  @@index([serviceId])
 }
 
 model Appointment {

@@ -23,17 +23,35 @@ export async function POST(request: Request) {
     const payload = parsed.data;
     const service = await prisma.service.findUnique({
       where: { id: payload.serviceId },
+      include: {
+        unitOverrides: payload.unitId ? {
+          where: { unitId: payload.unitId },
+        } : false,
+      },
     });
 
-    if (!service || !service.isActive) {
+    if (!service) {
       return NextResponse.json(
-        { message: "Serviço inválido ou indisponível." },
+        { message: "Serviço inválido." },
+        { status: 404 },
+      );
+    }
+
+    const unitOverride = service.unitOverrides?.[0];
+    const isActive = unitOverride ? unitOverride.isActive : service.isActive;
+    const durationMinutes = (unitOverride && unitOverride.durationMinutes !== null) 
+      ? unitOverride.durationMinutes 
+      : service.durationMinutes;
+
+    if (!isActive) {
+      return NextResponse.json(
+        { message: "Serviço indisponível nesta unidade." },
         { status: 404 },
       );
     }
 
     const slot = await assertPublicBookingSlot({
-      service,
+      service: { ...service, durationMinutes },
       dateStr: payload.date,
       timeStr: payload.time,
       unitId: payload.unitId,

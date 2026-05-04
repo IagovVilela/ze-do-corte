@@ -14,9 +14,16 @@ export default async function AdminServicosPage() {
     redirect("/admin");
   }
 
-  const services = await prisma.service.findMany({
-    orderBy: { name: "asc" },
-  });
+  const [services, units] = await Promise.all([
+    prisma.service.findMany({
+      orderBy: { name: "asc" },
+      include: { unitOverrides: true },
+    }),
+    prisma.barbershopUnit.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, isActive: true },
+    })
+  ]);
 
   const rows = services.map((s) => ({
     id: s.id,
@@ -26,6 +33,12 @@ export default async function AdminServicosPage() {
     durationMinutes: s.durationMinutes,
     price: Number(s.price),
     isActive: s.isActive,
+    unitOverrides: s.unitOverrides.map(o => ({
+      unitId: o.unitId,
+      price: o.price ? Number(o.price) : null,
+      durationMinutes: o.durationMinutes,
+      isActive: o.isActive,
+    })),
   }));
 
   return (
@@ -38,7 +51,7 @@ export default async function AdminServicosPage() {
             subtitle="Crie serviços, filtre por tipo, edite ou exclua (se não houver reservas). Alterações ativas refletem no site e no agendamento."
           />
           <div className="mt-8">
-            <AdminServicesManager initialServices={rows} />
+            <AdminServicesManager initialServices={rows} units={units} />
           </div>
         </AnimatedSection>
       </section>

@@ -17,6 +17,12 @@ const patchSchema = z.object({
   price: z.number().min(0).max(999_999).optional(),
   isActive: z.boolean().optional(),
   category: categoryZ.optional(),
+  unitOverrides: z.array(z.object({
+    unitId: z.string().min(1),
+    price: z.number().min(0).max(999_999).nullable(),
+    durationMinutes: z.number().int().min(5).max(480).nullable(),
+    isActive: z.boolean(),
+  })).optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -66,7 +72,19 @@ export async function PATCH(request: Request, context: RouteContext) {
         ...(parsed.data.category !== undefined
           ? { category: parsed.data.category as ServiceCategory }
           : {}),
+        ...(parsed.data.unitOverrides !== undefined ? {
+          unitOverrides: {
+            deleteMany: {},
+            create: parsed.data.unitOverrides.map(o => ({
+              unitId: o.unitId,
+              price: o.price,
+              durationMinutes: o.durationMinutes,
+              isActive: o.isActive,
+            }))
+          }
+        } : {})
       },
+      include: { unitOverrides: true },
     });
     return NextResponse.json({
       service: {
@@ -77,6 +95,12 @@ export async function PATCH(request: Request, context: RouteContext) {
         durationMinutes: service.durationMinutes,
         price: Number(service.price),
         isActive: service.isActive,
+        unitOverrides: service.unitOverrides.map(o => ({
+          unitId: o.unitId,
+          price: o.price ? Number(o.price) : null,
+          durationMinutes: o.durationMinutes,
+          isActive: o.isActive,
+        })),
       },
     });
   } catch {

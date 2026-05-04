@@ -19,6 +19,12 @@ type ServiceRow = {
   durationMinutes: number;
   price: number;
   isActive: boolean;
+  unitOverrides: {
+    unitId: string;
+    price: number | null;
+    durationMinutes: number | null;
+    isActive: boolean;
+  }[];
 };
 
 function normalizeCategory(raw: string): ServiceCategoryUi {
@@ -32,9 +38,17 @@ type ServiceDraft = {
   durationMinutes: number;
   price: number;
   isActive: boolean;
+  unitOverrides: Record<string, {
+    price: number | null;
+    durationMinutes: number | null;
+    isActive: boolean;
+  }>;
 };
 
-type Props = { initialServices: ServiceRow[] };
+type Props = { 
+  initialServices: ServiceRow[];
+  units: { id: string; name: string; isActive: boolean }[];
+};
 
 const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
   CORTE: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
@@ -44,7 +58,7 @@ const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
   OUTRO: "bg-zinc-500/20 text-zinc-300 ring-white/10",
 };
 
-export function AdminServicesManager({ initialServices }: Props) {
+export function AdminServicesManager({ initialServices, units }: Props) {
   const router = useRouter();
   const [services, setServices] = useState<ServiceRow[]>(() =>
     initialServices.map((s) => ({
@@ -69,6 +83,7 @@ export function AdminServicesManager({ initialServices }: Props) {
     durationMinutes: 30,
     price: 0,
     isActive: true,
+    unitOverrides: {},
   });
 
   const filtered = useMemo(() => {
@@ -128,6 +143,10 @@ export function AdminServicesManager({ initialServices }: Props) {
 
   function openEdit(s: ServiceRow) {
     setEditingId(s.id);
+    const overridesRec: Record<string, any> = {};
+    for (const o of s.unitOverrides) {
+      overridesRec[o.unitId] = { price: o.price, durationMinutes: o.durationMinutes, isActive: o.isActive };
+    }
     setDraft({
       name: s.name,
       description: s.description,
@@ -135,6 +154,7 @@ export function AdminServicesManager({ initialServices }: Props) {
       durationMinutes: s.durationMinutes,
       price: s.price,
       isActive: s.isActive,
+      unitOverrides: overridesRec,
     });
   }
 
@@ -159,6 +179,13 @@ export function AdminServicesManager({ initialServices }: Props) {
       setError("Duração entre 5 e 480 minutos.");
       return;
     }
+    const overridesArray = Object.entries(draft.unitOverrides).map(([unitId, o]) => ({
+      unitId,
+      price: o.price,
+      durationMinutes: o.durationMinutes,
+      isActive: o.isActive,
+    }));
+
     const ok = await patchService(id, {
       name,
       description,
@@ -166,6 +193,7 @@ export function AdminServicesManager({ initialServices }: Props) {
       durationMinutes: draft.durationMinutes,
       price: draft.price,
       isActive: draft.isActive,
+      unitOverrides: overridesArray,
     });
     if (ok) closeEdit();
   }
@@ -186,6 +214,13 @@ export function AdminServicesManager({ initialServices }: Props) {
     }
     setPending(true);
     try {
+      const overridesArray = Object.entries(newForm.unitOverrides).map(([unitId, o]) => ({
+        unitId,
+        price: o.price,
+        durationMinutes: o.durationMinutes,
+        isActive: o.isActive,
+      }));
+
       const res = await fetch("/api/admin/services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -196,6 +231,7 @@ export function AdminServicesManager({ initialServices }: Props) {
           durationMinutes: newForm.durationMinutes,
           price: newForm.price,
           isActive: newForm.isActive,
+          unitOverrides: overridesArray,
         }),
       });
       const payload = (await res.json()) as { message?: string };
@@ -211,6 +247,7 @@ export function AdminServicesManager({ initialServices }: Props) {
         durationMinutes: 30,
         price: 0,
         isActive: true,
+        unitOverrides: {},
       });
       await refreshList();
     } catch (err) {
@@ -346,7 +383,7 @@ export function AdminServicesManager({ initialServices }: Props) {
               }
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <label className="flex items-center gap-2 text-sm text-zinc-300 sm:col-span-2">
             <input
               type="checkbox"
               checked={newForm.isActive}
@@ -356,6 +393,53 @@ export function AdminServicesManager({ initialServices }: Props) {
             />
             Ativo no site e no agendamento
           </label>
+
+          {units.length > 1 && (
+            <div className="sm:col-span-2 border-t border-white/10 pt-4 mt-2">
+              <h4 className="text-sm font-medium text-zinc-300 mb-3">Preços Específicos por Unidade (Opcional)</h4>
+              <div className="space-y-4">
+                {units.map(unit => {
+                  const ov = newForm.unitOverrides[unit.id] || { isActive: true, price: null, durationMinutes: null };
+                  return (
+                    <div key={unit.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center rounded-xl bg-zinc-900/30 p-3 border border-white/5">
+                      <span className="text-sm text-zinc-200 truncate">{unit.name}</span>
+                      <label className="flex items-center gap-1.5 text-xs text-zinc-400">
+                        Ativo:
+                        <input
+                          type="checkbox"
+                          checked={ov.isActive}
+                          onChange={(e) => setNewForm(f => ({
+                            ...f,
+                            unitOverrides: { ...f.unitOverrides, [unit.id]: { ...ov, isActive: e.target.checked } }
+                          }))}
+                        />
+                      </label>
+                      <input
+                        type="number"
+                        placeholder={`R$ ${newForm.price}`}
+                        className="w-24 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                        value={ov.price === null ? "" : ov.price}
+                        onChange={(e) => setNewForm(f => ({
+                          ...f,
+                          unitOverrides: { ...f.unitOverrides, [unit.id]: { ...ov, price: e.target.value === "" ? null : Number(e.target.value) } }
+                        }))}
+                      />
+                      <input
+                        type="number"
+                        placeholder={`${newForm.durationMinutes}m`}
+                        className="w-20 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                        value={ov.durationMinutes === null ? "" : ov.durationMinutes}
+                        onChange={(e) => setNewForm(f => ({
+                          ...f,
+                          unitOverrides: { ...f.unitOverrides, [unit.id]: { ...ov, durationMinutes: e.target.value === "" ? null : Number(e.target.value) } }
+                        }))}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         <button
           type="submit"
@@ -576,7 +660,7 @@ export function AdminServicesManager({ initialServices }: Props) {
                         }
                       />
                     </label>
-                    <label className="flex items-center gap-2 text-xs text-zinc-400">
+                    <label className="flex items-center gap-2 text-xs text-zinc-400 sm:col-span-2">
                       <input
                         type="checkbox"
                         checked={draft.isActive}
@@ -588,6 +672,52 @@ export function AdminServicesManager({ initialServices }: Props) {
                       />
                       Ativo
                     </label>
+
+                    {units.length > 1 && (
+                      <div className="sm:col-span-2 border-t border-white/10 pt-3 mt-1">
+                        <h5 className="text-xs font-medium text-zinc-400 mb-2">Preços por Unidade</h5>
+                        <div className="space-y-2">
+                          {units.map(unit => {
+                            const ov = draft.unitOverrides[unit.id] || { isActive: true, price: null, durationMinutes: null };
+                            return (
+                              <div key={unit.id} className="flex flex-wrap gap-2 items-center rounded-lg bg-zinc-900/50 px-3 py-2 border border-white/5">
+                                <span className="text-xs text-zinc-300 flex-1 min-w-[80px] truncate">{unit.name}</span>
+                                <label className="flex items-center gap-1 text-[10px] text-zinc-500">
+                                  <input
+                                    type="checkbox"
+                                    checked={ov.isActive}
+                                    onChange={(e) => setDraft(d => d ? {
+                                      ...d,
+                                      unitOverrides: { ...d.unitOverrides, [unit.id]: { ...ov, isActive: e.target.checked } }
+                                    } : d)}
+                                  />
+                                </label>
+                                <input
+                                  type="number"
+                                  placeholder={`R$ ${draft.price}`}
+                                  className="w-20 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+                                  value={ov.price === null ? "" : ov.price}
+                                  onChange={(e) => setDraft(d => d ? {
+                                    ...d,
+                                    unitOverrides: { ...d.unitOverrides, [unit.id]: { ...ov, price: e.target.value === "" ? null : Number(e.target.value) } }
+                                  } : d)}
+                                />
+                                <input
+                                  type="number"
+                                  placeholder={`${draft.durationMinutes}m`}
+                                  className="w-16 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+                                  value={ov.durationMinutes === null ? "" : ov.durationMinutes}
+                                  onChange={(e) => setDraft(d => d ? {
+                                    ...d,
+                                    unitOverrides: { ...d.unitOverrides, [unit.id]: { ...ov, durationMinutes: e.target.value === "" ? null : Number(e.target.value) } }
+                                  } : d)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
