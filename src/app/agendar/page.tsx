@@ -3,7 +3,11 @@ import { DatabaseUnavailableNotice } from "@/components/database-unavailable-not
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { BARBER_SLOGAN_PRIMARY } from "@/lib/constants";
-import { getBarbersForBooking, getPublicBarbershopUnits, getServices } from "@/lib/data";
+import {
+  getBarbersForBooking,
+  getPublicBarbershopUnits,
+  getServicesForBooking,
+} from "@/lib/data";
 
 export const metadata = {
   title: "Agendar horário | Zé do Corte",
@@ -14,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function BookingPage() {
   const [services, barbers, units] = await Promise.all([
-    getServices(),
+    getServicesForBooking(),
     getBarbersForBooking(),
     getPublicBarbershopUnits(),
   ]);

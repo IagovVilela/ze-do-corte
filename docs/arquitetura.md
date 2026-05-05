@@ -40,7 +40,7 @@ Documentação detalhada: **[admin-hierarquia.md](./admin-hierarquia.md)**.
 
 Ver `prisma/schema.prisma` para o contrato exato.
 
-- **Service** — nome, descrição, **`category`** (`ServiceCategory`: Corte, Barba, Combo, Tratamento, Outro), duração, preço, `isActive`.
+- **Service** — obrigatoriamente ligado a uma **`BarbershopUnit`** (`unitId`); unicidade do nome **por unidade** (preços/catálogo podem variar entre lojas); **`category`** (`ServiceCategory`), duração, preço, `isActive`.
 - **Appointment** — cliente, dados de contato, intervalo `startsAt`/`endsAt`, `status` (enum), relação com `Service`, opcionalmente **`unitId`**, opcionalmente **`staffMemberId`** (barbeiro `STAFF` atribuído; reservas públicas costumam entrar sem profissional até dono/admin atribuírem), **`clientManageToken`** opcional (link secreto `/minha-reserva/...` gerado na reserva pública), pagamento em balcão (`paidAt`, `paymentMethod`).
 - **BarbershopUnit** — unidades (slug, endereço, `isDefault` para o site público).
 - **StaffMember** — e-mail, `StaffRole`, hash bcrypt da senha, unidade opcional (obrigatória para STAFF), `displayName`, `phone`, `profileImageUrl` / `profileImagePublicId` (Cloudinary), `websiteBio` e `showOnWebsite` (cartão na página inicial, só para STAFF), `workWeekJson` opcional (expediente semanal do barbeiro), subscrições **Web Push** (`StaffPushSubscription`: `endpoint`, chaves `p256dh` / `auth`).

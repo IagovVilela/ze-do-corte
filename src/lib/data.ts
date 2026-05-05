@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 import { prisma } from "@/lib/prisma";
-import type { PublicBarber } from "@/lib/types";
+import type { PublicBarber, ServiceSummary } from "@/lib/types";
 
 function isDatabaseConnectionError(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -13,6 +13,24 @@ function isDatabaseConnectionError(error: unknown): boolean {
   }
   const message = error instanceof Error ? error.message : String(error);
   return /ECONNREFUSED|Can't reach database|P1001|P1017/i.test(message);
+}
+
+function mapServiceToSummary(service: {
+  id: string;
+  name: string;
+  description: string;
+  durationMinutes: number;
+  price: Prisma.Decimal;
+  unitId: string;
+}): ServiceSummary {
+  return {
+    id: service.id,
+    name: service.name,
+    description: service.description,
+    durationMinutes: service.durationMinutes,
+    price: Number(service.price),
+    unitId: service.unitId,
+  };
 }
 
 const SERVICE_SEED = [
@@ -42,10 +60,36 @@ const SERVICE_SEED = [
   },
 ];
 
+/** Garante uma unidade padrão para seed automático (desenvolvimento). */
+async function ensureBarbershopUnitForSeed(): Promise<string | null> {
+  try {
+    const unit = await prisma.barbershopUnit.upsert({
+      where: { slug: "matriz" },
+      create: {
+        name: "Unidade matriz",
+        slug: "matriz",
+        isDefault: true,
+        isActive: true,
+        city: "São José dos Campos",
+      },
+      update: {
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return unit.id;
+  } catch {
+    return null;
+  }
+}
+
 export async function ensureSeedServices() {
   try {
     const count = await prisma.service.count();
     if (count > 0) return;
+
+    const unitId = (await getDefaultBarbershopUnitId()) ?? (await ensureBarbershopUnitForSeed());
+    if (!unitId) return;
 
     await prisma.service.createMany({
       data: SERVICE_SEED.map((service) => ({
@@ -55,6 +99,7 @@ export async function ensureSeedServices() {
         price: service.price,
         category: service.category,
         isActive: true,
+        unitId,
       })),
     });
   } catch (error) {
@@ -70,26 +115,53 @@ export async function ensureSeedServices() {
   }
 }
 
-export async function getServices() {
+/**
+ * Serviços ativos da **unidade padrão** — página inicial e vitrine (`/`).
+ */
+export async function getServices(): Promise<ServiceSummary[]> {
   try {
     await ensureSeedServices();
+    const unitId = await getDefaultBarbershopUnitId();
+    if (!unitId) {
+      return [];
+    }
+
     const services = await prisma.service.findMany({
-      where: { isActive: true },
+      where: { isActive: true, unitId },
       orderBy: { createdAt: "asc" },
     });
 
-    return services.map((service) => ({
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      durationMinutes: service.durationMinutes,
-      price: Number(service.price),
-    }));
+    return services.map(mapServiceToSummary);
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
         console.warn(
           "[data] getServices: base indisponível — a devolver lista vazia (evita 500 na página).",
+        );
+      }
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
+ * Todos os serviços ativos **por unidade** — formulário de agendamento filtra pela unidade escolhida.
+ */
+export async function getServicesForBooking(): Promise<ServiceSummary[]> {
+  try {
+    await ensureSeedServices();
+    const services = await prisma.service.findMany({
+      where: { isActive: true },
+      orderBy: [{ unitId: "asc" }, { createdAt: "asc" }],
+    });
+
+    return services.map(mapServiceToSummary);
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[data] getServicesForBooking: base indisponível — a devolver lista vazia.",
         );
       }
       return [];

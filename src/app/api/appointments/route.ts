@@ -32,6 +32,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (service.unitId !== payload.unitId) {
+      return NextResponse.json(
+        { message: "Este serviço não está disponível na unidade selecionada." },
+        { status: 400 },
+      );
+    }
+
     const slot = await assertPublicBookingSlot({
       service,
       dateStr: payload.date,

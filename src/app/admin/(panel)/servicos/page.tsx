@@ -14,18 +14,34 @@ export default async function AdminServicosPage() {
     redirect("/admin");
   }
 
-  const services = await prisma.service.findMany({
-    orderBy: { name: "asc" },
-  });
+  const [services, units] = await Promise.all([
+    prisma.service.findMany({
+      orderBy: [{ unit: { name: "asc" } }, { name: "asc" }],
+      include: { unit: { select: { id: true, name: true } } },
+    }),
+    prisma.barbershopUnit.findMany({
+      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      select: { id: true, name: true, isDefault: true, isActive: true },
+    }),
+  ]);
 
   const rows = services.map((s) => ({
     id: s.id,
+    unitId: s.unitId,
+    unitName: s.unit.name,
     name: s.name,
     description: s.description,
     category: s.category,
     durationMinutes: s.durationMinutes,
     price: Number(s.price),
     isActive: s.isActive,
+  }));
+
+  const initialUnits = units.map((u) => ({
+    id: u.id,
+    name: u.name,
+    isDefault: u.isDefault,
+    isActive: u.isActive,
   }));
 
   return (
@@ -35,10 +51,10 @@ export default async function AdminServicosPage() {
           <SectionTitle
             eyebrow="Catálogo"
             title="Serviços e preços"
-            subtitle="Crie serviços, filtre por tipo, edite ou exclua (se não houver reservas). Alterações ativas refletem no site e no agendamento."
+            subtitle="Cada serviço pertence a uma unidade (preço e catálogo podem diferir por loja). Filtre por tipo ou unidade, edite ou exclua (se não houver reservas). Alterações ativas refletem no site e no agendamento."
           />
           <div className="mt-8">
-            <AdminServicesManager initialServices={rows} />
+            <AdminServicesManager initialServices={rows} initialUnits={initialUnits} />
           </div>
         </AnimatedSection>
       </section>

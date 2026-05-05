@@ -13,6 +13,8 @@ import { cn, formatMoney } from "@/lib/utils";
 
 type ServiceRow = {
   id: string;
+  unitId: string;
+  unitName: string;
   name: string;
   description: string;
   category: string;
@@ -26,6 +28,7 @@ function normalizeCategory(raw: string): ServiceCategoryUi {
 }
 
 type ServiceDraft = {
+  unitId: string;
   name: string;
   description: string;
   category: ServiceCategoryUi;
@@ -34,7 +37,17 @@ type ServiceDraft = {
   isActive: boolean;
 };
 
-type Props = { initialServices: ServiceRow[] };
+export type AdminUnitOption = {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  isActive: boolean;
+};
+
+type Props = {
+  initialServices: ServiceRow[];
+  initialUnits: AdminUnitOption[];
+};
 
 const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
   CORTE: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
@@ -44,7 +57,12 @@ const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
   OUTRO: "bg-zinc-500/20 text-zinc-300 ring-white/10",
 };
 
-export function AdminServicesManager({ initialServices }: Props) {
+function defaultUnitIdFromList(units: AdminUnitOption[]) {
+  const active = units.filter((u) => u.isActive);
+  return active.find((u) => u.isDefault)?.id ?? active[0]?.id ?? "";
+}
+
+export function AdminServicesManager({ initialServices, initialUnits }: Props) {
   const router = useRouter();
   const [services, setServices] = useState<ServiceRow[]>(() =>
     initialServices.map((s) => ({
@@ -57,32 +75,44 @@ export function AdminServicesManager({ initialServices }: Props) {
   const [pending, setPending] = useState(false);
 
   const [filterCategory, setFilterCategory] = useState<ServiceCategoryUi | "ALL">("ALL");
+  const [filterUnit, setFilterUnit] = useState<"ALL" | string>("ALL");
   const [search, setSearch] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ServiceDraft | null>(null);
 
-  const [newForm, setNewForm] = useState<ServiceDraft>({
+  const [newForm, setNewForm] = useState<ServiceDraft>(() => ({
+    unitId: defaultUnitIdFromList(initialUnits),
     name: "",
     description: "",
     category: "OUTRO",
     durationMinutes: 30,
     price: 0,
     isActive: true,
-  });
+  }));
+
+  const activeUnits = useMemo(
+    () => initialUnits.filter((u) => u.isActive),
+    [initialUnits],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return services.filter((s) => {
+      if (filterUnit !== "ALL" && s.unitId !== filterUnit) {
+        return false;
+      }
       if (filterCategory !== "ALL" && normalizeCategory(s.category) !== filterCategory) {
         return false;
       }
       if (!q) return true;
       return (
-        s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
+        s.name.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        s.unitName.toLowerCase().includes(q)
       );
     });
-  }, [services, filterCategory, search]);
+  }, [services, filterCategory, filterUnit, search]);
 
   async function refreshList() {
     const res = await fetch("/api/admin/services");
@@ -129,6 +159,7 @@ export function AdminServicesManager({ initialServices }: Props) {
   function openEdit(s: ServiceRow) {
     setEditingId(s.id);
     setDraft({
+      unitId: s.unitId,
       name: s.name,
       description: s.description,
       category: normalizeCategory(s.category),
@@ -159,7 +190,12 @@ export function AdminServicesManager({ initialServices }: Props) {
       setError("Duração entre 5 e 480 minutos.");
       return;
     }
+    if (!draft.unitId) {
+      setError("Selecione a unidade.");
+      return;
+    }
     const ok = await patchService(id, {
+      unitId: draft.unitId,
       name,
       description,
       category: draft.category,
@@ -184,12 +220,17 @@ export function AdminServicesManager({ initialServices }: Props) {
       setError("Descrição: mínimo 3 caracteres.");
       return;
     }
+    if (!newForm.unitId) {
+      setError("Selecione a unidade.");
+      return;
+    }
     setPending(true);
     try {
       const res = await fetch("/api/admin/services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          unitId: newForm.unitId,
           name,
           description,
           category: newForm.category,
@@ -205,6 +246,7 @@ export function AdminServicesManager({ initialServices }: Props) {
       }
       setMessage("Serviço criado.");
       setNewForm({
+        unitId: defaultUnitIdFromList(initialUnits),
         name: "",
         description: "",
         category: "OUTRO",
@@ -264,6 +306,11 @@ export function AdminServicesManager({ initialServices }: Props) {
           {error}
         </p>
       ) : null}
+      {activeUnits.length === 0 ? (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-100">
+          Não há unidades ativas. Ative ou crie uma unidade em Unidades antes de adicionar serviços.
+        </p>
+      ) : null}
 
       <form
         onSubmit={(e) => void createService(e)}
@@ -271,6 +318,27 @@ export function AdminServicesManager({ initialServices }: Props) {
       >
         <h3 className="text-lg font-semibold text-white">Novo serviço</h3>
         <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-1 text-sm sm:col-span-2">
+            <span className="text-zinc-400">Unidade</span>
+            <select
+              className={selectClass}
+              required
+              disabled={activeUnits.length === 0}
+              value={newForm.unitId}
+              onChange={(e) => setNewForm((f) => ({ ...f, unitId: e.target.value }))}
+            >
+              {activeUnits.length === 0 ? (
+                <option value="">Nenhuma unidade ativa</option>
+              ) : (
+                activeUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                    {u.isDefault ? " (padrão)" : ""}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
           <label className="space-y-1 text-sm sm:col-span-2">
             <span className="text-zinc-400">Nome</span>
             <input
@@ -359,14 +427,52 @@ export function AdminServicesManager({ initialServices }: Props) {
         </div>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || activeUnits.length === 0}
           className="rounded-full bg-brand-500 px-5 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-50"
         >
           Criar serviço
         </button>
       </form>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-6">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+            Filtrar por unidade
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setFilterUnit("ALL")}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
+                filterUnit === "ALL"
+                  ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
+                  : "text-zinc-400 ring-white/10 hover:bg-white/5",
+              )}
+            >
+              Todas ({services.length})
+            </button>
+            {activeUnits.map((u) => {
+              const count = services.filter((s) => s.unitId === u.id).length;
+              return (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => setFilterUnit(u.id)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
+                    filterUnit === u.id
+                      ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
+                      : "text-zinc-400 ring-white/10 hover:bg-white/5",
+                  )}
+                >
+                  {u.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
             Filtrar por tipo
@@ -416,6 +522,7 @@ export function AdminServicesManager({ initialServices }: Props) {
             className={input}
           />
         </label>
+        </div>
       </div>
 
       <p className="text-sm text-zinc-500">
@@ -442,7 +549,8 @@ export function AdminServicesManager({ initialServices }: Props) {
                   >
                     {SERVICE_CATEGORY_LABELS[cat]}
                   </span>
-                  <h4 className="mt-2 text-base font-semibold text-white">{s.name}</h4>
+                  <p className="mt-1 text-xs text-zinc-500">{s.unitName}</p>
+                  <h4 className="mt-1 text-base font-semibold text-white">{s.name}</h4>
                 </div>
                 <span
                   className={cn(
@@ -493,6 +601,28 @@ export function AdminServicesManager({ initialServices }: Props) {
                 </div>
               ) : draft ? (
                 <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+                  <label className="block space-y-1 text-xs">
+                    <span className="text-zinc-500">Unidade</span>
+                    <select
+                      className={selectClass}
+                      value={draft.unitId}
+                      onChange={(e) =>
+                        setDraft((d) => (d ? { ...d, unitId: e.target.value } : d))
+                      }
+                    >
+                      {initialUnits.map((u) => (
+                        <option
+                          key={u.id}
+                          value={u.id}
+                          disabled={!u.isActive && u.id !== draft.unitId}
+                        >
+                          {u.name}
+                          {u.isDefault ? " (padrão)" : ""}
+                          {!u.isActive ? " (inativa)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <label className="block space-y-1 text-xs">
                     <span className="text-zinc-500">Nome</span>
                     <input

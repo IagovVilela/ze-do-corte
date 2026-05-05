@@ -39,6 +39,7 @@ model BarbershopUnit {
   updatedAt    DateTime        @updatedAt
   appointments Appointment[]
   staffMembers StaffMember[]
+  services     Service[]
 }
 
 model StaffMember {
@@ -118,10 +119,13 @@ model Service {
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  unitId          String
+  unit            BarbershopUnit   @relation(fields: [unitId], references: [id], onDelete: Restrict)
   appointments    Appointment[]
 
-  @@unique([name])
+  @@unique([unitId, name])
   @@index([category])
+  @@index([unitId])
 }
 
 model Appointment {

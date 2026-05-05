@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 const categoryZ = z.enum(SERVICE_CATEGORY_ORDER);
 
 const createSchema = z.object({
+  unitId: z.string().min(1, "Selecione a unidade."),
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().min(3).max(2000),
   durationMinutes: z.number().int().min(5).max(480),
@@ -27,12 +28,15 @@ export async function GET() {
   }
 
   const services = await prisma.service.findMany({
-    orderBy: [{ category: "asc" }, { name: "asc" }],
+    orderBy: [{ unit: { name: "asc" } }, { category: "asc" }, { name: "asc" }],
+    include: { unit: { select: { id: true, name: true } } },
   });
 
   return NextResponse.json({
     services: services.map((s) => ({
       id: s.id,
+      unitId: s.unitId,
+      unitName: s.unit.name,
       name: s.name,
       description: s.description,
       category: s.category,
@@ -67,9 +71,18 @@ export async function POST(request: Request) {
 
   const category = parsed.data.category as ServiceCategory;
 
+  const unitOk = await prisma.barbershopUnit.findFirst({
+    where: { id: parsed.data.unitId, isActive: true },
+    select: { id: true },
+  });
+  if (!unitOk) {
+    return NextResponse.json({ message: "Unidade inválida ou inativa." }, { status: 400 });
+  }
+
   try {
     const service = await prisma.service.create({
       data: {
+        unitId: parsed.data.unitId,
         name: parsed.data.name.trim(),
         description: parsed.data.description.trim(),
         durationMinutes: parsed.data.durationMinutes,
@@ -78,10 +91,16 @@ export async function POST(request: Request) {
         category,
       },
     });
+    const unit = await prisma.barbershopUnit.findUnique({
+      where: { id: service.unitId },
+      select: { name: true },
+    });
     return NextResponse.json(
       {
         service: {
           id: service.id,
+          unitId: service.unitId,
+          unitName: unit?.name ?? "",
           name: service.name,
           description: service.description,
           category: service.category,
@@ -94,7 +113,7 @@ export async function POST(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      { message: "Já existe um serviço com este nome." },
+      { message: "Já existe um serviço com este nome nesta unidade." },
       { status: 409 },
     );
   }

@@ -6,6 +6,8 @@ export type ServiceSummary = {
   description: string;
   durationMinutes: number;
   price: number;
+  /** Unidade a que este preço e catálogo pertencem. */
+  unitId: string;
 };
 
 /** Barbeiro exibido na home (`getPublicBarbers`). Sem e-mail. */

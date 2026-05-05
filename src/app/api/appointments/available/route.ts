@@ -86,7 +86,7 @@ export async function GET(request: Request) {
   const [service, appointments] = await Promise.all([
     prisma.service.findUnique({
       where: { id: serviceId },
-      select: { durationMinutes: true, isActive: true },
+      select: { durationMinutes: true, isActive: true, unitId: true },
     }),
     prisma.appointment.findMany({
       where: {
@@ -111,6 +111,13 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { error: "Serviço inválido." },
       { status: 404 },
+    );
+  }
+
+  if (resolvedUnitId && service.unitId !== resolvedUnitId) {
+    return NextResponse.json(
+      { error: "Serviço não disponível nesta unidade." },
+      { status: 400 },
     );
   }
 

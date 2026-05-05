@@ -52,8 +52,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Export Excel | `src/app/api/admin/export/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
 | Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
-| Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` |
-| Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH`, `DELETE` |
+| Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` (corpo com `unitId`; unicidade por par **unidade + nome**) |
+| Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH` (opcional `unitId`), `DELETE` |
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
 | Configuração | `src/app/api/admin/settings/route.ts` |
 | Login / logout painel | `src/app/api/auth/login/route.ts`, `logout/route.ts` |
@@ -72,7 +72,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `constants.ts` | `BARBER_SHOP_ADDRESS`, `BARBER_CONTACT_LINKS` (tel, WhatsApp, Instagram) |
 | `contact-links.ts` | `getWhatsappContactHref`, `getInstagramContactHref` a partir das constantes |
 | `lordicon-cdn-ids.ts` | IDs públicos `cdn.lordicon.com` por slot; `lordicon-server.ts` usa sem API token |
-| `data.ts` | `getServices`, `getPublicBarbers`, `getBarbersForBooking` (STAFF da unidade padrão), seed assistido se necessário |
+| `data.ts` | `getServices` (catálogo da unidade padrão — home), `getServicesForBooking` (todas as unidades ativas para `/agendar`), `getPublicBarbers`, `getBarbersForBooking`, seed assistido se necessário |
 | `barber-card-theme.ts` | Paleta e layout dos cartões da equipe na home (hash estável do `id` do `StaffMember`) |
 | `password.ts` | `hashPassword` / `verifyPassword` (bcryptjs) |
 | `session-cookie.ts` | Token de sessão, `createDbSession`, resolução por cookie |

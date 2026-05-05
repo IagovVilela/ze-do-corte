@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 const categoryZ = z.enum(SERVICE_CATEGORY_ORDER);
 
 const patchSchema = z.object({
+  unitId: z.string().min(1).optional(),
   name: z.string().trim().min(2).max(120).optional(),
   description: z.string().trim().min(3).max(2000).optional(),
   durationMinutes: z.number().int().min(5).max(480).optional(),
@@ -50,10 +51,21 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Serviço não encontrado." }, { status: 404 });
   }
 
+  if (parsed.data.unitId !== undefined) {
+    const unitOk = await prisma.barbershopUnit.findFirst({
+      where: { id: parsed.data.unitId, isActive: true },
+      select: { id: true },
+    });
+    if (!unitOk) {
+      return NextResponse.json({ message: "Unidade inválida ou inativa." }, { status: 400 });
+    }
+  }
+
   try {
     const service = await prisma.service.update({
       where: { id },
       data: {
+        ...(parsed.data.unitId !== undefined ? { unitId: parsed.data.unitId } : {}),
         ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
         ...(parsed.data.description !== undefined
           ? { description: parsed.data.description }
@@ -67,10 +79,13 @@ export async function PATCH(request: Request, context: RouteContext) {
           ? { category: parsed.data.category as ServiceCategory }
           : {}),
       },
+      include: { unit: { select: { name: true } } },
     });
     return NextResponse.json({
       service: {
         id: service.id,
+        unitId: service.unitId,
+        unitName: service.unit.name,
         name: service.name,
         description: service.description,
         category: service.category,

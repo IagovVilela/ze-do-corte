@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getServices } from "@/lib/data";
+import { getServicesForBooking } from "@/lib/data";
 
 export async function GET() {
   try {
-    const services = await getServices();
+    const services = await getServicesForBooking();
 
     return NextResponse.json({ services });
   } catch (error) {

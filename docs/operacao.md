@@ -80,6 +80,15 @@ Depois de mudar o `schema.prisma`, rode **`npx prisma generate`** (e **`npx pris
 
 Exemplo típico: **`Unknown field 'workWeekJson'`** em **`/admin/expediente`** — o código e o schema estão alinhados; falta sincronizar o **cliente** (`generate`) e a **tabela** (`db push`), depois limpar **`.next`** e voltar a subir o dev server.
 
+### Prisma: coluna não existe no banco (ex.: `Service.unitId`)
+
+O código espera o schema atual (`schema.prisma`), mas o Postgres local ficou atrás (sem migrações aplicadas). Sintoma: **`The column (not available) does not exist`** ou erro ao abrir a home.
+
+1. Com base **vazia** ou só criada com **`migrate`**: na raiz do projeto, **`npx prisma migrate deploy`** (ou **`npx prisma migrate dev`** em desenvolvimento).
+2. **`prisma migrate deploy`** falha com **P3005** (“database schema is not empty”): a base já tinha tabelas criadas com **`db push`** ou outro fluxo, sem histórico em **`_prisma_migrations`**. Ver [baselining](https://www.prisma.io/docs/guides/migrate/developing-and-baselines) na documentação Prisma, ou alinhe o schema manualmente com as migrações em **`prisma/migrations/`** e marque-as como aplicadas com **`prisma migrate resolve`** conforme o guia.
+
+Se **`db push`** recusar adicionar **`unitId`** em **`Service`** porque já há linhas e a coluna seria obrigatória, é preciso uma migração que **adiciona a coluna, preenche e só depois define NOT NULL** (como em **`20260411120000_service_per_unit`**), não um push direto.
+
 ## Comandos npm (raiz do projeto)
 
 | Comando | Uso |

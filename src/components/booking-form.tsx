@@ -32,7 +32,12 @@ type BookingFormProps = {
 export function BookingForm({ services, barbers, units }: BookingFormProps) {
   const defaultUnitId = units.find((u) => u.isDefault)?.id ?? units[0]?.id ?? "";
   const [unitId, setUnitId] = useState(defaultUnitId);
-  const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const [serviceId, setServiceId] = useState("");
+
+  const servicesForUnit = useMemo(
+    () => services.filter((s) => s.unitId === unitId),
+    [services, unitId],
+  );
   const [staffMemberId, setStaffMemberId] = useState("");
   const [selectedDate, setSelectedDate] = useState(
     format(visibleDates[0], "yyyy-MM-dd"),
@@ -50,10 +55,17 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    if (!serviceId && services[0]) {
-      setServiceId(services[0].id);
+    const list = services.filter((s) => s.unitId === unitId);
+    const first = list[0];
+    if (!first) {
+      setServiceId("");
+      return;
     }
-  }, [serviceId, services]);
+    setServiceId((prev) => {
+      const ok = list.some((s) => s.id === prev);
+      return ok ? prev : first.id;
+    });
+  }, [services, unitId]);
 
   const filteredBarbers = useMemo(
     () => barbers.filter((b) => !b.unitId || b.unitId === unitId),
@@ -61,8 +73,8 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
   );
 
   const selectedService = useMemo(
-    () => services.find((service) => service.id === serviceId),
-    [serviceId, services],
+    () => servicesForUnit.find((service) => service.id === serviceId),
+    [serviceId, servicesForUnit],
   );
 
   const selectedBarberName = useMemo(() => {
@@ -232,11 +244,17 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
                 }}
               >
-                {services.map((service) => (
-                  <option key={service.id} value={service.id} className="bg-zinc-900">
-                    {service.name} • R$ {service.price.toFixed(2)}
+                {servicesForUnit.length === 0 ? (
+                  <option value="" className="bg-zinc-900">
+                    Nenhum serviço cadastrado nesta unidade
                   </option>
-                ))}
+                ) : (
+                  servicesForUnit.map((service) => (
+                    <option key={service.id} value={service.id} className="bg-zinc-900">
+                      {service.name} • R$ {service.price.toFixed(2)}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
 
