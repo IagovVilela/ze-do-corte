@@ -6,8 +6,17 @@ export type ServiceSummary = {
   description: string;
   durationMinutes: number;
   price: number;
-  /** Unidade a que este preço e catálogo pertencem. */
+  /** Unidade dona deste registo no catálogo (serviço por unidade). */
   unitId: string;
+  /** Catálogo base (quando carregado do servidor). */
+  isActive?: boolean;
+  /** Preço/duração/atividade específicos para outras unidades (opcional). */
+  unitOverrides?: {
+    unitId: string;
+    price: number | null;
+    durationMinutes: number | null;
+    isActive: boolean;
+  }[];
 };
 
 /** Barbeiro exibido na home (`getPublicBarbers`). Sem e-mail. */

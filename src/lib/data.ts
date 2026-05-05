@@ -15,14 +15,23 @@ function isDatabaseConnectionError(error: unknown): boolean {
   return /ECONNREFUSED|Can't reach database|P1001|P1017/i.test(message);
 }
 
-function mapServiceToSummary(service: {
-  id: string;
-  name: string;
-  description: string;
-  durationMinutes: number;
-  price: Prisma.Decimal;
-  unitId: string;
-}): ServiceSummary {
+function mapServiceToSummary(
+  service: {
+    id: string;
+    name: string;
+    description: string;
+    durationMinutes: number;
+    price: Prisma.Decimal;
+    unitId: string;
+    isActive: boolean;
+    unitOverrides?: Array<{
+      unitId: string;
+      price: Prisma.Decimal | null;
+      durationMinutes: number | null;
+      isActive: boolean;
+    }>;
+  },
+): ServiceSummary {
   return {
     id: service.id,
     name: service.name,
@@ -30,6 +39,17 @@ function mapServiceToSummary(service: {
     durationMinutes: service.durationMinutes,
     price: Number(service.price),
     unitId: service.unitId,
+    isActive: service.isActive,
+    ...(service.unitOverrides?.length
+      ? {
+          unitOverrides: service.unitOverrides.map((o) => ({
+            unitId: o.unitId,
+            price: o.price != null ? Number(o.price) : null,
+            durationMinutes: o.durationMinutes,
+            isActive: o.isActive,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -129,6 +149,9 @@ export async function getServices(): Promise<ServiceSummary[]> {
     const services = await prisma.service.findMany({
       where: { isActive: true, unitId },
       orderBy: { createdAt: "asc" },
+      include: {
+        unitOverrides: true,
+      },
     });
 
     return services.map(mapServiceToSummary);
@@ -154,6 +177,7 @@ export async function getServicesForBooking(): Promise<ServiceSummary[]> {
     const services = await prisma.service.findMany({
       where: { isActive: true },
       orderBy: [{ unitId: "asc" }, { createdAt: "asc" }],
+      include: { unitOverrides: true },
     });
 
     return services.map(mapServiceToSummary);

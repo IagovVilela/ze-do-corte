@@ -86,7 +86,7 @@ export async function GET(request: Request) {
   const [service, appointments] = await Promise.all([
     prisma.service.findUnique({
       where: { id: serviceId },
-      select: { durationMinutes: true, isActive: true, unitId: true },
+      include: { unitOverrides: true },
     }),
     prisma.appointment.findMany({
       where: {
@@ -107,37 +107,57 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  if (!service || !service.isActive) {
+  if (!service) {
     return NextResponse.json(
       { error: "Serviço inválido." },
       { status: 404 },
     );
   }
 
-  if (resolvedUnitId && service.unitId !== resolvedUnitId) {
+  const unitOverride = resolvedUnitId
+    ? service.unitOverrides.find((o) => o.unitId === resolvedUnitId)
+    : undefined;
+
+  if (resolvedUnitId) {
+    const allowed =
+      service.unitId === resolvedUnitId || Boolean(unitOverride);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Serviço não disponível nesta unidade." },
+        { status: 400 },
+      );
+    }
+  }
+  const isActive = unitOverride ? unitOverride.isActive : service.isActive;
+  const durationMinutes =
+    unitOverride && unitOverride.durationMinutes !== null
+      ? unitOverride.durationMinutes
+      : service.durationMinutes;
+
+  if (!isActive) {
     return NextResponse.json(
-      { error: "Serviço não disponível nesta unidade." },
-      { status: 400 },
+      { error: "Serviço indisponível nesta unidade." },
+      { status: 404 },
     );
   }
 
   const now = new Date();
   const slots = BUSINESS_HOURS.map((hour) => {
     const slotStart = getSlotStart(dayStart, hour);
-    const slotEnd = getSlotEnd(slotStart, service.durationMinutes);
+    const slotEnd = getSlotEnd(slotStart, durationMinutes);
     const overlaps = appointments.some((appointment) =>
       appointmentOverlapsSlot(appointment, slotStart, slotEnd, bookWithStaffId),
     );
     const withinHours = isSlotWithinBusinessHours(
       slotStart,
-      service.durationMinutes,
+      durationMinutes,
     );
     const withinStaffSchedule =
       !bookWithStaffId ||
       isSlotWithinStaffSchedule(
         staffWorkWeekJson,
         slotStart,
-        service.durationMinutes,
+        durationMinutes,
       );
     const available =
       withinHours &&

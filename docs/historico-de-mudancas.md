@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-05-04
+
+- **Serviços — preços por unidade**: adicionado suporte para **"Overrides"** de preço, duração e disponibilidade de serviços por `BarbershopUnit`. O admin pode configurar exceções no cadastro do serviço para cada loja, mantendo um valor "padrão" global. O formulário de agendamento público e o dashboard agora reagem dinamicamente aos preços e horários da unidade selecionada. Adicionada a tabela `BarbershopUnitService` no Prisma para gerenciar as regras.
+
 ## 2026-04-23
 
 - **Perfil no painel — edição de e-mail**: usuários agora podem alterar seu próprio e-mail de login na página de perfil (`/admin/perfil`). A API (`PATCH /api/auth/profile`) agora aceita a alteração e valida se o novo e-mail já não está em uso por outro membro da equipe. A restrição anterior (que exigia um administrador na Equipe para alterar o e-mail) foi removida do componente `admin-profile-form.tsx`.

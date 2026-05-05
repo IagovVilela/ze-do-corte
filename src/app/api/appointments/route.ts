@@ -23,16 +23,36 @@ export async function POST(request: Request) {
     const payload = parsed.data;
     const service = await prisma.service.findUnique({
       where: { id: payload.serviceId },
+      include: { unitOverrides: true },
     });
 
-    if (!service || !service.isActive) {
+    if (!service) {
       return NextResponse.json(
-        { message: "Serviço inválido ou indisponível." },
+        { message: "Serviço inválido." },
         { status: 404 },
       );
     }
 
-    if (service.unitId !== payload.unitId) {
+    const unitOverride = payload.unitId
+      ? service.unitOverrides.find((o) => o.unitId === payload.unitId)
+      : undefined;
+    const isActive = unitOverride ? unitOverride.isActive : service.isActive;
+    const durationMinutes = (unitOverride && unitOverride.durationMinutes !== null) 
+      ? unitOverride.durationMinutes 
+      : service.durationMinutes;
+
+    if (!isActive) {
+      return NextResponse.json(
+        { message: "Serviço indisponível nesta unidade." },
+        { status: 404 },
+      );
+    }
+
+    if (
+      payload.unitId &&
+      service.unitId !== payload.unitId &&
+      !unitOverride
+    ) {
       return NextResponse.json(
         { message: "Este serviço não está disponível na unidade selecionada." },
         { status: 400 },
@@ -40,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const slot = await assertPublicBookingSlot({
-      service,
+      service: { ...service, durationMinutes },
       dateStr: payload.date,
       timeStr: payload.time,
       unitId: payload.unitId,

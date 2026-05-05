@@ -17,7 +17,10 @@ export default async function AdminServicosPage() {
   const [services, units] = await Promise.all([
     prisma.service.findMany({
       orderBy: [{ unit: { name: "asc" } }, { name: "asc" }],
-      include: { unit: { select: { id: true, name: true } } },
+      include: {
+        unit: { select: { id: true, name: true } },
+        unitOverrides: true,
+      },
     }),
     prisma.barbershopUnit.findMany({
       orderBy: [{ isDefault: "desc" }, { name: "asc" }],
@@ -35,6 +38,12 @@ export default async function AdminServicosPage() {
     durationMinutes: s.durationMinutes,
     price: Number(s.price),
     isActive: s.isActive,
+    unitOverrides: s.unitOverrides.map(o => ({
+      unitId: o.unitId,
+      price: o.price ? Number(o.price) : null,
+      durationMinutes: o.durationMinutes,
+      isActive: o.isActive,
+    })),
   }));
 
   const initialUnits = units.map((u) => ({
