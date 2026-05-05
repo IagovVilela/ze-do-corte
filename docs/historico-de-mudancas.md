@@ -9,6 +9,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 ## 2026-05-04
 
 - **Serviços — preços por unidade**: adicionado suporte para **"Overrides"** de preço, duração e disponibilidade de serviços por `BarbershopUnit`. O admin pode configurar exceções no cadastro do serviço para cada loja, mantendo um valor "padrão" global. O formulário de agendamento público e o dashboard agora reagem dinamicamente aos preços e horários da unidade selecionada. Adicionada a tabela `BarbershopUnitService` no Prisma para gerenciar as regras.
+- **Migração `20260412120000_barbershop_unit_service`**: SQL que cria a tabela **`BarbershopUnitService`** no Postgres (sem ela, qualquer página/API com `include: { unitOverrides: true }` gerava **500**). Em produção, depende de **`prisma migrate deploy`** no arranque (`start:prod`).
 
 ## 2026-04-23
 
