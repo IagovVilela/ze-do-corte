@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { toZonedTime } from "date-fns-tz";
 
 import {
+  BARBER_TIMEZONE,
   BARBER_CLOSE_SATURDAY_HOUR,
   BARBER_CLOSE_WEEKDAY_HOUR,
   BUSINESS_HOURS,
@@ -163,12 +165,13 @@ export function isSlotWithinStaffSchedule(
 ): boolean {
   if (workWeekJson == null) return true;
 
-  const day = slotStart.getDay();
+  const zonedStart = toZonedTime(slotStart, BARBER_TIMEZONE);
+  const day = zonedStart.getDay();
   const bounds = getEffectiveStaffDayBounds(workWeekJson, day);
   if (!bounds) return false;
 
-  const sh = slotStart.getHours();
-  const sm = slotStart.getMinutes();
+  const sh = zonedStart.getHours();
+  const sm = zonedStart.getMinutes();
   const slotStartMin = sh * 60 + sm;
   const slotEndMin = slotStartMin + durationMinutes;
 

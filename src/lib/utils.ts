@@ -1,7 +1,9 @@
 import { clsx, type ClassValue } from "clsx";
 import { addMinutes, format } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 import {
+  BARBER_TIMEZONE,
   BARBER_CLOSE_SATURDAY_HOUR,
   BARBER_CLOSE_WEEKDAY_HOUR,
   BUSINESS_HOURS,
@@ -23,10 +25,9 @@ export function formatDateTime(value: Date) {
 }
 
 export function getSlotStart(date: Date, time: string) {
-  const [hour, minute] = time.split(":").map(Number);
-  const slot = new Date(date);
-  slot.setHours(hour, minute, 0, 0);
-  return slot;
+  const dayLabel = format(date, "yyyy-MM-dd");
+  const localDateTime = new Date(`${dayLabel}T${time}:00`);
+  return fromZonedTime(localDateTime, BARBER_TIMEZONE);
 }
 
 export function getSlotsForDate(date: Date) {
@@ -37,15 +38,18 @@ export function getSlotEnd(start: Date, durationMinutes: number) {
   return addMinutes(start, durationMinutes);
 }
 
-/** Momento do fechamento no mesmo dia civil do agendamento (seg–sex 20h, sáb 17h). */
+/** Momento do fechamento no mesmo dia civil da barbearia (seg–sex 20h, sáb 17h). */
 export function getShopClosingTime(slotDay: Date): Date {
-  const close = new Date(slotDay);
-  if (close.getDay() === 6) {
-    close.setHours(BARBER_CLOSE_SATURDAY_HOUR, 0, 0, 0);
-  } else {
-    close.setHours(BARBER_CLOSE_WEEKDAY_HOUR, 0, 0, 0);
-  }
-  return close;
+  const zonedStart = toZonedTime(slotDay, BARBER_TIMEZONE);
+  const closeHour =
+    zonedStart.getDay() === 6
+      ? BARBER_CLOSE_SATURDAY_HOUR
+      : BARBER_CLOSE_WEEKDAY_HOUR;
+
+  const zonedClose = new Date(zonedStart);
+  zonedClose.setHours(closeHour, 0, 0, 0);
+
+  return fromZonedTime(zonedClose, BARBER_TIMEZONE);
 }
 
 /** Domingo fechado; nos demais dias o serviço precisa terminar até o fechamento. */
@@ -53,7 +57,13 @@ export function isSlotWithinBusinessHours(
   slotStart: Date,
   durationMinutes: number,
 ): boolean {
-  if (slotStart.getDay() === 0) return false;
+  const zonedStart = toZonedTime(slotStart, BARBER_TIMEZONE);
+  if (zonedStart.getDay() === 0) return false;
+
+  const startMinutes = zonedStart.getHours() * 60 + zonedStart.getMinutes();
+  const openMinutes = 9 * 60;
+  if (startMinutes < openMinutes) return false;
+
   const slotEnd = getSlotEnd(slotStart, durationMinutes);
   const close = getShopClosingTime(slotStart);
   return slotEnd.getTime() <= close.getTime();
