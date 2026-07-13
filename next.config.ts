@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
    * gerando "Unknown field" em runtime. Externalizar força o uso do cliente em `node_modules`.
    */
   serverExternalPackages: ["@prisma/client", "bcryptjs", "cloudinary", "web-push"],
+  allowedDevOrigins: ["*.loca.lt", "slick-toes-ask.loca.lt"],
   images: {
     remotePatterns: [
       {
