@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Geist, Geist_Mono } from "next/font/google";
 
-import { BARBER_SLOGAN_PRIMARY, BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,8 +20,9 @@ const display = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: `Zé do Corte | ${BARBER_SLOGAN_PRIMARY}`,
-  description: `${BARBER_SLOGAN_PRIMARY}. ${BARBER_SLOGAN_SECONDARY} Agendamento online em São José dos Campos.`,
+  title: "Barbernegon | Sua barbearia, sua cara",
+  description:
+    "Plataforma para barbearias: site com identidade forte, agendamento online, admin, caixa e clube de assinaturas — sem burocracia.",
   icons: {
     icon: [{ url: "/images/logo.jpeg", type: "image/jpeg" }],
     apple: "/images/logo.jpeg",

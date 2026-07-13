@@ -126,4 +126,6 @@ export const createAppointmentSchema = z.object({
   notes: z.string().trim().max(240, "Máximo de 240 caracteres.").optional(),
   /** Opcional: barbeiro da unidade padrão; se enviado, dispara e-mail (Resend) para o profissional. */
   staffMemberId: z.string().min(1).optional(),
+  /** Slug do tenant — obrigatório para isolamento multi-tenant. */
+  organizationSlug: z.string().trim().min(1).optional(),
 });

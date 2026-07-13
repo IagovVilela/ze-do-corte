@@ -15,6 +15,10 @@ import { DashboardSummaryTable } from "@/components/dashboard-summary-table";
 import { DashboardTelemetryScopeTabs } from "@/components/dashboard-telemetry-scope-tabs";
 import { DashboardUnitTelemetry } from "@/components/dashboard-unit-telemetry";
 import { DashboardVolumeArea } from "@/components/dashboard-volume-area";
+import {
+  OnboardingChecklist,
+  computeOnboardingChecklist,
+} from "@/components/onboarding-checklist";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { cn } from "@/lib/utils";
@@ -51,24 +55,28 @@ export default async function AdminPage({
   const telemetryScope = parseTelemetryScope(sp);
 
   const showUnitColumn = access.role !== "STAFF";
-  const [snapshot, { rows, total, pageSize }, barberRows, unitRows] = await Promise.all([
-    getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
-    getAdminAppointmentsPaginated(access, page, undefined, listFilters),
-    access.role === "STAFF"
-      ? Promise.resolve([] as const)
-      : prisma.staffMember.findMany({
-          where: { role: "STAFF", ...staffMemberScopeWhere(access) },
-          select: { id: true, displayName: true, email: true, unitId: true },
-          orderBy: [{ displayName: "asc" }, { email: "asc" }],
-        }),
-    showUnitColumn
-      ? prisma.barbershopUnit.findMany({
-          where: { isActive: true, ...unitScopeWhere(access) },
-          select: { id: true, name: true },
-          orderBy: { name: "asc" },
-        })
-      : Promise.resolve([] as { id: string; name: string }[]),
-  ]);
+  const [snapshot, { rows, total, pageSize }, barberRows, unitRows, onboardingItems] =
+    await Promise.all([
+      getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
+      getAdminAppointmentsPaginated(access, page, undefined, listFilters),
+      access.role === "STAFF"
+        ? Promise.resolve([] as const)
+        : prisma.staffMember.findMany({
+            where: { role: "STAFF", ...staffMemberScopeWhere(access) },
+            select: { id: true, displayName: true, email: true, unitId: true },
+            orderBy: [{ displayName: "asc" }, { email: "asc" }],
+          }),
+      showUnitColumn
+        ? prisma.barbershopUnit.findMany({
+            where: { isActive: true, ...unitScopeWhere(access) },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+          })
+        : Promise.resolve([] as { id: string; name: string }[]),
+      access.role === "OWNER" || access.permissions.manageBranding
+        ? computeOnboardingChecklist(access)
+        : Promise.resolve([]),
+    ]);
 
   const {
     metrics,
@@ -117,6 +125,12 @@ export default async function AdminPage({
             <AdminExportButton canExport={access.permissions.exportData} />
           </div>
         </AnimatedSection>
+
+        {onboardingItems.length > 0 ? (
+          <div className="mt-8">
+            <OnboardingChecklist items={onboardingItems} />
+          </div>
+        ) : null}
       </section>
 
       <section className="container-max pb-10">

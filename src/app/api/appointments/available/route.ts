@@ -51,10 +51,49 @@ export async function GET(request: Request) {
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
 
-  const resolvedUnitId =
-    unitIdParam && unitIdParam.length > 0
-      ? unitIdParam
-      : await getDefaultBarbershopUnitId();
+  const organizationSlug = searchParams.get("organizationSlug");
+  let organizationId: string | null = null;
+  if (organizationSlug) {
+    const org = await prisma.organization.findUnique({
+      where: { slug: organizationSlug.trim().toLowerCase() },
+      select: { id: true },
+    });
+    if (!org) {
+      return NextResponse.json({ error: "Barbearia não encontrada." }, { status: 404 });
+    }
+    organizationId = org.id;
+  }
+
+  let resolvedUnitId =
+    unitIdParam && unitIdParam.length > 0 ? unitIdParam : null;
+
+  if (resolvedUnitId) {
+    const unitRow = await prisma.barbershopUnit.findFirst({
+      where: {
+        id: resolvedUnitId,
+        ...(organizationId ? { organizationId } : {}),
+      },
+      select: { id: true, organizationId: true },
+    });
+    if (!unitRow) {
+      return NextResponse.json(
+        { error: "Unidade inválida para esta barbearia." },
+        { status: 400 },
+      );
+    }
+    organizationId = unitRow.organizationId;
+  }
+
+  if (!organizationId) {
+    return NextResponse.json(
+      { error: "Informe organizationSlug ou unitId." },
+      { status: 400 },
+    );
+  }
+
+  if (!resolvedUnitId) {
+    resolvedUnitId = await getDefaultBarbershopUnitId(organizationId);
+  }
 
   let bookWithStaffId: string | null = null;
   let staffWorkWeekJson: unknown = null;
@@ -70,6 +109,7 @@ export async function GET(request: Request) {
         id: staffMemberIdParam,
         role: "STAFF",
         unitId: resolvedUnitId,
+        ...(organizationId ? { organizationId } : {}),
       },
       select: { id: true, workWeekJson: true },
     });

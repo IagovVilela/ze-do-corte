@@ -42,6 +42,10 @@ export async function GET() {
       Telefone: appointment.clientPhone,
       Servico: appointment.service.name,
       ValorServico: Number(appointment.service.price).toFixed(2),
+      ValorPago:
+        appointment.amountPaid != null
+          ? Number(appointment.amountPaid).toFixed(2)
+          : "",
       Unidade: appointment.unitId ? (unitNames.get(appointment.unitId) ?? "") : "",
       Profissional: appointment.staffMemberId
         ? (staffLabels.get(appointment.staffMemberId) ?? "")
@@ -65,7 +69,7 @@ export async function GET() {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition":
-          'attachment; filename="agendamentos-ze-do-corte.xlsx"',
+          'attachment; filename="agendamentos-barbernegon.xlsx"',
       },
     });
   } catch {

@@ -28,6 +28,7 @@ export async function assertPublicBookingSlot(options: {
   unitId: string | null;
   staffMemberId?: string | undefined;
   excludeAppointmentId?: string;
+  organizationId?: string;
 }): Promise<
   | {
       ok: true;
@@ -44,6 +45,7 @@ export async function assertPublicBookingSlot(options: {
     unitId,
     staffMemberId,
     excludeAppointmentId,
+    organizationId,
   } = options;
 
   const day = parseISO(dateStr);
@@ -85,6 +87,7 @@ export async function assertPublicBookingSlot(options: {
         id: staffMemberId,
         role: "STAFF",
         unitId: unitId,
+        ...(organizationId ? { organizationId } : {}),
       },
       select: { id: true, email: true, displayName: true, workWeekJson: true },
     });

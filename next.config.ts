@@ -32,6 +32,11 @@ const nextConfig: NextConfig = {
         destination: "/admin/login",
         permanent: false,
       },
+      {
+        source: "/agendar",
+        destination: "/ze-do-corte/agendar",
+        permanent: false,
+      },
     ];
   },
 };

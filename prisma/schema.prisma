@@ -26,57 +26,103 @@ enum ServiceCategory {
   OUTRO
 }
 
+enum OrganizationPlanStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum ClientSubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  PAST_DUE
+}
+
+/// Tenant Barbernegon — uma organização = uma marca / dono.
+model Organization {
+  id             String                 @id @default(cuid())
+  name           String
+  /// Slug público: barbernegon.com/[slug]
+  slug           String                 @unique
+  planStatus     OrganizationPlanStatus @default(TRIAL)
+  trialEndsAt    DateTime?
+  /// Branding white-label
+  logoUrl        String?
+  primaryColor   String?                @db.VarChar(16)
+  slogan         String?                @db.VarChar(160)
+  sloganSecondary String?               @db.VarChar(200)
+  heroMediaUrl   String?
+  aboutText      String?                @db.Text
+  instagramHref  String?
+  whatsappHref   String?
+  phoneLabel     String?
+  timezone       String                 @default("America/Sao_Paulo")
+  /// Checklist de onboarding (JSON booleans).
+  onboardingJson Json?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  units              BarbershopUnit[]
+  staffMembers       StaffMember[]
+  settings           BarbershopSetting[]
+  subscriptionPlans  SubscriptionPlan[]
+  clientSubscriptions ClientSubscription[]
+
+  @@index([planStatus])
+}
+
 model BarbershopUnit {
-  id           String          @id @default(cuid())
-  name         String
-  slug         String          @unique
-  addressLine  String?
-  city         String?
-  phone        String?
-  isActive     Boolean         @default(true)
-  isDefault    Boolean         @default(false)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  appointments Appointment[]
-  staffMembers StaffMember[]
-  services     Service[]
-  unitServices BarbershopUnitService[]
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  addressLine    String?
+  city           String?
+  phone          String?
+  isActive       Boolean       @default(true)
+  isDefault      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  appointments   Appointment[]
+  staffMembers   StaffMember[]
+  services       Service[]
+  unitServices   BarbershopUnitService[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([isDefault, isActive])
 }
 
 model StaffMember {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  displayName  String?
-  /// Telefone de contato (opcional), editável pelo próprio usuário no painel.
-  phone        String?
-  /// URL pública da foto de perfil (Cloudinary `secure_url`).
+  id                    String        @id @default(cuid())
+  organizationId        String
+  organization          Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email                 String        @unique
+  displayName           String?
+  phone                 String?
   profileImageUrl       String?
-  /// `public_id` no Cloudinary — usado para apagar a imagem ao substituir ou remover.
-  profileImagePublicId String?
-  /// Texto curto na página inicial (só exibido para `STAFF` com `showOnWebsite`).
-  websiteBio    String?   @db.VarChar(400)
-  /// Incluir cartão na home institucional (barbeiros com papel `STAFF`).
-  showOnWebsite Boolean   @default(false)
-  role         StaffRole
-  /// Hash bcrypt da senha de acesso ao painel (nunca em texto puro).
-  passwordHash String?
-  unitId       String?
-  unit         BarbershopUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  sessions     Session[]
-  /// Agendamentos em que este membro é o barbeiro/profissional responsável.
-  appointments Appointment[]
-  /// Expediente semanal personalizado (`null` = segue só o horário da barbearia).
-  /// Formato: chaves "0"–"6" (Date.getDay). Ver `src/lib/staff-work-schedule.ts`.
-  workWeekJson Json?
-  pushSubscriptions StaffPushSubscription[]
+  profileImagePublicId  String?
+  websiteBio            String?       @db.VarChar(400)
+  showOnWebsite         Boolean       @default(false)
+  role                  StaffRole
+  passwordHash          String?
+  unitId                String?
+  unit                  BarbershopUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  sessions              Session[]
+  appointments          Appointment[]
+  workWeekJson          Json?
+  pushSubscriptions     StaffPushSubscription[]
 
+  @@index([organizationId])
   @@index([unitId])
   @@index([showOnWebsite, role])
 }
 
-/// Web Push (navegador) — um registo por endpoint/dispositivo; ver `src/lib/notify-barber-booking.ts`.
 model StaffPushSubscription {
   id            String      @id @default(cuid())
   staffMemberId String
@@ -91,7 +137,6 @@ model StaffPushSubscription {
 
 model Session {
   id            String      @id @default(cuid())
-  /// SHA-256 hex do token enviado no cookie (o cookie guarda o token em claro).
   tokenHash     String      @unique
   staffMemberId String
   staffMember   StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
@@ -103,17 +148,21 @@ model Session {
 }
 
 model BarbershopSetting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String   @db.Text
-  updatedAt DateTime @updatedAt
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            String
+  value          String       @db.Text
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
 }
 
 model Service {
   id              String           @id @default(cuid())
   name            String
   description     String
-  /// Agrupa serviços no painel e permite filtrar por tipo.
   category        ServiceCategory  @default(OUTRO)
   durationMinutes Int
   price           Decimal          @db.Decimal(10, 2)
@@ -124,6 +173,7 @@ model Service {
   unit            BarbershopUnit   @relation(fields: [unitId], references: [id], onDelete: Restrict)
   appointments    Appointment[]
   unitOverrides   BarbershopUnitService[]
+  planItems       SubscriptionPlanService[]
 
   @@unique([unitId, name])
   @@index([category])
@@ -136,11 +186,8 @@ model BarbershopUnitService {
   unit            BarbershopUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   serviceId       String
   service         Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  /// Preço específico para esta unidade (se nulo, usa o valor padrão do Service)
   price           Decimal?       @db.Decimal(10, 2)
-  /// Duração específica para esta unidade (se nulo, usa o valor padrão do Service)
   durationMinutes Int?
-  /// Permite desativar um serviço especificamente para uma unidade
   isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -151,28 +198,30 @@ model BarbershopUnitService {
 }
 
 model Appointment {
-  id          String            @id @default(cuid())
-  clientName  String
-  clientPhone String
-  clientEmail String?
-  notes       String?
-  startsAt    DateTime
-  endsAt      DateTime
-  status      AppointmentStatus @default(CONFIRMED)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  serviceId   String
-  service     Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  unitId      String?
-  unit        BarbershopUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  /// Profissional (barbeiro) responsável; null = ainda não atribuído (visível só a dono/admin).
-  staffMemberId String?
-  staffMember   StaffMember?    @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
-  /// Registo de pagamento no balcão (null = ainda não marcado como pago).
-  paidAt          DateTime?
-  paymentMethod   String?         @db.VarChar(32)
-  /// URL secreta para o cliente alterar/cancelar sem login (`/minha-reserva/[token]`). Gerado na criação pública.
-  clientManageToken String?       @unique @db.VarChar(36)
+  id                String            @id @default(cuid())
+  clientName        String
+  clientPhone       String
+  clientEmail       String?
+  notes             String?
+  startsAt          DateTime
+  endsAt            DateTime
+  status            AppointmentStatus @default(CONFIRMED)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  serviceId         String
+  service           Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  unitId            String?
+  unit              BarbershopUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  staffMemberId     String?
+  staffMember       StaffMember?      @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
+  paidAt            DateTime?
+  paymentMethod     String?           @db.VarChar(32)
+  /// Valor cobrado no balcão (opcional; default = preço do serviço).
+  amountPaid        Decimal?          @db.Decimal(10, 2)
+  clientManageToken String?           @unique @db.VarChar(36)
+  /// Se o atendimento usou crédito do clube de assinaturas.
+  usedSubscriptionId String?
+  usedSubscription   ClientSubscription? @relation(fields: [usedSubscriptionId], references: [id], onDelete: SetNull)
 
   @@index([startsAt])
   @@index([status])
@@ -180,4 +229,65 @@ model Appointment {
   @@index([unitId])
   @@index([staffMemberId])
   @@index([paidAt])
+  @@index([usedSubscriptionId])
+}
+
+/// Plano do clube (por organização).
+model SubscriptionPlan {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  price          Decimal      @db.Decimal(10, 2)
+  /// Ciclo em dias (ex.: 30).
+  cycleDays      Int          @default(30)
+  /// Quantidade de usos inclusos por ciclo (null = ilimitado dentro dos serviços do plano).
+  visitsIncluded Int?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  services       SubscriptionPlanService[]
+  subscriptions  ClientSubscription[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model SubscriptionPlanService {
+  id      String           @id @default(cuid())
+  planId  String
+  plan    SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  serviceId String
+  service Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, serviceId])
+  @@index([serviceId])
+}
+
+/// Assinatura de cliente final ao clube da barbearia.
+model ClientSubscription {
+  id               String                    @id @default(cuid())
+  organizationId   String
+  organization     Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId           String
+  plan             SubscriptionPlan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  clientName       String
+  clientPhone      String
+  clientEmail      String?
+  status           ClientSubscriptionStatus  @default(ACTIVE)
+  startsAt         DateTime                  @default(now())
+  currentPeriodEnd DateTime
+  visitsUsed       Int                       @default(0)
+  cancelledAt      DateTime?
+  cancelReason     String?                   @db.VarChar(240)
+  notes            String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  appointments     Appointment[]
+
+  @@index([organizationId])
+  @@index([planId])
+  @@index([clientPhone])
+  @@index([status])
 }

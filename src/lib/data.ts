@@ -80,21 +80,20 @@ const SERVICE_SEED = [
   },
 ];
 
-/** Garante uma unidade padrão para seed automático (desenvolvimento). */
-async function ensureBarbershopUnitForSeed(): Promise<string | null> {
+async function ensureOrgUnitForSeed(organizationId: string): Promise<string | null> {
   try {
     const unit = await prisma.barbershopUnit.upsert({
-      where: { slug: "matriz" },
+      where: {
+        organizationId_slug: { organizationId, slug: "matriz" },
+      },
       create: {
+        organizationId,
         name: "Unidade matriz",
         slug: "matriz",
         isDefault: true,
         isActive: true,
-        city: "São José dos Campos",
       },
-      update: {
-        isActive: true,
-      },
+      update: { isActive: true },
       select: { id: true },
     });
     return unit.id;
@@ -103,12 +102,16 @@ async function ensureBarbershopUnitForSeed(): Promise<string | null> {
   }
 }
 
-export async function ensureSeedServices() {
+export async function ensureSeedServices(organizationId: string) {
   try {
-    const count = await prisma.service.count();
+    const count = await prisma.service.count({
+      where: { unit: { organizationId } },
+    });
     if (count > 0) return;
 
-    const unitId = (await getDefaultBarbershopUnitId()) ?? (await ensureBarbershopUnitForSeed());
+    const unitId =
+      (await getDefaultBarbershopUnitId(organizationId)) ??
+      (await ensureOrgUnitForSeed(organizationId));
     if (!unitId) return;
 
     await prisma.service.createMany({
@@ -135,32 +138,24 @@ export async function ensureSeedServices() {
   }
 }
 
-/**
- * Serviços ativos da **unidade padrão** — página inicial e vitrine (`/`).
- */
-export async function getServices(): Promise<ServiceSummary[]> {
+/** Serviços ativos da unidade padrão da organização. */
+export async function getServices(organizationId: string): Promise<ServiceSummary[]> {
   try {
-    await ensureSeedServices();
-    const unitId = await getDefaultBarbershopUnitId();
-    if (!unitId) {
-      return [];
-    }
+    await ensureSeedServices(organizationId);
+    const unitId = await getDefaultBarbershopUnitId(organizationId);
+    if (!unitId) return [];
 
     const services = await prisma.service.findMany({
       where: { isActive: true, unitId },
       orderBy: { createdAt: "asc" },
-      include: {
-        unitOverrides: true,
-      },
+      include: { unitOverrides: true },
     });
 
     return services.map(mapServiceToSummary);
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[data] getServices: base indisponível — a devolver lista vazia (evita 500 na página).",
-        );
+        console.warn("[data] getServices: base indisponível — lista vazia.");
       }
       return [];
     }
@@ -168,14 +163,14 @@ export async function getServices(): Promise<ServiceSummary[]> {
   }
 }
 
-/**
- * Todos os serviços ativos **por unidade** — formulário de agendamento filtra pela unidade escolhida.
- */
-export async function getServicesForBooking(): Promise<ServiceSummary[]> {
+/** Serviços ativos da organização (todas as unidades). */
+export async function getServicesForBooking(
+  organizationId: string,
+): Promise<ServiceSummary[]> {
   try {
-    await ensureSeedServices();
+    await ensureSeedServices(organizationId);
     const services = await prisma.service.findMany({
-      where: { isActive: true },
+      where: { isActive: true, unit: { organizationId } },
       orderBy: [{ unitId: "asc" }, { createdAt: "asc" }],
       include: { unitOverrides: true },
     });
@@ -184,9 +179,7 @@ export async function getServicesForBooking(): Promise<ServiceSummary[]> {
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[data] getServicesForBooking: base indisponível — a devolver lista vazia.",
-        );
+        console.warn("[data] getServicesForBooking: base indisponível — lista vazia.");
       }
       return [];
     }
@@ -194,14 +187,21 @@ export async function getServicesForBooking(): Promise<ServiceSummary[]> {
   }
 }
 
-/** Barbeiros (`STAFF`) da unidade padrão — opções no formulário de agendamento. */
-export async function getBarbersForBooking(): Promise<
+export async function getBarbersForBooking(
+  organizationId: string,
+): Promise<
   { id: string; name: string; imageUrl: string | null; unitId: string | null }[]
 > {
   try {
     const rows = await prisma.staffMember.findMany({
-      where: { role: "STAFF" },
-      select: { id: true, displayName: true, email: true, profileImageUrl: true, unitId: true },
+      where: { role: "STAFF", organizationId },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        profileImageUrl: true,
+        unitId: true,
+      },
       orderBy: [{ displayName: "asc" }, { email: "asc" }],
     });
 
@@ -210,14 +210,17 @@ export async function getBarbersForBooking(): Promise<
         r.displayName?.trim() ||
         (r.email.includes("@") ? r.email.split("@")[0] : r.email) ||
         "Profissional";
-      return { id: r.id, name, imageUrl: r.profileImageUrl ?? null, unitId: r.unitId };
+      return {
+        id: r.id,
+        name,
+        imageUrl: r.profileImageUrl ?? null,
+        unitId: r.unitId,
+      };
     });
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[data] getBarbersForBooking: base indisponível — a devolver lista vazia.",
-        );
+        console.warn("[data] getBarbersForBooking: base indisponível — lista vazia.");
       }
       return [];
     }
@@ -225,11 +228,12 @@ export async function getBarbersForBooking(): Promise<
   }
 }
 
-/** Funcionários (`STAFF`) marcados para aparecer na página inicial. */
-export async function getPublicBarbers(): Promise<PublicBarber[]> {
+export async function getPublicBarbers(
+  organizationId: string,
+): Promise<PublicBarber[]> {
   try {
     const rows = await prisma.staffMember.findMany({
-      where: { role: "STAFF", showOnWebsite: true },
+      where: { role: "STAFF", showOnWebsite: true, organizationId },
       select: {
         id: true,
         displayName: true,
@@ -255,9 +259,7 @@ export async function getPublicBarbers(): Promise<PublicBarber[]> {
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[data] getPublicBarbers: base indisponível — a devolver lista vazia.",
-        );
+        console.warn("[data] getPublicBarbers: base indisponível — lista vazia.");
       }
       return [];
     }
@@ -265,11 +267,10 @@ export async function getPublicBarbers(): Promise<PublicBarber[]> {
   }
 }
 
-/** Unidades ativas da barbearia para exibir na página inicial. */
-export async function getPublicBarbershopUnits() {
+export async function getPublicBarbershopUnits(organizationId: string) {
   try {
-    const units = await prisma.barbershopUnit.findMany({
-      where: { isActive: true },
+    return await prisma.barbershopUnit.findMany({
+      where: { isActive: true, organizationId },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
       select: {
         id: true,
@@ -279,12 +280,11 @@ export async function getPublicBarbershopUnits() {
         isDefault: true,
       },
     });
-    return units;
   } catch (error) {
     if (isDatabaseConnectionError(error)) {
       if (process.env.NODE_ENV === "development") {
         console.warn(
-          "[data] getPublicBarbershopUnits: base indisponível — a devolver lista vazia.",
+          "[data] getPublicBarbershopUnits: base indisponível — lista vazia.",
         );
       }
       return [];

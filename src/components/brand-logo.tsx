@@ -4,17 +4,26 @@ type BrandLogoProps = {
   size?: number;
   className?: string;
   priority?: boolean;
+  src?: string | null;
+  alt?: string;
 };
 
 /**
- * Marca em `public/images/logo.jpeg` — `<img>` nativo (evita edge cases do otimizador com certos assets).
+ * Logo da marca — default em `public/images/logo.jpeg` ou URL do tenant.
  */
-export function BrandLogo({ size = 40, className, priority = false }: BrandLogoProps) {
+export function BrandLogo({
+  size = 40,
+  className,
+  priority = false,
+  src,
+  alt = "",
+}: BrandLogoProps) {
+  const imageSrc = src?.trim() || "/images/logo.jpeg";
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- asset estático em public/
+    // eslint-disable-next-line @next/next/no-img-element -- asset estático ou URL remota do tenant
     <img
-      src="/images/logo.jpeg"
-      alt=""
+      src={imageSrc}
+      alt={alt}
       width={size}
       height={size}
       loading={priority ? "eager" : "lazy"}
@@ -24,7 +33,7 @@ export function BrandLogo({ size = 40, className, priority = false }: BrandLogoP
         "shrink-0 rounded-xl object-contain object-center ring-1 ring-white/15",
         className,
       )}
-      aria-hidden
+      aria-hidden={alt ? undefined : true}
     />
   );
 }

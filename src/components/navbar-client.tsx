@@ -17,20 +17,41 @@ import {
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
-const publicLinks = [
-  { href: "/", label: "Início" },
-  { href: "/#servicos", label: "Serviços" },
-  { href: "/#equipe", label: "Equipe" },
-  { href: "/#contato", label: "Contato" },
-  { href: "/agendar", label: "Agendar" },
-] as const;
-
 const linkClassDesktop =
   "rounded-full px-2.5 py-1.5 text-sm text-zinc-200 transition-colors hover:bg-white/10 hover:text-white md:px-3";
 
-function NavbarSocialLinks({ className }: { className?: string }) {
-  const wa = getWhatsappContactHref();
-  const ig = getInstagramContactHref();
+export type NavbarChromeProps = {
+  trailing: ReactNode;
+  brandName?: string;
+  logoUrl?: string | null;
+  homeHref?: string;
+  bookHref?: string;
+  whatsappHref?: string | null;
+  instagramHref?: string | null;
+};
+
+function buildLinks(homeHref: string, bookHref: string) {
+  const base = homeHref === "/" ? "" : homeHref.replace(/\/$/, "");
+  return [
+    { href: homeHref, label: "Início" },
+    { href: `${base}/#servicos`, label: "Serviços" },
+    { href: `${base}/#equipe`, label: "Equipe" },
+    { href: `${base}/#contato`, label: "Contato" },
+    { href: bookHref, label: "Agendar" },
+  ];
+}
+
+function NavbarSocialLinks({
+  className,
+  whatsappHref,
+  instagramHref,
+}: {
+  className?: string;
+  whatsappHref?: string | null;
+  instagramHref?: string | null;
+}) {
+  const wa = whatsappHref?.trim() || getWhatsappContactHref();
+  const ig = instagramHref?.trim() || getInstagramContactHref();
   if (!wa && !ig) return null;
 
   const iconBtn =
@@ -69,10 +90,10 @@ function NavbarSocialLinks({ className }: { className?: string }) {
   );
 }
 
-function PublicNavLinks() {
+function PublicNavLinks({ links }: { links: { href: string; label: string }[] }) {
   return (
     <div className="contents">
-      {publicLinks.map((link) => (
+      {links.map((link) => (
         <motion.div
           key={link.href}
           whileHover={{ y: -2 }}
@@ -97,12 +118,22 @@ function MobileMenuOverlay({
   trailing,
   menuId,
   reduceMotion,
+  brandName,
+  logoUrl,
+  links,
+  whatsappHref,
+  instagramHref,
 }: {
   open: boolean;
   onClose: () => void;
   trailing: ReactNode;
   menuId: string;
   reduceMotion: boolean | null;
+  brandName: string;
+  logoUrl?: string | null;
+  links: { href: string; label: string }[];
+  whatsappHref?: string | null;
+  instagramHref?: string | null;
 }) {
   const close = useCallback(() => onClose(), [onClose]);
   const instant = reduceMotion === true;
@@ -206,10 +237,10 @@ function MobileMenuOverlay({
                   animate={{ opacity: 1, y: 0 }}
                   transition={instant ? { duration: 0 } : { ...mobileContentTransition, delay: 0.05 }}
                 >
-                  <BrandLogo size={48} className="h-12 w-12 shrink-0 shadow-lg shadow-brand-500/15 ring-1 ring-white/10" />
+                  <BrandLogo size={48} className="h-12 w-12 shrink-0 shadow-lg shadow-brand-500/15 ring-1 ring-white/10" src={logoUrl} />
                   <div className="min-w-0">
                     <p id={`${menuId}-label`} className="font-display text-lg font-semibold tracking-wide text-white">
-                      Zé do Corte
+                      {brandName}
                     </p>
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-brand-200/90">
                       Navegue
@@ -238,7 +269,7 @@ function MobileMenuOverlay({
                   initial="hidden"
                   animate="show"
                 >
-                  {publicLinks.map((link) => (
+                  {links.map((link) => (
                     <motion.li key={link.href} variants={itemVariants}>
                       <Link
                         href={link.href}
@@ -268,7 +299,11 @@ function MobileMenuOverlay({
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
                     Redes
                   </p>
-                  <NavbarSocialLinks className="flex items-center gap-2" />
+                  <NavbarSocialLinks
+                    className="flex items-center gap-2"
+                    whatsappHref={whatsappHref}
+                    instagramHref={instagramHref}
+                  />
                 </div>
                 <div
                   className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-brand-300/50 [&_a]:bg-gradient-to-r [&_a]:from-brand-300 [&_a]:via-brand-400 [&_a]:to-brand-500 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_14px_44px_-10px_rgba(250,204,21,0.55)] [&_a]:transition [&_a]:hover:brightness-[1.07]"
@@ -285,12 +320,21 @@ function MobileMenuOverlay({
   );
 }
 
-export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
+export function NavbarChrome({
+  trailing,
+  brandName = "Zé do Corte",
+  logoUrl,
+  homeHref = "/",
+  bookHref = "/agendar",
+  whatsappHref,
+  instagramHref,
+}: NavbarChromeProps) {
   const reduceMotion = useReducedMotion();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const menuId = useId();
   const { direction, pastTop } = useScrollDirection({ threshold: 14, topMargin: 72 });
+  const links = buildLinks(homeHref, bookHref);
 
   /** Esconder quando rola para baixo E não está no topo E menu mobile fechado. */
   const hidden = direction === "down" && pastTop && !mobileOpen;
@@ -325,16 +369,16 @@ export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
       >
       <div className="container-max flex min-h-14 items-center justify-between gap-2 py-2 sm:h-16 sm:py-0 md:gap-3">
         <Link
-          href="/"
+          href={homeHref}
           className="flex min-w-0 shrink items-center gap-2 font-semibold tracking-wide transition-opacity hover:opacity-90 sm:gap-2.5"
         >
-          <BrandLogo size={38} priority className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
-          <span className="truncate text-sm text-white sm:text-base">Zé do Corte</span>
+          <BrandLogo size={38} priority className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" src={logoUrl} />
+          <span className="truncate text-sm text-white sm:text-base">{brandName}</span>
         </Link>
 
         <nav className="hidden min-w-0 flex-nowrap items-center justify-end gap-1 md:flex md:gap-2 lg:gap-3">
-          <NavbarSocialLinks />
-          <PublicNavLinks />
+          <NavbarSocialLinks whatsappHref={whatsappHref} instagramHref={instagramHref} />
+          <PublicNavLinks links={links} />
           {trailing}
         </nav>
 
@@ -386,6 +430,11 @@ export function NavbarChrome({ trailing }: { trailing: ReactNode }) {
               trailing={trailing}
               menuId={menuId}
               reduceMotion={reduceMotion}
+              brandName={brandName}
+              logoUrl={logoUrl}
+              links={links}
+              whatsappHref={whatsappHref}
+              instagramHref={instagramHref}
             />,
             document.body,
           )

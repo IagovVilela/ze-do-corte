@@ -3,17 +3,19 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Unidade padrão para agendamentos públicos e registros legados sem `unitId`.
+ * Unidade padrão da organização para agendamentos públicos.
  */
-export async function getDefaultBarbershopUnitId(): Promise<string | null> {
+export async function getDefaultBarbershopUnitId(
+  organizationId: string,
+): Promise<string | null> {
   const preferred = await prisma.barbershopUnit.findFirst({
-    where: { isDefault: true, isActive: true },
+    where: { organizationId, isDefault: true, isActive: true },
     select: { id: true },
   });
   if (preferred) return preferred.id;
 
   const fallback = await prisma.barbershopUnit.findFirst({
-    where: { isActive: true },
+    where: { organizationId, isActive: true },
     orderBy: { createdAt: "asc" },
     select: { id: true },
   });

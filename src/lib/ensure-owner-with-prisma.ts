@@ -5,11 +5,7 @@ import { hashPassword } from "./password";
 import { MIN_PASSWORD_LENGTH } from "./password-policy";
 
 /**
- * Garante um `StaffMember` OWNER com senha a partir de `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD`.
- * Idempotente: se já existir com `passwordHash`, não altera.
- *
- * Usado por `scripts/ensure-owner.ts` e por `src/instrumentation.ts` (produção) como reforço
- * quando o comando de arranque não inclui o script (ex.: só `next start`).
+ * Garante Organization padrão + OWNER com senha a partir de SEED_OWNER_*.
  */
 export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void> {
   const emailRaw = process.env.SEED_OWNER_EMAIL?.trim();
@@ -25,6 +21,21 @@ export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void>
     );
     return;
   }
+
+  const org = await prisma.organization.upsert({
+    where: { slug: "ze-do-corte" },
+    create: {
+      id: "org_ze_do_corte_default",
+      name: "Zé do Corte",
+      slug: "ze-do-corte",
+      planStatus: "ACTIVE",
+      slogan: "Estilo e confiança",
+      sloganSecondary: "Experiências únicas para homens únicos",
+      primaryColor: "#f59e0b",
+      timezone: "America/Sao_Paulo",
+    },
+    update: {},
+  });
 
   const ownerEmail = emailRaw.toLowerCase();
   console.log(`[ensure-owner] A processar OWNER para e-mail: ${ownerEmail}`);
@@ -43,6 +54,7 @@ export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void>
           role: "OWNER",
           passwordHash: ownerHash,
           unitId: null,
+          organizationId: org.id,
         },
       });
       console.log(`[ensure-owner] Criado OWNER: ${ownerEmail}`);
@@ -56,14 +68,12 @@ export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void>
     return;
   }
 
-  if (!existing.passwordHash) {
-    await prisma.staffMember.update({
-      where: { email: ownerEmail },
-      data: { passwordHash: ownerHash },
-    });
-    console.log(`[ensure-owner] Senha definida para: ${ownerEmail}`);
-    return;
-  }
-
-  console.log(`[ensure-owner] Proprietário já existe: ${ownerEmail}`);
+  await prisma.staffMember.update({
+    where: { email: ownerEmail },
+    data: {
+      organizationId: org.id,
+      ...(!existing.passwordHash ? { passwordHash: ownerHash } : {}),
+    },
+  });
+  console.log(`[ensure-owner] Proprietário alinhado: ${ownerEmail}`);
 }

@@ -14,9 +14,30 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const unit = await prisma.barbershopUnit.upsert({
-    where: { slug: "matriz" },
+  const org = await prisma.organization.upsert({
+    where: { slug: "ze-do-corte" },
     create: {
+      id: "org_ze_do_corte_default",
+      name: "Zé do Corte",
+      slug: "ze-do-corte",
+      planStatus: "ACTIVE",
+      slogan: "Estilo e confiança",
+      sloganSecondary: "Experiências únicas para homens únicos",
+      primaryColor: "#f59e0b",
+      timezone: "America/Sao_Paulo",
+    },
+    update: {
+      planStatus: "ACTIVE",
+      name: "Zé do Corte",
+    },
+  });
+
+  const unit = await prisma.barbershopUnit.upsert({
+    where: {
+      organizationId_slug: { organizationId: org.id, slug: "matriz" },
+    },
+    create: {
+      organizationId: org.id,
       name: "Unidade matriz",
       slug: "matriz",
       isDefault: true,
@@ -26,6 +47,7 @@ async function main() {
     update: {
       isDefault: true,
       isActive: true,
+      organizationId: org.id,
     },
   });
 
@@ -55,17 +77,21 @@ async function main() {
         role: "OWNER",
         passwordHash: ownerHash,
         unitId: null,
+        organizationId: org.id,
       },
     });
     console.log(
-      `[seed] Criado proprietário: ${ownerEmail} (senha em SEED_OWNER_PASSWORD ou padrão do seed — altere após o primeiro login).`,
+      `[seed] Criado proprietário: ${ownerEmail} (org ${org.slug}).`,
     );
-  } else if (!existingOwner.passwordHash) {
+  } else {
     await prisma.staffMember.update({
       where: { email: ownerEmail },
-      data: { passwordHash: ownerHash },
+      data: {
+        organizationId: org.id,
+        ...(!existingOwner.passwordHash ? { passwordHash: ownerHash } : {}),
+      },
     });
-    console.log(`[seed] Senha definida para o proprietário existente: ${ownerEmail}`);
+    console.log(`[seed] Proprietário alinhado à org ${org.slug}: ${ownerEmail}`);
   }
 
   const services = [

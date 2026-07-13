@@ -6,7 +6,6 @@ import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
 import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 
 export async function POST(request: Request) {
   try {
@@ -21,8 +20,43 @@ export async function POST(request: Request) {
     }
 
     const payload = parsed.data;
-    const service = await prisma.service.findUnique({
-      where: { id: payload.serviceId },
+
+    let organizationId: string | null = null;
+    if (payload.organizationSlug) {
+      const org = await prisma.organization.findUnique({
+        where: { slug: payload.organizationSlug.trim().toLowerCase() },
+        select: { id: true },
+      });
+      if (!org) {
+        return NextResponse.json(
+          { message: "Barbearia não encontrada." },
+          { status: 404 },
+        );
+      }
+      organizationId = org.id;
+    }
+
+    const unit = await prisma.barbershopUnit.findFirst({
+      where: {
+        id: payload.unitId,
+        isActive: true,
+        ...(organizationId ? { organizationId } : {}),
+      },
+      select: { id: true, organizationId: true },
+    });
+    if (!unit) {
+      return NextResponse.json(
+        { message: "Unidade inválida." },
+        { status: 400 },
+      );
+    }
+    organizationId = unit.organizationId;
+
+    const service = await prisma.service.findFirst({
+      where: {
+        id: payload.serviceId,
+        unit: { organizationId },
+      },
       include: { unitOverrides: true },
     });
 
@@ -33,13 +67,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const unitOverride = payload.unitId
-      ? service.unitOverrides.find((o) => o.unitId === payload.unitId)
-      : undefined;
+    const unitOverride = service.unitOverrides.find(
+      (o) => o.unitId === payload.unitId,
+    );
     const isActive = unitOverride ? unitOverride.isActive : service.isActive;
-    const durationMinutes = (unitOverride && unitOverride.durationMinutes !== null) 
-      ? unitOverride.durationMinutes 
-      : service.durationMinutes;
+    const durationMinutes =
+      unitOverride && unitOverride.durationMinutes !== null
+        ? unitOverride.durationMinutes
+        : service.durationMinutes;
 
     if (!isActive) {
       return NextResponse.json(
@@ -48,11 +83,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      payload.unitId &&
-      service.unitId !== payload.unitId &&
-      !unitOverride
-    ) {
+    if (service.unitId !== payload.unitId && !unitOverride) {
       return NextResponse.json(
         { message: "Este serviço não está disponível na unidade selecionada." },
         { status: 400 },
@@ -65,6 +96,7 @@ export async function POST(request: Request) {
       timeStr: payload.time,
       unitId: payload.unitId,
       staffMemberId: payload.staffMemberId,
+      organizationId,
     });
 
     if (!slot.ok) {

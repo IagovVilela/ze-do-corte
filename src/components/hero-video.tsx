@@ -13,11 +13,17 @@ import { HERO_VIDEO_SRC } from "@/lib/constants";
 
 type HeroBackdropVideoProps = {
   scrollTargetRef: React.RefObject<HTMLElement | null>;
+  /** URL de imagem/vídeo do tenant; se imagem, substitui o vídeo padrão. */
+  mediaUrl?: string | null;
 };
 
 /** min-h/min-w garantem cobertura mesmo com object-cover + transforms */
 const VIDEO_CLASS =
   "min-h-full min-w-full h-full w-full object-cover object-[center_30%]";
+
+function isImageUrl(url: string) {
+  return /\.(jpe?g|png|gif|webp|avif)(\?|$)/i.test(url) || url.includes("/image/");
+}
 
 /**
  * Vídeo em full-bleed atrás do hero (Framer Motion):
@@ -30,12 +36,18 @@ const VIDEO_CLASS =
  * SSR: `useReducedMotion()` pode divergir entre servidor e cliente; só aplicamos
  * o ramo "reduced" após mount para a hidratação coincidir.
  */
-export function HeroBackdropVideo({ scrollTargetRef }: HeroBackdropVideoProps) {
+export function HeroBackdropVideo({
+  scrollTargetRef,
+  mediaUrl,
+}: HeroBackdropVideoProps) {
   const prefersReducedMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const reduceMotion = mounted && prefersReducedMotion;
+  const custom = mediaUrl?.trim() || null;
+  const useImage = Boolean(custom && isImageUrl(custom));
+  const videoSrc = custom && !useImage ? custom : HERO_VIDEO_SRC;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +63,7 @@ export function HeroBackdropVideo({ scrollTargetRef }: HeroBackdropVideoProps) {
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el) return;
+    if (!el || useImage) return;
     if (reduceMotion) {
       el.pause();
       return;
@@ -61,7 +73,7 @@ export function HeroBackdropVideo({ scrollTargetRef }: HeroBackdropVideoProps) {
     } else {
       el.pause();
     }
-  }, [inView, reduceMotion]);
+  }, [inView, reduceMotion, useImage]);
 
   return (
     <div
@@ -88,20 +100,30 @@ export function HeroBackdropVideo({ scrollTargetRef }: HeroBackdropVideoProps) {
               : { scale: scaleMotion, y: parallaxMotion }
           }
         >
-          <video
-            ref={videoRef}
-            src={HERO_VIDEO_SRC}
-            className={VIDEO_CLASS}
-            muted
-            loop
-            playsInline
-            preload={reduceMotion ? "metadata" : "auto"}
-            autoPlay={!reduceMotion}
-            controls={false}
-            disablePictureInPicture
-            aria-label="Vídeo institucional da barbearia Zé do Corte"
-            suppressHydrationWarning
-          />
+          {useImage && custom ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={custom}
+              alt=""
+              className={VIDEO_CLASS}
+              decoding="async"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={videoSrc}
+              className={VIDEO_CLASS}
+              muted
+              loop
+              playsInline
+              preload={reduceMotion ? "metadata" : "auto"}
+              autoPlay={!reduceMotion}
+              controls={false}
+              disablePictureInPicture
+              aria-label="Vídeo institucional da barbearia"
+              suppressHydrationWarning
+            />
+          )}
         </motion.div>
       </motion.div>
 

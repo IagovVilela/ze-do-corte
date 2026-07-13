@@ -61,6 +61,21 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const org = await prisma.organization.upsert({
+    where: { slug: "ze-do-corte" },
+    create: {
+      id: "org_ze_do_corte_default",
+      name: "Zé do Corte",
+      slug: "ze-do-corte",
+      planStatus: "ACTIVE",
+      slogan: "Estilo e confiança",
+      sloganSecondary: "Experiências únicas para homens únicos",
+      primaryColor: "#f59e0b",
+      timezone: "America/Sao_Paulo",
+    },
+    update: {},
+  });
+
   const passwordHash = await hashPassword(ownerPlainPassword);
   const member = await prisma.staffMember.upsert({
     where: { email },
@@ -70,18 +85,20 @@ async function main() {
       role: "OWNER",
       passwordHash,
       unitId: null,
+      organizationId: org.id,
     },
     update: {
       role: "OWNER",
       passwordHash,
       unitId: null,
+      organizationId: org.id,
       ...(displayName !== null ? { displayName } : {}),
     },
   });
 
   await prisma.session.deleteMany({ where: { staffMemberId: member.id } });
 
-  console.log(`Proprietário pronto: ${member.email}`);
+  console.log(`Proprietário pronto: ${member.email} (org ${org.slug})`);
   console.log("Sessões antigas deste utilizador foram encerradas. Entre em /admin/login com a nova senha.");
 }
 

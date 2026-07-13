@@ -27,9 +27,15 @@ type BookingFormProps = {
   services: ServiceSummary[];
   barbers: { id: string; name: string; imageUrl: string | null; unitId: string | null }[];
   units: { id: string; name: string; isDefault: boolean }[];
+  organizationSlug: string;
 };
 
-export function BookingForm({ services, barbers, units }: BookingFormProps) {
+export function BookingForm({
+  services,
+  barbers,
+  units,
+  organizationSlug,
+}: BookingFormProps) {
   const defaultUnitId = units.find((u) => u.isDefault)?.id ?? units[0]?.id ?? "";
   const [unitId, setUnitId] = useState(defaultUnitId);
   const [serviceId, setServiceId] = useState("");
@@ -111,7 +117,7 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
             ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
             : "";
         const response = await fetch(
-          `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}${staffQ}`,
+          `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
         );
         if (!response.ok) {
           throw new Error("Falha na disponibilidade");
@@ -126,7 +132,7 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
     };
 
     void fetchAvailability();
-  }, [serviceId, selectedDate, staffMemberId, unitId]);
+  }, [serviceId, selectedDate, staffMemberId, unitId, organizationSlug]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,6 +160,7 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
           date: selectedDate,
           time: selectedTime,
           unitId: unitId,
+          organizationSlug,
           ...(staffMemberId ? { staffMemberId } : {}),
         }),
       });
@@ -182,7 +189,7 @@ export function BookingForm({ services, barbers, units }: BookingFormProps) {
           ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
           : "";
       const refresh = await fetch(
-        `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}${staffQ}`,
+        `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
       );
       const refreshed = (await refresh.json()) as AvailableApiResponse;
       setAvailableSlots(refreshed.availableSlots);

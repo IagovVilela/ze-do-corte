@@ -4,12 +4,13 @@ import type { Prisma, StaffMember, StaffRole } from "@prisma/client";
 
 export type StaffPermissions = {
   manageUnits: boolean;
-  /** Quem pode gerir contas no painel (registros StaffMember + senhas). */
   manageStaff: "none" | "staff_only" | "full";
   manageServices: boolean;
   manageSettings: boolean;
   exportData: boolean;
   viewRevenue: boolean;
+  manageSubscriptions: boolean;
+  manageBranding: boolean;
 };
 
 export type StaffAccess = {
@@ -19,9 +20,10 @@ export type StaffAccess = {
   phone: string | null;
   profileImageUrl: string | null;
   role: StaffRole;
+  organizationId: string;
   /**
    * Quando definido, métricas e listagens ficam restritas a estas unidades.
-   * Proprietário / admin sem unidade = visão global.
+   * Proprietário / admin sem unidade = visão da organização inteira.
    */
   unitIdsFilter: string[] | undefined;
   permissions: StaffPermissions;
@@ -37,6 +39,8 @@ function permissionsForRole(role: StaffRole): StaffPermissions {
         manageSettings: true,
         exportData: true,
         viewRevenue: true,
+        manageSubscriptions: true,
+        manageBranding: true,
       };
     case "ADMIN":
       return {
@@ -46,6 +50,8 @@ function permissionsForRole(role: StaffRole): StaffPermissions {
         manageSettings: false,
         exportData: true,
         viewRevenue: true,
+        manageSubscriptions: true,
+        manageBranding: false,
       };
     case "STAFF":
       return {
@@ -55,6 +61,8 @@ function permissionsForRole(role: StaffRole): StaffPermissions {
         manageSettings: false,
         exportData: false,
         viewRevenue: false,
+        manageSubscriptions: false,
+        manageBranding: false,
       };
     default: {
       const _exhaustive: never = role;
@@ -63,8 +71,8 @@ function permissionsForRole(role: StaffRole): StaffPermissions {
   }
 }
 
-/** Monta `StaffAccess` a partir de um registro `StaffMember` autenticado. */
 export function staffAccessFromMember(member: StaffMember): StaffAccess | null {
+  if (!member.organizationId) return null;
   if (member.role === "STAFF" && !member.unitId) {
     return null;
   }
@@ -77,6 +85,7 @@ export function staffAccessFromMember(member: StaffMember): StaffAccess | null {
     phone: member.phone ?? null,
     profileImageUrl: member.profileImageUrl ?? null,
     role: member.role,
+    organizationId: member.organizationId,
     unitIdsFilter:
       unitIdsFilter && unitIdsFilter.length > 0 ? unitIdsFilter : undefined,
     permissions: permissionsForRole(member.role),
@@ -84,30 +93,57 @@ export function staffAccessFromMember(member: StaffMember): StaffAccess | null {
 }
 
 /**
- * Filtro de agendamentos no painel e exportações.
- * - OWNER / ADMIN: **sempre** todos os agendamentos (todas as unidades, inclusive `unitId` null).
- * - STAFF: só da sua unidade **e** com `staffMemberId` = próprio id (produção atribuída).
- *   Agendamentos sem profissional só aparecem para dono/admin até serem atribuídos.
+ * Filtro de agendamentos no painel e exportações — sempre limitado à organização.
  */
 export function appointmentScopeWhere(
   access: StaffAccess,
 ): Prisma.AppointmentWhereInput {
+  const orgViaUnit: Prisma.AppointmentWhereInput = {
+    unit: { organizationId: access.organizationId },
+  };
+
   if (access.role === "STAFF") {
     const unitIds = access.unitIdsFilter;
     if (!unitIds?.length) {
       return { id: { in: [] } };
     }
     return {
-      AND: [{ unitId: { in: unitIds } }, { staffMemberId: access.userId }],
+      AND: [
+        orgViaUnit,
+        { unitId: { in: unitIds } },
+        { staffMemberId: access.userId },
+      ],
     };
   }
+
   if (access.role === "OWNER" || access.role === "ADMIN") {
-    return {};
+    return orgViaUnit;
   }
+
   if (access.unitIdsFilter?.length) {
-    return { unitId: { in: access.unitIdsFilter } };
+    return {
+      AND: [orgViaUnit, { unitId: { in: access.unitIdsFilter } }],
+    };
   }
-  return {};
+  return orgViaUnit;
+}
+
+export function unitScopeWhere(
+  access: StaffAccess,
+): Prisma.BarbershopUnitWhereInput {
+  return { organizationId: access.organizationId };
+}
+
+export function staffMemberScopeWhere(
+  access: StaffAccess,
+): Prisma.StaffMemberWhereInput {
+  return { organizationId: access.organizationId };
+}
+
+export function serviceScopeWhere(
+  access: StaffAccess,
+): Prisma.ServiceWhereInput {
+  return { unit: { organizationId: access.organizationId } };
 }
 
 export function canAssignRole(
@@ -121,12 +157,10 @@ export function canAssignRole(
 
 export function canModifyStaffMember(
   access: StaffAccess,
-  target: { role: StaffRole; email: string },
+  target: { role: StaffRole; organizationId: string },
 ): boolean {
+  if (target.organizationId !== access.organizationId) return false;
   if (access.permissions.manageStaff === "none") return false;
-  if (target.email.toLowerCase() === access.email?.toLowerCase()) {
-    return false;
-  }
   if (access.permissions.manageStaff === "full") return true;
   return target.role === "STAFF";
 }

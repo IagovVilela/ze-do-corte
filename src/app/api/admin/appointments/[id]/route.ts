@@ -15,12 +15,14 @@ const patchSchema = z
     staffMemberId: z.union([z.string().min(1), z.null()]).optional(),
     paidAt: z.union([z.iso.datetime(), z.null()]).optional(),
     paymentMethod: z.string().trim().max(32).nullable().optional(),
+    amountPaid: z.union([z.number().nonnegative(), z.null()]).optional(),
   })
   .refine(
     (d) =>
       d.staffMemberId !== undefined ||
       d.paidAt !== undefined ||
-      d.paymentMethod !== undefined,
+      d.paymentMethod !== undefined ||
+      d.amountPaid !== undefined,
     { message: "Nada para atualizar." },
   );
 
@@ -66,7 +68,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const touchesPayment =
-    parsed.data.paidAt !== undefined || parsed.data.paymentMethod !== undefined;
+    parsed.data.paidAt !== undefined ||
+    parsed.data.paymentMethod !== undefined ||
+    parsed.data.amountPaid !== undefined;
   if (touchesPayment && !canRecordPayment(auth.access.role)) {
     return NextResponse.json(
       { message: "Apenas proprietário ou administrador pode registar pagamento." },
@@ -107,6 +111,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (parsed.data.paidAt === null) {
       updateData.paidAt = null;
       updateData.paymentMethod = null;
+      updateData.amountPaid = null;
     } else {
       updateData.paidAt = new Date(parsed.data.paidAt);
       if (parsed.data.paymentMethod !== undefined) {
@@ -115,6 +120,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   } else if (parsed.data.paymentMethod !== undefined) {
     updateData.paymentMethod = parsed.data.paymentMethod;
+  }
+
+  if (parsed.data.amountPaid !== undefined) {
+    updateData.amountPaid = parsed.data.amountPaid;
   }
 
   if (parsed.data.staffMemberId !== undefined) {

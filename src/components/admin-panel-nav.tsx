@@ -50,6 +50,26 @@ export function AdminPanelNav({ access }: { access: StaffAccess }) {
       show: access.permissions.manageServices,
     },
     {
+      href: "/admin/marca",
+      label: "Marca",
+      show: access.permissions.manageBranding,
+    },
+    {
+      href: "/admin/caixa",
+      label: "Caixa",
+      show: access.permissions.viewRevenue,
+    },
+    {
+      href: "/admin/clube",
+      label: "Clube",
+      show: access.permissions.manageSubscriptions,
+    },
+    {
+      href: "/admin/plano",
+      label: "Plano",
+      show: access.role === "OWNER",
+    },
+    {
       href: "/admin/configuracao",
       label: "Configuração",
       show: access.permissions.manageSettings,
