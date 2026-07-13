@@ -2,7 +2,6 @@
 
 import {
   motion,
-  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useScroll,
@@ -12,60 +11,56 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  EASE_EDITORIAL,
-  fadeUpSmall,
-  staggerContainer,
-  staggerItem,
-  titleWord,
-} from "@/lib/motion-presets";
+import { EASE_EDITORIAL } from "@/lib/motion-presets";
 
-const BRAND = "Barbernegon";
-const HEADLINE_WORDS = ["Sua", "barbearia.", "Sua", "cara."] as const;
+/**
+ * Landing Barbernegon — estética cinema (grain, vídeo full-bleed, tipografia forte).
+ * Microinterações com Framer Motion; conteúdo legível mesmo com reduced-motion.
+ */
 
-function MagneticLink({
+function useMagnetic() {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 260, damping: 20 });
+  const sy = useSpring(y, { stiffness: 260, damping: 20 });
+  const reduce = useReducedMotion();
+  const onMove = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      if (reduce) return;
+      const r = e.currentTarget.getBoundingClientRect();
+      x.set((e.clientX - r.left - r.width / 2) * 0.28);
+      y.set((e.clientY - r.top - r.height / 2) * 0.28);
+    },
+    [reduce, x, y],
+  );
+  const onLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+  return { sx, sy, onMove, onLeave };
+}
+
+function Cta({
   href,
   children,
-  className,
-  primary = false,
+  variant = "primary",
 }: {
   href: string;
   children: React.ReactNode;
-  className?: string;
-  primary?: boolean;
+  variant?: "primary" | "ghost";
 }) {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 220, damping: 18 });
-  const springY = useSpring(y, { stiffness: 220, damping: 18 });
-  const reduce = useReducedMotion();
-
-  const onMove = (e: React.MouseEvent) => {
-    if (reduce || !ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    x.set((e.clientX - r.left - r.width / 2) * 0.22);
-    y.set((e.clientY - r.top - r.height / 2) * 0.22);
-  };
-
-  const onLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
+  const { sx, sy, onMove, onLeave } = useMagnetic();
+  const base =
+    variant === "primary"
+      ? "bg-[#e8e2d6] text-[#0a0908] hover:bg-white"
+      : "border border-white/30 text-[#e8e2d6] hover:border-white/60 hover:bg-white/5";
   return (
-    <motion.div style={{ x: springX, y: springY }} className="inline-flex">
+    <motion.div style={{ x: sx, y: sy }} className="inline-flex">
       <Link
-        ref={ref}
         href={href}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
-        className={
-          className ??
-          (primary
-            ? "inline-flex items-center justify-center rounded-md bg-[#f0ebe3] px-7 py-3.5 text-sm font-semibold tracking-wide text-[#0c0b0a] transition hover:bg-white"
-            : "inline-flex items-center justify-center rounded-md border border-white/25 bg-transparent px-7 py-3.5 text-sm font-semibold tracking-wide text-[#f0ebe3] transition hover:border-white/50 hover:bg-white/5")
-        }
+        className={`inline-flex min-h-12 items-center justify-center px-8 text-[13px] font-semibold tracking-[0.14em] uppercase transition ${base}`}
       >
         {children}
       </Link>
@@ -73,356 +68,308 @@ function MagneticLink({
   );
 }
 
-function LandingNav() {
-  const [scrolled, setScrolled] = useState(false);
-  const reduce = useReducedMotion();
-
+function Nav() {
+  const [solid, setSolid] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setSolid(window.scrollY > 40);
+    fn();
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
-    <motion.header
-      initial={reduce ? false : { y: -28, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.7, ease: EASE_EDITORIAL }}
-      className="fixed inset-x-0 top-0 z-50"
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        solid ? "border-b border-white/10 bg-black/70 backdrop-blur-md" : ""
+      }`}
     >
-      <div
-        className={
-          scrolled
-            ? "border-b border-white/10 bg-[#0c0b0a]/80 backdrop-blur-xl"
-            : "border-b border-transparent bg-transparent"
-        }
-      >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-[4.25rem] max-w-[1200px] items-center justify-between px-5 md:px-8">
+        <Link
+          href="/"
+          className="font-display text-[1.35rem] tracking-[0.22em] text-[#e8e2d6] uppercase"
+        >
+          Barbernegon
+        </Link>
+        <div className="flex items-center gap-6">
           <Link
-            href="/"
-            className="font-[family-name:var(--font-landing-display)] text-xl tracking-[0.14em] text-[#f0ebe3] uppercase"
+            href="/admin/login"
+            className="hidden text-[12px] tracking-[0.16em] text-white/50 uppercase transition hover:text-white sm:inline"
           >
-            {BRAND}
+            Entrar
           </Link>
-          <nav className="flex items-center gap-5">
-            <Link
-              href="/admin/login"
-              className="hidden text-sm text-white/55 transition hover:text-white sm:inline"
-            >
-              Entrar
-            </Link>
-            <MagneticLink href="/cadastro" primary>
-              Começar grátis
-            </MagneticLink>
-          </nav>
+          <Cta href="/cadastro">Começar</Cta>
         </div>
       </div>
-    </motion.header>
-  );
-}
-
-function HeroBackdrop({ targetRef }: { targetRef: React.RefObject<HTMLElement | null> }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-    offset: ["start start", "end start"],
-  });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0.35]);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el || reduce) return;
-    void el.play().catch(() => {});
-  }, [reduce]);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <motion.div className="absolute inset-0" style={{ scale, y, opacity }}>
-        <video
-          ref={videoRef}
-          src="/images/videoPrincipal.mp4"
-          className="h-full w-full object-cover object-[center_28%]"
-          muted
-          loop
-          playsInline
-          autoPlay={!reduce}
-          preload="auto"
-        />
-      </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0c0b0a]/92 via-[#0c0b0a]/55 to-[#0c0b0a]/25" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0b0a] via-[#0c0b0a]/25 to-[#0c0b0a]/45" />
-      <div
-        className="absolute inset-0 opacity-[0.18]"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
-    </div>
+    </header>
   );
 }
 
 function Hero() {
-  const ref = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const reduce = useReducedMotion();
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
-  const spotX = useTransform(mouseX, (v) => `${v * 100}%`);
-  const spotY = useTransform(mouseY, (v) => `${v * 100}%`);
-  const spotlight = useMotionTemplate`radial-gradient(520px circle at ${spotX} ${spotY}, rgba(240,235,227,0.12), transparent 55%)`;
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+  const mediaScale = useTransform(scrollYProgress, [0, 1], [1, 1.14]);
+  const mediaY = useTransform(scrollYProgress, [0, 1], [0, 90]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
 
-  const onMove = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      if (!ref.current || reduce) return;
-      const r = ref.current.getBoundingClientRect();
-      mouseX.set((e.clientX - r.left) / r.width);
-      mouseY.set((e.clientY - r.top) / r.height);
-    },
-    [mouseX, mouseY, reduce],
-  );
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || reduce) return;
+    void v.play().catch(() => undefined);
+  }, [reduce]);
 
   return (
-    <section
-      ref={ref}
-      onMouseMove={onMove}
-      className="relative isolate min-h-[100svh] overflow-hidden pt-16"
-    >
-      <HeroBackdrop targetRef={ref} />
-      {!reduce ? (
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-[1]"
-          style={{ background: spotlight }}
+    <section ref={sectionRef} className="relative h-[100svh] min-h-[640px] overflow-hidden bg-black">
+      <motion.div
+        className="absolute inset-0"
+        style={reduce ? undefined : { scale: mediaScale, y: mediaY }}
+      >
+        <video
+          ref={videoRef}
+          className="h-full w-full object-cover object-[center_30%] contrast-[1.05] saturate-[0.85]"
+          src="/images/videoPrincipal.mp4"
+          muted
+          loop
+          playsInline
+          autoPlay
+          preload="auto"
+          aria-hidden
         />
-      ) : null}
-
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-6xl flex-col justify-end px-4 pb-16 sm:px-6 md:pb-24">
-        <motion.div
-          variants={staggerContainer(0.09, 0.12)}
-          initial="hidden"
-          animate="visible"
-          className="max-w-3xl"
-        >
-          <motion.p
-            variants={fadeUpSmall}
-            className="font-[family-name:var(--font-landing-display)] text-[clamp(3.4rem,12vw,8.5rem)] leading-[0.86] tracking-[0.04em] text-[#f0ebe3] uppercase"
-          >
-            {BRAND}
-          </motion.p>
-
-          <motion.h1
-            className="mt-5 max-w-xl text-2xl font-medium leading-tight tracking-tight text-[#f0ebe3]/90 sm:text-3xl md:text-4xl"
-            variants={staggerContainer(0.05, 0)}
-          >
-            {HEADLINE_WORDS.map((word, i) => (
-              <span key={`${word}-${i}`} className="inline-block overflow-hidden align-bottom">
-                <motion.span className="inline-block pr-[0.28em]" variants={titleWord}>
-                  {word}
-                </motion.span>
-              </span>
-            ))}
-          </motion.h1>
-
-          <motion.p
-            variants={fadeUpSmall}
-            className="mt-5 max-w-md text-base leading-relaxed text-white/65 md:text-lg"
-          >
-            Site próprio, agenda em segundos e painel limpo — sem burocracia.
-          </motion.p>
-
-          <motion.div variants={fadeUpSmall} className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <MagneticLink href="/cadastro" primary>
-              Criar minha barbearia
-            </MagneticLink>
-            <MagneticLink href="/ze-do-corte">Ver demo ao vivo</MagneticLink>
-          </motion.div>
-        </motion.div>
-      </div>
+        {/* film grain */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.22] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\")",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/50" />
+      </motion.div>
 
       <motion.div
-        aria-hidden
-        className="absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 md:block"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
+        className="relative z-10 mx-auto flex h-full max-w-[1200px] flex-col justify-end px-5 pb-16 md:px-8 md:pb-24"
+        style={reduce ? undefined : { y: contentY, opacity: contentOpacity }}
       >
+        <motion.p
+          className="font-display text-[clamp(3.75rem,14vw,9.5rem)] leading-[0.82] tracking-[0.06em] text-[#e8e2d6] uppercase"
+          initial={reduce ? false : { opacity: 0, y: 48 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: EASE_EDITORIAL }}
+        >
+          Barbernegon
+        </motion.p>
+
+        <motion.h1
+          className="mt-5 max-w-xl text-[clamp(1.35rem,3.2vw,2.15rem)] font-medium leading-[1.15] tracking-tight text-[#e8e2d6]/90"
+          initial={reduce ? false : { opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: EASE_EDITORIAL }}
+        >
+          Sua barbearia. Sua cara.
+        </motion.h1>
+
+        <motion.p
+          className="mt-4 max-w-md text-[15px] leading-relaxed text-white/60 md:text-base"
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, delay: 0.28, ease: EASE_EDITORIAL }}
+        >
+          Site próprio, agenda em segundos e painel limpo — sem burocracia.
+        </motion.p>
+
         <motion.div
-          className="h-10 w-px origin-top bg-gradient-to-b from-white/50 to-transparent"
-          animate={reduce ? undefined : { scaleY: [0.4, 1, 0.4], opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        />
+          className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+          initial={reduce ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: EASE_EDITORIAL }}
+        >
+          <Cta href="/cadastro">Criar minha barbearia</Cta>
+          <Cta href="/ze-do-corte" variant="ghost">
+            Ver demo ao vivo
+          </Cta>
+        </motion.div>
       </motion.div>
+
+      {!reduce ? (
+        <motion.div
+          aria-hidden
+          className="absolute bottom-7 left-1/2 z-10 h-12 w-px -translate-x-1/2 bg-gradient-to-b from-white/55 to-transparent"
+          animate={{ scaleY: [0.45, 1, 0.45], opacity: [0.35, 0.85, 0.35] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ) : null}
     </section>
   );
 }
 
-function Reveal({
+function SectionReveal({
   children,
-  className,
+  className = "",
 }: {
   children: React.ReactNode;
   className?: string;
 }) {
   const reduce = useReducedMotion();
-  if (reduce) return <div className={className}>{children}</div>;
   return (
-    <motion.div
+    <motion.section
       className={className}
-      initial={{ opacity: 0, y: 56, filter: "blur(12px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, amount: 0.25, margin: "0px 0px -8% 0px" }}
+      initial={reduce ? false : { opacity: 0, y: 64 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.85, ease: EASE_EDITORIAL }}
     >
       {children}
-    </motion.div>
+    </motion.section>
   );
 }
 
-function FeatureStrip({
-  index,
-  title,
-  body,
-  href,
-  cta,
-}: {
-  index: string;
-  title: string;
-  body: string;
-  href: string;
-  cta: string;
-}) {
+function Statement() {
   return (
-    <Reveal>
-      <div className="group grid gap-8 border-t border-white/10 py-16 md:grid-cols-[140px_1fr_auto] md:items-end md:gap-12 md:py-20">
-        <p className="font-[family-name:var(--font-landing-display)] text-5xl tracking-wide text-white/20 transition group-hover:text-[#c45c3a]/80">
-          {index}
+    <SectionReveal className="relative overflow-hidden bg-[#070707] px-5 py-28 md:px-8 md:py-36">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 80% 50% at 20% 0%, rgba(232,226,214,0.25), transparent 55%)",
+        }}
+      />
+      <div className="relative mx-auto max-w-[1200px]">
+        <p className="text-[11px] tracking-[0.28em] text-white/40 uppercase">
+          Posicionamento
         </p>
-        <div>
-          <h2 className="font-[family-name:var(--font-landing-display)] text-4xl tracking-wide text-[#f0ebe3] md:text-5xl">
-            {title}
-          </h2>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-white/55">{body}</p>
-        </div>
-        <MagneticLink href={href}>{cta}</MagneticLink>
+        <h2 className="font-display mt-5 max-w-4xl text-[clamp(2.4rem,6vw,5rem)] leading-[0.95] tracking-[0.04em] text-[#e8e2d6] uppercase">
+          Identidade real.
+          <br />
+          Zero marketplace.
+          <br />
+          Setup em minutos.
+        </h2>
+        <p className="mt-8 max-w-lg text-base leading-relaxed text-white/50">
+          Sua marca na frente — não um app genérico. O cliente agenda no navegador,
+          sem baixar nada e sem ver concorrentes.
+        </p>
       </div>
-    </Reveal>
+    </SectionReveal>
   );
 }
 
-function Marquee() {
-  const reduce = useReducedMotion();
+function ProductMoments() {
   const items = [
-    "Site white-label",
-    "Agendamento online",
-    "Admin limpo",
-    "Caixa no balcão",
-    "Clube sem burocracia",
-    "Cancelamento claro",
+    {
+      n: "01",
+      title: "Site com a sua cara",
+      body: "Logo, cores, slogans e hero em /sua-marca. White-label de verdade.",
+      href: "/ze-do-corte",
+      label: "Abrir demo",
+    },
+    {
+      n: "02",
+      title: "Agenda em segundos",
+      body: "Serviço, horário, confirmação. Fluido no mobile — sem App Store.",
+      href: "/ze-do-corte/agendar",
+      label: "Agendar",
+    },
+    {
+      n: "03",
+      title: "Caixa e clube claros",
+      body: "Relatório no balcão e assinaturas com cancelamento imediato.",
+      href: "/cadastro",
+      label: "Começar",
+    },
   ];
-  const row = [...items, ...items];
 
   return (
-    <div className="overflow-hidden border-y border-white/10 bg-[#12100e] py-4">
-      <motion.div
-        className="flex w-max gap-10 whitespace-nowrap"
-        animate={reduce ? undefined : { x: ["0%", "-50%"] }}
-        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-      >
-        {row.map((label, i) => (
-          <span
-            key={`${label}-${i}`}
-            className="font-[family-name:var(--font-landing-display)] text-2xl tracking-[0.18em] text-white/35 uppercase"
-          >
-            {label}
-            <span className="ml-10 text-[#c45c3a]/70">/</span>
-          </span>
+    <section className="border-t border-white/10 bg-black">
+      <div className="mx-auto max-w-[1200px] px-5 md:px-8">
+        {items.map((item, i) => (
+          <SectionReveal key={item.n}>
+            <div
+              className={`grid gap-8 py-16 md:grid-cols-[100px_1.2fr_0.8fr] md:items-end md:gap-12 md:py-24 ${
+                i < items.length - 1 ? "border-b border-white/10" : ""
+              }`}
+            >
+              <p className="font-display text-4xl tracking-wide text-white/20">{item.n}</p>
+              <div>
+                <h3 className="font-display text-4xl tracking-[0.04em] text-[#e8e2d6] uppercase md:text-5xl">
+                  {item.title}
+                </h3>
+                <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/50">
+                  {item.body}
+                </p>
+              </div>
+              <div className="md:justify-self-end">
+                <Cta href={item.href} variant="ghost">
+                  {item.label}
+                </Cta>
+              </div>
+            </div>
+          </SectionReveal>
         ))}
-      </motion.div>
-    </div>
+      </div>
+    </section>
   );
 }
 
-function ClosingCta() {
+function FinalCta() {
   return (
-    <section className="relative overflow-hidden py-28 md:py-36">
+    <SectionReveal className="relative overflow-hidden border-t border-white/10 bg-[#0a0908] px-5 py-28 text-center md:px-8 md:py-36">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(196,92,58,0.18), transparent 55%), linear-gradient(180deg, #0c0b0a, #141210)",
+            "radial-gradient(ellipse 60% 45% at 50% 0%, rgba(232,226,214,0.08), transparent 60%)",
         }}
       />
-      <Reveal className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-        <p className="font-[family-name:var(--font-landing-display)] text-5xl leading-[0.9] tracking-wide text-[#f0ebe3] md:text-7xl">
+      <div className="relative mx-auto max-w-3xl">
+        <h2 className="font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.9] tracking-[0.05em] text-[#e8e2d6] uppercase">
           Pronto em minutos.
           <br />
           Não em semanas.
-        </p>
-        <p className="mx-auto mt-6 max-w-lg text-base text-white/55">
-          Sem App Store. Sem marketplace que dilui sua marca. Trial completo para validar com a
-          sua clientela.
+        </h2>
+        <p className="mx-auto mt-6 max-w-md text-white/50">
+          Trial completo. Sem App Store. Sem diluir sua marca em marketplace.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <MagneticLink href="/cadastro" primary>
-            Começar agora
-          </MagneticLink>
-          <MagneticLink href="/planos">Ver planos</MagneticLink>
+          <Cta href="/cadastro">Começar agora</Cta>
+          <Cta href="/planos" variant="ghost">
+            Ver planos
+          </Cta>
         </div>
-      </Reveal>
-    </section>
+      </div>
+    </SectionReveal>
   );
 }
 
 export function BarbernegonLanding() {
   return (
-    <div className="min-h-svh bg-[#0c0b0a] text-[#f0ebe3] selection:bg-[#c45c3a]/40">
-      <LandingNav />
+    <div className="min-h-svh bg-black text-[#e8e2d6] antialiased selection:bg-white/20">
+      <Nav />
       <main>
         <Hero />
-        <Marquee />
-        <section className="mx-auto max-w-6xl px-4 sm:px-6">
-          <FeatureStrip
-            index="01"
-            title="Site com a sua cara"
-            body="Logo, cores, slogans e hero — em barbernegon.com/sua-marca. Identidade real, não um logo em app genérico."
-            href="/ze-do-corte"
-            cta="Ver demo"
-          />
-          <FeatureStrip
-            index="02"
-            title="Agenda em segundos"
-            body="Cliente marca no navegador, escolhe serviço e horário — sem baixar app e sem ver concorrentes."
-            href="/ze-do-corte/agendar"
-            cta="Agendar demo"
-          />
-          <FeatureStrip
-            index="03"
-            title="Caixa e clube simples"
-            body="Relatórios no balcão e assinaturas com cancelamento imediato. Sem prender o cliente."
-            href="/cadastro"
-            cta="Criar conta"
-          />
-        </section>
-        <ClosingCta />
+        <Statement />
+        <ProductMoments />
+        <FinalCta />
       </main>
-      <footer className="border-t border-white/10 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 text-xs text-white/40 sm:flex-row sm:px-6">
-          <p>
-            © {new Date().getFullYear()} {BRAND}
-          </p>
-          <div className="flex gap-5">
-            <Link href="/planos" className="transition hover:text-white/80">
+      <footer className="border-t border-white/10 bg-black py-8">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-4 px-5 text-[11px] tracking-[0.14em] text-white/35 uppercase md:flex-row md:px-8">
+          <p>© {new Date().getFullYear()} Barbernegon</p>
+          <div className="flex gap-6">
+            <Link href="/planos" className="hover:text-white/70">
               Planos
             </Link>
-            <Link href="/admin/login" className="transition hover:text-white/80">
+            <Link href="/admin/login" className="hover:text-white/70">
               Painel
             </Link>
-            <Link href="/cadastro" className="transition hover:text-white/80">
-              Cadastro
+            <Link href="/ze-do-corte" className="hover:text-white/70">
+              Demo
             </Link>
           </div>
         </div>
