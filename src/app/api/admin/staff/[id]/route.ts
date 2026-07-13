@@ -6,7 +6,12 @@ import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { hashPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
-import { canAssignRole, canModifyStaffMember } from "@/lib/staff-access";
+import {
+  canAssignRole,
+  canModifyStaffMember,
+  staffMemberScopeWhere,
+  unitScopeWhere,
+} from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +51,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const existing = await prisma.staffMember.findUnique({ where: { id } });
+  const existing = await prisma.staffMember.findFirst({
+    where: { id, ...staffMemberScopeWhere(auth.access) },
+  });
   if (!existing) {
     return NextResponse.json({ message: "Membro não encontrado." }, { status: 404 });
   }
@@ -89,6 +96,22 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
   if (nextRole !== "STAFF") {
     unitId = null;
+  }
+
+  if (unitId) {
+    const unitOk = await prisma.barbershopUnit.findFirst({
+      where: {
+        id: unitId,
+        ...unitScopeWhere(auth.access),
+      },
+      select: { id: true },
+    });
+    if (!unitOk) {
+      return NextResponse.json(
+        { message: "Unidade inválida para esta organização." },
+        { status: 400 },
+      );
+    }
   }
 
   let nextPasswordHash: string | undefined;
@@ -146,7 +169,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const existing = await prisma.staffMember.findUnique({ where: { id } });
+  const existing = await prisma.staffMember.findFirst({
+    where: { id, ...staffMemberScopeWhere(auth.access) },
+  });
   if (!existing) {
     return NextResponse.json({ message: "Membro não encontrado." }, { status: 404 });
   }

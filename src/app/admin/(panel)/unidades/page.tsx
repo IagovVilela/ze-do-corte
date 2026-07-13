@@ -5,6 +5,7 @@ import { AnimatedSection } from "@/components/animated-section";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function AdminUnitsPage() {
   }
 
   const units = await prisma.barbershopUnit.findMany({
+    where: unitScopeWhere(access),
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
   });
 

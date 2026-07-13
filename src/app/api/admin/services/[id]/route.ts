@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORY_ORDER } from "@/lib/service-category";
+import { serviceScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
+  const organizationId = auth.access.organizationId;
 
   let body: unknown;
   try {
@@ -52,18 +54,41 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const exists = await prisma.service.findUnique({ where: { id } });
+  const exists = await prisma.service.findFirst({
+    where: { id, ...serviceScopeWhere(auth.access) },
+  });
   if (!exists) {
     return NextResponse.json({ message: "Serviço não encontrado." }, { status: 404 });
   }
 
   if (parsed.data.unitId !== undefined) {
     const unitOk = await prisma.barbershopUnit.findFirst({
-      where: { id: parsed.data.unitId, isActive: true },
+      where: {
+        id: parsed.data.unitId,
+        isActive: true,
+        ...unitScopeWhere(auth.access),
+      },
       select: { id: true },
     });
     if (!unitOk) {
       return NextResponse.json({ message: "Unidade inválida ou inativa." }, { status: 400 });
+    }
+  }
+
+  if (parsed.data.unitOverrides && parsed.data.unitOverrides.length > 0) {
+    const overrideUnitIds = [...new Set(parsed.data.unitOverrides.map((o) => o.unitId))];
+    const overrideUnits = await prisma.barbershopUnit.findMany({
+      where: {
+        id: { in: overrideUnitIds },
+        organizationId,
+      },
+      select: { id: true },
+    });
+    if (overrideUnits.length !== overrideUnitIds.length) {
+      return NextResponse.json(
+        { message: "Uma ou mais unidades de override não pertencem à organização." },
+        { status: 400 },
+      );
     }
   }
 
@@ -137,7 +162,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const exists = await prisma.service.findUnique({ where: { id } });
+  const exists = await prisma.service.findFirst({
+    where: { id, ...serviceScopeWhere(auth.access) },
+  });
   if (!exists) {
     return NextResponse.json({ message: "Serviço não encontrado." }, { status: 404 });
   }

@@ -5,6 +5,7 @@ import { AnimatedSection } from "@/components/animated-section";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { serviceScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function AdminServicosPage() {
 
   const [services, units] = await Promise.all([
     prisma.service.findMany({
+      where: serviceScopeWhere(access),
       orderBy: [{ unit: { name: "asc" } }, { name: "asc" }],
       include: {
         unit: { select: { id: true, name: true } },
@@ -23,6 +25,7 @@ export default async function AdminServicosPage() {
       },
     }),
     prisma.barbershopUnit.findMany({
+      where: unitScopeWhere(access),
       orderBy: [{ isDefault: "desc" }, { name: "asc" }],
       select: { id: true, name: true, isDefault: true, isActive: true },
     }),

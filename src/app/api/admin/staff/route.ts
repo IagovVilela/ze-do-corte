@@ -7,7 +7,11 @@ import { hashPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
 import { staffEmailSchema } from "@/lib/staff-email";
-import { canAssignRole } from "@/lib/staff-access";
+import {
+  canAssignRole,
+  staffMemberScopeWhere,
+  unitScopeWhere,
+} from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +31,7 @@ export async function GET() {
   }
 
   const staff = await prisma.staffMember.findMany({
+    where: staffMemberScopeWhere(auth.access),
     include: { unit: true },
     orderBy: [{ role: "asc" }, { email: "asc" }],
   });
@@ -95,12 +100,30 @@ export async function POST(request: Request) {
     );
   }
 
+  if (parsed.data.unitId) {
+    const unitOk = await prisma.barbershopUnit.findFirst({
+      where: {
+        id: parsed.data.unitId,
+        ...unitScopeWhere(auth.access),
+      },
+      select: { id: true },
+    });
+    if (!unitOk) {
+      return NextResponse.json(
+        { message: "Unidade inválida para esta organização." },
+        { status: 400 },
+      );
+    }
+  }
+
   const email = parsed.data.email.toLowerCase();
   const passwordHash = await hashPassword(parsed.data.initialPassword);
+  const organizationId = auth.access.organizationId;
 
   try {
     const member = await prisma.staffMember.create({
       data: {
+        organizationId,
         email,
         displayName: parsed.data.displayName?.trim() || null,
         role,

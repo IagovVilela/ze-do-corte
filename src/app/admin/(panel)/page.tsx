@@ -28,6 +28,7 @@ import {
   parseTelemetryScope,
 } from "@/lib/admin-list-url";
 import { prisma } from "@/lib/prisma";
+import { staffMemberScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -56,13 +57,13 @@ export default async function AdminPage({
     access.role === "STAFF"
       ? Promise.resolve([] as const)
       : prisma.staffMember.findMany({
-          where: { role: "STAFF" },
+          where: { role: "STAFF", ...staffMemberScopeWhere(access) },
           select: { id: true, displayName: true, email: true, unitId: true },
           orderBy: [{ displayName: "asc" }, { email: "asc" }],
         }),
     showUnitColumn
       ? prisma.barbershopUnit.findMany({
-          where: { isActive: true },
+          where: { isActive: true, ...unitScopeWhere(access) },
           select: { id: true, name: true },
           orderBy: { name: "asc" },
         })

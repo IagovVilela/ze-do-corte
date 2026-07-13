@@ -5,6 +5,7 @@ import { AnimatedSection } from "@/components/animated-section";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { staffMemberScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 import { defaultWorkWeekFromShop, parseWorkWeekFromDb } from "@/lib/work-week";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,12 @@ export default async function AdminEquipePage() {
 
   const [staff, units] = await Promise.all([
     prisma.staffMember.findMany({
+      where: staffMemberScopeWhere(access),
       include: { unit: true },
       orderBy: [{ role: "asc" }, { email: "asc" }],
     }),
     prisma.barbershopUnit.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...unitScopeWhere(access) },
       orderBy: { name: "asc" },
     }),
   ]);

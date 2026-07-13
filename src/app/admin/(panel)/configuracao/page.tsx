@@ -29,6 +29,7 @@ export default async function AdminConfiguracaoPage() {
 
   const existing = await prisma.barbershopSetting.findMany({
     where: {
+      organizationId: access.organizationId,
       key: { in: PRESET_KEYS.map((p) => p.key) },
     },
   });

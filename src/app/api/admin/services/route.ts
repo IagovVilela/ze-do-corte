@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORY_ORDER } from "@/lib/service-category";
+import { serviceScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export async function GET() {
   }
 
   const services = await prisma.service.findMany({
+    where: serviceScopeWhere(auth.access),
     orderBy: [{ unit: { name: "asc" } }, { category: "asc" }, { name: "asc" }],
     include: {
       unit: { select: { id: true, name: true } },
@@ -85,13 +87,35 @@ export async function POST(request: Request) {
   }
 
   const category = parsed.data.category as ServiceCategory;
+  const organizationId = auth.access.organizationId;
 
   const unitOk = await prisma.barbershopUnit.findFirst({
-    where: { id: parsed.data.unitId, isActive: true },
+    where: {
+      id: parsed.data.unitId,
+      isActive: true,
+      ...unitScopeWhere(auth.access),
+    },
     select: { id: true },
   });
   if (!unitOk) {
     return NextResponse.json({ message: "Unidade inválida ou inativa." }, { status: 400 });
+  }
+
+  if (parsed.data.unitOverrides && parsed.data.unitOverrides.length > 0) {
+    const overrideUnitIds = [...new Set(parsed.data.unitOverrides.map((o) => o.unitId))];
+    const overrideUnits = await prisma.barbershopUnit.findMany({
+      where: {
+        id: { in: overrideUnitIds },
+        organizationId,
+      },
+      select: { id: true },
+    });
+    if (overrideUnits.length !== overrideUnitIds.length) {
+      return NextResponse.json(
+        { message: "Uma ou mais unidades de override não pertencem à organização." },
+        { status: 400 },
+      );
+    }
   }
 
   try {
@@ -117,8 +141,8 @@ export async function POST(request: Request) {
       },
       include: { unitOverrides: true },
     });
-    const unit = await prisma.barbershopUnit.findUnique({
-      where: { id: service.unitId },
+    const unit = await prisma.barbershopUnit.findFirst({
+      where: { id: service.unitId, organizationId },
       select: { name: true },
     });
     return NextResponse.json(

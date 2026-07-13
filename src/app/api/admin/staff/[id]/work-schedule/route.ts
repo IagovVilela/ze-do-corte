@@ -24,9 +24,15 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const target = await prisma.staffMember.findUnique({
-    where: { id },
-    select: { id: true, role: true, email: true, workWeekJson: true },
+  const target = await prisma.staffMember.findFirst({
+    where: { id, organizationId: auth.access.organizationId },
+    select: {
+      id: true,
+      role: true,
+      email: true,
+      organizationId: true,
+      workWeekJson: true,
+    },
   });
   if (!target) {
     return NextResponse.json({ message: "Membro não encontrado." }, { status: 404 });
@@ -57,9 +63,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const target = await prisma.staffMember.findUnique({
-    where: { id },
-    select: { id: true, role: true, email: true },
+  const target = await prisma.staffMember.findFirst({
+    where: { id, organizationId: auth.access.organizationId },
+    select: { id: true, role: true, email: true, organizationId: true },
   });
   if (!target) {
     return NextResponse.json({ message: "Membro não encontrado." }, { status: 404 });

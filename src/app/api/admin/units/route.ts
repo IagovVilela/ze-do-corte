@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export async function GET() {
   }
 
   const units = await prisma.barbershopUnit.findMany({
+    where: unitScopeWhere(auth.access),
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
   });
   return NextResponse.json({ units });
@@ -52,11 +54,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const organizationId = auth.access.organizationId;
   const slug = parsed.data.slug?.length
     ? slugify(parsed.data.slug)
     : slugify(parsed.data.name);
 
-  const existing = await prisma.barbershopUnit.findUnique({ where: { slug } });
+  const existing = await prisma.barbershopUnit.findUnique({
+    where: { organizationId_slug: { organizationId, slug } },
+  });
   if (existing) {
     return NextResponse.json(
       { message: "Já existe uma unidade com este identificador (slug)." },
@@ -68,10 +73,14 @@ export async function POST(request: Request) {
 
   const unit = await prisma.$transaction(async (tx) => {
     if (isDefault) {
-      await tx.barbershopUnit.updateMany({ data: { isDefault: false } });
+      await tx.barbershopUnit.updateMany({
+        where: { organizationId },
+        data: { isDefault: false },
+      });
     }
     return tx.barbershopUnit.create({
       data: {
+        organizationId,
         name: parsed.data.name.trim(),
         slug,
         addressLine: parsed.data.addressLine?.trim() || null,

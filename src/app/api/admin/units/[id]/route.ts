@@ -5,6 +5,7 @@ import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { normalizeBrProfilePhone } from "@/lib/br-phone-format";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { unitScopeWhere } from "@/lib/staff-access";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
+  const organizationId = auth.access.organizationId;
 
   let body: unknown;
   try {
@@ -61,7 +63,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const current = await prisma.barbershopUnit.findUnique({ where: { id } });
+  const current = await prisma.barbershopUnit.findFirst({
+    where: { id, ...unitScopeWhere(auth.access) },
+  });
   if (!current) {
     return NextResponse.json({ message: "Unidade não encontrada." }, { status: 404 });
   }
@@ -69,7 +73,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const nextSlug = parsed.data.slug ? slugify(parsed.data.slug) : undefined;
   if (nextSlug && nextSlug !== current.slug) {
     const taken = await prisma.barbershopUnit.findUnique({
-      where: { slug: nextSlug },
+      where: { organizationId_slug: { organizationId, slug: nextSlug } },
     });
     if (taken) {
       return NextResponse.json({ message: "Slug já em uso." }, { status: 409 });
@@ -81,7 +85,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const unit = await prisma.$transaction(async (tx) => {
     if (isDefault === true) {
       await tx.barbershopUnit.updateMany({
-        where: { NOT: { id } },
+        where: { organizationId, NOT: { id } },
         data: { isDefault: false },
       });
     }
@@ -122,7 +126,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const current = await prisma.barbershopUnit.findUnique({ where: { id } });
+  const current = await prisma.barbershopUnit.findFirst({
+    where: { id, ...unitScopeWhere(auth.access) },
+  });
   if (!current) {
     return NextResponse.json({ message: "Unidade não encontrada." }, { status: 404 });
   }

@@ -128,6 +128,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         where: {
           id: nextStaffId,
           role: "STAFF",
+          organizationId: auth.access.organizationId,
         },
         select: {
           id: true,

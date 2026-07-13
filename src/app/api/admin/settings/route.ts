@@ -17,7 +17,9 @@ export async function GET() {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
 
+  const organizationId = auth.access.organizationId;
   const rows = await prisma.barbershopSetting.findMany({
+    where: { organizationId },
     orderBy: { key: "asc" },
   });
   const settings = Object.fromEntries(rows.map((r) => [r.key, r.value]));
@@ -46,12 +48,13 @@ export async function PUT(request: Request) {
     );
   }
 
+  const organizationId = auth.access.organizationId;
   const entries = Object.entries(parsed.data.settings);
   await prisma.$transaction(
     entries.map(([key, value]) =>
       prisma.barbershopSetting.upsert({
-        where: { key },
-        create: { key, value },
+        where: { organizationId_key: { organizationId, key } },
+        create: { organizationId, key, value },
         update: { value },
       }),
     ),
