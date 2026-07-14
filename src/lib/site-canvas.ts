@@ -57,9 +57,16 @@ const themeSchema = z.object({
       "dots",
       "diagonal",
       "horizon",
+      "vertical",
       "glow",
       "noise",
       "checker",
+      "blueprint",
+      "cross",
+      "rings",
+      "waves",
+      "spark",
+      "mesh",
     ])
     .optional(),
   /** Cor das linhas / tinta do padrão (hex). */

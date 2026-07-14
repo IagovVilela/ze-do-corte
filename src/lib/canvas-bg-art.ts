@@ -7,9 +7,16 @@ export const CANVAS_BG_ART_IDS = [
   "dots",
   "diagonal",
   "horizon",
+  "vertical",
   "glow",
   "noise",
   "checker",
+  "blueprint",
+  "cross",
+  "rings",
+  "waves",
+  "spark",
+  "mesh",
 ] as const;
 
 export type CanvasBgArtId = (typeof CANVAS_BG_ART_IDS)[number];
@@ -20,13 +27,20 @@ export const CANVAS_BG_ART_OPTIONS: {
   hint: string;
 }[] = [
   { id: "none", label: "Só cor", hint: "Fundo liso" },
-  { id: "grid", label: "Quadriculado", hint: "Linhas em grade" },
-  { id: "dots", label: "Pontos", hint: "Pontilhado suave" },
-  { id: "diagonal", label: "Diagonais", hint: "Faixas inclinadas" },
-  { id: "horizon", label: "Linhas", hint: "Faixas horizontais" },
+  { id: "grid", label: "Quadriculado", hint: "Grade fina" },
+  { id: "blueprint", label: "Planta", hint: "Grade tipo engenharia" },
+  { id: "dots", label: "Pontos", hint: "Pontilhado" },
+  { id: "cross", label: "Cruzes", hint: "Marcas +" },
+  { id: "diagonal", label: "Diagonais", hint: "Listras /" },
+  { id: "mesh", label: "Malha", hint: "X entrecruzado" },
+  { id: "horizon", label: "Horizontais", hint: "Linhas →" },
+  { id: "vertical", label: "Verticais", hint: "Linhas ↑" },
+  { id: "rings", label: "Anéis", hint: "Círculos" },
+  { id: "waves", label: "Ondas", hint: "Curvas" },
+  { id: "spark", label: "Faíscas", hint: "Pontos brilhantes" },
   { id: "glow", label: "Brilho", hint: "Manchas de luz" },
-  { id: "noise", label: "Grão", hint: "Textura leve" },
-  { id: "checker", label: "Xadrez", hint: "Blocos sutis" },
+  { id: "noise", label: "Grão", hint: "Textura áspera" },
+  { id: "checker", label: "Xadrez", hint: "Blocos" },
 ];
 
 export function isCanvasBgArtId(v: string | undefined | null): v is CanvasBgArtId {
@@ -59,12 +73,11 @@ export function inkRgba(hex: string | undefined | null, alpha: number): string {
 }
 
 export type CanvasBgArtOpts = {
-  /** Cor das linhas / tinta do padrão (hex). */
   color?: string | null;
-  /** Intensidade 0–100 (default 35). */
   strength?: number | null;
-  /** Cor principal do tema (fallback do brilho). */
   primary?: string | null;
+  /** Força contraste maior (miniaturas do seletor). */
+  preview?: boolean;
 };
 
 /**
@@ -77,7 +90,6 @@ export function canvasBgArtStyle(
   CSSProperties,
   "backgroundImage" | "backgroundSize" | "backgroundPosition" | "backgroundRepeat"
 > {
-  // Compat: chamada antiga `canvasBgArtStyle(art, primary)`
   const o: CanvasBgArtOpts =
     typeof opts === "string" ? { primary: opts } : (opts ?? {});
 
@@ -86,16 +98,18 @@ export function canvasBgArtStyle(
     ? o.color.trim()
     : o.primary?.trim().startsWith("#")
       ? o.primary.trim()
-      : "#a1a1aa";
+      : "#94a3b8";
   const strength = Math.min(
     100,
-    Math.max(5, Number.isFinite(Number(o.strength)) ? Number(o.strength) : 35),
+    Math.max(5, Number.isFinite(Number(o.strength)) ? Number(o.strength) : 45),
   );
-  const base = strength / 100;
-  const ink = inkRgba(color, Math.min(0.95, base * 0.55));
-  const inkSoft = inkRgba(color, Math.min(0.9, base * 0.35));
-  const brandSoft = inkRgba(color, Math.min(0.95, base * 0.7));
-  const brandFaint = inkRgba(color, Math.min(0.9, base * 0.4));
+  // Preview: empurra a intensidade para a arte aparecer na miniatura.
+  const base = o.preview ? Math.max(0.72, strength / 100) : strength / 100;
+  const ink = inkRgba(color, Math.min(0.98, 0.18 + base * 0.65));
+  const inkMid = inkRgba(color, Math.min(0.95, 0.12 + base * 0.5));
+  const inkSoft = inkRgba(color, Math.min(0.9, 0.08 + base * 0.38));
+  const glowA = inkRgba(color, Math.min(0.95, 0.25 + base * 0.55));
+  const glowB = inkRgba(color, Math.min(0.9, 0.15 + base * 0.35));
 
   switch (id) {
     case "none":
@@ -103,42 +117,103 @@ export function canvasBgArtStyle(
     case "grid":
       return {
         backgroundImage: `linear-gradient(to right, ${ink} 1px, transparent 1px), linear-gradient(to bottom, ${ink} 1px, transparent 1px)`,
-        backgroundSize: "32px 32px",
+        backgroundSize: o.preview ? "12px 12px" : "28px 28px",
+      };
+    case "blueprint":
+      return {
+        backgroundImage: [
+          `linear-gradient(to right, ${ink} 1px, transparent 1px)`,
+          `linear-gradient(to bottom, ${ink} 1px, transparent 1px)`,
+          `linear-gradient(to right, ${inkMid} 2px, transparent 2px)`,
+          `linear-gradient(to bottom, ${inkMid} 2px, transparent 2px)`,
+        ].join(", "),
+        backgroundSize: o.preview
+          ? "10px 10px, 10px 10px, 40px 40px, 40px 40px"
+          : "16px 16px, 16px 16px, 64px 64px, 64px 64px",
       };
     case "dots":
       return {
-        backgroundImage: `radial-gradient(circle, ${ink} 1.25px, transparent 1.25px)`,
-        backgroundSize: "18px 18px",
+        backgroundImage: `radial-gradient(circle, ${ink} 1.6px, transparent 1.7px)`,
+        backgroundSize: o.preview ? "10px 10px" : "16px 16px",
+      };
+    case "cross":
+      return {
+        backgroundImage: `linear-gradient(${ink} 2px, transparent 2px), linear-gradient(90deg, ${ink} 2px, transparent 2px)`,
+        backgroundSize: o.preview ? "14px 14px" : "22px 22px",
+        backgroundPosition: "center",
       };
     case "diagonal":
       return {
-        backgroundImage: `repeating-linear-gradient(-45deg, ${inkSoft} 0 1px, transparent 1px 14px)`,
+        backgroundImage: `repeating-linear-gradient(-45deg, ${ink} 0 2px, transparent 2px 12px)`,
+      };
+    case "mesh":
+      return {
+        backgroundImage: `repeating-linear-gradient(45deg, ${inkSoft} 0 1.5px, transparent 1.5px 16px), repeating-linear-gradient(-45deg, ${ink} 0 1.5px, transparent 1.5px 16px)`,
       };
     case "horizon":
       return {
-        backgroundImage: `repeating-linear-gradient(0deg, ${inkSoft} 0 1px, transparent 1px 28px)`,
+        backgroundImage: `repeating-linear-gradient(0deg, ${ink} 0 2px, transparent 2px 18px)`,
       };
-    case "glow":
+    case "vertical":
       return {
-        backgroundImage: `radial-gradient(900px 480px at 12% -10%, ${brandSoft}, transparent 60%), radial-gradient(700px 420px at 88% 8%, ${brandFaint}, transparent 55%), radial-gradient(600px 500px at 50% 110%, ${brandFaint}, transparent 50%)`,
-        backgroundRepeat: "no-repeat",
+        backgroundImage: `repeating-linear-gradient(90deg, ${ink} 0 2px, transparent 2px 18px)`,
       };
-    case "noise": {
-      const rgb = hexToRgb(color) ?? { r: 161, g: 161, b: 170 };
-      const op = Math.min(0.7, base * 0.55).toFixed(2);
+    case "rings":
+      return {
+        backgroundImage: `repeating-radial-gradient(circle at 30% 25%, transparent 0 14px, ${ink} 14px 15.5px), repeating-radial-gradient(circle at 75% 70%, transparent 0 18px, ${inkSoft} 18px 19.5px)`,
+        backgroundSize: o.preview ? "70px 70px, 90px 90px" : "180px 180px, 240px 240px",
+      };
+    case "waves": {
+      const rgb = hexToRgb(color) ?? { r: 148, g: 163, b: 184 };
+      const op = Math.min(0.95, 0.25 + base * 0.6).toFixed(2);
       const svg = encodeURIComponent(
-        `<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${rgb.r / 255} 0 0 0 0 ${rgb.g / 255} 0 0 0 0 ${rgb.b / 255} 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='${op}'/></svg>`,
+        `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'><path d='M0 20 Q 30 0 60 20 T 120 20' fill='none' stroke='rgb(${rgb.r},${rgb.g},${rgb.b})' stroke-width='2' opacity='${op}'/><path d='M0 28 Q 30 8 60 28 T 120 28' fill='none' stroke='rgb(${rgb.r},${rgb.g},${rgb.b})' stroke-width='1.2' opacity='${Number(op) * 0.65}'/></svg>`,
       );
       return {
         backgroundImage: `url("data:image/svg+xml,${svg}")`,
-        backgroundSize: "180px 180px",
+        backgroundSize: o.preview ? "60px 20px" : "140px 48px",
+      };
+    }
+    case "spark":
+      return {
+        backgroundImage: [
+          `radial-gradient(circle, ${ink} 1.4px, transparent 1.5px)`,
+          `radial-gradient(circle, ${glowA} 1px, transparent 1.2px)`,
+          `radial-gradient(circle at 70% 40%, ${inkMid} 1.2px, transparent 1.3px)`,
+        ].join(", "),
+        backgroundSize: o.preview
+          ? "12px 12px, 18px 18px, 14px 20px"
+          : "28px 28px, 44px 44px, 36px 52px",
+        backgroundPosition: "0 0, 10px 14px, 18px 6px",
+      };
+    case "glow":
+      return {
+        backgroundImage: [
+          `radial-gradient(ellipse 80% 55% at 15% 10%, ${glowA}, transparent 62%)`,
+          `radial-gradient(ellipse 70% 50% at 88% 20%, ${glowB}, transparent 58%)`,
+          `radial-gradient(ellipse 90% 60% at 50% 100%, ${glowB}, transparent 55%)`,
+          `linear-gradient(135deg, ${inkSoft} 0%, transparent 40%, ${inkSoft} 100%)`,
+        ].join(", "),
+        backgroundRepeat: "no-repeat",
+      };
+    case "noise": {
+      const rgb = hexToRgb(color) ?? { r: 148, g: 163, b: 184 };
+      const op = Math.min(0.85, 0.3 + base * 0.55).toFixed(2);
+      const svg = encodeURIComponent(
+        `<svg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${rgb.r / 255} 0 0 0 0 ${rgb.g / 255} 0 0 0 0 ${rgb.b / 255} 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='${op}'/></svg>`,
+      );
+      return {
+        backgroundImage: `url("data:image/svg+xml,${svg}")`,
+        backgroundSize: o.preview ? "80px 80px" : "160px 160px",
       };
     }
     case "checker":
       return {
-        backgroundImage: `linear-gradient(45deg, ${inkSoft} 25%, transparent 25%), linear-gradient(-45deg, ${inkSoft} 25%, transparent 25%), linear-gradient(45deg, transparent 75%, ${inkSoft} 75%), linear-gradient(-45deg, transparent 75%, ${inkSoft} 75%)`,
-        backgroundSize: "28px 28px",
-        backgroundPosition: "0 0, 0 14px, 14px -14px, -14px 0",
+        backgroundImage: `linear-gradient(45deg, ${inkMid} 25%, transparent 25%), linear-gradient(-45deg, ${inkMid} 25%, transparent 25%), linear-gradient(45deg, transparent 75%, ${inkMid} 75%), linear-gradient(-45deg, transparent 75%, ${inkMid} 75%)`,
+        backgroundSize: o.preview ? "14px 14px" : "24px 24px",
+        backgroundPosition: o.preview
+          ? "0 0, 0 7px, 7px -7px, -7px 0"
+          : "0 0, 0 12px, 12px -12px, -12px 0",
       };
     default: {
       const _exhaustive: never = id;
@@ -156,6 +231,6 @@ export function canvasBgArtPreviewStyle(
 ): CSSProperties {
   return {
     backgroundColor: background,
-    ...canvasBgArtStyle(id, opts),
+    ...canvasBgArtStyle(id, { ...opts, preview: true, strength: opts.strength ?? 70 }),
   };
 }

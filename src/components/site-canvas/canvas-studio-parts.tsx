@@ -282,16 +282,18 @@ export function CanvasStage({
             transformOrigin: "top center",
           }}
         >
-          {/* Guias só do editor (não vão para o site). */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 z-0 opacity-[0.35]"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
-              backgroundSize: "32px 32px",
-            }}
-          />
+          {/* Guias só do editor — somem quando há arte de fundo ativa. */}
+          {(canvas.theme?.bgArt ?? "none") === "none" ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-0 opacity-[0.28]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px)",
+                backgroundSize: "32px 32px",
+              }}
+            />
+          ) : null}
           {elements.map((el) => {
             const selected = el.id === selectedId;
             return (
@@ -718,7 +720,7 @@ export function ThemePanel({
                       t.background?.startsWith("#") ? t.background : "#0f1419",
                       {
                         color: artColor,
-                        strength: t.bgArtStrength ?? 35,
+                        strength: Math.max(t.bgArtStrength ?? 45, 65),
                         primary: t.primary,
                       },
                     )}
@@ -750,14 +752,14 @@ export function ThemePanel({
               <label className="block space-y-1 text-xs text-zinc-400">
                 <span className="flex justify-between">
                   Intensidade
-                  <span className="text-zinc-500">{t.bgArtStrength ?? 35}%</span>
+                  <span className="text-zinc-500">{t.bgArtStrength ?? 45}%</span>
                 </span>
                 <input
                   type="range"
                   min={8}
                   max={90}
                   step={1}
-                  value={t.bgArtStrength ?? 35}
+                  value={t.bgArtStrength ?? 45}
                   onChange={(e) =>
                     onChange({
                       ...t,
