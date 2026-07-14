@@ -8,6 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-14
 
+- **Canvas — artes de fundo**: no painel de tema (`/admin/site`), seletor **Arte de fundo** (sólido, quadriculado, pontos, diagonais, linhas, brilho, grão, xadrez); a grade fina do editor é só guia e não vai para o site.
+- **Canvas — desfazer/refazer**: botões Voltar/Avançar no editor (`/admin/site`) + atalhos Ctrl+Z / Ctrl+Y (⌘ no Mac); arrastar/redimensionar conta como um passo.
 - **UX WhatsApp/Pagamentos para leigo**: telas `/admin/whatsapp` e `/admin/pagamentos` em passos simples; explica como o dinheiro vai da Asaas para o banco; webhook Asaas do salão criado **automaticamente** ao salvar o código; número WhatsApp atualiza o link do site. Guia: [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md).
 - **Paleta global amarelo → azul**: tokens `brand-*` / `--brand` em `globals.css`, gradientes do body, seleção, scrollbars, checkboxes e `.heading-gradient` alinhados a electric blue (`#3b82f6` / `#8eb6ff`, fundo `#0f1419`). Defaults de cadastro/marca/canvas e sombras hardcoded de agendamento/hero/admin passam a azul; orgs com `primaryColor` já salva no banco só mudam ao editar a marca.
 - **Landing Stitch aplicada (azul)**: layout Dark Cinematic do export Stitch (nav glass, hero “Sua barbearia. Sua cara.”, cards Identidade Real, seção site, intelligence, CTA); paleta **electric blue** no lugar do violeta; shader WebGL + orb hero; Geist + JetBrains Mono. Ver `src/components/landing/`.

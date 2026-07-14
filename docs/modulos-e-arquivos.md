@@ -45,7 +45,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/expediente` | `src/app/admin/(panel)/expediente/page.tsx` | Expediente semanal do **STAFF** (`admin-work-schedule-form.tsx`) |
 | `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
 | `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Textos `BarbershopSetting` (só proprietário) |
-| `/admin/login` | `src/app/admin/(auth)/login/page.tsx` | Formulário de login |
+| `/admin/login` | `src/app/admin/login/page.tsx` | Formulário de login |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
 | Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` |
 

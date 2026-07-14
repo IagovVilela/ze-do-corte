@@ -26,6 +26,7 @@ import {
   type SiteCanvasConfig,
 } from "@/lib/site-canvas";
 import type { PublicBarber, ServiceSummary } from "@/lib/types";
+import { useCanvasHistory } from "@/lib/use-canvas-history";
 
 type UnitInfo = {
   id: string;
@@ -51,7 +52,18 @@ export function SiteCanvasEditor({
   slogans,
 }: Props) {
   const [org, setOrg] = useState(initialOrg);
-  const [canvas, setCanvas] = useState<SiteCanvasConfig>(() =>
+  const {
+    canvas,
+    setCanvas,
+    commitCanvas,
+    replaceCanvas,
+    beginInteraction,
+    endInteraction,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useCanvasHistory(
     parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name),
   );
   const [artboard, setArtboard] = useState<CanvasArtboardId>("desktop");
@@ -62,9 +74,9 @@ export function SiteCanvasEditor({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setCanvas(parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name));
+    replaceCanvas(parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name));
     setOrg(initialOrg);
-  }, [initialOrg]);
+  }, [initialOrg, replaceCanvas]);
 
   const selected = useMemo(
     () => canvas.elements.find((e) => e.id === selectedId) ?? null,
@@ -73,12 +85,46 @@ export function SiteCanvasEditor({
 
   const boardW = canvas.artboards[artboard].width;
 
-  const patchElement = useCallback((next: CanvasElement) => {
-    setCanvas((c) => ({
-      ...c,
-      elements: c.elements.map((e) => (e.id === next.id ? next : e)),
-    }));
-  }, []);
+  const patchElement = useCallback(
+    (next: CanvasElement) => {
+      setCanvas((c) => ({
+        ...c,
+        elements: c.elements.map((e) => (e.id === next.id ? next : e)),
+      }));
+    },
+    [setCanvas],
+  );
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault();
+        redo();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
 
   async function save() {
     setSaving(true);
@@ -101,7 +147,7 @@ export function SiteCanvasEditor({
       if (!res.ok) throw new Error(data.message ?? "Falha ao salvar.");
       if (data.organization) {
         setOrg(data.organization);
-        setCanvas(
+        replaceCanvas(
           parseSiteCanvasConfig(
             data.organization.siteJson,
             data.organization.name,
@@ -128,7 +174,6 @@ export function SiteCanvasEditor({
     setMessage("");
     setError("");
     try {
-      // Aplica no cliente primeiro (fonte confiável) e grava o siteJson validado.
       const local = getCanvasTemplate(id, org.name);
       const res = await fetch("/api/admin/organization", {
         method: "PATCH",
@@ -148,7 +193,7 @@ export function SiteCanvasEditor({
         data.organization?.siteJson ?? local,
         org.name,
       );
-      setCanvas(next);
+      commitCanvas(next);
       if (data.organization) setOrg(data.organization);
       setSelectedId(null);
       setTemplatesOpen(false);
@@ -161,17 +206,14 @@ export function SiteCanvasEditor({
   }
 
   function addElement(el: CanvasElement) {
-    setCanvas((c) => ({ ...c, elements: [...c.elements, el] }));
+    commitCanvas((c) => ({ ...c, elements: [...c.elements, el] }));
     setSelectedId(el.id);
   }
 
   function addElements(els: CanvasElement[]) {
     if (!els.length) return;
-    setCanvas((c) => {
-      const bottom = Math.max(
-        ...els.map((e) => e.frame.y + e.frame.h),
-        0,
-      );
+    commitCanvas((c) => {
+      const bottom = Math.max(...els.map((e) => e.frame.y + e.frame.h), 0);
       const board = c.artboards[artboard];
       const nextH = Math.max(board.height, bottom + 80);
       return {
@@ -189,7 +231,7 @@ export function SiteCanvasEditor({
 
   function deleteSelected() {
     if (!selectedId) return;
-    setCanvas((c) => ({
+    commitCanvas((c) => ({
       ...c,
       elements: c.elements.filter((e) => e.id !== selectedId),
     }));
@@ -208,13 +250,13 @@ export function SiteCanvasEditor({
       },
       zIndex: selected.zIndex + 1,
     };
-    setCanvas((c) => ({ ...c, elements: [...c.elements, copy] }));
+    commitCanvas((c) => ({ ...c, elements: [...c.elements, copy] }));
     setSelectedId(copy.id);
   }
 
   function bringFront() {
     if (!selectedId) return;
-    setCanvas((c) => {
+    commitCanvas((c) => {
       const peers = c.elements.filter((e) => e.artboard === artboard);
       const maxZ = peers.reduce((m, e) => Math.max(m, e.zIndex), 0);
       return {
@@ -228,7 +270,7 @@ export function SiteCanvasEditor({
 
   function sendBack() {
     if (!selectedId) return;
-    setCanvas((c) => {
+    commitCanvas((c) => {
       const peers = c.elements.filter((e) => e.artboard === artboard);
       const minZ = peers.reduce((m, e) => Math.min(m, e.zIndex), 999);
       const nextZ = Math.max(0, minZ - 1);
@@ -240,6 +282,9 @@ export function SiteCanvasEditor({
       };
     });
   }
+
+  const historyBtn =
+    "inline-flex size-8 items-center justify-center rounded-lg border border-white/15 text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
 
   return (
     <div className="flex h-[calc(100svh-5.5rem)] min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
@@ -270,11 +315,34 @@ export function SiteCanvasEditor({
           ))}
         </div>
 
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className={historyBtn}
+            disabled={!canUndo}
+            title="Voltar (Ctrl+Z)"
+            aria-label="Voltar"
+            onClick={undo}
+          >
+            <UndoIcon />
+          </button>
+          <button
+            type="button"
+            className={historyBtn}
+            disabled={!canRedo}
+            title="Avançar (Ctrl+Y)"
+            aria-label="Avançar"
+            onClick={redo}
+          >
+            <RedoIcon />
+          </button>
+        </div>
+
         <button
           type="button"
           className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
           onClick={() => {
-            setCanvas((c) => copyDesktopToMobile(c));
+            commitCanvas((c) => copyDesktopToMobile(c));
             setArtboard("mobile");
             setSelectedId(null);
             setMessage("Layout desktop copiado para mobile (escalado).");
@@ -325,7 +393,7 @@ export function SiteCanvasEditor({
               setCanvas((c) => applyThemeChangeToCanvas(c, theme))
             }
             onBindElements={() => {
-              setCanvas((c) => ({
+              commitCanvas((c) => ({
                 ...c,
                 elements: bindElementsToThemeTokens(c.elements),
               }));
@@ -346,7 +414,9 @@ export function SiteCanvasEditor({
         </div>
         <CanvasStage
           canvas={canvas}
-          onChange={setCanvas}
+          onChange={(next: SiteCanvasConfig) => setCanvas(next)}
+          onInteractionStart={beginInteraction}
+          onInteractionEnd={endInteraction}
           artboard={artboard}
           selectedId={selectedId}
           onSelect={setSelectedId}
@@ -366,5 +436,47 @@ export function SiteCanvasEditor({
         />
       </div>
     </div>
+  );
+}
+
+function UndoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 14 4 9l5-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 9h10.5a6.5 6.5 0 1 1 0 13H12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function RedoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="m15 14 5-5-5-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 9H9.5a6.5 6.5 0 1 0 0 13H12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

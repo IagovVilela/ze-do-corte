@@ -49,6 +49,23 @@ const themeSchema = z.object({
   background: z.string().trim().min(3).max(16).optional(),
   surface: z.string().trim().min(3).max(16).optional(),
   text: z.string().trim().min(3).max(16).optional(),
+  /** Arte de fundo: none | grid | dots | diagonal | horizon | glow | noise | checker */
+  bgArt: z
+    .enum([
+      "none",
+      "grid",
+      "dots",
+      "diagonal",
+      "horizon",
+      "glow",
+      "noise",
+      "checker",
+    ])
+    .optional(),
+  /** Cor das linhas / tinta do padrão (hex). */
+  bgArtColor: z.string().trim().min(3).max(16).optional(),
+  /** Intensidade do padrão 5–100. */
+  bgArtStrength: z.number().min(5).max(100).optional(),
   fontDisplay: z.string().trim().max(80).optional(),
   fontBody: z.string().trim().max(80).optional(),
   radius: z.enum(["sm", "md", "lg"]).optional(),

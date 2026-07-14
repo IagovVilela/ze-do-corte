@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { canvasBgArtStyle } from "@/lib/canvas-bg-art";
 import type { CanvasElement, CanvasTheme, SiteCanvasConfig } from "@/lib/site-canvas";
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -181,6 +182,11 @@ export function canvasThemeStyle(
     backgroundColor: background,
     color: text,
     fontFamily: fontBody,
+    ...canvasBgArtStyle(t.bgArt, {
+      color: t.bgArtColor,
+      strength: t.bgArtStrength,
+      primary,
+    }),
   } as CSSProperties;
 }
 

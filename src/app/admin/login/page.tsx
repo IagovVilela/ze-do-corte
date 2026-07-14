@@ -10,9 +10,13 @@ export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<{ from?: string }> };
 
 export default async function AdminLoginPage({ searchParams }: Props) {
-  const access = await getStaffAccessOrNull();
-  if (access) {
-    redirect("/admin");
+  try {
+    const access = await getStaffAccessOrNull();
+    if (access) {
+      redirect("/admin");
+    }
+  } catch (error) {
+    console.error("[admin/login] sessão indisponível:", error);
   }
 
   const { from } = await searchParams;

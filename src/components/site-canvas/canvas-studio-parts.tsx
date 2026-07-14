@@ -22,6 +22,10 @@ import {
   CANVAS_MEDIA_ACCEPT,
   isCanvasVideoUrl,
 } from "@/lib/canvas-media";
+import {
+  CANVAS_BG_ART_OPTIONS,
+  canvasBgArtPreviewStyle,
+} from "@/lib/canvas-bg-art";
 import { PAGE_TEMPLATE_META } from "@/lib/canvas-page-templates";
 import { canvasThemeStyle } from "@/lib/canvas-theme-style";
 import type { OrganizationPublic } from "@/lib/organization";
@@ -106,6 +110,10 @@ function snap(n: number, grid = 8) {
 type Props = {
   canvas: SiteCanvasConfig;
   onChange: (next: SiteCanvasConfig) => void;
+  /** Início de arrastar / redimensionar (um passo no histórico). */
+  onInteractionStart?: () => void;
+  /** Fim do gesto no canvas. */
+  onInteractionEnd?: () => void;
   artboard: CanvasArtboardId;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -119,6 +127,8 @@ type Props = {
 export function CanvasStage({
   canvas,
   onChange,
+  onInteractionStart,
+  onInteractionEnd,
   artboard,
   selectedId,
   onSelect,
@@ -200,7 +210,8 @@ export function CanvasStage({
     drag.current = null;
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", endDrag);
-  }, [onPointerMove]);
+    onInteractionEnd?.();
+  }, [onInteractionEnd, onPointerMove]);
 
   function startMove(e: ReactPointerEvent, id: string) {
     e.stopPropagation();
@@ -208,6 +219,7 @@ export function CanvasStage({
     const el = canvas.elements.find((x) => x.id === id);
     if (!el || el.locked) return;
     onSelect(id);
+    onInteractionStart?.();
     drag.current = {
       kind: "move",
       startX: e.clientX,
@@ -225,6 +237,7 @@ export function CanvasStage({
     const el = canvas.elements.find((x) => x.id === id);
     if (!el || el.locked) return;
     onSelect(id);
+    onInteractionStart?.();
     drag.current = {
       kind: "resize",
       handle,
@@ -267,11 +280,18 @@ export function CanvasStage({
             height: board.height,
             transform: `scale(${zoom})`,
             transformOrigin: "top center",
-            backgroundImage:
-              "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
           }}
         >
+          {/* Guias só do editor (não vão para o site). */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0 opacity-[0.35]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
           {elements.map((el) => {
             const selected = el.id === selectedId;
             return (
@@ -611,7 +631,10 @@ export function ThemePanel({
   const row =
     "mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100";
 
-  function set(key: keyof NonNullable<SiteCanvasConfig["theme"]>, value: string) {
+  function set(
+    key: keyof NonNullable<SiteCanvasConfig["theme"]>,
+    value: string,
+  ) {
     onChange({ ...t, [key]: value });
   }
 
@@ -659,6 +682,95 @@ export function ThemePanel({
             />
           </label>
         ))}
+
+        <div className="pt-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            Arte de fundo
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+            Textura ou padrão sobre a cor de fundo (aparece no site ao salvar).
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {CANVAS_BG_ART_OPTIONS.map((opt) => {
+              const active = (t.bgArt ?? "none") === opt.id;
+              const artColor = t.bgArtColor?.startsWith("#")
+                ? t.bgArtColor
+                : t.primary?.startsWith("#")
+                  ? t.primary
+                  : "#a1a1aa";
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  title={opt.hint}
+                  onClick={() => set("bgArt", opt.id)}
+                  className={cn(
+                    "overflow-hidden rounded-lg border text-left transition",
+                    active
+                      ? "border-brand-400 ring-1 ring-brand-400/50"
+                      : "border-white/10 hover:border-white/25",
+                  )}
+                >
+                  <div
+                    className="h-10 w-full"
+                    style={canvasBgArtPreviewStyle(
+                      opt.id,
+                      t.background?.startsWith("#") ? t.background : "#0f1419",
+                      {
+                        color: artColor,
+                        strength: t.bgArtStrength ?? 35,
+                        primary: t.primary,
+                      },
+                    )}
+                  />
+                  <span className="block px-1.5 py-1 text-[10px] font-medium text-zinc-300">
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {(t.bgArt ?? "none") !== "none" ? (
+            <div className="mt-2 space-y-2 rounded-lg border border-white/10 bg-zinc-900/40 p-2">
+              <label className="flex items-center justify-between gap-2 text-xs text-zinc-400">
+                <span>Cor das linhas</span>
+                <input
+                  type="color"
+                  className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
+                  value={
+                    t.bgArtColor?.startsWith("#")
+                      ? t.bgArtColor
+                      : t.primary?.startsWith("#")
+                        ? t.primary
+                        : "#a1a1aa"
+                  }
+                  onChange={(e) => set("bgArtColor", e.target.value)}
+                />
+              </label>
+              <label className="block space-y-1 text-xs text-zinc-400">
+                <span className="flex justify-between">
+                  Intensidade
+                  <span className="text-zinc-500">{t.bgArtStrength ?? 35}%</span>
+                </span>
+                <input
+                  type="range"
+                  min={8}
+                  max={90}
+                  step={1}
+                  value={t.bgArtStrength ?? 35}
+                  onChange={(e) =>
+                    onChange({
+                      ...t,
+                      bgArtStrength: Number(e.target.value),
+                    })
+                  }
+                  className="w-full"
+                />
+              </label>
+            </div>
+          ) : null}
+        </div>
+
         {onBindElements ? (
           <button
             type="button"
