@@ -5,10 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 type PlatformInfo = {
   webhookConfigured: boolean;
   encryptionConfigured: boolean;
-  appId: string | null;
-  graphVersion: string;
-  templateConfirmation: string | null;
-  templateReminder: string | null;
 };
 
 type Connection = {
@@ -35,6 +31,7 @@ const inputClass =
 export function WhatsAppAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [platform, setPlatform] = useState<PlatformInfo | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [logs, setLogs] = useState<LogRow[]>([]);
@@ -66,6 +63,12 @@ export function WhatsAppAdminPanel() {
       setWabaId(data.connection?.whatsappWabaId ?? "");
       setDisplayPhone(data.connection?.whatsappDisplayPhone ?? "");
       setBotEnabled(data.connection?.whatsappBotEnabled ?? false);
+      if (
+        data.connection?.whatsappPhoneNumberId ||
+        data.connection?.hasAccessToken
+      ) {
+        setShowAdvanced(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro.");
     } finally {
@@ -88,11 +91,15 @@ export function WhatsAppAdminPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           whatsappBotEnabled: botEnabled,
-          whatsappPhoneNumberId: phoneNumberId.trim() || null,
-          whatsappWabaId: wabaId.trim() || null,
           whatsappDisplayPhone: displayPhone.trim() || null,
-          ...(accessToken.trim()
-            ? { whatsappAccessToken: accessToken.trim() }
+          ...(showAdvanced
+            ? {
+                whatsappPhoneNumberId: phoneNumberId.trim() || null,
+                whatsappWabaId: wabaId.trim() || null,
+                ...(accessToken.trim()
+                  ? { whatsappAccessToken: accessToken.trim() }
+                  : {}),
+              }
             : {}),
         }),
       });
@@ -100,10 +107,13 @@ export function WhatsAppAdminPanel() {
         message?: string;
         connection?: Connection;
       };
-      if (!res.ok) throw new Error(data.message ?? "Falha ao salvar.");
+      if (!res.ok) throw new Error(data.message ?? "Não foi possível salvar.");
       setConnection(data.connection ?? null);
       setAccessToken("");
-      setMessage("Configuração WhatsApp salva.");
+      setMessage(
+        data.message ??
+          "Número salvo. O botão de WhatsApp do site já pode usar esse contato.",
+      );
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro.");
@@ -113,7 +123,11 @@ export function WhatsAppAdminPanel() {
   }
 
   async function onDisconnect() {
-    if (!window.confirm("Desconectar o número WhatsApp desta barbearia?")) {
+    if (
+      !window.confirm(
+        "Desligar o assistente de mensagens? Seu número no site continua cadastrado.",
+      )
+    ) {
       return;
     }
     setSaving(true);
@@ -126,7 +140,7 @@ export function WhatsAppAdminPanel() {
       });
       const data = (await res.json()) as { message?: string };
       if (!res.ok) throw new Error(data.message ?? "Falha.");
-      setMessage("WhatsApp desconectado.");
+      setMessage(data.message ?? "Assistente desligado.");
       setAccessToken("");
       await load();
     } catch (err) {
@@ -139,6 +153,11 @@ export function WhatsAppAdminPanel() {
   if (loading) {
     return <p className="text-sm text-zinc-400">Carregando WhatsApp…</p>;
   }
+
+  const botReady =
+    Boolean(connection?.hasAccessToken) &&
+    Boolean(connection?.whatsappPhoneNumberId) &&
+    botEnabled;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -154,103 +173,126 @@ export function WhatsAppAdminPanel() {
         </p>
       )}
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-zinc-950/40 p-5 text-sm">
-        <h2 className="font-display text-lg text-white">Plataforma Meta</h2>
-        <ul className="space-y-1 text-zinc-400">
+      <section className="rounded-2xl border border-brand-500/25 bg-brand-500/5 p-5 text-sm leading-relaxed text-zinc-300">
+        <h2 className="font-display text-lg text-white">O que você precisa saber</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5">
           <li>
-            Webhook / App Secret:{" "}
-            <span className="text-zinc-200">
-              {platform?.webhookConfigured ? "OK" : "faltando META_*"}
-            </span>
+            <strong className="font-medium text-zinc-100">Número da barbearia</strong> —
+            é o que você já usa no dia a dia. Serve para o botão “WhatsApp” do site.
           </li>
           <li>
-            Criptografia de token:{" "}
-            <span className="text-zinc-200">
-              {platform?.encryptionConfigured
-                ? "OK"
-                : "faltando WHATSAPP_TOKEN_ENCRYPTION_KEY"}
-            </span>
-          </li>
-          <li>
-            Template confirmação:{" "}
-            <span className="text-zinc-200">
-              {platform?.templateConfirmation ?? "— (usa texto na janela 24h)"}
-            </span>
-          </li>
-          <li>
-            Template lembrete:{" "}
-            <span className="text-zinc-200">
-              {platform?.templateReminder ?? "—"}
-            </span>
+            <strong className="font-medium text-zinc-100">Assistente que agenda sozinho</strong>{" "}
+            — precisa de WhatsApp Business oficial (Meta). Se você ainda não tem
+            isso, use só o número; o suporte Barbernegon pode ajudar a ligar o
+            assistente depois.
           </li>
         </ul>
-        <p className="text-[11px] leading-relaxed text-zinc-500">
-          Webhook público:{" "}
-          <code className="text-zinc-400">/api/webhooks/whatsapp</code>. Cada
-          barbearia usa o próprio <em>Phone number ID</em>; o bot resolve a org
-          por esse ID.
-        </p>
       </section>
 
-      <form onSubmit={onSave} className="space-y-4 rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg text-white">Conexão desta barbearia</h2>
-          <label className="flex items-center gap-2 text-sm text-zinc-300">
+      <div
+        className={
+          botReady
+            ? "rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
+            : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-zinc-400"
+        }
+      >
+        {botReady
+          ? "Assistente ligado — clientes podem agendar pelo WhatsApp."
+          : connection?.whatsappDisplayPhone
+            ? "Número no site: ok. Assistente de agenda ainda não está ligado."
+            : "Cadastre o número da barbearia para aparecer no site."}
+      </div>
+
+      <form onSubmit={onSave} className="space-y-5 rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Passo 1 — o essencial
+          </p>
+          <label className="mt-2 block space-y-1.5 text-sm">
+            <span className="text-zinc-200">Número de WhatsApp da barbearia</span>
             <input
-              type="checkbox"
-              checked={botEnabled}
-              onChange={(e) => setBotEnabled(e.target.checked)}
+              className={inputClass}
+              value={displayPhone}
+              onChange={(e) => setDisplayPhone(e.target.value)}
+              placeholder="(11) 99999-0000"
+              inputMode="tel"
+              autoComplete="tel"
             />
-            Bot ativo
+            <span className="block text-xs text-zinc-500">
+              Com DDD. Ex.: 11999990000 ou +55 11 99999-0000
+            </span>
           </label>
         </div>
 
-        <p className="text-xs text-zinc-500">
-          Status:{" "}
-          {connection?.hasAccessToken
-            ? `token gravado${connection.whatsappConnectedAt ? ` · ${new Date(connection.whatsappConnectedAt).toLocaleString("pt-BR")}` : ""}`
-            : "sem token"}
-        </p>
+        <div className="border-t border-white/10 pt-5">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="text-left text-sm text-brand-300 hover:underline"
+          >
+            {showAdvanced
+              ? "Ocultar opções do assistente"
+              : "Quero ligar o assistente que agenda pelo WhatsApp"}
+          </button>
 
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-zinc-300">Phone number ID (Meta)</span>
-          <input
-            className={inputClass}
-            value={phoneNumberId}
-            onChange={(e) => setPhoneNumberId(e.target.value)}
-            placeholder="Ex.: 1098…"
-          />
-        </label>
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-zinc-300">WABA ID (opcional)</span>
-          <input
-            className={inputClass}
-            value={wabaId}
-            onChange={(e) => setWabaId(e.target.value)}
-          />
-        </label>
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-zinc-300">Número exibido</span>
-          <input
-            className={inputClass}
-            value={displayPhone}
-            onChange={(e) => setDisplayPhone(e.target.value)}
-            placeholder="+55 11 …"
-          />
-        </label>
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-zinc-300">
-            Access token {connection?.hasAccessToken ? "(deixe vazio para manter)" : ""}
-          </span>
-          <input
-            type="password"
-            className={inputClass}
-            value={accessToken}
-            onChange={(e) => setAccessToken(e.target.value)}
-            placeholder="EAAG…"
-            autoComplete="off"
-          />
-        </label>
+          {showAdvanced ? (
+            <div className="mt-4 space-y-4">
+              <p className="text-sm text-zinc-400">
+                Esses códigos vêm do painel WhatsApp Business (Meta). Na dúvida,
+                peça ao suporte Barbernegon — não invente esses valores.
+              </p>
+
+              {!platform?.webhookConfigured || !platform?.encryptionConfigured ? (
+                <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                  A plataforma ainda está preparando o assistente. Fale com o
+                  suporte antes de preencher os códigos.
+                </p>
+              ) : null}
+
+              <label className="flex items-center gap-2 text-sm text-zinc-200">
+                <input
+                  type="checkbox"
+                  checked={botEnabled}
+                  onChange={(e) => setBotEnabled(e.target.checked)}
+                />
+                Ligar assistente (responder e agendar automaticamente)
+              </label>
+
+              <label className="block space-y-1.5 text-sm">
+                <span className="text-zinc-300">Código do número (Phone number ID)</span>
+                <input
+                  className={inputClass}
+                  value={phoneNumberId}
+                  onChange={(e) => setPhoneNumberId(e.target.value)}
+                  placeholder="Número longo que a Meta mostra"
+                />
+              </label>
+              <label className="block space-y-1.5 text-sm">
+                <span className="text-zinc-300">Senha de acesso (Access token)</span>
+                <input
+                  type="password"
+                  className={inputClass}
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  placeholder={
+                    connection?.hasAccessToken
+                      ? "Já salva — cole outra só se for trocar"
+                      : "Cole a senha longa que a Meta gerou"
+                  }
+                  autoComplete="off"
+                />
+              </label>
+              <label className="block space-y-1.5 text-sm">
+                <span className="text-zinc-400">ID da conta Business (opcional)</span>
+                <input
+                  className={inputClass}
+                  value={wabaId}
+                  onChange={(e) => setWabaId(e.target.value)}
+                />
+              </label>
+            </div>
+          ) : null}
+        </div>
 
         <div className="flex flex-wrap gap-2 pt-2">
           <button
@@ -266,13 +308,13 @@ export function WhatsAppAdminPanel() {
             onClick={() => void onDisconnect()}
             className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 disabled:opacity-40"
           >
-            Desconectar
+            Desligar assistente
           </button>
         </div>
       </form>
 
       <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
-        <h2 className="font-display text-lg text-white">Envios recentes</h2>
+        <h2 className="font-display text-lg text-white">Mensagens recentes</h2>
         {logs.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">Nenhum envio ainda.</p>
         ) : (

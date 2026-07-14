@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
-import { AsaasApiError, asaasPingApiKey } from "@/lib/asaas-client";
+import {
+  AsaasApiError,
+  asaasEnsureOrgWebhook,
+  asaasPingApiKey,
+} from "@/lib/asaas-client";
 import {
   encryptAsaasSecret,
   isAsaasTokenEncryptionConfigured,
 } from "@/lib/asaas-crypto";
 import { prisma } from "@/lib/prisma";
+import { getAsaasWebhookUrl } from "@/lib/public-app-url";
 
 export const dynamic = "force-dynamic";
 
@@ -56,11 +61,16 @@ export async function GET() {
     },
   });
 
+  const webhookUrl = getAsaasWebhookUrl();
+  const encryptionConfigured = isAsaasTokenEncryptionConfigured();
+  const platformWebhookToken = Boolean(process.env.ASAAS_WEBHOOK_TOKEN?.trim());
+
   return NextResponse.json({
     platform: {
-      encryptionConfigured: isAsaasTokenEncryptionConfigured(),
-      webhookHint:
-        "https://SEU_DOMINIO/api/webhooks/asaas (mesmo ASAAS_WEBHOOK_TOKEN no painel Asaas do salão)",
+      encryptionConfigured,
+      webhookTokenConfigured: platformWebhookToken,
+      readyForShops: encryptionConfigured && platformWebhookToken,
+      webhookUrl,
     },
     connection: {
       asaasEnabled: org?.asaasEnabled ?? false,
@@ -109,12 +119,15 @@ export async function PATCH(request: Request) {
         : parsed.data.asaasAccountEmail;
   }
 
+  let webhookNote: string | null = null;
+  let plainKeyForWebhook: string | null = null;
+
   if (parsed.data.asaasApiKey?.trim()) {
     if (!isAsaasTokenEncryptionConfigured()) {
       return NextResponse.json(
         {
           message:
-            "Defina ASAAS_TOKEN_ENCRYPTION_KEY no servidor antes de gravar a API key.",
+            "A plataforma ainda não está pronta para guardar o código do Asaas. Avise o suporte Barbernegon.",
         },
         { status: 503 },
       );
@@ -125,11 +138,12 @@ export async function PATCH(request: Request) {
     } catch (error) {
       const message =
         error instanceof AsaasApiError
-          ? `API key inválida ou Asaas indisponível: ${error.message}`
-          : "Não foi possível validar a API key no Asaas.";
+          ? "Esse código do Asaas não funcionou. Confira se copiou inteiro em Integrações → API Key."
+          : "Não foi possível falar com o Asaas agora. Tente de novo em instantes.";
       return NextResponse.json({ message }, { status: 400 });
     }
     data.asaasApiKeyEnc = encryptAsaasSecret(key);
+    plainKeyForWebhook = key;
   }
 
   if (Object.keys(data).length === 0) {
@@ -146,8 +160,34 @@ export async function PATCH(request: Request) {
     },
   });
 
+  if (plainKeyForWebhook) {
+    const webhookUrl = getAsaasWebhookUrl();
+    const authToken = process.env.ASAAS_WEBHOOK_TOKEN?.trim();
+    if (!webhookUrl || !authToken) {
+      webhookNote =
+        "Código salvo. Falta o suporte Barbernegon liberar o aviso automático de pagamentos (URL do site / token).";
+    } else {
+      try {
+        const result = await asaasEnsureOrgWebhook(plainKeyForWebhook, {
+          url: webhookUrl,
+          authToken,
+          email: org.asaasAccountEmail,
+        });
+        webhookNote = result.created
+          ? "Pronto: avisos de pagamento ligados automaticamente."
+          : "Pronto: avisos de pagamento atualizados.";
+      } catch (error) {
+        console.error("[payments] asaasEnsureOrgWebhook", error);
+        webhookNote =
+          "Código salvo, mas não conseguimos ligar o aviso automático. Abra o Asaas → Integrações → Webhooks e peça ajuda ao suporte.";
+      }
+    }
+  }
+
   return NextResponse.json({
-    message: "Pagamentos do salão atualizados.",
+    message: webhookNote
+      ? `Conta ligada. ${webhookNote}`
+      : "Configuração de pagamentos salva.",
     connection: {
       asaasEnabled: org.asaasEnabled,
       asaasAccountEmail: org.asaasAccountEmail,

@@ -103,7 +103,7 @@ export function ContactVisitPanel({
       <div className="relative flex flex-1 flex-col justify-end px-6 pb-2 pt-4">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(520px_200px_at_70%_80%,color-mix(in_srgb,var(--brand,#c4a574)_18%,transparent),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(520px_200px_at_70%_80%,color-mix(in_srgb,var(--brand,#3b82f6)_18%,transparent),transparent_70%)]"
         />
         <blockquote className="relative z-[1] font-display text-xl font-medium leading-snug tracking-tight text-zinc-100 md:text-2xl">
           {quote}

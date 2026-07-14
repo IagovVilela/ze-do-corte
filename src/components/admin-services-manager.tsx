@@ -62,7 +62,7 @@ type Props = {
 
 const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
   CORTE: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
-  BARBA: "bg-amber-500/15 text-amber-200 ring-amber-500/30",
+  BARBA: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
   COMBO: "bg-violet-500/15 text-violet-200 ring-violet-500/30",
   TRATAMENTO: "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30",
   OUTRO: "bg-zinc-500/20 text-zinc-300 ring-white/10",
@@ -341,7 +341,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
         </p>
       ) : null}
       {activeUnits.length === 0 ? (
-        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-100">
+        <p className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
           Não há unidades ativas. Ative ou crie uma unidade em Unidades antes de adicionar serviços.
         </p>
       ) : null}

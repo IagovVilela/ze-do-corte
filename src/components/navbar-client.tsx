@@ -219,7 +219,7 @@ function MobileMenuOverlay({
           >
             {/* Camadas decorativas (não bloqueiam cliques nos filhos com pointer-events) */}
             <div
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-10%,rgba(250,204,21,0.14),transparent_58%),radial-gradient(ellipse_80%_55%_at_110%_40%,rgba(59,130,246,0.06),transparent_55%),radial-gradient(ellipse_60%_45%_at_-10%_80%,rgba(250,204,21,0.05),transparent_50%)]"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-10%,rgba(59, 130, 246,0.14),transparent_58%),radial-gradient(ellipse_80%_55%_at_110%_40%,rgba(59,130,246,0.06),transparent_55%),radial-gradient(ellipse_60%_45%_at_-10%_80%,rgba(59, 130, 246,0.05),transparent_50%)]"
               aria-hidden
             />
             <div
@@ -304,7 +304,7 @@ function MobileMenuOverlay({
                   />
                 </div>
                 <div
-                  className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-brand-300/50 [&_a]:bg-gradient-to-r [&_a]:from-brand-300 [&_a]:via-brand-400 [&_a]:to-brand-500 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_14px_44px_-10px_rgba(250,204,21,0.55)] [&_a]:transition [&_a]:hover:brightness-[1.07]"
+                  className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-brand-300/50 [&_a]:bg-gradient-to-r [&_a]:from-brand-300 [&_a]:via-brand-400 [&_a]:to-brand-500 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_14px_44px_-10px_rgba(59, 130, 246,0.55)] [&_a]:transition [&_a]:hover:brightness-[1.07]"
                   onClick={close}
                 >
                   {trailing}

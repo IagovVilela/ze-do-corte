@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090a0d;
-  --foreground: #f4f4f5;
-  --muted: #a1a1aa;
-  --brand: #eab308;
-  --brand-900: #713f12;
-  --surface: #13141a;
+  --background: #0f1419;
+  --foreground: #e2eaf4;
+  --muted: #a8b6c9;
+  --brand: #3b82f6;
+  --brand-900: #1e3a8a;
+  --surface: #121820;
   --border: rgba(255, 255, 255, 0.08);
   --success: #22c55e;
   --danger: #f43f5e;
   /* Barras de rolagem (tema escuro) */
   --scrollbar-track: rgba(255, 255, 255, 0.05);
-  --scrollbar-thumb: rgba(234, 179, 8, 0.35);
-  --scrollbar-thumb-hover: rgba(234, 179, 8, 0.55);
+  --scrollbar-thumb: rgba(59, 130, 246, 0.4);
+  --scrollbar-thumb-hover: rgba(59, 130, 246, 0.6);
 }
 
 @theme inline {
@@ -23,22 +23,22 @@
   --font-mono: var(--font-geist-mono);
 
   /* Tokens sobrescritos em runtime pelo tema do canvas (`canvasThemeStyle`). */
-  --color-brand-50: var(--brand-50, #fefce8);
-  --color-brand-100: var(--brand-100, #fef9c3);
-  --color-brand-200: var(--brand-200, #fef08a);
-  --color-brand-300: var(--brand-300, #fde047);
-  --color-brand-400: var(--brand-400, #facc15);
-  --color-brand-500: var(--brand-500, #eab308);
-  --color-brand-600: var(--brand-600, #ca8a04);
-  --color-brand-700: var(--brand-700, #a16207);
-  --color-brand-900: var(--brand-900, #713f12);
-  --color-brand-950: var(--brand-950, #090a0d);
+  --color-brand-50: var(--brand-50, #eff6ff);
+  --color-brand-100: var(--brand-100, #dbeafe);
+  --color-brand-200: var(--brand-200, #bfdbfe);
+  --color-brand-300: var(--brand-300, #93c5fd);
+  --color-brand-400: var(--brand-400, #8eb6ff);
+  --color-brand-500: var(--brand-500, #3b82f6);
+  --color-brand-600: var(--brand-600, #2563eb);
+  --color-brand-700: var(--brand-700, #1d4ed8);
+  --color-brand-900: var(--brand-900, #1e3a8a);
+  --color-brand-950: var(--brand-950, #0f1419);
 
-  --color-brand-surface-5: var(--brand-surface-5, #18150a);
-  --color-brand-surface-10: var(--brand-surface-10, #252010);
-  --color-brand-surface-15: var(--brand-surface-15, #332c12);
-  --color-brand-surface-20: var(--brand-surface-20, #413814);
-  --color-brand-surface-25: var(--brand-surface-25, #4f4416);
+  --color-brand-surface-5: var(--brand-surface-5, #111827);
+  --color-brand-surface-10: var(--brand-surface-10, #152033);
+  --color-brand-surface-15: var(--brand-surface-15, #1a2740);
+  --color-brand-surface-20: var(--brand-surface-20, #1e2f4d);
+  --color-brand-surface-25: var(--brand-surface-25, #23355a);
 }
 
 * {
@@ -92,8 +92,8 @@ body {
 
 body {
   background:
-    radial-gradient(1000px 500px at 10% -20%, rgba(250, 204, 21, 0.18), transparent 65%),
-    radial-gradient(800px 500px at 85% -10%, rgba(59, 130, 246, 0.16), transparent 70%),
+    radial-gradient(1000px 500px at 10% -20%, rgba(59, 130, 246, 0.2), transparent 65%),
+    radial-gradient(800px 500px at 85% -10%, rgba(142, 182, 255, 0.12), transparent 70%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -101,7 +101,7 @@ body {
 }
 
 ::selection {
-  background: rgba(234, 179, 8, 0.42);
+  background: rgba(59, 130, 246, 0.45);
   color: #fff;
 }
 
@@ -116,7 +116,7 @@ body {
 }
 
 .heading-gradient {
-  background-image: linear-gradient(120deg, #fefce8 0%, #fde047 42%, #eab308 88%, #ca8a04 100%);
+  background-image: linear-gradient(120deg, #eff6ff 0%, #8eb6ff 42%, #3b82f6 88%, #2563eb 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -134,7 +134,7 @@ body {
   }
 }
 
-/* Checkboxes nativos — estilo único (marca âmbar, cantos arredondados) */
+/* Checkboxes nativos — marca azul, cantos arredondados */
 input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -144,7 +144,7 @@ input[type="checkbox"] {
   margin: 0;
   border: 2px solid rgba(255, 255, 255, 0.22);
   border-radius: 0.35rem;
-  background: rgba(9, 10, 13, 0.85);
+  background: rgba(15, 20, 25, 0.85);
   cursor: pointer;
   vertical-align: middle;
   transition:
@@ -154,8 +154,8 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:hover:not(:disabled) {
-  border-color: rgba(252, 211, 77, 0.45);
-  box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.14);
+  border-color: rgba(142, 182, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
 }
 
 input[type="checkbox"]:focus {
@@ -163,21 +163,21 @@ input[type="checkbox"]:focus {
 }
 
 input[type="checkbox"]:focus-visible {
-  outline: 2px solid rgba(234, 179, 8, 0.55);
+  outline: 2px solid rgba(59, 130, 246, 0.6);
   outline-offset: 2px;
 }
 
 input[type="checkbox"]:checked {
-  border-color: rgba(252, 211, 77, 0.75);
+  border-color: rgba(142, 182, 255, 0.8);
   background-color: var(--brand);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23090a0d' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.2 6.6 11.3 12.7 4.2'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23ffffff' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.2 6.6 11.3 12.7 4.2'/%3E%3C/svg%3E");
   background-size: 0.7rem auto;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 input[type="checkbox"]:checked:hover:not(:disabled) {
-  border-color: rgba(254, 243, 199, 0.85);
+  border-color: rgba(219, 234, 254, 0.9);
   filter: brightness(1.06);
 }
 
@@ -187,9 +187,9 @@ input[type="checkbox"]:disabled {
 }
 
 input[type="checkbox"]:indeterminate {
-  border-color: rgba(252, 211, 77, 0.6);
-  background-color: rgba(234, 179, 8, 0.35);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23fef3c7' stroke-width='2.25' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E");
+  border-color: rgba(142, 182, 255, 0.65);
+  background-color: rgba(59, 130, 246, 0.4);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath stroke='%23eff6ff' stroke-width='2.25' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E");
   background-size: 0.65rem auto;
   background-position: center;
   background-repeat: no-repeat;
@@ -205,13 +205,5 @@ input[type="checkbox"]:indeterminate {
 @media (min-width: 768px) {
   .container-max {
     padding-inline: 2rem;
-  }
-}
-
-/* Landing Barbernegon v2 — cursor custom (desktop só) */
-@media (pointer: fine) {
-  html.ln-cursor-none,
-  html.ln-cursor-none * {
-    cursor: none !important;
   }
 }

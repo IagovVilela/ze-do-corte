@@ -99,8 +99,8 @@ export function getSiteTemplate(id: SiteTemplateId, shopName: string): SitePageC
       return {
         version: 1,
         theme: {
-          primary: "#c4a574",
-          background: "#0c0a08",
+          primary: "#3b82f6",
+          background: "#0f1419",
           surface: "#18181b",
           text: "#fafafa",
           motion: "subtle",
@@ -121,9 +121,9 @@ export function getSiteTemplate(id: SiteTemplateId, shopName: string): SitePageC
       return {
         version: 1,
         theme: {
-          primary: "#c4a574",
+          primary: "#3b82f6",
           secondary: "#78716c",
-          background: "#0c0a08",
+          background: "#0f1419",
           surface: "#18181b",
           text: "#fafafa",
           motion: "full",
@@ -169,9 +169,9 @@ export function getSiteTemplate(id: SiteTemplateId, shopName: string): SitePageC
       return {
         version: 1,
         theme: {
-          primary: "#c4a574",
+          primary: "#3b82f6",
           secondary: "#a8a29e",
-          background: "#0c0a08",
+          background: "#0f1419",
           surface: "#18181b",
           text: "#fafafa",
           motion: "subtle",

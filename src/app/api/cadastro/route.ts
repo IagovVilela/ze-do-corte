@@ -98,7 +98,7 @@ export async function POST(request: Request) {
           trialEndsAt,
           slogan: parsed.data.shopName,
           sloganSecondary: "Sua barbearia, sua cara.",
-          primaryColor: "#c4a574",
+          primaryColor: "#3b82f6",
           onboardingJson,
           siteJson: getCanvasTemplate(
             "classic",

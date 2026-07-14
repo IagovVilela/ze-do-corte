@@ -251,3 +251,69 @@ export function isoDatePlusDays(days: number): string {
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+const ORG_WEBHOOK_EVENTS = [
+  "PAYMENT_CREATED",
+  "PAYMENT_UPDATED",
+  "PAYMENT_CONFIRMED",
+  "PAYMENT_RECEIVED",
+  "PAYMENT_OVERDUE",
+  "PAYMENT_DELETED",
+  "PAYMENT_REFUNDED",
+  "SUBSCRIPTION_CREATED",
+  "SUBSCRIPTION_UPDATED",
+  "SUBSCRIPTION_DELETED",
+] as const;
+
+type AsaasWebhookRow = {
+  id: string;
+  url?: string | null;
+  name?: string | null;
+  enabled?: boolean;
+};
+
+/**
+ * Garante que a conta Asaas do salão notifica a Barbernegon.
+ * O dono não precisa configurar webhook manualmente.
+ */
+export async function asaasEnsureOrgWebhook(
+  apiKey: string,
+  opts: { url: string; authToken: string; email?: string | null },
+): Promise<{ created: boolean; updated: boolean; webhookId: string }> {
+  const list = await asaasFetch<{ data?: AsaasWebhookRow[] }>(
+    apiKey,
+    "/webhooks",
+  );
+  const existing = (list.data ?? []).find(
+    (w) => (w.url ?? "").replace(/\/$/, "") === opts.url.replace(/\/$/, ""),
+  );
+
+  const body = {
+    name: "Barbernegon",
+    url: opts.url,
+    email: opts.email?.trim() || undefined,
+    enabled: true,
+    interrupted: false,
+    apiVersion: 3,
+    authToken: opts.authToken,
+    sendType: "SEQUENTIALLY",
+    events: [...ORG_WEBHOOK_EVENTS],
+  };
+
+  if (existing?.id) {
+    await asaasFetch(apiKey, `/webhooks/${existing.id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+    return { created: false, updated: true, webhookId: existing.id };
+  }
+
+  const created = await asaasFetch<AsaasWebhookRow>(apiKey, "/webhooks", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  if (!created.id) {
+    throw new AsaasApiError("Webhook criado sem id.", 500, created);
+  }
+  return { created: true, updated: false, webhookId: created.id };
+}

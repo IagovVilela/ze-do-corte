@@ -318,7 +318,7 @@ export function BookingForm({
                     className={cn(
                       "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
                       staffMemberId === ""
-                        ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(234,179,8,0.35)]"
+                        ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(59, 130, 246,0.35)]"
                         : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
                     )}
                   >
@@ -382,7 +382,7 @@ export function BookingForm({
                         className={cn(
                           "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
                           isSelected
-                            ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(234,179,8,0.35)]"
+                            ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(59, 130, 246,0.35)]"
                             : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
                         )}
                       >
@@ -462,7 +462,7 @@ export function BookingForm({
                     className={cn(
                       "min-w-[4.75rem] max-w-[5.5rem] shrink-0 snap-start rounded-xl border px-2 py-2 text-left transition sm:min-w-[5.25rem] sm:max-w-none sm:px-3 sm:py-2.5",
                       isActive
-                        ? "border-brand-500 bg-brand-surface-20 text-brand-50 shadow-[0_0_20px_-8px_rgba(234,179,8,0.5)]"
+                        ? "border-brand-500 bg-brand-surface-20 text-brand-50 shadow-[0_0_20px_-8px_rgba(59, 130, 246,0.5)]"
                         : "border-white/10 bg-zinc-950/40 hover:border-zinc-500",
                     )}
                   >
@@ -486,7 +486,7 @@ export function BookingForm({
               ) : null}
             </div>
             {noSlotsAvailable ? (
-              <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90">
+              <p className="rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-sm text-sky-200/90">
                 Não há horários livres nesta data para o serviço escolhido. Tente outro dia
                 ou outro serviço.
               </p>

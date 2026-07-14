@@ -113,7 +113,7 @@ export function Hero({
     <>
       <Link
         href={bookHref}
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(250,204,21,0.5)] transition hover:brightness-110"
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(59, 130, 246,0.5)] transition hover:brightness-110"
       >
         <CalendarClock className="h-4 w-4" aria-hidden />
         {ctaText}
@@ -252,7 +252,7 @@ export function Hero({
             >
               <Link
                 href={bookHref}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(250,204,21,0.5)] transition hover:brightness-110"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(59, 130, 246,0.5)] transition hover:brightness-110"
               >
                 <motion.span
                   animate={{ y: [0, -2, 0] }}

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { phoneToWhatsAppHref } from "@/lib/phone-to-whatsapp-link";
+import { prisma } from "@/lib/prisma";
 import {
   encryptSecret,
   isWhatsAppTokenEncryptionConfigured,
 } from "@/lib/whatsapp-crypto";
 import { isMetaWhatsAppPlatformConfigured } from "@/lib/whatsapp-meta-client";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -105,12 +106,15 @@ export async function PATCH(request: Request) {
         whatsappBotEnabled: false,
         whatsappPhoneNumberId: null,
         whatsappWabaId: null,
-        whatsappDisplayPhone: null,
         whatsappAccessTokenEnc: null,
         whatsappConnectedAt: null,
       },
     });
-    return NextResponse.json({ ok: true, disconnected: true });
+    return NextResponse.json({
+      ok: true,
+      disconnected: true,
+      message: "Assistente desligado. Seu número no site continua igual.",
+    });
   }
 
   if (data.whatsappAccessToken !== undefined && data.whatsappAccessToken) {
@@ -118,7 +122,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           message:
-            "Defina WHATSAPP_TOKEN_ENCRYPTION_KEY no servidor antes de gravar o token.",
+            "A plataforma ainda não está pronta para o assistente. Fale com o suporte Barbernegon.",
         },
         { status: 503 },
       );
@@ -130,6 +134,11 @@ export async function PATCH(request: Request) {
   else if (typeof data.whatsappAccessToken === "string") {
     tokenEnc = encryptSecret(data.whatsappAccessToken);
   }
+
+  const waHref =
+    data.whatsappDisplayPhone !== undefined && data.whatsappDisplayPhone
+      ? phoneToWhatsAppHref(data.whatsappDisplayPhone)
+      : undefined;
 
   const org = await prisma.organization.update({
     where: { id: auth.access.organizationId },
@@ -146,6 +155,7 @@ export async function PATCH(request: Request) {
       ...(data.whatsappDisplayPhone !== undefined
         ? { whatsappDisplayPhone: data.whatsappDisplayPhone }
         : {}),
+      ...(waHref ? { whatsappHref: waHref } : {}),
       ...(tokenEnc !== undefined
         ? {
             whatsappAccessTokenEnc: tokenEnc,
@@ -156,20 +166,25 @@ export async function PATCH(request: Request) {
     select: {
       whatsappBotEnabled: true,
       whatsappPhoneNumberId: true,
+      whatsappWabaId: true,
       whatsappDisplayPhone: true,
       whatsappConnectedAt: true,
       whatsappAccessTokenEnc: true,
+      whatsappHref: true,
     },
   });
 
   return NextResponse.json({
     ok: true,
+    message: "WhatsApp atualizado.",
     connection: {
       whatsappBotEnabled: org.whatsappBotEnabled,
       whatsappPhoneNumberId: org.whatsappPhoneNumberId,
+      whatsappWabaId: org.whatsappWabaId,
       whatsappDisplayPhone: org.whatsappDisplayPhone,
       whatsappConnectedAt: org.whatsappConnectedAt?.toISOString() ?? null,
       hasAccessToken: Boolean(org.whatsappAccessTokenEnc),
+      whatsappHref: org.whatsappHref,
     },
   });
 }

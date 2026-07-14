@@ -70,7 +70,7 @@ async function main() {
       planStatus: "ACTIVE",
       slogan: "Estilo e confiança",
       sloganSecondary: "Experiências únicas para homens únicos",
-      primaryColor: "#f59e0b",
+      primaryColor: "#3b82f6",
       timezone: "America/Sao_Paulo",
     },
     update: {},

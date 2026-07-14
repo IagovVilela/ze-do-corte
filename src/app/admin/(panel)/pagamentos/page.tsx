@@ -16,9 +16,9 @@ export default async function AdminPagamentosPage() {
   return (
     <div className="space-y-8">
       <SectionTitle
-        eyebrow="Integrações"
+        eyebrow="Receber clientes"
         title="Pagamentos"
-        description="Conecte a conta Asaas da barbearia para receber PIX de agendamentos e assinaturas do clube — o valor cai direto na sua conta."
+        description="Ligue o PIX automático do site e do clube. O dinheiro entra na sua conta Asaas e de lá você transfere para o seu banco."
       />
       <PaymentsAdminPanel />
     </div>

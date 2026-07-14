@@ -226,7 +226,7 @@ export function migrateSitePageToCanvas(
           props: {
             text: p.ctaLabel?.trim() || "Agendar",
             href: p.ctaHref?.trim() || "book",
-            backgroundColor: page.theme?.primary || "#c4a574",
+            backgroundColor: page.theme?.primary || "#3b82f6",
             color: "#09090b",
             borderRadius: 999,
             fontWeight: 700,
@@ -286,7 +286,7 @@ export function migrateSitePageToCanvas(
           props: {
             text: p.ctaLabel || p.title || "Agendar",
             href: p.ctaHref || "book",
-            backgroundColor: page.theme?.primary || "#c4a574",
+            backgroundColor: page.theme?.primary || "#3b82f6",
             color: "#09090b",
             borderRadius: 999,
             fontWeight: 700,
@@ -483,7 +483,7 @@ export function createLibraryElement(
         props: {
           text: "Botão",
           href: "book",
-          backgroundColor: "#c4a574",
+          backgroundColor: "#3b82f6",
           color: "#09090b",
           borderRadius: 999,
           fontWeight: 700,
@@ -615,7 +615,7 @@ export function createLibraryElement(
         frame: { x: pad, y: atY, w: 160, h: 36 },
         props: {
           text: "Novidade",
-          backgroundColor: "#c4a574",
+          backgroundColor: "#3b82f6",
           color: "#09090b",
           borderRadius: 999,
           fontSize: 13,

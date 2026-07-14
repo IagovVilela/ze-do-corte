@@ -161,7 +161,7 @@ export default async function AdminPage({
             </div>
             {showRevenue ? (
               <>
-                <div className="glass-card rounded-2xl border border-amber-500/15 p-5">
+                <div className="glass-card rounded-2xl border border-sky-500/15 p-5">
                   <p className="text-sm text-zinc-400">Faturamento (mês, concluídos)</p>
                   <p className="mt-2 text-3xl font-semibold text-brand-300">
                     R$ {metrics.revenueMonth.toFixed(2)}

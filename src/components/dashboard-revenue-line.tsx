@@ -22,8 +22,8 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
   const hasAny = data.some((d) => d.amount > 0);
 
   return (
-    <div className="glass-card rounded-2xl border border-amber-500/15 p-5 shadow-[0_0_40px_-20px_rgba(234,179,8,0.35)]">
-      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-amber-200/90">
+    <div className="glass-card rounded-2xl border border-sky-500/15 p-5 shadow-[0_0_40px_-20px_rgba(59, 130, 246,0.35)]">
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-sky-200/90">
         Recebimentos
       </h3>
       <p className="mt-1 text-sm text-zinc-400">
@@ -50,7 +50,7 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
               <Tooltip
                 contentStyle={{
                   borderRadius: "0.75rem",
-                  border: "1px solid rgba(234,179,8,0.28)",
+                  border: "1px solid rgba(59, 130, 246,0.28)",
                   background: "#11131a",
                 }}
                 formatter={(value) => [
@@ -61,9 +61,9 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
               <Line
                 type="monotone"
                 dataKey="amount"
-                stroke="#fbbf24"
+                stroke="#3b82f6"
                 strokeWidth={2.5}
-                dot={{ fill: "#fbbf24", r: 3, strokeWidth: 0 }}
+                dot={{ fill: "#3b82f6", r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>

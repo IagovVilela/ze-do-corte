@@ -8,6 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-14
 
+- **UX WhatsApp/Pagamentos para leigo**: telas `/admin/whatsapp` e `/admin/pagamentos` em passos simples; explica como o dinheiro vai da Asaas para o banco; webhook Asaas do salão criado **automaticamente** ao salvar o código; número WhatsApp atualiza o link do site. Guia: [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md).
+- **Paleta global amarelo → azul**: tokens `brand-*` / `--brand` em `globals.css`, gradientes do body, seleção, scrollbars, checkboxes e `.heading-gradient` alinhados a electric blue (`#3b82f6` / `#8eb6ff`, fundo `#0f1419`). Defaults de cadastro/marca/canvas e sombras hardcoded de agendamento/hero/admin passam a azul; orgs com `primaryColor` já salva no banco só mudam ao editar a marca.
 - **Landing Stitch aplicada (azul)**: layout Dark Cinematic do export Stitch (nav glass, hero “Sua barbearia. Sua cara.”, cards Identidade Real, seção site, intelligence, CTA); paleta **electric blue** no lugar do violeta; shader WebGL + orb hero; Geist + JetBrains Mono. Ver `src/components/landing/`.
 - **Landing Barbernegon redesenhada do zero**: identidade ink + mint signal (Syne/Manrope), hero interativo sem vídeo cinema, sticky story, bento tilt, cursor/glow/magnetic CTAs, marquee e contadores — conteúdo comercial preservado. Componentes em `src/components/landing/`.
 - **Pagamentos Asaas**: billing SaaS (Starter/Pro) na conta da plataforma; cada salão conecta API key em `/admin/pagamentos` e recebe PIX/clube direto. Webhook `/api/webhooks/asaas`, gates Pro (caixa/clube), crédito de clube no agendamento. Ver [pagamentos-asaas.md](./pagamentos-asaas.md). Migração `20260714210000_asaas_payments`.

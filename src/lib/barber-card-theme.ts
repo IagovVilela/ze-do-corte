@@ -19,12 +19,12 @@ export type BarberCardTheme = {
 
 const PALETTE: BarberCardTheme[] = [
   {
-    ring: "ring-amber-500/35 hover:ring-amber-400/50",
-    imageWash: "from-amber-600/25 via-transparent to-transparent",
+    ring: "ring-sky-500/35 hover:ring-sky-400/50",
+    imageWash: "from-sky-600/25 via-transparent to-transparent",
     imageFade: "from-zinc-950 via-zinc-950/70 to-transparent",
-    accentText: "text-amber-200",
-    chip: "bg-amber-500/15 text-amber-200/90 ring-amber-500/25",
-    bar: "from-amber-400/80 to-amber-600/20",
+    accentText: "text-sky-200",
+    chip: "bg-sky-500/15 text-sky-200/90 ring-sky-500/25",
+    bar: "from-sky-400/80 to-sky-600/20",
   },
   {
     ring: "ring-cyan-500/35 hover:ring-cyan-400/50",

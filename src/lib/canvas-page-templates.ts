@@ -2129,7 +2129,7 @@ function bauhausTemplate(name: string): SiteCanvasConfig {
     {
       type: "rect",
       frame: { x: 880, y: 80, w: 360, h: 360 },
-      props: { backgroundColor: "#eab308", borderRadius: 0 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
     },
     {
       type: "text",
@@ -2177,7 +2177,7 @@ function bauhausTemplate(name: string): SiteCanvasConfig {
     {
       type: "rect",
       frame: { x: 960, y: 680, w: 480, h: 80 },
-      props: { backgroundColor: "#eab308", borderRadius: 0 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
     },
     {
       type: "text",
@@ -2242,7 +2242,7 @@ function bauhausTemplate(name: string): SiteCanvasConfig {
     {
       type: "rect",
       frame: { x: 264, y: 24, w: 110, h: 110 },
-      props: { backgroundColor: "#eab308", borderRadius: 0 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
     },
     {
       type: "text",
@@ -2279,7 +2279,7 @@ function bauhausTemplate(name: string): SiteCanvasConfig {
     {
       type: "rect",
       frame: { x: 0, y: 416, w: 390, h: 48 },
-      props: { backgroundColor: "#eab308", borderRadius: 0 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
     },
     {
       type: "services",

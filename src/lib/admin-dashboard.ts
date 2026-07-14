@@ -51,7 +51,7 @@ const STATUS_PIE_LABEL: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_PIE_COLOR: Record<AppointmentStatus, string> = {
-  CONFIRMED: "#f59e0b",
+  CONFIRMED: "#3b82f6",
   COMPLETED: "#38bdf8",
   CANCELLED: "#f87171",
 };

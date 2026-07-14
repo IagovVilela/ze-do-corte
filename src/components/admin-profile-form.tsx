@@ -209,9 +209,9 @@ export function AdminProfileForm({
         </div>
 
         {!avatarUploadEnabled ? (
-          <p className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+          <p className="mt-4 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-2 text-xs text-sky-100/90">
             O servidor ainda não tem as variáveis Cloudinary (
-            <code className="text-amber-50/90">CLOUDINARY_*</code>). Configure-as para
+            <code className="text-sky-50/90">CLOUDINARY_*</code>). Configure-as para
             habilitar fotos.
           </p>
         ) : null}

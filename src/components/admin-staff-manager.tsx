@@ -324,7 +324,7 @@ export function AdminStaffManager({
                   <td className="px-4 py-3">
                     <span
                       className={
-                        s.hasPassword ? "text-emerald-400" : "text-amber-400/90"
+                        s.hasPassword ? "text-emerald-400" : "text-sky-400/90"
                       }
                     >
                       {s.hasPassword ? "Definida" : "Sem senha"}

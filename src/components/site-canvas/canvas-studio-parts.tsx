@@ -635,9 +635,9 @@ export function ThemePanel({
         </p>
         {(
           [
-            ["primary", "Principal", "#c4a574"],
+            ["primary", "Principal", "#3b82f6"],
             ["secondary", "Secundária", "#a8a29e"],
-            ["background", "Fundo", "#0c0a08"],
+            ["background", "Fundo", "#0f1419"],
             ["surface", "Superfície", "#18181b"],
             ["text", "Texto", "#fafafa"],
           ] as const
@@ -974,7 +974,7 @@ export function ElementInspector({
               value={
                 p.backgroundColor?.startsWith("#")
                   ? p.backgroundColor
-                  : "#c4a574"
+                  : "#3b82f6"
               }
               onChange={(e) => setProp("backgroundColor", e.target.value)}
             />
@@ -1202,7 +1202,7 @@ export function ElementInspector({
               value={
                 p.backgroundColor?.startsWith("#")
                   ? p.backgroundColor
-                  : "#c4a574"
+                  : "#3b82f6"
               }
               onChange={(e) => setProp("backgroundColor", e.target.value)}
             />

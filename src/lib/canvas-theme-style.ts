@@ -118,9 +118,9 @@ export function canvasThemeStyle(
   fallbackPrimary?: string | null,
 ): CSSProperties {
   const t = theme ?? {};
-  const primary = t.primary?.trim() || fallbackPrimary?.trim() || "#c4a574";
+  const primary = t.primary?.trim() || fallbackPrimary?.trim() || "#3b82f6";
   const secondary = t.secondary?.trim() || darken(primary, 0.25);
-  const background = t.background?.trim() || "#0c0a08";
+  const background = t.background?.trim() || "#0f1419";
   const surface = t.surface?.trim() || "#18181b";
   const text = t.text?.trim() || "#fafafa";
   const radius =

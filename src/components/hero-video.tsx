@@ -108,7 +108,7 @@ export function HeroBackdropVideo({
             />
           ) : (
             <div
-              className="h-full w-full bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,rgba(196,165,116,0.28),transparent_55%),radial-gradient(ellipse_70%_50%_at_80%_70%,rgba(63,63,70,0.45),transparent_50%),linear-gradient(160deg,#0c0a08,#18181b_55%,#09090b)]"
+              className="h-full w-full bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,rgba(196,165,116,0.28),transparent_55%),radial-gradient(ellipse_70%_50%_at_80%_70%,rgba(63,63,70,0.45),transparent_50%),linear-gradient(160deg,#0f1419,#18181b_55%,#09090b)]"
             />
           )}
         </motion.div>
@@ -120,7 +120,7 @@ export function HeroBackdropVideo({
         className="absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 90% 60% at 20% 20%, color-mix(in srgb, var(--brand, #c4a574) 40%, transparent), transparent 55%)",
+            "radial-gradient(ellipse 90% 60% at 20% 20%, color-mix(in srgb, var(--brand, #3b82f6) 40%, transparent), transparent 55%)",
         }}
       />
     </div>

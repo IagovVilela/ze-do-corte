@@ -21,7 +21,7 @@ const empty: OrgForm = {
   name: "",
   slug: "",
   logoUrl: "",
-  primaryColor: "#c4a574",
+  primaryColor: "#3b82f6",
   slogan: "",
   sloganSecondary: "",
   heroMediaUrl: "",
@@ -35,7 +35,7 @@ function normalizeHex(value: string): string {
   const v = value.trim();
   if (/^#[0-9A-Fa-f]{6}$/.test(v)) return v.toLowerCase();
   if (/^[0-9A-Fa-f]{6}$/.test(v)) return `#${v.toLowerCase()}`;
-  return "#c4a574";
+  return "#3b82f6";
 }
 
 function isVideoUrl(url: string): boolean {
@@ -70,7 +70,7 @@ export function BrandEditorForm() {
           name: String(o.name ?? ""),
           slug: String(o.slug ?? ""),
           logoUrl: String(o.logoUrl ?? ""),
-          primaryColor: normalizeHex(String(o.primaryColor ?? "#c4a574")),
+          primaryColor: normalizeHex(String(o.primaryColor ?? "#3b82f6")),
           slogan: String(o.slogan ?? ""),
           sloganSecondary: String(o.sloganSecondary ?? ""),
           heroMediaUrl: String(o.heroMediaUrl ?? ""),
@@ -263,7 +263,7 @@ export function BrandEditorForm() {
                 }))
               }
               className={`${inputClass} max-w-[9rem] font-mono uppercase`}
-              placeholder="#c4a574"
+              placeholder="#3b82f6"
               spellCheck={false}
             />
             <span

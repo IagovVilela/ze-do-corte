@@ -291,7 +291,7 @@ export function AdminUnitsManager({
                         <button
                           type="button"
                           disabled={pending}
-                          className="rounded-full border border-amber-500/35 px-3 py-1 text-xs text-amber-200 hover:bg-amber-500/10"
+                          className="rounded-full border border-sky-500/35 px-3 py-1 text-xs text-sky-200 hover:bg-sky-500/10"
                           onClick={() => (editingId === u.id ? closeEdit() : openEdit(u))}
                         >
                           {editingId === u.id ? "Fechar" : "Editar dados"}

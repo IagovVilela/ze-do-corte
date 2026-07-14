@@ -16,9 +16,9 @@ export default async function AdminWhatsAppPage() {
   return (
     <div className="space-y-8">
       <SectionTitle
-        eyebrow="Integrações"
+        eyebrow="Atendimento"
         title="WhatsApp"
-        description="Conecte o número Business (Meta Cloud API) para o bot agendar, remarcar e cancelar, e para enviar confirmações e lembretes."
+        description="Cadastre o número da barbearia para o site. Se quiser, depois ligue o assistente que agenda sozinho."
       />
       <WhatsAppAdminPanel />
     </div>

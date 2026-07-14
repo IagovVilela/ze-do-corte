@@ -260,7 +260,7 @@ export function ManageReservationClient({ token }: Props) {
         </dl>
 
         {!data.canManage && data.manageBlockedReason ? (
-          <p className="mt-6 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <p className="mt-6 rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-sm text-sky-200">
             {data.manageBlockedReason}
           </p>
         ) : null}
