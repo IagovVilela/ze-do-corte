@@ -14,16 +14,25 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   barbers: PublicBarber[];
+  shopName?: string;
+  gridCols?: 1 | 2 | 3;
 };
 
-export function HomeBarbersGrid({ barbers }: Props) {
+export function HomeBarbersGrid({
+  barbers,
+  shopName = "equipe",
+  gridCols = 3,
+}: Props) {
   const reduceMotion = useReducedMotion();
+  const cols =
+    gridCols === 1
+      ? "mt-10 grid gap-6"
+      : gridCols === 2
+        ? "mt-10 grid gap-6 sm:grid-cols-2"
+        : "mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7";
 
   return (
-    <StaggerReveal
-      className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7"
-      stagger={0.12}
-    >
+    <StaggerReveal className={cols} stagger={0.12}>
       {barbers.map((barber) => {
         const theme = getBarberCardTheme(barber.id);
         const layout = getBarberCardLayout(barber.id);
@@ -135,7 +144,7 @@ export function HomeBarbersGrid({ barbers }: Props) {
                 </p>
               ) : (
                 <p className="mt-3 text-sm italic text-zinc-600">
-                  Profissional da equipe Zé do Corte.
+                  Profissional da equipe {shopName}.
                 </p>
               )}
             </div>

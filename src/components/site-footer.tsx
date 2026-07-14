@@ -4,11 +4,6 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
-import { BARBER_SLOGAN_SECONDARY } from "@/lib/constants";
-import {
-  getInstagramContactHref,
-  getWhatsappContactHref,
-} from "@/lib/contact-links";
 
 type SiteFooterProps = {
   showPitch?: boolean;
@@ -21,16 +16,16 @@ type SiteFooterProps = {
 
 export function SiteFooter({
   showPitch = true,
-  brandName = "Zé do Corte",
+  brandName = "Barbearia",
   pitch,
   logoUrl,
   whatsappHref,
   instagramHref,
 }: SiteFooterProps) {
   const reduceMotion = useReducedMotion();
-  const wa = whatsappHref?.trim() || getWhatsappContactHref();
-  const ig = instagramHref?.trim() || getInstagramContactHref();
-  const pitchText = pitch?.trim() || BARBER_SLOGAN_SECONDARY;
+  const wa = whatsappHref?.trim() || null;
+  const ig = instagramHref?.trim() || null;
+  const pitchText = pitch?.trim() || null;
   const linkClass =
     "inline-flex items-center gap-2 rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-brand-500/35 hover:text-white";
 
@@ -52,13 +47,21 @@ export function SiteFooter({
           whileHover={reduceMotion ? undefined : { x: 2 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
-          <BrandLogo size={48} className="h-12 w-12" src={logoUrl} />
+          <BrandLogo
+            size={48}
+            className="h-12 w-12"
+            src={logoUrl}
+            fallbackLabel={brandName}
+            alt={brandName}
+          />
           <p>
             © {new Date().getFullYear()} {brandName}. Todos os direitos reservados.
           </p>
         </motion.div>
         <div className="flex flex-col items-center gap-3 md:items-end">
-          {showPitch ? <p className="max-w-sm text-zinc-500">{pitchText}</p> : null}
+          {showPitch && pitchText ? (
+            <p className="max-w-sm text-zinc-500">{pitchText}</p>
+          ) : null}
           {(wa || ig) && (
             <div className="flex flex-wrap items-center justify-center gap-2 md:justify-end">
               {wa ? (

@@ -9,11 +9,10 @@ import {
 } from "framer-motion";
 import { ArrowRight, CalendarClock, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { HeroBackdropVideo } from "@/components/hero-video";
 import { HeroStudioPanel } from "@/components/hero-studio-panel";
-import { BARBER_SLOGAN_PRIMARY } from "@/lib/constants";
 import { fadeUpSmall, staggerContainer, titleWord } from "@/lib/motion-presets";
 
 const h1LineVariants = {
@@ -32,6 +31,8 @@ export type HeroProps = {
   bookHref?: string;
   heroMediaUrl?: string | null;
   supportingText?: string;
+  ctaLabel?: string;
+  motionOff?: boolean;
 };
 
 export function Hero({
@@ -40,9 +41,19 @@ export function Hero({
   bookHref = "/agendar",
   heroMediaUrl,
   supportingText,
+  ctaLabel = "Agendar agora",
+  motionOff = false,
 }: HeroProps = {}) {
   const ref = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  const reduceMotionPref = useReducedMotion();
+  const reduceMotion =
+    !mounted || motionOff || reduceMotionPref === true;
+  const ctaText = ctaLabel.trim() || "Agendar agora";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -70,16 +81,17 @@ export function Hero({
     mouseY.set(0);
   }, [mouseX, mouseY]);
 
-  const eyebrow = slogan?.trim() || BARBER_SLOGAN_PRIMARY;
+  const eyebrow = slogan?.trim() || brandName?.trim() || "Sua barbearia";
   const support =
     supportingText?.trim() ||
-    "Agende pelo site, escolha seu serviço e chegue no horário — atendimento de alto padrão.";
+    "Agende pelo site, escolha seu serviço e chegue no horário.";
 
   const shellClass =
     "relative isolate min-h-[calc(100svh-4rem)] w-full overflow-hidden pt-20 pb-14 md:min-h-[min(92svh,920px)] md:pb-20";
 
+  // Sem mídia full-bleed, centralizar o conteúdo evita o "primeiro ecrã preto" (antes era justify-end).
   const innerClass =
-    "container-max relative z-10 mx-auto flex min-h-[min(72svh,560px)] flex-col justify-end gap-10 px-4 pb-2 pt-8 md:min-h-[min(68svh,620px)] md:flex-row md:items-end md:justify-between md:gap-12 md:pt-16";
+    "container-max relative z-10 mx-auto flex min-h-[min(72svh,560px)] flex-col justify-center gap-10 px-4 pb-2 pt-8 md:min-h-[min(68svh,620px)] md:flex-row md:items-center md:justify-between md:gap-12 md:pt-12";
 
   const titleBlock = brandName ? (
     <>
@@ -104,7 +116,7 @@ export function Hero({
         className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-[0_12px_36px_-10px_rgba(250,204,21,0.5)] transition hover:brightness-110"
       >
         <CalendarClock className="h-4 w-4" aria-hidden />
-        Agendar agora
+        {ctaText}
       </Link>
       <a
         href="#servicos"
@@ -137,7 +149,11 @@ export function Hero({
             <div className="flex flex-col gap-3 sm:flex-row">{cta}</div>
           </div>
           <div className="w-full shrink-0 md:max-w-md lg:max-w-[420px]">
-            <HeroStudioPanel />
+            <HeroStudioPanel
+              bookHref={bookHref}
+              servicesHref="#servicos"
+              motionOff={motionOff}
+            />
           </div>
         </div>
       </section>
@@ -244,7 +260,7 @@ export function Hero({
                 >
                   <CalendarClock className="h-4 w-4" aria-hidden />
                 </motion.span>
-                Agendar agora
+                {ctaText}
               </Link>
             </motion.div>
             <motion.div
@@ -269,7 +285,11 @@ export function Hero({
         </motion.div>
 
         <div className="w-full shrink-0 md:max-w-md lg:max-w-[420px]">
-          <HeroStudioPanel />
+          <HeroStudioPanel
+            bookHref={bookHref}
+            servicesHref="#servicos"
+            motionOff={motionOff}
+          />
         </div>
       </div>
     </section>

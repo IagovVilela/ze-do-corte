@@ -2,9 +2,24 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+async function assertPro(organizationId: string) {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { planStatus: true, planTier: true, trialEndsAt: true },
+  });
+  if (!org || !hasProFeatures(org)) {
+    return NextResponse.json(
+      { message: "Clube disponível no plano Pro (ou trial)." },
+      { status: 403 },
+    );
+  }
+  return null;
+}
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -21,6 +36,8 @@ export async function GET() {
   if (!auth.access.permissions.manageSubscriptions) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
+  const denied = await assertPro(auth.access.organizationId);
+  if (denied) return denied;
 
   const plans = await prisma.subscriptionPlan.findMany({
     where: { organizationId: auth.access.organizationId },
@@ -40,6 +57,8 @@ export async function POST(request: Request) {
   if (!auth.access.permissions.manageSubscriptions) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
+  const denied = await assertPro(auth.access.organizationId);
+  if (denied) return denied;
 
   let body: unknown;
   try {

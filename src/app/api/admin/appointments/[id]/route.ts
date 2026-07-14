@@ -112,8 +112,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       updateData.paidAt = null;
       updateData.paymentMethod = null;
       updateData.amountPaid = null;
+      updateData.paymentStatus = "UNPAID";
     } else {
       updateData.paidAt = new Date(parsed.data.paidAt);
+      updateData.paymentStatus = "PAID";
       if (parsed.data.paymentMethod !== undefined) {
         updateData.paymentMethod = parsed.data.paymentMethod;
       }

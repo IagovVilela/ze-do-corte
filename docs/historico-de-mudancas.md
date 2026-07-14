@@ -6,10 +6,34 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-14
+
+- **Landing Stitch aplicada (azul)**: layout Dark Cinematic do export Stitch (nav glass, hero “Sua barbearia. Sua cara.”, cards Identidade Real, seção site, intelligence, CTA); paleta **electric blue** no lugar do violeta; shader WebGL + orb hero; Geist + JetBrains Mono. Ver `src/components/landing/`.
+- **Landing Barbernegon redesenhada do zero**: identidade ink + mint signal (Syne/Manrope), hero interativo sem vídeo cinema, sticky story, bento tilt, cursor/glow/magnetic CTAs, marquee e contadores — conteúdo comercial preservado. Componentes em `src/components/landing/`.
+- **Pagamentos Asaas**: billing SaaS (Starter/Pro) na conta da plataforma; cada salão conecta API key em `/admin/pagamentos` e recebe PIX/clube direto. Webhook `/api/webhooks/asaas`, gates Pro (caixa/clube), crédito de clube no agendamento. Ver [pagamentos-asaas.md](./pagamentos-asaas.md). Migração `20260714210000_asaas_payments`.
+- **WhatsApp Cloud API (Meta)**: bot multi-tenant (agendar / remarcar / cancelar), webhook `/api/webhooks/whatsapp`, admin `/admin/whatsapp`, confirmação/cancelamento outbound, cron `npm run whatsapp:reminders`. Ver [whatsapp-meta.md](./whatsapp-meta.md). Domínio compartilhado em `booking-domain.ts`. Migração `20260714200000_whatsapp_cloud_api`.
+
+## 2026-07-13
+
+- **Agendar (`/{slug}/agendar`)**: conteúdo sob a navbar fixa estava cortado — `main` com `pt-20 sm:pt-24`.
+- **Marca (`/admin/marca`)**: cor principal com seletor visual (`type=color`); logo e mídia padrão com botão **Carregar do dispositivo** + preview; URL externa opcional.
+- **Fix modelos → clássico**: templates com divisor fino / barra neon (`w`/`h` baixos) ou `borderRadius` pill (999) falhavam no Zod e `parseSiteCanvasConfig` caía no layout clássico. Schema afrouxado (`w`≥4, `h`≥1, radius≤999); API valida o modelo antes de gravar.
+- **Modelos de página — identidade estrutural**: todos os 13 layouts com conteúdo reescritos com arquiteturas distintas (split 50/50, magazine spine, hero full, sidebar, barras neon, grade brutalista, faixas maré, ritual centrado, formas Bauhaus, mapa-first); `layoutHint` no seletor reflete a estrutura, não só a cor.
+- **Upload de mídia no canvas**: no inspector (`/admin/site`), Imagem/Mídia/Hero usam botão **Carregar do dispositivo** (abre seletor de arquivos); link externo fica opcional. Aceita JPEG/PNG/WebP (6 MB) e MP4/WebM (40 MB) via Cloudinary (`kind: canvas`). Site público renderiza vídeo em loop.
+- **Modelos de página**: +6 layouts (neon, brutalista, ocean, boutique, bauhaus, rua) — total 14 em `canvas-page-templates.ts`.
+- **Paleta do Catálogo no canvas**: cards de serviço (`ServiceCard` themed) seguem Principal (preço/badge), Superfície (fundo) e Texto; tokens `brand-*` / `brand-surface-*` sobrescritos pelo tema do canvas.
+- **Performance produção**: Prisma com Pool `pg` limitado (`max` 5) + singleton sempre em `globalThis` (evita esgotar conexões e requests “travados”); `getOrganizationBySlug` com `cache()` do React; instrumentation de ensure-owner desligada (já cobre `start:prod`).
+- **Modelos de página completos**: 8 layouts distintos (blank, classic, studio, minimal, moderno, editorial, impacto, noir) em `canvas-page-templates.ts` — temas, tipografia e composição próprios; seletor **Modelos de página** em `/admin/site`.
+- **Presets do canvas**: variantes de botão/badge/painel/texto/hero; seções pré-montadas (hero+diferenciais, CTA, serviços, prova social, intro, contato+rodapé); tipografia no tema (`src/lib/canvas-presets.ts`). Biblioteca com abas Itens / Seções / Botões.
+- **Biblioteca do canvas enriquecida**: novos tipos `hero`, `panel`, `grid`, `divider`, `badge`, `spacer`; painel **Cores do sistema** no editor (`ThemePanel`); preview aplica tokens de marca ao vivo (`canvas-theme-style.ts`).
+- **Canvas tipo Canva (`siteJson` v2)**: arteboards desktop/mobile + elementos com posição/tamanho absolutos (`src/lib/site-canvas.ts`). Público: `TenantCanvasRenderer`. Editor: **`/admin/site`**. Migração automática v1→v2. **`/admin/marca`** fica só identidade.
+- **Site institucional 100% do tenant**: rotas `/{slug}` sem fallback da Zé; cadastro com template classic.
+
 ## 2026-05-04
 
 - **Serviços — preços por unidade**: adicionado suporte para **"Overrides"** de preço, duração e disponibilidade de serviços por `BarbershopUnit`. O admin pode configurar exceções no cadastro do serviço para cada loja, mantendo um valor "padrão" global. O formulário de agendamento público e o dashboard agora reagem dinamicamente aos preços e horários da unidade selecionada. Adicionada a tabela `BarbershopUnitService` no Prisma para gerenciar as regras.
 - **Migração `20260412120000_barbershop_unit_service`**: SQL que cria a tabela **`BarbershopUnitService`** no Postgres (sem ela, qualquer página/API com `include: { unitOverrides: true }` gerava **500**). Em produção, depende de **`prisma migrate deploy`** no arranque (`start:prod`).
+- **Cadastro SaaS**: falha **500** em `POST /api/cadastro` porque `Organization.planStatus` estava como **TEXT** e o Prisma esperava o enum **`OrganizationPlanStatus`**. Migração **`20260713213000_organization_plan_enums`** + ajuste na migração Barbernegon para criar os enums.
 
 ## 2026-04-23
 

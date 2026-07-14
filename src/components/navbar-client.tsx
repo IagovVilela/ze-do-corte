@@ -10,10 +10,6 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { AnimatedText } from "@/components/animated-text";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
-import {
-  getInstagramContactHref,
-  getWhatsappContactHref,
-} from "@/lib/contact-links";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +24,8 @@ export type NavbarChromeProps = {
   bookHref?: string;
   whatsappHref?: string | null;
   instagramHref?: string | null;
+  /** Sem redes da plataforma — só links da org. */
+  phoneLabel?: string | null;
 };
 
 function buildLinks(homeHref: string, bookHref: string) {
@@ -50,8 +48,8 @@ function NavbarSocialLinks({
   whatsappHref?: string | null;
   instagramHref?: string | null;
 }) {
-  const wa = whatsappHref?.trim() || getWhatsappContactHref();
-  const ig = instagramHref?.trim() || getInstagramContactHref();
+  const wa = whatsappHref?.trim() || null;
+  const ig = instagramHref?.trim() || null;
   if (!wa && !ig) return null;
 
   const iconBtn =
@@ -237,7 +235,7 @@ function MobileMenuOverlay({
                   animate={{ opacity: 1, y: 0 }}
                   transition={instant ? { duration: 0 } : { ...mobileContentTransition, delay: 0.05 }}
                 >
-                  <BrandLogo size={48} className="h-12 w-12 shrink-0 shadow-lg shadow-brand-500/15 ring-1 ring-white/10" src={logoUrl} />
+                  <BrandLogo size={48} className="h-12 w-12 shrink-0 shadow-lg shadow-brand-500/15 ring-1 ring-white/10" src={logoUrl} fallbackLabel={brandName} alt={brandName} />
                   <div className="min-w-0">
                     <p id={`${menuId}-label`} className="font-display text-lg font-semibold tracking-wide text-white">
                       {brandName}
@@ -322,34 +320,38 @@ function MobileMenuOverlay({
 
 export function NavbarChrome({
   trailing,
-  brandName = "Zé do Corte",
+  brandName = "Barbearia",
   logoUrl,
   homeHref = "/",
   bookHref = "/agendar",
   whatsappHref,
   instagramHref,
 }: NavbarChromeProps) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotionPref = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
   const menuId = useId();
   const { direction, pastTop } = useScrollDirection({ threshold: 14, topMargin: 72 });
   const links = buildLinks(homeHref, bookHref);
+  const reduceMotion = !mounted || reduceMotionPref === true;
 
   /** Esconder quando rola para baixo E não está no topo E menu mobile fechado. */
-  const hidden = direction === "down" && pastTop && !mobileOpen;
+  const hidden = mounted && direction === "down" && pastTop && !mobileOpen;
+  const showPastTop = mounted && pastTop;
 
   useEffect(() => {
+    setMounted(true);
     setPortalReady(true);
   }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <motion.div
-        initial={reduceMotion ? false : { y: -32, opacity: 0 }}
+        initial={false}
         animate={
           reduceMotion
-            ? false
+            ? { y: 0, opacity: 1 }
             : {
                 y: hidden ? "-100%" : 0,
                 opacity: 1,
@@ -362,7 +364,7 @@ export function NavbarChrome({
         }
         className={cn(
           "transition-[background-color,border-color,backdrop-filter] duration-300",
-          pastTop
+          showPastTop
             ? "border-b border-white/10 bg-brand-950/85 backdrop-blur-xl shadow-lg shadow-black/10"
             : "border-b border-transparent bg-brand-950/40 backdrop-blur-sm",
         )}
@@ -372,7 +374,7 @@ export function NavbarChrome({
           href={homeHref}
           className="flex min-w-0 shrink items-center gap-2 font-semibold tracking-wide transition-opacity hover:opacity-90 sm:gap-2.5"
         >
-          <BrandLogo size={38} priority className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" src={logoUrl} />
+          <BrandLogo size={38} priority className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" src={logoUrl} fallbackLabel={brandName} alt={brandName} />
           <span className="truncate text-sm text-white sm:text-base">{brandName}</span>
         </Link>
 

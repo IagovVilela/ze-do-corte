@@ -1,9 +1,7 @@
-import { randomUUID } from "node:crypto";
-
 import { NextResponse } from "next/server";
 
-import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
-import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
+import { createPublicBooking } from "@/lib/booking-domain";
+import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
@@ -50,97 +48,34 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    organizationId = unit.organizationId;
 
-    const service = await prisma.service.findFirst({
-      where: {
-        id: payload.serviceId,
-        unit: { organizationId },
-      },
-      include: { unitOverrides: true },
-    });
-
-    if (!service) {
-      return NextResponse.json(
-        { message: "Serviço inválido." },
-        { status: 404 },
-      );
-    }
-
-    const unitOverride = service.unitOverrides.find(
-      (o) => o.unitId === payload.unitId,
-    );
-    const isActive = unitOverride ? unitOverride.isActive : service.isActive;
-    const durationMinutes =
-      unitOverride && unitOverride.durationMinutes !== null
-        ? unitOverride.durationMinutes
-        : service.durationMinutes;
-
-    if (!isActive) {
-      return NextResponse.json(
-        { message: "Serviço indisponível nesta unidade." },
-        { status: 404 },
-      );
-    }
-
-    if (service.unitId !== payload.unitId && !unitOverride) {
-      return NextResponse.json(
-        { message: "Este serviço não está disponível na unidade selecionada." },
-        { status: 400 },
-      );
-    }
-
-    const slot = await assertPublicBookingSlot({
-      service: { ...service, durationMinutes },
-      dateStr: payload.date,
-      timeStr: payload.time,
+    const created = await createPublicBooking({
+      organizationId: unit.organizationId,
       unitId: payload.unitId,
+      serviceId: payload.serviceId,
+      date: payload.date,
+      time: payload.time,
+      customerName: payload.customerName,
+      customerPhone: payload.customerPhone,
+      customerEmail: payload.customerEmail,
+      notes: payload.notes,
       staffMemberId: payload.staffMemberId,
-      organizationId,
+      bookingSource: "site",
     });
 
-    if (!slot.ok) {
+    if (!created.ok) {
       return NextResponse.json(
-        { message: slot.message },
-        { status: slot.status },
+        { message: created.message },
+        { status: created.status },
       );
     }
 
-    const { startsAt, endsAt, assignedStaff } = slot;
-
-    const appointment = await prisma.appointment.create({
-      data: {
-        clientName: payload.customerName,
-        clientPhone: payload.customerPhone,
-        clientEmail: payload.customerEmail || null,
-        notes: payload.notes || null,
-        startsAt,
-        endsAt,
-        serviceId: payload.serviceId,
-        unitId: payload.unitId,
-        staffMemberId: assignedStaff?.id ?? null,
-        clientManageToken: randomUUID(),
-      },
-      include: {
-        service: true,
-      },
+    void notifyClientWhatsAppConfirmation({
+      organizationId: unit.organizationId,
+      appointment: created.appointment,
     });
 
-    if (assignedStaff) {
-      void notifyBarberNewAssignment({
-        staffMemberId: assignedStaff.id,
-        barberEmail: assignedStaff.email,
-        barberDisplayName: assignedStaff.displayName,
-        clientName: payload.customerName,
-        clientPhone: payload.customerPhone,
-        clientEmail: payload.customerEmail?.trim() || null,
-        serviceName: appointment.service.name,
-        startsAt: appointment.startsAt,
-        notes: payload.notes ?? null,
-      });
-    }
-
-    return NextResponse.json({ appointment }, { status: 201 });
+    return NextResponse.json({ appointment: created.appointment }, { status: 201 });
   } catch (error) {
     console.error("POST /api/appointments error", error);
     return NextResponse.json(

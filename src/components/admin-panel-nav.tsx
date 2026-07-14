@@ -55,9 +55,24 @@ export function AdminPanelNav({ access }: { access: StaffAccess }) {
       show: access.permissions.manageBranding,
     },
     {
+      href: "/admin/site",
+      label: "Site",
+      show: access.permissions.manageBranding,
+    },
+    {
+      href: "/admin/whatsapp",
+      label: "WhatsApp",
+      show: access.permissions.manageBranding,
+    },
+    {
       href: "/admin/caixa",
       label: "Caixa",
       show: access.permissions.viewRevenue,
+    },
+    {
+      href: "/admin/pagamentos",
+      label: "Pagamentos",
+      show: access.role === "OWNER" || access.permissions.manageSettings,
     },
     {
       href: "/admin/clube",

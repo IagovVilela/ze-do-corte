@@ -1,18 +1,20 @@
-import { BARBER_SHOP_ADDRESS } from "@/lib/constants";
-
 type Props = {
-  query?: string;
+  query: string;
+  mapTitle?: string;
 };
 
-export function LocationMap({ query }: Props) {
-  const address = query || BARBER_SHOP_ADDRESS;
+/** Mapa só com endereço fornecido — sem fallback para endereço da marca piloto. */
+export function LocationMap({ query, mapTitle }: Props) {
+  const address = query.trim();
+  if (!address) return null;
   const encoded = encodeURIComponent(address);
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+  const title = mapTitle?.trim() ? `Mapa — ${mapTitle.trim()}` : "Mapa da unidade";
 
   return (
     <div className="flex flex-col gap-4">
       <iframe
-        title="Mapa — Zé do Corte"
+        title={title}
         className="aspect-[16/10] min-h-[220px] w-full rounded-2xl border border-white/10 bg-zinc-900/40"
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

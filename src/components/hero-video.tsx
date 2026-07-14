@@ -9,16 +9,13 @@ import {
 } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-import { HERO_VIDEO_SRC } from "@/lib/constants";
-
 type HeroBackdropVideoProps = {
   scrollTargetRef: React.RefObject<HTMLElement | null>;
-  /** URL de imagem/vídeo do tenant; se imagem, substitui o vídeo padrão. */
+  /** URL de imagem/vídeo do tenant. Sem mídia: backdrop genérico (sem vídeo piloto). */
   mediaUrl?: string | null;
 };
 
-/** min-h/min-w garantem cobertura mesmo com object-cover + transforms */
-const VIDEO_CLASS =
+const MEDIA_CLASS =
   "min-h-full min-w-full h-full w-full object-cover object-[center_30%]";
 
 function isImageUrl(url: string) {
@@ -26,15 +23,7 @@ function isImageUrl(url: string) {
 }
 
 /**
- * Vídeo em full-bleed atrás do hero (Framer Motion):
- * - preenche toda a seção, object-cover;
- * - zoom / parallax suave com o scroll da seção;
- * - play quando o hero está visível;
- * - gradientes para contraste do texto;
- * - sem controlos nativos (visual mais limpo).
- *
- * SSR: `useReducedMotion()` pode divergir entre servidor e cliente; só aplicamos
- * o ramo "reduced" após mount para a hidratação coincidir.
+ * Backdrop do hero: mídia do tenant ou gradiente neutro (nunca fallback de marca piloto).
  */
 export function HeroBackdropVideo({
   scrollTargetRef,
@@ -47,7 +36,7 @@ export function HeroBackdropVideo({
   const reduceMotion = mounted && prefersReducedMotion;
   const custom = mediaUrl?.trim() || null;
   const useImage = Boolean(custom && isImageUrl(custom));
-  const videoSrc = custom && !useImage ? custom : HERO_VIDEO_SRC;
+  const useVideo = Boolean(custom && !useImage);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +52,7 @@ export function HeroBackdropVideo({
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || useImage) return;
+    if (!el || !useVideo) return;
     if (reduceMotion) {
       el.pause();
       return;
@@ -73,7 +62,7 @@ export function HeroBackdropVideo({
     } else {
       el.pause();
     }
-  }, [inView, reduceMotion, useImage]);
+  }, [inView, reduceMotion, useVideo]);
 
   return (
     <div
@@ -91,7 +80,6 @@ export function HeroBackdropVideo({
             : { duration: 1.1, ease: [0.16, 1, 0.3, 1] }
         }
       >
-        {/* Só `inset` negativo: `w-full` aqui quebrava a largura (sobrava faixa à direita). */}
         <motion.div
           className="absolute inset-[-8%] origin-center will-change-transform"
           style={
@@ -102,17 +90,12 @@ export function HeroBackdropVideo({
         >
           {useImage && custom ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={custom}
-              alt=""
-              className={VIDEO_CLASS}
-              decoding="async"
-            />
-          ) : (
+            <img src={custom} alt="" className={MEDIA_CLASS} decoding="async" />
+          ) : useVideo && custom ? (
             <video
               ref={videoRef}
-              src={videoSrc}
-              className={VIDEO_CLASS}
+              src={custom}
+              className={MEDIA_CLASS}
               muted
               loop
               playsInline
@@ -120,21 +103,24 @@ export function HeroBackdropVideo({
               autoPlay={!reduceMotion}
               controls={false}
               disablePictureInPicture
-              aria-label="Vídeo institucional da barbearia"
+              aria-label="Mídia institucional da barbearia"
               suppressHydrationWarning
+            />
+          ) : (
+            <div
+              className="h-full w-full bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,rgba(196,165,116,0.28),transparent_55%),radial-gradient(ellipse_70%_50%_at_80%_70%,rgba(63,63,70,0.45),transparent_50%),linear-gradient(160deg,#0c0a08,#18181b_55%,#09090b)]"
             />
           )}
         </motion.div>
       </motion.div>
 
-      {/* Leitura do texto à esquerda + profundidade */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/55 to-black/20 md:from-black/90 md:via-black/45 md:to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-black/35" />
       <div
         className="absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 90% 60% at 20% 20%, rgba(250,204,21,0.12), transparent 55%)",
+            "radial-gradient(ellipse 90% 60% at 20% 20%, color-mix(in srgb, var(--brand, #c4a574) 40%, transparent), transparent 55%)",
         }}
       />
     </div>

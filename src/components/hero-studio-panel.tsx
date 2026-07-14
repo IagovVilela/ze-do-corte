@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import { ArrowUpRight, CalendarClock, Scissors, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const spring = { stiffness: 320, damping: 32, mass: 0.65 };
 
@@ -34,30 +34,49 @@ const rowVariants = {
   },
 };
 
-const HIGHLIGHTS = [
-  {
-    title: "Agenda no seu ritmo",
-    description: "Escolha dia e hora no site — rápido, sem fila à espera de resposta.",
-    href: "/agendar" as const,
-    icon: CalendarClock,
-  },
-  {
-    title: "Serviços à medida",
-    description: "Pacotes claros: corte, barba ou combinação. Veja preços e duração.",
-    href: "/#servicos" as const,
-    icon: Scissors,
-  },
-  {
-    title: "Experiência completa",
-    description: "Ambiente pensado para conforto, precisão e um resultado que dura.",
-    href: "/agendar" as const,
-    icon: Sparkles,
-  },
-];
+type HeroStudioPanelProps = {
+  bookHref?: string;
+  servicesHref?: string;
+  motionOff?: boolean;
+};
 
-export function HeroStudioPanel() {
-  const reduceMotion = useReducedMotion();
+export function HeroStudioPanel({
+  bookHref = "/agendar",
+  servicesHref = "#servicos",
+  motionOff = false,
+}: HeroStudioPanelProps = {}) {
+  const reduceMotionPref = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  const reduceMotion = !mounted || motionOff || reduceMotionPref === true;
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const highlights = [
+    {
+      title: "Agenda no seu ritmo",
+      description:
+        "Escolha dia e hora no site — rápido, sem fila à espera de resposta.",
+      href: bookHref,
+      icon: CalendarClock,
+    },
+    {
+      title: "Serviços à medida",
+      description:
+        "Pacotes claros: corte, barba ou combinação. Veja preços e duração.",
+      href: servicesHref,
+      icon: Scissors,
+    },
+    {
+      title: "Experiência completa",
+      description:
+        "Ambiente pensado para conforto, precisão e um resultado que dura.",
+      href: bookHref,
+      icon: Sparkles,
+    },
+  ] as const;
 
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
@@ -94,25 +113,15 @@ export function HeroStudioPanel() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
+      className="perspective-[1200px]"
+      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-      className="relative [perspective:1200px]"
-      style={{ transformStyle: "preserve-3d" }}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }
+      }
     >
-      {!reduceMotion ? (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute -inset-[1px] z-0 rounded-[1.35rem] opacity-25"
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent, rgba(250,204,21,0.34), transparent 40%)",
-          }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-        />
-      ) : null}
-
       <motion.div
         ref={cardRef}
         onMouseMove={handleMove}
@@ -122,81 +131,44 @@ export function HeroStudioPanel() {
           rotateY,
           transformStyle: "preserve-3d",
         }}
-        className="glass-card relative z-10 overflow-hidden rounded-3xl p-1"
+        className="relative overflow-hidden rounded-2xl border border-white/12 bg-zinc-950/70 shadow-[0_24px_80px_-28px_rgba(0,0,0,0.85)] backdrop-blur-md"
       >
         <motion.div
-          className="pointer-events-none absolute inset-0 rounded-[1.15rem]"
+          className="pointer-events-none absolute inset-0 opacity-90"
           style={{ background: spotlight }}
+          aria-hidden
         />
-
-        <div
-          className="relative rounded-2xl border border-white/10 bg-zinc-950/85 px-5 py-6 backdrop-blur-md"
-          style={{ transform: "translateZ(24px)" }}
-        >
-          <div className="mb-6 flex items-end justify-between gap-3">
-            <div>
-              <motion.p
-                className="font-display text-4xl leading-none tracking-wide text-white md:text-5xl"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.5 }}
-              >
-                NO ESTÚDIO
-              </motion.p>
-              <motion.p
-                className="mt-1 text-[11px] font-medium tracking-[0.35em] text-zinc-500 uppercase"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.45, duration: 0.4 }}
-              >
-                três formas de viver a experiência
-              </motion.p>
-            </div>
-            <motion.div
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5"
-              whileHover={{ scale: 1.08, borderColor: "rgba(234,179,8,0.48)" }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            >
-              <Scissors className="h-5 w-5 text-brand-300" aria-hidden />
-            </motion.div>
+        <div className="relative z-10 p-5 sm:p-6">
+          <div className="mb-5 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-brand-300" aria-hidden />
+            <p className="text-xs font-semibold tracking-[0.22em] text-white uppercase">
+              Experiência completa
+            </p>
           </div>
 
           <motion.ul
-            className="space-y-3"
+            className="space-y-2.5"
             variants={listVariants}
-            initial="hidden"
+            initial={reduceMotion ? false : "hidden"}
             animate="show"
           >
-            {HIGHLIGHTS.map((item) => (
+            {highlights.map((item) => (
               <motion.li key={item.title} variants={rowVariants}>
                 <Link
                   href={item.href}
-                  className="group relative flex w-full items-stretch gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 py-3.5 text-left outline-none transition-colors hover:border-brand-500/35 focus-visible:ring-2 focus-visible:ring-brand-500/50"
+                  className="group flex items-start gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3.5 py-3 transition hover:border-brand-500/35 hover:bg-brand-500/5"
                 >
-                  <motion.span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-brand-300"
-                    whileHover={
-                      reduceMotion
-                        ? undefined
-                        : { scale: 1.06, rotate: [0, -4, 4, 0] }
-                    }
-                    transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
-                  >
-                    <item.icon className="h-5 w-5" aria-hidden />
-                  </motion.span>
-                  <div className="min-w-0 flex-1 py-0.5">
-                    <p className="font-display text-lg tracking-wide text-white">{item.title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-zinc-400">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-brand-300">
+                    <item.icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-white">
+                      {item.title}
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-zinc-400">
                       {item.description}
-                    </p>
-                  </div>
-                  <motion.span
-                    className="flex shrink-0 items-center self-center text-brand-300/70"
-                    whileHover={{ x: 3, y: -2 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                  >
-                    <ArrowUpRight className="h-4 w-4" aria-hidden />
-                  </motion.span>
+                    </span>
+                  </span>
                 </Link>
               </motion.li>
             ))}
@@ -204,15 +176,20 @@ export function HeroStudioPanel() {
 
           <motion.div
             className="mt-6 flex items-center justify-between gap-4 border-t border-white/10 pt-5"
-            initial={{ opacity: 0, y: 8 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65, duration: 0.45 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { delay: 0.65, duration: 0.45 }
+            }
           >
             <p className="max-w-[58%] text-[11px] leading-relaxed text-zinc-500">
-              Toque em um cartão para reservar ou ver pacotes — fluxo direto, sem ruído.
+              Toque em um cartão para reservar ou ver pacotes — fluxo direto, sem
+              ruído.
             </p>
             <Link
-              href="/agendar"
+              href={bookHref}
               className="group inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5 text-xs font-bold text-zinc-950 transition hover:bg-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               <span className="transition">Reservar</span>

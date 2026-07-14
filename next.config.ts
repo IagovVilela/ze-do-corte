@@ -2,10 +2,36 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /**
-   * Turbopack pode copiar um `@prisma/client` antigo para `.next/dev/node_modules` após `prisma generate`,
-   * gerando "Unknown field" em runtime. Externalizar força o uso do cliente em `node_modules`.
+   * Pacotes só de servidor. `pg` / adapter Prisma nunca podem ir para o bundle do browser
+   * (erro "Can't resolve 'fs'" via instrumentation → prisma).
    */
-  serverExternalPackages: ["@prisma/client", "bcryptjs", "cloudinary", "web-push"],
+  turbopack: {},
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-pg",
+    "pg",
+    "pg-native",
+    "bcryptjs",
+    "cloudinary",
+    "web-push",
+  ],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve = config.resolve ?? {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        path: false,
+        stream: false,
+        crypto: false,
+        child_process: false,
+      };
+    }
+    return config;
+  },
   allowedDevOrigins: ["*.loca.lt", "slick-toes-ask.loca.lt"],
   images: {
     remotePatterns: [

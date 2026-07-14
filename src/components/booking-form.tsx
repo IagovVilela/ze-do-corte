@@ -11,6 +11,7 @@ import { BUSINESS_HOURS } from "@/lib/constants";
 import { formatBrPhoneNational } from "@/lib/br-phone-format";
 import type { ServiceSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { AppointmentPixPay } from "@/components/appointment-pix-pay";
 
 type AvailableApiResponse = {
   date: string;
@@ -54,6 +55,10 @@ export function BookingForm({
   const [bookingState, setBookingState] = useState<BookingState>("idle");
   const [message, setMessage] = useState("");
   const [successManageToken, setSuccessManageToken] = useState<string | null>(null);
+  const [successAppointmentId, setSuccessAppointmentId] = useState<string | null>(
+    null,
+  );
+  const [successUsedClub, setSuccessUsedClub] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const filteredBarbers = useMemo(
@@ -167,7 +172,11 @@ export function BookingForm({
 
       const payload = (await response.json()) as {
         message?: string;
-        appointment?: { clientManageToken?: string | null };
+        appointment?: {
+          id?: string;
+          clientManageToken?: string | null;
+          usedSubscriptionId?: string | null;
+        };
       };
       if (!response.ok) {
         throw new Error(payload.message ?? "Não foi possível agendar.");
@@ -178,6 +187,8 @@ export function BookingForm({
       setSuccessManageToken(
         payload.appointment?.clientManageToken?.trim() || null,
       );
+      setSuccessAppointmentId(payload.appointment?.id ?? null);
+      setSuccessUsedClub(Boolean(payload.appointment?.usedSubscriptionId));
       setCustomerName("");
       setCustomerPhone("");
       setCustomerEmail("");
@@ -704,6 +715,13 @@ export function BookingForm({
                       )}
                     </button>
                   </div>
+                  {successAppointmentId ? (
+                    <AppointmentPixPay
+                      appointmentId={successAppointmentId}
+                      manageToken={successManageToken}
+                      usedClub={successUsedClub}
+                    />
+                  ) : null}
                 </div>
               ) : null}
             </motion.div>

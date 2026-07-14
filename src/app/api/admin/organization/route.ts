@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { isReservedSlug, slugifyOrgName } from "@/lib/organization";
+import { isReservedSlug } from "@/lib/organization";
+import {
+  siteCanvasSchema,
+  getCanvasTemplate,
+  CANVAS_PAGE_TEMPLATE_IDS,
+  type CanvasTemplateId,
+} from "@/lib/site-canvas";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +40,8 @@ const patchSchema = z.object({
   phoneLabel: z.string().trim().max(40).nullable().optional(),
   timezone: z.string().trim().min(3).max(64).optional(),
   onboardingJson: z.record(z.string(), z.boolean()).optional(),
+  siteJson: siteCanvasSchema.optional(),
+  siteTemplate: z.enum(CANVAS_PAGE_TEMPLATE_IDS).optional(),
 });
 
 function emptyToNull(v: string | null | undefined) {
@@ -97,6 +106,53 @@ export async function PATCH(request: Request) {
     }
   }
 
+  let nextSiteJson = data.siteJson;
+  let templatePrimary: string | undefined;
+  if (data.siteTemplate) {
+    const current = await prisma.organization.findUnique({
+      where: { id: auth.access.organizationId },
+      select: { name: true },
+    });
+    const built = getCanvasTemplate(
+      data.siteTemplate as CanvasTemplateId,
+      data.name ?? current?.name ?? "Barbearia",
+    );
+    const validated = siteCanvasSchema.safeParse(built);
+    if (!validated.success) {
+      return NextResponse.json(
+        {
+          message:
+            "Modelo inválido (estrutura do canvas). Tente outro modelo ou atualize o app.",
+          issues: validated.error.issues.slice(0, 5).map((i) => ({
+            path: i.path.join("."),
+            message: i.message,
+          })),
+        },
+        { status: 500 },
+      );
+    }
+    nextSiteJson = validated.data;
+    templatePrimary = nextSiteJson.theme?.primary;
+  }
+
+  let nextOnboarding: Prisma.InputJsonValue | undefined;
+  if (data.onboardingJson !== undefined) {
+    const current = await prisma.organization.findUnique({
+      where: { id: auth.access.organizationId },
+      select: { onboardingJson: true },
+    });
+    const prev =
+      current?.onboardingJson &&
+      typeof current.onboardingJson === "object" &&
+      !Array.isArray(current.onboardingJson)
+        ? (current.onboardingJson as Record<string, unknown>)
+        : {};
+    nextOnboarding = {
+      ...prev,
+      ...data.onboardingJson,
+    } as Prisma.InputJsonValue;
+  }
+
   const org = await prisma.organization.update({
     where: { id: auth.access.organizationId },
     data: {
@@ -105,7 +161,9 @@ export async function PATCH(request: Request) {
       ...(data.logoUrl !== undefined ? { logoUrl: emptyToNull(data.logoUrl) } : {}),
       ...(data.primaryColor !== undefined
         ? { primaryColor: emptyToNull(data.primaryColor) }
-        : {}),
+        : templatePrimary
+          ? { primaryColor: templatePrimary }
+          : {}),
       ...(data.slogan !== undefined ? { slogan: emptyToNull(data.slogan) } : {}),
       ...(data.sloganSecondary !== undefined
         ? { sloganSecondary: emptyToNull(data.sloganSecondary) }
@@ -122,14 +180,12 @@ export async function PATCH(request: Request) {
         : {}),
       ...(data.phoneLabel !== undefined ? { phoneLabel: emptyToNull(data.phoneLabel) } : {}),
       ...(data.timezone !== undefined ? { timezone: data.timezone } : {}),
-      ...(data.onboardingJson !== undefined ? { onboardingJson: data.onboardingJson } : {}),
+      ...(nextOnboarding !== undefined ? { onboardingJson: nextOnboarding } : {}),
+      ...(nextSiteJson !== undefined
+        ? { siteJson: nextSiteJson as Prisma.InputJsonValue }
+        : {}),
     },
   });
 
   return NextResponse.json({ organization: org });
-}
-
-/** Utilitário exportado para testes/scripts — evita dead import warnings. */
-export function suggestSlug(name: string) {
-  return slugifyOrgName(name);
 }

@@ -58,32 +58,32 @@ export default function CadastroPage() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/60 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-amber-500/60 focus:ring-2 focus:ring-amber-500/20";
+    "w-full rounded-xl border border-white/10 bg-[#0a0e13]/70 px-4 py-3 text-[#e2eaf4] outline-none transition placeholder:text-[#7a889c] focus:border-[#3b82f6]/60 focus:ring-2 focus:ring-[#3b82f6]/20";
 
   return (
-    <div className="relative min-h-svh overflow-hidden bg-[#0c0a08] text-zinc-100">
+    <div className="relative min-h-svh overflow-hidden bg-[#0f1419] text-[#e2eaf4]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_20%_-10%,rgba(196,165,116,0.22),transparent_55%),radial-gradient(ellipse_60%_40%_at_90%_20%,rgba(90,70,40,0.25),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.28),transparent_55%),radial-gradient(ellipse_50%_40%_at_90%_10%,rgba(142,182,255,0.12),transparent_50%)]"
       />
       <div className="relative mx-auto flex min-h-svh max-w-lg flex-col justify-center px-4 py-16">
         <Link
           href="/"
-          className="mb-8 font-display text-2xl tracking-wide text-[#e8d5b5] transition hover:text-white"
+          className="mb-8 text-2xl font-semibold tracking-tight text-[#8eb6ff] transition hover:text-white"
         >
           Barbernegon
         </Link>
-        <h1 className="font-display text-4xl tracking-wide text-white">
+        <h1 className="text-4xl font-bold tracking-tight text-white">
           Crie sua barbearia
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+        <p className="mt-3 text-sm leading-relaxed text-[#a8b6c9]">
           Em minutos você tem site próprio, agendamento e painel — sem
           burocracia.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">Nome da barbearia</span>
+            <span className="text-[#a8b6c9]">Nome da barbearia</span>
             <input
               required
               value={shopName}
@@ -94,9 +94,9 @@ export default function CadastroPage() {
           </label>
 
           <label className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">Endereço do site</span>
+            <span className="text-[#a8b6c9]">Endereço do site</span>
             <div className="flex items-center gap-2">
-              <span className="shrink-0 text-xs text-zinc-500">/</span>
+              <span className="shrink-0 text-xs text-[#7a889c]">/</span>
               <input
                 value={slugTouched ? slug : previewSlug}
                 onChange={(e) => {
@@ -107,13 +107,13 @@ export default function CadastroPage() {
                 placeholder="barbearia-do-joao"
               />
             </div>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-[#7a889c]">
               Seu site: barbernegon.com/{previewSlug}
             </span>
           </label>
 
           <label className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">Seu nome</span>
+            <span className="text-[#a8b6c9]">Seu nome</span>
             <input
               required
               value={ownerName}
@@ -123,7 +123,7 @@ export default function CadastroPage() {
           </label>
 
           <label className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">E-mail</span>
+            <span className="text-[#a8b6c9]">E-mail</span>
             <input
               required
               type="email"
@@ -135,7 +135,7 @@ export default function CadastroPage() {
           </label>
 
           <label className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">Senha</span>
+            <span className="text-[#a8b6c9]">Senha</span>
             <input
               required
               type="password"
@@ -156,15 +156,18 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-gradient-to-r from-[#c4a574] to-[#a8895a] px-6 py-3 text-sm font-bold text-zinc-950 transition hover:brightness-110 disabled:opacity-60"
+            className="w-full rounded-full bg-[#3b82f6] px-6 py-3 text-sm font-bold text-white shadow-[0_0_24px_-6px_rgba(59,130,246,0.55)] transition hover:bg-[#2563eb] disabled:opacity-60"
           >
             {loading ? "Criando…" : "Começar grátis"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-[#7a889c]">
           Já tem conta?{" "}
-          <Link href="/admin/login" className="text-[#e8d5b5] underline-offset-2 hover:underline">
+          <Link
+            href="/admin/login"
+            className="text-[#8eb6ff] underline-offset-2 hover:underline"
+          >
             Entrar no painel
           </Link>
         </p>

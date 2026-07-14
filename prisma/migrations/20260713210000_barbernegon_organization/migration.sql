@@ -1,11 +1,21 @@
 -- Barbernegon: Organization tenant + subscriptions + org scoping
 
+DO $$ BEGIN
+  CREATE TYPE "OrganizationPlanStatus" AS ENUM ('TRIAL', 'ACTIVE', 'PAST_DUE', 'CANCELLED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "ClientSubscriptionStatus" AS ENUM ('ACTIVE', 'PAUSED', 'CANCELLED', 'PAST_DUE');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- 1) Organization
 CREATE TABLE IF NOT EXISTS "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "planStatus" TEXT NOT NULL DEFAULT 'TRIAL',
+    "planStatus" "OrganizationPlanStatus" NOT NULL DEFAULT 'TRIAL',
     "trialEndsAt" TIMESTAMP(3),
     "logoUrl" TEXT,
     "primaryColor" VARCHAR(16),
@@ -174,7 +184,7 @@ CREATE TABLE IF NOT EXISTS "ClientSubscription" (
     "clientName" TEXT NOT NULL,
     "clientPhone" TEXT NOT NULL,
     "clientEmail" TEXT,
-    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "status" "ClientSubscriptionStatus" NOT NULL DEFAULT 'ACTIVE',
     "startsAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "currentPeriodEnd" TIMESTAMP(3) NOT NULL,
     "visitsUsed" INTEGER NOT NULL DEFAULT 0,

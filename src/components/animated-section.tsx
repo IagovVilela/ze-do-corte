@@ -1,12 +1,13 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import type { PropsWithChildren } from "react";
+import { useEffect, useState, type PropsWithChildren } from "react";
 
 type AnimatedSectionProps = PropsWithChildren<{
   id?: string;
   className?: string;
   delay?: number;
+  motionOff?: boolean;
 }>;
 
 export function AnimatedSection({
@@ -14,8 +15,16 @@ export function AnimatedSection({
   id,
   className,
   delay = 0,
+  motionOff = false,
 }: AnimatedSectionProps) {
-  const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  const reduceMotionPref = useReducedMotion();
+  const reduceMotion =
+    !mounted || motionOff || reduceMotionPref === true;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (reduceMotion) {
     return (

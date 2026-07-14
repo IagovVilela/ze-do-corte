@@ -50,15 +50,23 @@ Sem essas variáveis, o agendamento continua normal; apenas não há envio (avis
 
 **Regra com Web Push:** se o profissional tiver **pelo menos uma** subscrição push ativa na base **e** VAPID estiver configurado (ver abaixo), o sistema **não envia e-mail** para esse aviso — usa só notificação no browser.
 
+### WhatsApp Cloud API (Meta)
+
+Opcional. Configure `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_TOKEN_ENCRYPTION_KEY` (e templates se precisar fora da janela 24h). Webhook: `/api/webhooks/whatsapp`. Cada org liga o número em **`/admin/whatsapp`**. Lembretes: `npm run whatsapp:reminders` (agendar no cron do host). Guia completo: [whatsapp-meta.md](./whatsapp-meta.md).
+
+### Asaas (pagamentos)
+
+Opcional até ativar cobrança. Plataforma: `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN`, `ASAAS_ENV`, `ASAAS_TOKEN_ENCRYPTION_KEY`. Webhook: `/api/webhooks/asaas`. Dono assina em **`/admin/plano`**; o salão conecta a própria key em **`/admin/pagamentos`**. Guia: [pagamentos-asaas.md](./pagamentos-asaas.md).
+
+### Pagamento e gráficos no `/admin`
+
+**Balcão:** dono/admin regista `paidAt` / método na lista ou `PATCH /api/admin/appointments/[id]`. **Online:** PIX pós-agendamento e clube via Asaas do salão (quando ligado). Gráficos: período **Hoje / 7 dias / Mês / 3 meses** (`chartRange`); `GET /api/admin/dashboard?chartRange=`.
+
 ### Web Push (notificação ao barbeiro no navegador)
 
 Opcional. Com **`NEXT_PUBLIC_VAPID_PUBLIC_KEY`**, **`VAPID_PRIVATE_KEY`** e (recomendado) **`VAPID_SUBJECT`** (ex.: `mailto:contacto@seudominio.com`), o profissional pode ativar notificações em **`/admin/perfil`**; o ficheiro **`public/sw.js`** trata do evento push.
 
 Gere um par de chaves: `npx web-push generate-vapid-keys`. A chave **pública** vai em `NEXT_PUBLIC_*`; a **privada** só no servidor (`VAPID_PRIVATE_KEY`). **Não commite** a privada.
-
-### Pagamento e gráficos no `/admin`
-
-Não há gateway online: **dono/admin** regista no balcão **data/hora do pagamento** (`paidAt`) e **método** opcional na lista de agendamentos ou com `PATCH /api/admin/appointments/[id]`. Os gráficos do painel respeitam o período escolhido (**Hoje**, **7 dias**, **Mês**, **3 meses** — query `chartRange`); a API **`GET /api/admin/dashboard?chartRange=`** devolve o mesmo conjunto de séries.
 
 ### Next.js dev: `Compaction failed` / `ENOENT` em `.next\dev\...\build-manifest.json`
 

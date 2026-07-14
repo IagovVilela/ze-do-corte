@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { prisma } from "@/lib/prisma";
 
 export type OrganizationPublic = {
@@ -16,9 +18,10 @@ export type OrganizationPublic = {
   whatsappHref: string | null;
   phoneLabel: string | null;
   timezone: string;
+  siteJson: unknown;
 };
 
-const orgSelect = {
+export const orgSelect = {
   id: true,
   name: true,
   slug: true,
@@ -32,9 +35,10 @@ const orgSelect = {
   whatsappHref: true,
   phoneLabel: true,
   timezone: true,
+  siteJson: true,
 } as const;
 
-export async function getOrganizationBySlug(
+async function loadOrganizationBySlug(
   slug: string,
 ): Promise<OrganizationPublic | null> {
   const normalized = slug.trim().toLowerCase();
@@ -44,6 +48,9 @@ export async function getOrganizationBySlug(
     select: orgSelect,
   });
 }
+
+/** Uma query por request quando layout + page pedem a mesma org. */
+export const getOrganizationBySlug = cache(loadOrganizationBySlug);
 
 export async function getOrganizationById(
   id: string,

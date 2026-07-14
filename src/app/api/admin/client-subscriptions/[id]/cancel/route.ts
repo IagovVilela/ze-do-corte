@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { asaasCancelSubscription } from "@/lib/asaas-client";
+import { getOrgAsaasApiKey } from "@/lib/asaas-org";
+import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +24,17 @@ export async function POST(request: Request, context: RouteContext) {
   if (!auth.ok) return auth.response;
   if (!auth.access.permissions.manageSubscriptions) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
+  }
+
+  const org = await prisma.organization.findUnique({
+    where: { id: auth.access.organizationId },
+    select: { planStatus: true, planTier: true, trialEndsAt: true },
+  });
+  if (!org || !hasProFeatures(org)) {
+    return NextResponse.json(
+      { message: "Clube disponível no plano Pro (ou trial)." },
+      { status: 403 },
+    );
   }
 
   const { id } = await context.params;
@@ -44,6 +58,17 @@ export async function POST(request: Request, context: RouteContext) {
 
   const parsed = cancelSchema.safeParse(body);
   const reason = parsed.success ? parsed.data.reason : null;
+
+  if (existing.asaasSubscriptionId) {
+    const apiKey = await getOrgAsaasApiKey(auth.access.organizationId);
+    if (apiKey) {
+      try {
+        await asaasCancelSubscription(apiKey, existing.asaasSubscriptionId);
+      } catch (error) {
+        console.error("cancel asaas subscription", error);
+      }
+    }
+  }
 
   const subscription = await prisma.clientSubscription.update({
     where: { id },

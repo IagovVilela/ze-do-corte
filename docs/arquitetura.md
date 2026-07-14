@@ -13,15 +13,33 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
 
 ## Fluxo público (institucional + agendamento)
 
-- **`/`** — Server Component obtém serviços (`getServices` / Prisma) e barbeiros públicos (`getPublicBarbers`: `STAFF` com `showOnWebsite`); renderiza Hero, lista de serviços, secção **Equipe** (se houver), contato, mapa.
-- **`/agendar`** — Formulário cliente (`BookingForm`) chama:
+- **`/`** — Landing da **plataforma Barbernegon** (não é o site de um tenant).
+- **`/[slug]`** — Site institucional do tenant. `Organization.siteJson` **v2 (canvas)** renderizado por `TenantCanvasRenderer`. Fallbacks de branding neutros. Constantes `BARBER_*` **não** alimentam essa rota.
+- **`/[slug]/agendar`** — Formulário cliente (`BookingForm`) scoped à org:
   - `GET /api/appointments/available` — slots livres por serviço e data; com **`staffMemberId`**, considera só conflitos desse profissional (e vagas ainda sem profissional);
-  - `POST /api/appointments` — cria registro; valida sobreposição; opcionalmente **`staffMemberId`** (barbeiro da unidade padrão); define **`clientManageToken`** (UUID) para o link de gestão. Aviso ao profissional atribuído: **Web Push** se existir subscrição ativa e VAPID configurado; caso contrário **e-mail Resend** quando `RESEND_*` estiver definido (`notify-barber-booking.ts`).
+  - `POST /api/appointments` — cria via `booking-domain` (`createPublicBooking`); aviso ao profissional (Web Push / Resend); se WhatsApp do tenant ativo, confirmação ao cliente (`whatsapp-notify-client`).
+- **WhatsApp (Meta Cloud API)** — webhook `GET|POST /api/webhooks/whatsapp`; bot FSM (`whatsapp-bot-fsm`) agenda/remarca/cancela; admin `/admin/whatsapp`. Detalhes: [whatsapp-meta.md](./whatsapp-meta.md).
+- **`/agendar`** — legado mono-marca: redireciona para o tenant seed (`/ze-do-corte/agendar`).
 - **`/minha-reserva/[token]`** — Cliente consulta, **remarca** ou **cancela** (`CONFIRMED` e horário futuro) sem conta; **`GET`/`PATCH /api/appointments/manage/[token]`**. O token é equivalente a uma senha — não partilhar em canais públicos.
+
+### Site editável (`Organization.siteJson`)
+
+- **v2 (canvas)**: arteboards `desktop` / `mobile` + `elements[]` com `frame {x,y,w,h}` absolutos. Contrato em `src/lib/site-canvas.ts`. Editor visual em **`/admin/site`**. Render público: `TenantCanvasRenderer`.
+- Tipos de biblioteca: básicos (texto, botão, badge, divisor, espaço), layout (hero, painel, grid, retângulo), mídia, e blocos de negócio (menu, serviços, equipe, contato, rodapé).
+- Presets: estilos de botão/badge/painel/texto/hero, seções pré-montadas e tipografia — `src/lib/canvas-presets.ts`.
+- **Modelos de página** (layouts completos desktop+mobile, estruturas distintas): blank; classic (centro + painéis); studio (70/30 foto); minimal (coluna 640); moderno (split 50/50); editorial (spine magazine); impacto (hero full); noir (sidebar); neon (barras + ticker); brutalista (grade bordada); ocean (faixas maré); boutique (ritual centrado); bauhaus (formas ■●■); rua (contato primeiro) — `src/lib/canvas-page-templates.ts`.
+- Tema do canvas (`theme.primary|secondary|background|surface|text` + `fontDisplay`/`fontBody`) → CSS vars via `canvasThemeStyle` / `organizationBrandStyle`.
+- **v1 (legado)**: `sections[]` ordenadas — convertido automaticamente para v2 no parse (`migrateSitePageToCanvas`).
+- Cadastro e templates gravam **v2**. Identidade (logo, slug, redes) permanece em **`/admin/marca`**.
+
+CSS vars da paleta: `organizationBrandStyle` / `resolveSiteCanvas` em `src/lib/org-branding.ts` (+ `src/lib/canvas-theme-style.ts` no cliente).
 
 ## Fluxo administrativo
 
 - **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`).
+- **`/admin/marca`** — identidade (nome, slug, logo, cores, slogans, redes, uploads).
+- **`/admin/site`** — canvas tipo Canva: biblioteca (hero/painel/grid etc.), cores do sistema, arteboards desktop/mobile, drag/resize, inspector com **upload do dispositivo** (imagem/vídeo), templates, salvar `siteJson` v2.
+- **`/admin/whatsapp`** — conecta Phone number ID + token Meta (cifrado), liga/desliga bot, logs de envio.
 - **`/admin/perfil`** — utilizador autenticado altera `displayName`, `phone`, senha (`PATCH /api/auth/profile`) e foto (`POST`/`DELETE /api/auth/profile/avatar` → Cloudinary quando configurado); a foto alimenta o cartão na home para quem é barbeiro em destaque. Opcionalmente ativa **Web Push** (VAPID + `public/sw.js`) para receber aviso de agendamento atribuído sem e-mail.
 - **`/admin/expediente`** — só **STAFF**: define o próprio `workWeekJson` via `PATCH /api/auth/work-schedule`; `null` segue só o horário global da barbearia nos slots públicos.
 - **`/admin/equipe`** — gestão de membros; para **STAFF**, texto e visibilidade na home (`PATCH /api/admin/staff/[id]`) e **expediente** por funcionário para **OWNER/ADMIN** (`GET`/`PATCH /api/admin/staff/[id]/work-schedule`).
@@ -40,8 +58,10 @@ Documentação detalhada: **[admin-hierarquia.md](./admin-hierarquia.md)**.
 
 Ver `prisma/schema.prisma` para o contrato exato.
 
+- **Organization** — tenant: `slug`, branding (`logoUrl`, `primaryColor`, slogans, redes, `heroMediaUrl`, …), **`siteJson`** (página institucional), `timezone`, `planStatus` / `planTier` / trial, billing Asaas (plataforma + API key do salão).
+- **PaymentEvent** — eventos Asaas processados (idempotência do webhook).
 - **Service** — obrigatoriamente ligado a uma **`BarbershopUnit`** (`unitId`); unicidade do nome **por unidade** (preços/catálogo podem variar entre lojas); **`category`** (`ServiceCategory`), duração, preço, `isActive`.
-- **Appointment** — cliente, dados de contato, intervalo `startsAt`/`endsAt`, `status` (enum), relação com `Service`, opcionalmente **`unitId`**, opcionalmente **`staffMemberId`** (barbeiro `STAFF` atribuído; reservas públicas costumam entrar sem profissional até dono/admin atribuírem), **`clientManageToken`** opcional (link secreto `/minha-reserva/...` gerado na reserva pública), pagamento em balcão (`paidAt`, `paymentMethod`).
+- **Appointment** — cliente, dados de contato, intervalo `startsAt`/`endsAt`, `status` (enum), relação com `Service`, opcionalmente **`unitId`**, opcionalmente **`staffMemberId`** (barbeiro `STAFF` atribuído; reservas públicas costumam entrar sem profissional até dono/admin atribuírem), **`clientManageToken`** opcional (link secreto `/minha-reserva/...` gerado na reserva pública), pagamento (`paidAt`, `paymentMethod`, `paymentStatus`, `asaasPaymentId`, crédito de clube).
 - **BarbershopUnit** — unidades (slug, endereço, `isDefault` para o site público).
 - **StaffMember** — e-mail, `StaffRole`, hash bcrypt da senha, unidade opcional (obrigatória para STAFF), `displayName`, `phone`, `profileImageUrl` / `profileImagePublicId` (Cloudinary), `websiteBio` e `showOnWebsite` (cartão na página inicial, só para STAFF), `workWeekJson` opcional (expediente semanal do barbeiro), subscrições **Web Push** (`StaffPushSubscription`: `endpoint`, chaves `p256dh` / `auth`).
 - **Session** — `tokenHash` (SHA-256 do token do cookie), `expiresAt`, ligação a `StaffMember`.
@@ -56,6 +76,7 @@ Ver `prisma/schema.prisma` para o contrato exato.
 ## Diagrama lógico (texto)
 
 ```
-Cliente → páginas / e /agendar → API appointments → Prisma → PostgreSQL
+Cliente → /[slug] (siteJson) + /[slug]/agendar → API appointments → Prisma → PostgreSQL
+Dono → /admin/marca → Organization.siteJson / branding → TenantSiteRenderer
 Admin → /admin/login → Session + cookie → /admin + APIs admin → Prisma → PostgreSQL
 ```

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { isClientManageTokenFormat } from "@/lib/client-manage-token";
 import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
+import { notifyClientWhatsAppCancellation } from "@/lib/whatsapp-notify-client";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -118,10 +119,20 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (parsed.data.action === "cancel") {
-    await prisma.appointment.update({
+    const updated = await prisma.appointment.update({
       where: { id: appointment.id },
       data: { status: "CANCELLED" },
+      include: {
+        service: { select: { name: true } },
+        unit: { select: { organizationId: true } },
+      },
     });
+    if (updated.unit?.organizationId) {
+      void notifyClientWhatsAppCancellation({
+        organizationId: updated.unit.organizationId,
+        appointment: updated,
+      });
+    }
     return NextResponse.json({ ok: true, status: "CANCELLED" });
   }
 

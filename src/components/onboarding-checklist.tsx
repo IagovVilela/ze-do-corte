@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { StaffAccess } from "@/lib/staff-access";
@@ -29,6 +30,9 @@ export async function computeOnboardingChecklist(
       logoUrl: true,
       slogan: true,
       primaryColor: true,
+      heroMediaUrl: true,
+      whatsappHref: true,
+      instagramHref: true,
       onboardingJson: true,
       _count: {
         select: {
@@ -40,23 +44,40 @@ export async function computeOnboardingChecklist(
     },
   });
 
-  const [serviceCount, staffCount] = await Promise.all([
+  const [serviceCount, staffCount, staffWithSchedule] = await Promise.all([
     prisma.service.count({
       where: { unit: { organizationId: access.organizationId } },
     }),
     prisma.staffMember.count({
       where: { organizationId: access.organizationId, role: "STAFF" },
     }),
+    prisma.staffMember.count({
+      where: {
+        organizationId: access.organizationId,
+        role: "STAFF",
+        workWeekJson: { not: Prisma.DbNull },
+      },
+    }),
   ]);
 
   const flags = (org?.onboardingJson ?? {}) as OnboardingFlags;
+  const hasBrandBasics =
+    Boolean(org?.logoUrl) ||
+    Boolean(org?.primaryColor) ||
+    Boolean(flags.logo) ||
+    Boolean(flags.branding);
+  const hasBrandPresence =
+    Boolean(org?.slogan) ||
+    Boolean(org?.heroMediaUrl) ||
+    Boolean(org?.whatsappHref) ||
+    Boolean(org?.instagramHref);
 
   return [
     {
       key: "logo",
-      label: "Adicionar logo e cores",
-      href: "/admin/marca",
-      done: Boolean(org?.logoUrl) || Boolean(flags.logo) || Boolean(flags.branding),
+      label: "Montar o site no canvas (e identidade)",
+      href: "/admin/site",
+      done: hasBrandBasics && (hasBrandPresence || Boolean(flags.branding)),
     },
     {
       key: "unit",
@@ -80,7 +101,7 @@ export async function computeOnboardingChecklist(
       key: "schedule",
       label: "Revisar expediente da equipe",
       href: "/admin/equipe",
-      done: Boolean(flags.schedule),
+      done: staffWithSchedule > 0 || Boolean(flags.schedule),
     },
   ];
 }

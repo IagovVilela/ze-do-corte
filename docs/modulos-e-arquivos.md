@@ -26,10 +26,19 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 
 | Rota | Arquivo | Notas |
 |------|---------|--------|
-| `/` | `src/app/page.tsx` | Institucional, serviços do DB; secção **Equipe** (`#equipe`) se houver barbeiros em destaque |
-| `/agendar` | `src/app/agendar/page.tsx` | Agendamento |
+| `/` | `src/app/page.tsx` | Landing **Barbernegon** (plataforma) |
+| `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic |
+| `/planos` | `src/app/planos/page.tsx` | Planos da plataforma (Starter/Pro) |
+| `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
+| `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
+| `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
+| `/admin/marca` | `src/app/admin/(panel)/marca/page.tsx` | Identidade (logo, slug, redes) |
+| `/admin/site` | `src/app/admin/(panel)/site/page.tsx` | Canvas Canva (`site-canvas-editor.tsx`) |
+| `/admin/whatsapp` | `src/app/admin/(panel)/whatsapp/page.tsx` | Conexão Meta Cloud API + bot + logs |
+| `/admin/pagamentos` | `src/app/admin/(panel)/pagamentos/page.tsx` | Conta Asaas do salão (API key) |
+| `/admin/plano` | `src/app/admin/(panel)/plano/page.tsx` | Assinatura SaaS Barbernegon |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
 | `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio, “Mostrar na home”, **expediente** (`workWeekJson`) para OWNER/ADMIN (`admin-staff-manager.tsx`) |
 | `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
@@ -61,6 +70,15 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Expediente (funcionário) | `src/app/api/auth/work-schedule/route.ts` — `GET`, `PATCH` (só **STAFF**) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
+| Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding) |
+| Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
+| WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
+| WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
+| Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
+| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Starter/Pro |
+| Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
+| PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |
+| Cadastro SaaS | `src/app/api/cadastro/route.ts` — cria org com `siteJson` classic |
 
 ## Biblioteca (`src/lib`)
 
@@ -69,8 +87,16 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `prisma.ts` | Cliente Prisma (adapter pg quando aplicável) |
 | `types.ts` | Tipos compartilhados + schema Zod de criação de agendamento |
 | `utils.ts` | `cn`, dinheiro, datas, cálculo de slots |
-| `constants.ts` | `BARBER_SHOP_ADDRESS`, `BARBER_CONTACT_LINKS` (tel, WhatsApp, Instagram) |
-| `contact-links.ts` | `getWhatsappContactHref`, `getInstagramContactHref` a partir das constantes |
+| `constants.ts` | `BARBER_*` / `HERO_VIDEO_SRC` — **legado piloto + defaults de slots/fuso**; não usar como fallback de branding em `/{slug}` |
+| `contact-links.ts` | Helpers legados a partir das constantes (não usados no renderer do tenant) |
+| `organization.ts` | `getOrganizationBySlug`, `OrganizationPublic` (inclui `siteJson`), slugs reservados |
+| `org-branding.ts` | CSS vars da paleta, slogans neutros, `resolveSiteConfig` |
+| `site-page.ts` | Schema v1 legado (`sections[]`) |
+| `site-canvas.ts` | Schema v2 canvas, migrate v1→v2, templates, `copyDesktopToMobile` |
+| `canvas-page-templates.ts` | Modelos de página completa (14 layouts distintos) |
+| `canvas-presets.ts` | Estilos prontos, seções pré-montadas, tipografia |
+| `canvas-theme-style.ts` | Tokens CSS do tema do canvas (cliente + servidor) |
+| `org-branding.ts` | Resolve canvas + `organizationBrandStyle` (server) |
 | `lordicon-cdn-ids.ts` | IDs públicos `cdn.lordicon.com` por slot; `lordicon-server.ts` usa sem API token |
 | `data.ts` | `getServices` (catálogo da unidade padrão — home), `getServicesForBooking` (todas as unidades ativas para `/agendar`), `getPublicBarbers`, `getBarbersForBooking`, seed assistido se necessário |
 | `barber-card-theme.ts` | Paleta e layout dos cartões da equipe na home (hash estável do `id` do `StaffMember`) |
@@ -85,9 +111,12 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `admin-dashboard.ts` | **`getAdminDashboardSnapshot`** com **`appointmentListWhere`** (filtros URL) + lista paginada; **`unitTelemetry`** (OWNER/ADMIN); resumo com valor **confirmados + concluídos** no período |
 | `admin-list-url.ts` | Parse de `status` / `staff` / `unit` / `q`, `telemetryScope`, `parseTelemetryScope`, `buildAdminPageHref` (URLs `/admin?…`, seguro para cliente) |
 | `admin-appointment-list-where.ts` | `appointmentListWhere` — junta `appointmentScopeWhere` com filtros da lista (só servidor) |
-| `cloudinary-server.ts` | Upload/remoção de avatar no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
+| `cloudinary-server.ts` | Upload/remoção de avatar e **assets de marca** (logo/hero/canvas, incl. vídeo) no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
 | `appointment-slot-conflict.ts` | Regras de sobreposição de horário (agendamento geral vs. por profissional); `excludeAppointmentId` na remarcação |
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos) — `POST /api/appointments` e gestão pública |
+| `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
+| `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, outbound, cron de lembretes |
+| `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` | Gateway Asaas, billing SaaS, PIX/clube, gates de plano |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |
 | `notify-barber-booking.ts` | Envio de e-mail via Resend ao barbeiro atribuído (`RESEND_*`) |
 | `work-week.ts` | Expediente semanal do barbeiro (`workWeekJson`), interseção com horário da loja |
@@ -96,21 +125,27 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 
 | Componente | Pasta |
 |------------|-------|
+| Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
+| Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` |
+| Editor de identidade | `brand-editor-form.tsx` |
+| WhatsApp admin | `whatsapp-admin-panel.tsx` |
+| Pagamentos admin | `payments-admin-panel.tsx` |
+| PIX pós-agendar | `appointment-pix-pay.tsx` |
 | Navbar (menu mobile ecrã completo + animações, redes, Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
-| Hero, seções animadas | `hero.tsx`, `hero-studio-panel.tsx` (painel 3D / spotlight), `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx` (cartões da equipe na home) |
+| Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
 | Painel | `admin-panel-nav.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
-| Mapa (contato) | `location-map.tsx` |
+| Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
-| Logo marca | `brand-logo.tsx` + [`public/images/logo.jpeg`](../public/images/logo.jpeg) (favicon + UI; também notificações push em `public/sw.js`) |
+| Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |
 | Ícones de marca (WhatsApp / Instagram) | `src/components/icons/whatsapp-icon.tsx`, `instagram-icon.tsx`, `index.ts` |
 
 ## Prisma
 
 | Arquivo | Função |
 |---------|--------|
-| `prisma/schema.prisma` | `Service`, `Appointment`, `BarbershopUnit`, `StaffMember`, `Session`, `BarbershopSetting`, enums |
+| `prisma/schema.prisma` | `Organization` (+ `siteJson`), `Service`, `Appointment`, `BarbershopUnit`, `StaffMember`, `Session`, `BarbershopSetting`, enums |
 | `prisma/seed.ts` | Serviços + unidade matriz + proprietário inicial + `unitId` em agendamentos sem unidade |
 | `prisma.config.ts` | Configuração Prisma 7 (se presente) |
 

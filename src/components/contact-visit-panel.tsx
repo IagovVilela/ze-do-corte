@@ -5,28 +5,54 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarClock, Phone } from "lucide-react";
 
-import {
-  BARBER_CONTACT_LINKS,
-  BARBER_SLOGAN_PRIMARY,
-  BARBER_SLOGAN_SECONDARY,
-  BARBER_WEEKLY_SCHEDULE,
-} from "@/lib/constants";
-import {
-  getInstagramContactHref,
-  getWhatsappContactHref,
-} from "@/lib/contact-links";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import { LordIconAnimated } from "@/components/lord-icon-animated";
 
-export function ContactVisitPanel() {
+export type ContactScheduleRow = { label: string; range: string };
+
+type ContactVisitPanelProps = {
+  bookHref?: string;
+  sloganPrimary?: string | null;
+  sloganSecondary?: string | null;
+  phoneLabel?: string | null;
+  phoneHref?: string | null;
+  whatsappHref?: string | null;
+  instagramHref?: string | null;
+  instagramLabel?: string | null;
+  schedule?: ContactScheduleRow[] | null;
+};
+
+export function ContactVisitPanel({
+  bookHref = "/agendar",
+  sloganPrimary,
+  sloganSecondary,
+  phoneLabel,
+  phoneHref,
+  whatsappHref,
+  instagramHref,
+  instagramLabel,
+  schedule,
+}: ContactVisitPanelProps = {}) {
   const reduceMotion = useReducedMotion();
   const [ctaHover, setCtaHover] = useState(false);
-  const { telHref, telLabel, instagramUser } = BARBER_CONTACT_LINKS;
+  const telHref = phoneHref?.trim() || null;
+  const telLabel = phoneLabel?.trim() || null;
   const showTel = Boolean(telHref && telLabel);
-  const waHref = getWhatsappContactHref();
-  const igHref = getInstagramContactHref();
+  const waHref = whatsappHref?.trim() || null;
+  const igHref = instagramHref?.trim() || null;
   const showWa = Boolean(waHref);
   const showIg = Boolean(igHref);
+  const rows = schedule?.length
+    ? schedule
+    : [
+        { label: "Seg–Sex", range: "Consulte" },
+        { label: "Sábado", range: "Consulte" },
+        { label: "Domingo", range: "Consulte" },
+      ];
+  const quote = sloganPrimary?.trim() || "Horários e visita";
+  const support =
+    sloganSecondary?.trim() ||
+    "Escolha o melhor horário no site para o seu atendimento.";
 
   return (
     <motion.article
@@ -47,15 +73,15 @@ export function ContactVisitPanel() {
           <div>
             <h3 className="text-xl font-semibold text-zinc-100">Horário & visita</h3>
             <p className="mt-1 text-sm leading-relaxed text-zinc-400">
-              Reserve com antecedência e chegue no horário — assim mantemos o fluxo tranquilo para
-              todos.
+              Reserve com antecedência e chegue no horário — assim mantemos o fluxo
+              tranquilo para todos.
             </p>
           </div>
         </div>
       </div>
 
       <ul className="divide-y divide-white/[0.06] px-6">
-        {BARBER_WEEKLY_SCHEDULE.map((row) => (
+        {rows.map((row) => (
           <li
             key={row.label}
             className="flex items-baseline justify-between gap-4 py-3.5 text-sm first:pt-4"
@@ -77,19 +103,17 @@ export function ContactVisitPanel() {
       <div className="relative flex flex-1 flex-col justify-end px-6 pb-2 pt-4">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(520px_200px_at_70%_80%,rgba(250,204,21,0.12),transparent_70%),radial-gradient(380px_180px_at_20%_100%,rgba(59,130,246,0.1),transparent_65%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(520px_200px_at_70%_80%,color-mix(in_srgb,var(--brand,#c4a574)_18%,transparent),transparent_70%)]"
         />
         <blockquote className="relative z-[1] font-display text-xl font-medium leading-snug tracking-tight text-zinc-100 md:text-2xl">
-          {BARBER_SLOGAN_PRIMARY}
+          {quote}
         </blockquote>
-        <p className="relative z-[1] mt-3 max-w-md text-sm text-zinc-500">
-          {BARBER_SLOGAN_SECONDARY} Escolha o melhor horário no site para o seu corte ou barba.
-        </p>
+        <p className="relative z-[1] mt-3 max-w-md text-sm text-zinc-500">{support}</p>
       </div>
 
       <div className="space-y-4 p-6 pt-2">
         <Link
-          href="/agendar"
+          href={bookHref}
           onMouseEnter={() => setCtaHover(true)}
           onMouseLeave={() => setCtaHover(false)}
           onFocus={() => setCtaHover(true)}
@@ -112,7 +136,7 @@ export function ContactVisitPanel() {
           <div className="flex flex-wrap gap-2">
             {showTel ? (
               <a
-                href={telHref}
+                href={telHref!}
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
               >
                 <LordIconAnimated
@@ -144,7 +168,9 @@ export function ContactVisitPanel() {
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
               >
                 <InstagramIcon className="h-[18px] w-[18px]" aria-hidden />
-                {instagramUser ? `@${instagramUser.replace(/^@/, "")}` : "Instagram"}
+                {instagramLabel?.replace(/^@/, "")
+                  ? `@${instagramLabel.replace(/^@/, "")}`
+                  : "Instagram"}
               </a>
             ) : null}
           </div>

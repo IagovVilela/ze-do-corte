@@ -54,7 +54,7 @@ export default async function TenantBookingPage({ params }: Props) {
         whatsappHref={org.whatsappHref}
         instagramHref={org.instagramHref}
       />
-      <main className="flex-1 overflow-x-clip pb-16">
+      <main className="flex-1 overflow-x-clip pt-20 pb-16 sm:pt-24">
         <section className="container-max min-w-0 py-10 md:py-14">
           <div className="relative mb-10 max-w-3xl">
             <div

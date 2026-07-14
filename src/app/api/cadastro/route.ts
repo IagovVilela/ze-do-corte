@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
@@ -7,6 +8,7 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
 import { createDbSession } from "@/lib/session-cookie";
 import { isReservedSlug, slugifyOrgName } from "@/lib/organization";
+import { getCanvasTemplate } from "@/lib/site-canvas";
 import { staffEmailSchema } from "@/lib/staff-email";
 
 export const dynamic = "force-dynamic";
@@ -98,6 +100,10 @@ export async function POST(request: Request) {
           sloganSecondary: "Sua barbearia, sua cara.",
           primaryColor: "#c4a574",
           onboardingJson,
+          siteJson: getCanvasTemplate(
+            "classic",
+            parsed.data.shopName,
+          ) as Prisma.InputJsonValue,
         },
       });
 
@@ -135,8 +141,21 @@ export async function POST(request: Request) {
     return res;
   } catch (error) {
     console.error("POST /api/cadastro", error);
+    const prismaCode =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: string }).code)
+        : "";
+    if (prismaCode === "P2002") {
+      return NextResponse.json(
+        { message: "Este e-mail ou endereço de site já está em uso." },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
-      { message: "Não foi possível criar sua conta. Tente outro slug ou e-mail." },
+      {
+        message:
+          "Não foi possível criar sua conta. Confira os dados e tente novamente. Se o erro continuar, o banco pode estar desatualizado (migrações).",
+      },
       { status: 500 },
     );
   }

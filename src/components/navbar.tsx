@@ -7,6 +7,7 @@ export type NavbarBrandProps = {
   bookHref?: string;
   whatsappHref?: string | null;
   instagramHref?: string | null;
+  phoneLabel?: string | null;
 };
 
 export function Navbar(props: NavbarBrandProps = {}) {
@@ -18,6 +19,7 @@ export function Navbar(props: NavbarBrandProps = {}) {
       bookHref={props.bookHref}
       whatsappHref={props.whatsappHref}
       instagramHref={props.instagramHref}
+      phoneLabel={props.phoneLabel}
       trailing={<NavbarPainelTrailing />}
     />
   );

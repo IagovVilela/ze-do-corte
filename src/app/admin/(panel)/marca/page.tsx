@@ -16,8 +16,8 @@ export default async function AdminMarcaPage() {
     <div className="space-y-8">
       <SectionTitle
         eyebrow="Marca"
-        title="Identidade do seu site"
-        description="Logo, cores, slogans e contatos — o que o cliente vê em /sua-barbearia."
+        title="Identidade"
+        description="Nome, slug, logo, cores e redes. O layout visual da página pública se monta no canvas em Site."
       />
       <BrandEditorForm />
     </div>

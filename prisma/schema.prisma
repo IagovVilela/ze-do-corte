@@ -40,6 +40,20 @@ enum ClientSubscriptionStatus {
   PAST_DUE
 }
 
+/// Tier comercial Barbernegon (após trial ou após upgrade pago).
+enum OrganizationPlanTier {
+  TRIAL_FULL
+  STARTER
+  PRO
+}
+
+enum AppointmentPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+}
+
 /// Tenant Barbernegon — uma organização = uma marca / dono.
 model Organization {
   id             String                 @id @default(cuid())
@@ -47,7 +61,15 @@ model Organization {
   /// Slug público: barbernegon.com/[slug]
   slug           String                 @unique
   planStatus     OrganizationPlanStatus @default(TRIAL)
+  planTier       OrganizationPlanTier   @default(TRIAL_FULL)
   trialEndsAt    DateTime?
+  /// Billing SaaS (conta Asaas da plataforma)
+  asaasCustomerId     String?
+  asaasSubscriptionId String?
+  /// Conta Asaas do salão (recebe PIX/clube dos clientes)
+  asaasApiKeyEnc      String?           @db.Text
+  asaasEnabled        Boolean           @default(false)
+  asaasAccountEmail   String?
   /// Branding white-label
   logoUrl        String?
   primaryColor   String?                @db.VarChar(16)
@@ -59,8 +81,18 @@ model Organization {
   whatsappHref   String?
   phoneLabel     String?
   timezone       String                 @default("America/Sao_Paulo")
+  /// WhatsApp Cloud API (Meta) — credenciais por tenant
+  whatsappPhoneNumberId String?         @unique
+  whatsappWabaId        String?
+  /// Access token criptografado (AES) — nunca em texto puro nas APIs públicas
+  whatsappAccessTokenEnc String?        @db.Text
+  whatsappDisplayPhone  String?
+  whatsappBotEnabled    Boolean         @default(false)
+  whatsappConnectedAt   DateTime?
   /// Checklist de onboarding (JSON booleans).
   onboardingJson Json?
+  /// Configuração do site institucional (tema + secções/blocos). Ver `src/lib/site-page.ts`.
+  siteJson       Json?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
@@ -69,8 +101,12 @@ model Organization {
   settings           BarbershopSetting[]
   subscriptionPlans  SubscriptionPlan[]
   clientSubscriptions ClientSubscription[]
+  whatsappSessions   WhatsAppSession[]
+  whatsappOutboundLogs WhatsAppOutboundLog[]
+  paymentEvents      PaymentEvent[]
 
   @@index([planStatus])
+  @@index([asaasSubscriptionId])
 }
 
 model BarbershopUnit {
@@ -218,10 +254,16 @@ model Appointment {
   paymentMethod     String?           @db.VarChar(32)
   /// Valor cobrado no balcão (opcional; default = preço do serviço).
   amountPaid        Decimal?          @db.Decimal(10, 2)
+  paymentStatus     AppointmentPaymentStatus @default(UNPAID)
+  asaasPaymentId    String?
   clientManageToken String?           @unique @db.VarChar(36)
   /// Se o atendimento usou crédito do clube de assinaturas.
   usedSubscriptionId String?
   usedSubscription   ClientSubscription? @relation(fields: [usedSubscriptionId], references: [id], onDelete: SetNull)
+  /// Origem da reserva: site | whatsapp | admin (texto livre curto).
+  bookingSource     String?           @db.VarChar(32)
+  /// Lembrete WhatsApp já enviado (evita duplicar no cron).
+  whatsappReminderSentAt DateTime?
 
   @@index([startsAt])
   @@index([status])
@@ -230,6 +272,10 @@ model Appointment {
   @@index([staffMemberId])
   @@index([paidAt])
   @@index([usedSubscriptionId])
+  @@index([clientPhone])
+  @@index([whatsappReminderSentAt, startsAt])
+  @@index([asaasPaymentId])
+  @@index([paymentStatus])
 }
 
 /// Plano do clube (por organização).
@@ -282,6 +328,9 @@ model ClientSubscription {
   cancelledAt      DateTime?
   cancelReason     String?                   @db.VarChar(240)
   notes            String?
+  /// Cobrança recorrente na conta Asaas do salão
+  asaasCustomerId      String?
+  asaasSubscriptionId  String?
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
   appointments     Appointment[]
@@ -290,4 +339,67 @@ model ClientSubscription {
   @@index([planId])
   @@index([clientPhone])
   @@index([status])
+  @@index([asaasSubscriptionId])
+}
+
+/// Eventos Asaas processados (idempotência do webhook).
+model PaymentEvent {
+  id               String        @id @default(cuid())
+  /// ID único do evento Asaas (quando existir) ou hash sintético.
+  asaasEventId     String        @unique
+  event            String        @db.VarChar(80)
+  paymentId        String?
+  subscriptionId   String?
+  externalReference String?      @db.VarChar(160)
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  payloadJson      Json?
+  processedAt      DateTime      @default(now())
+
+  @@index([paymentId])
+  @@index([subscriptionId])
+  @@index([organizationId])
+  @@index([processedAt])
+}
+
+/// Sessão conversacional do bot WhatsApp (por org + telefone do cliente).
+model WhatsAppSession {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Dígitos E.164 sem +: ex. 5511999999999
+  waUserPhone    String
+  state          String       @default("idle") @db.VarChar(40)
+  contextJson    Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, waUserPhone])
+  @@index([organizationId])
+  @@index([updatedAt])
+}
+
+enum WhatsAppOutboundKind {
+  CONFIRMATION
+  REMINDER
+  CANCELLATION
+  MANUAL
+  BOT_REPLY
+}
+
+/// Log de mensagens enviadas via Cloud API (auditoria / debug).
+model WhatsAppOutboundLog {
+  id             String               @id @default(cuid())
+  organizationId String
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  appointmentId  String?
+  waUserPhone    String
+  kind           WhatsAppOutboundKind
+  metaMessageId  String?
+  status         String               @default("sent") @db.VarChar(32)
+  errorMessage   String?              @db.Text
+  createdAt      DateTime             @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([appointmentId])
 }

@@ -1,22 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { AnimatedSection } from "@/components/animated-section";
-import { HomeBarbersGrid } from "@/components/home-barbers-grid";
-import { HomeContactGrid } from "@/components/home-contact-grid";
-import { HomeDifferentials } from "@/components/home-differentials";
-import { HomeServicesGrid } from "@/components/home-services-grid";
-import { Hero } from "@/components/hero";
-import { Navbar } from "@/components/navbar";
-import { SectionTitle } from "@/components/section-title";
-import { SiteFooter } from "@/components/site-footer";
+import { TenantCanvasRenderer } from "@/components/tenant-canvas-renderer";
 import {
   getPublicBarbers,
   getPublicBarbershopUnits,
   getServices,
 } from "@/lib/data";
 import { getOrganizationBySlug, isReservedSlug } from "@/lib/organization";
-import { orgDisplaySlogan } from "@/lib/org-branding";
+import { orgDisplaySlogan, resolveSiteCanvas } from "@/lib/org-branding";
 
 export const dynamic = "force-dynamic";
 
@@ -44,77 +36,18 @@ export default async function TenantHomePage({ params }: Props) {
     getPublicBarbers(org.id),
     getPublicBarbershopUnits(org.id),
   ]);
+
+  const canvas = resolveSiteCanvas(org);
   const slogans = orgDisplaySlogan(org);
-  const homeHref = `/${org.slug}`;
-  const bookHref = `/${org.slug}/agendar`;
 
   return (
-    <div className="relative overflow-hidden">
-      <Navbar
-        brandName={org.name}
-        logoUrl={org.logoUrl}
-        homeHref={homeHref}
-        bookHref={bookHref}
-        whatsappHref={org.whatsappHref}
-        instagramHref={org.instagramHref}
-      />
-      <main className="pb-24">
-        <Hero
-          brandName={org.name}
-          slogan={slogans.primary}
-          bookHref={bookHref}
-          heroMediaUrl={org.heroMediaUrl}
-          supportingText={slogans.secondary}
-        />
-
-        <AnimatedSection id="servicos" className="container-max py-20">
-          <SectionTitle
-            eyebrow="Serviços"
-            title="Pacotes e experiências sob medida"
-            description="Escolha o que faz sentido para seu estilo."
-          />
-          <HomeServicesGrid services={services} />
-        </AnimatedSection>
-
-        {barbers.length > 0 ? (
-          <AnimatedSection id="equipe" className="container-max py-20">
-            <SectionTitle
-              eyebrow="Equipe"
-              title="Quem cuida do seu estilo"
-              description="Profissionais da casa com identidade própria."
-            />
-            <HomeBarbersGrid barbers={barbers} />
-          </AnimatedSection>
-        ) : null}
-
-        <AnimatedSection id="sobre" className="container-max py-16">
-          <SectionTitle
-            eyebrow="Sobre"
-            title={org.aboutText ? org.name : "Mais do que um corte"}
-            description={
-              org.aboutText?.trim() ||
-              "Design, técnica e atendimento em alto padrão."
-            }
-          />
-          {!org.aboutText ? <HomeDifferentials /> : null}
-        </AnimatedSection>
-
-        <AnimatedSection id="contato" className="container-max py-16">
-          <SectionTitle
-            eyebrow="Contato"
-            title={`Venha conhecer a ${org.name}`}
-            description={slogans.secondary}
-          />
-          <HomeContactGrid units={units} />
-        </AnimatedSection>
-      </main>
-      <SiteFooter
-        brandName={org.name}
-        pitch={slogans.secondary}
-        logoUrl={org.logoUrl}
-        whatsappHref={org.whatsappHref}
-        instagramHref={org.instagramHref}
-      />
-    </div>
+    <TenantCanvasRenderer
+      org={org}
+      canvas={canvas}
+      services={services}
+      barbers={barbers}
+      units={units}
+      slogans={slogans}
+    />
   );
 }

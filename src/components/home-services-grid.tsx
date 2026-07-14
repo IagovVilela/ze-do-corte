@@ -10,9 +10,16 @@ import type { ServiceSummary } from "@/lib/types";
 
 type Props = {
   services: ServiceSummary[];
+  gridCols?: 1 | 2 | 3;
+  /** Cartões seguem a paleta do canvas (Principal / Texto / Superfície). */
+  themed?: boolean;
 };
 
-export function HomeServicesGrid({ services }: Props) {
+export function HomeServicesGrid({
+  services,
+  gridCols = 3,
+  themed = false,
+}: Props) {
   if (services.length === 0) {
     return (
       <motion.div
@@ -27,10 +34,17 @@ export function HomeServicesGrid({ services }: Props) {
     );
   }
 
+  const cols =
+    gridCols === 1
+      ? "mt-10 grid gap-6"
+      : gridCols === 2
+        ? "mt-10 grid gap-6 md:grid-cols-2"
+        : "mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3";
+
   return (
-    <StaggerReveal className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3" stagger={0.11}>
+    <StaggerReveal className={cols} stagger={0.11}>
       {services.map((service) => (
-        <ServiceCard key={service.id} service={service} />
+        <ServiceCard key={service.id} service={service} themed={themed} />
       ))}
     </StaggerReveal>
   );

@@ -1,21 +1,8 @@
 /**
- * Corre uma vez por instância Node ao iniciar o servidor Next.
- * Em produção, reforça a criação do OWNER a partir de `SEED_OWNER_*` (idempotente),
- * para cenários em que o comando de arranque não executa `scripts/ensure-owner.ts`.
+ * Em produção o OWNER já é criado por `npm run start:prod` → `ensure-owner.ts`.
+ * O import dinâmico de `./instrumentation.node` quebrava no bundle Docker
+ * (ERR_MODULE_NOT_FOUND) e só gerava ruído/risco no arranque.
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") {
-    return;
-  }
-  if (process.env.NODE_ENV !== "production") {
-    return;
-  }
-
-  try {
-    const { prisma } = await import("@/lib/prisma");
-    const { ensureOwnerWithPrisma } = await import("@/lib/ensure-owner-with-prisma");
-    await ensureOwnerWithPrisma(prisma);
-  } catch (e) {
-    console.error("[instrumentation/ensure-owner]", e);
-  }
+  // intencionalmente vazio — auth e seed no start script
 }

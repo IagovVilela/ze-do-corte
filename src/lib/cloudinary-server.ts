@@ -23,6 +23,7 @@ export function isCloudinaryConfigured(): boolean {
 }
 
 const PROFILE_FOLDER = "ze-do-corte/profiles";
+const BRAND_FOLDER = "barbernegon/org-brand";
 
 export async function uploadProfileImageBuffer(
   buffer: Buffer,
@@ -41,6 +42,53 @@ export async function uploadProfileImageBuffer(
       { width: 512, height: 512, crop: "fill", gravity: "face" },
       { quality: "auto", fetch_format: "auto" },
     ],
+    resource_type: "image",
+  });
+  return { secureUrl: result.secure_url, publicId: result.public_id };
+}
+
+/** Logo, hero ou mídia solta do canvas do site (imagem ou vídeo). */
+export async function uploadBrandAssetBuffer(
+  buffer: Buffer,
+  mimeType: string,
+  organizationId: string,
+  kind: "logo" | "hero" | "canvas",
+): Promise<{ secureUrl: string; publicId: string }> {
+  ensureConfigured();
+  const isVideo = mimeType.startsWith("video/");
+  const resourceType = isVideo ? ("video" as const) : ("image" as const);
+  const dataUri = `data:${mimeType};base64,${buffer.toString("base64")}`;
+
+  if (isVideo) {
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: `${BRAND_FOLDER}/${organizationId}`,
+      public_id: `${kind}_${Date.now()}`,
+      overwrite: false,
+      resource_type: resourceType,
+    });
+    return { secureUrl: result.secure_url, publicId: result.public_id };
+  }
+
+  const transformation =
+    kind === "logo"
+      ? [
+          { width: 512, height: 512, crop: "limit" },
+          { quality: "auto", fetch_format: "auto" },
+        ]
+      : kind === "hero"
+        ? [
+            { width: 1920, height: 1080, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" },
+          ]
+        : [
+            { width: 2400, height: 2400, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" },
+          ];
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: `${BRAND_FOLDER}/${organizationId}`,
+    public_id: `${kind}_${Date.now()}`,
+    overwrite: false,
+    transformation,
     resource_type: "image",
   });
   return { secureUrl: result.secure_url, publicId: result.public_id };

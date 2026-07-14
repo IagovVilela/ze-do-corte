@@ -22,24 +22,23 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-brand-50: #fefce8;
-  --color-brand-100: #fef9c3;
-  --color-brand-200: #fef08a;
-  --color-brand-300: #fde047;
-  --color-brand-400: #facc15;
-  --color-brand-500: #eab308;
-  --color-brand-600: #ca8a04;
-  --color-brand-700: #a16207;
-  --color-brand-900: #713f12;
-  --color-brand-950: #090a0d;
+  /* Tokens sobrescritos em runtime pelo tema do canvas (`canvasThemeStyle`). */
+  --color-brand-50: var(--brand-50, #fefce8);
+  --color-brand-100: var(--brand-100, #fef9c3);
+  --color-brand-200: var(--brand-200, #fef08a);
+  --color-brand-300: var(--brand-300, #fde047);
+  --color-brand-400: var(--brand-400, #facc15);
+  --color-brand-500: var(--brand-500, #eab308);
+  --color-brand-600: var(--brand-600, #ca8a04);
+  --color-brand-700: var(--brand-700, #a16207);
+  --color-brand-900: var(--brand-900, #713f12);
+  --color-brand-950: var(--brand-950, #090a0d);
 
-  /* Fundos com tom dourado visível — substitui bg-brand-500/opacity que
-     ficava "marrom" em telas mobile com gamut sRGB reduzido. */
-  --color-brand-surface-5: #18150a;
-  --color-brand-surface-10: #252010;
-  --color-brand-surface-15: #332c12;
-  --color-brand-surface-20: #413814;
-  --color-brand-surface-25: #4f4416;
+  --color-brand-surface-5: var(--brand-surface-5, #18150a);
+  --color-brand-surface-10: var(--brand-surface-10, #252010);
+  --color-brand-surface-15: var(--brand-surface-15, #332c12);
+  --color-brand-surface-20: var(--brand-surface-20, #413814);
+  --color-brand-surface-25: var(--brand-surface-25, #4f4416);
 }
 
 * {
@@ -127,6 +126,14 @@ body {
   font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Landing: cursor custom (desktop) */
+@media (pointer: fine) {
+  html.ln-cursor-none,
+  html.ln-cursor-none * {
+    cursor: none !important;
+  }
+}
+
 /* Checkboxes nativos — estilo único (marca âmbar, cantos arredondados) */
 input[type="checkbox"] {
   appearance: none;
@@ -198,5 +205,13 @@ input[type="checkbox"]:indeterminate {
 @media (min-width: 768px) {
   .container-max {
     padding-inline: 2rem;
+  }
+}
+
+/* Landing Barbernegon v2 — cursor custom (desktop só) */
+@media (pointer: fine) {
+  html.ln-cursor-none,
+  html.ln-cursor-none * {
+    cursor: none !important;
   }
 }

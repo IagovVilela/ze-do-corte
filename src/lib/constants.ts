@@ -1,17 +1,24 @@
-/** Vídeo institucional do hero (arquivo em `public/images/`). */
+/**
+ * Constantes `BARBER_*` / `HERO_VIDEO_SRC` — legado do piloto Zé do Corte e defaults de
+ * horário/fuso do motor de slots. **Não** usar como fallback silencioso de branding em
+ * rotas `/{slug}` (site do tenant): identity, redes, vídeo e textos vêm de `Organization`
+ * + `siteJson`.
+ */
+
+/** Vídeo do piloto (seed/legado). Sites multi-tenant usam `Organization.heroMediaUrl`. */
 export const HERO_VIDEO_SRC = "/images/videoPrincipal.mp4";
 
-/** Slogans oficiais da marca (usar no site e materiais). */
+/** Slogans do piloto (seed/legado) — não alimentar UI de tenant. */
 export const BARBER_SLOGAN_PRIMARY = "Estilo e confiança";
 export const BARBER_SLOGAN_SECONDARY = "Experiências únicas para homens únicos";
 
-/** Endereço físico da barbearia (contato e mapas). */
+/** Endereço físico do piloto (seed/legado). */
 export const BARBER_SHOP_ADDRESS =
   "R. Laurent Martins, 209 - Jardim Esplanada, São José dos Campos - SP, 12242-431, Brasil";
 
 /**
- * Fuso IANA dos gráficos do painel (`/admin`): buckets por dia/semana/hora seguem o calendário
- * local da barbearia, não o do servidor (ex.: UTC na Railway).
+ * Fuso IANA padrão do motor de agenda e dos gráficos do painel quando a org não define outro.
+ * Buckets por dia/semana/hora seguem o calendário local, não o do servidor (ex.: UTC na Railway).
  */
 export const BARBER_TIMEZONE = "America/Sao_Paulo";
 
