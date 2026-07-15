@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-15
 
+- **Ops — gráficos na visão geral**: `/plataforma` com taxas (% marketplace/ativos/trial/canceladas), abas **7d/30d**, áreas de cadastros e agendamentos, pizzas de mix de plano e tier (`getPlatformOverview` + Recharts).
 - **Cancelar plano SaaS (`/admin/plano`)**: dono cancela a assinatura Barbernegon — trial/pagamento pendente vira Cancelado na hora; plano Ativo para cobranças e segue até o fim do período (`planCancelAt`), com opção de desfazer. APIs `POST /api/platform/billing/cancel` e `/undo-cancel`. Migração `20260716010000_organization_plan_cancel_at`.
 - **Remarcação no salão + avisos bilaterais**: painel `/admin` pode **Remarcar** (data/hora) além de cancelar/concluir; cliente e profissional são avisados (WhatsApp + e-mail quando houver contato; push/e-mail ao barbeiro). Cliente remarcar/cancelar em `/minha-reserva` ou WhatsApp também avisa o salão (`appointment-change-notify.ts`).
 - **Ops — entrada secreta**: `/plataforma/login` só existe com `?k=PLATFORM_OPS_GATE` (senão 404); API de login exige a mesma chave; sem sessão em `/plataforma` → 404 (não revela URL); link Ops removido do admin do salão.

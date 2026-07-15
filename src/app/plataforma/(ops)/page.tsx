@@ -1,16 +1,30 @@
 import Link from "next/link";
 
+import { DashboardVolumeArea } from "@/components/dashboard-volume-area";
+import { PlatformMixPie } from "@/components/plataforma/platform-mix-pie";
+import { PlatformOpsPeriodTabs } from "@/components/plataforma/platform-ops-period-tabs";
 import {
   planStatusLabel,
   planTierLabel,
 } from "@/lib/org-entitlements";
-import { getPlatformOverview } from "@/lib/platform-ops";
+import {
+  getPlatformOverview,
+  parsePlatformChartRange,
+} from "@/lib/platform-ops";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlataformaHomePage() {
-  const overview = await getPlatformOverview();
+type Props = {
+  searchParams: Promise<{ range?: string }>;
+};
+
+export default async function PlataformaHomePage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const chartRange = parsePlatformChartRange(sp.range);
+  const overview = await getPlatformOverview(chartRange);
   const o = overview.organizations;
+  const r = overview.rates;
+  const charts = overview.charts;
 
   return (
     <div className="space-y-8">
@@ -22,8 +36,7 @@ export default async function PlataformaHomePage() {
           Visão geral
         </h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Overview cross-tenant da Barbernegon — barbearias, agenda e
-          marketplace.
+          Indicadores, gráficos e saúde cross-tenant da Barbernegon.
         </p>
       </div>
 
@@ -32,6 +45,26 @@ export default async function PlataformaHomePage() {
         <StatCard label="Em trial" value={o.trial} />
         <StatCard label="Ativas" value={o.active} />
         <StatCard label="No marketplace" value={o.marketplaceListed} />
+        <StatCard
+          label="% no marketplace"
+          value={formatPct(r.marketplacePct)}
+          hint="listadas / total"
+        />
+        <StatCard
+          label="% ativas"
+          value={formatPct(r.activePct)}
+          hint="plano Active"
+        />
+        <StatCard
+          label="% em trial"
+          value={formatPct(r.trialPct)}
+          hint="ainda em teste"
+        />
+        <StatCard
+          label="% canceladas"
+          value={formatPct(r.cancelledPct)}
+          hint="plano Cancelled"
+        />
         <StatCard label="Trial vence em 7d" value={o.trialsEnding7d} />
         <StatCard label="Trial vence em 14d" value={o.trialsEnding14d} />
         <StatCard label="Pagamento pendente" value={o.pastDue} />
@@ -56,6 +89,46 @@ export default async function PlataformaHomePage() {
               ? `média ${overview.reviews.avgRating}`
               : undefined
           }
+        />
+      </div>
+
+      <PlatformOpsPeriodTabs current={chartRange} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DashboardVolumeArea
+          data={charts.organizationsSeries}
+          title="Cadastros de barbearias"
+          subtitle={charts.periodLabel}
+          unitSingular="cadastro"
+          unitPlural="cadastros"
+          stroke="#60a5fa"
+          gradientId="opsOrgsArea"
+        />
+        <DashboardVolumeArea
+          data={charts.appointmentsSeries}
+          title="Agendamentos"
+          subtitle={`${charts.periodLabel} · confirmados/concluídos`}
+          unitSingular="agendamento"
+          unitPlural="agendamentos"
+          stroke="#34d399"
+          gradientId="opsApptsArea"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PlatformMixPie
+          data={charts.planStatusMix}
+          title="Mix de planos"
+          subtitle="Distribuição atual por status"
+          centerLabel="barbearias"
+          emptyLabel="Nenhuma barbearia cadastrada."
+        />
+        <PlatformMixPie
+          data={charts.planTierMix}
+          title="Mix de tiers"
+          subtitle="Trial / Starter / Pro"
+          centerLabel="barbearias"
+          emptyLabel="Nenhuma barbearia cadastrada."
         />
       </div>
 
@@ -143,13 +216,18 @@ export default async function PlataformaHomePage() {
   );
 }
 
+function formatPct(value: number | null): string {
+  if (value == null) return "—";
+  return `${value}%`;
+}
+
 function StatCard({
   label,
   value,
   hint,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   hint?: string;
 }) {
   return (

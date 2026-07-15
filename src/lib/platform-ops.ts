@@ -7,7 +7,15 @@ import type {
   Prisma,
 } from "@prisma/client";
 
+import {
+  buildVolumeBucketKeys,
+  getDashboardPeriodMeta,
+  shopCalendarDayKey,
+  type DashboardPeriodMeta,
+} from "@/lib/dashboard-period";
+import { planStatusLabel, planTierLabel } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
+import type { DashboardPoint, DashboardStatusSlice } from "@/lib/types";
 
 function startOfLocalDay(d = new Date()): Date {
   const x = new Date(d);
@@ -15,7 +23,84 @@ function startOfLocalDay(d = new Date()): Date {
   return x;
 }
 
-export async function getPlatformOverview() {
+export type PlatformChartRange = "7d" | "30d";
+
+export function parsePlatformChartRange(
+  raw: string | undefined,
+): PlatformChartRange {
+  return raw === "7d" ? "7d" : "30d";
+}
+
+function platformChartPeriodMeta(
+  range: PlatformChartRange,
+  now = new Date(),
+): DashboardPeriodMeta {
+  if (range === "7d") {
+    return getDashboardPeriodMeta("7d", now);
+  }
+
+  const dayStart = startOfLocalDay(now);
+  const to = new Date(dayStart);
+  to.setDate(to.getDate() + 1);
+  to.setMilliseconds(to.getMilliseconds() - 1);
+
+  const from = new Date(dayStart);
+  from.setDate(from.getDate() - 29);
+
+  return {
+    range: "7d",
+    from,
+    to,
+    granularity: "day",
+    periodLabel: "Últimos 30 dias",
+  };
+}
+
+function pct(part: number, total: number): number | null {
+  if (total <= 0) return null;
+  return Math.round((part / total) * 1000) / 10;
+}
+
+function emptyDaySeries(meta: DashboardPeriodMeta): DashboardPoint[] {
+  return buildVolumeBucketKeys(meta).map((b) => ({
+    date: b.key,
+    dateLabel: b.label,
+    count: 0,
+  }));
+}
+
+function fillDaySeries(
+  meta: DashboardPeriodMeta,
+  dates: Date[],
+): DashboardPoint[] {
+  const map = new Map<string, number>();
+  for (const d of dates) {
+    const key = shopCalendarDayKey(d);
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return buildVolumeBucketKeys(meta).map((b) => ({
+    date: b.key,
+    dateLabel: b.label,
+    count: map.get(b.key) ?? 0,
+  }));
+}
+
+const PLAN_STATUS_COLORS: Record<OrganizationPlanStatus, string> = {
+  TRIAL: "#38bdf8",
+  ACTIVE: "#34d399",
+  PAST_DUE: "#fbbf24",
+  CANCELLED: "#fb7185",
+};
+
+const PLAN_TIER_COLORS: Record<string, string> = {
+  TRIAL_FULL: "#93c5fd",
+  STARTER: "#60a5fa",
+  PRO: "#3b82f6",
+};
+
+export async function getPlatformOverview(
+  chartRange: PlatformChartRange = "30d",
+) {
   const dayStart = startOfLocalDay();
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayEnd.getDate() + 1);
@@ -27,6 +112,8 @@ export async function getPlatformOverview() {
   trial7.setDate(trial7.getDate() + 7);
   const trial14 = new Date(dayStart);
   trial14.setDate(trial14.getDate() + 14);
+
+  const chartMeta = platformChartPeriodMeta(chartRange);
 
   const [
     orgTotal,
@@ -40,6 +127,8 @@ export async function getPlatformOverview() {
     trialsEnding14,
     reviewAgg,
     recentOrgs,
+    orgsInPeriod,
+    apptsInPeriod,
   ] = await Promise.all([
     prisma.organization.count(),
     prisma.organization.groupBy({
@@ -97,6 +186,19 @@ export async function getPlatformOverview() {
         createdAt: true,
       },
     }),
+    prisma.organization.findMany({
+      where: {
+        createdAt: { gte: chartMeta.from, lte: chartMeta.to },
+      },
+      select: { createdAt: true },
+    }),
+    prisma.appointment.findMany({
+      where: {
+        startsAt: { gte: chartMeta.from, lte: chartMeta.to },
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+      },
+      select: { startsAt: true },
+    }),
   ]);
 
   const statusMap: Record<string, number> = {};
@@ -108,17 +210,62 @@ export async function getPlatformOverview() {
     tierMap[row.planTier] = row._count._all;
   }
 
+  const trial = statusMap.TRIAL ?? 0;
+  const active = statusMap.ACTIVE ?? 0;
+  const pastDue = statusMap.PAST_DUE ?? 0;
+  const cancelled = statusMap.CANCELLED ?? 0;
+
+  const planStatusMix: DashboardStatusSlice[] = (
+    ["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED"] as OrganizationPlanStatus[]
+  )
+    .map((status) => ({
+      name: planStatusLabel(status),
+      value: statusMap[status] ?? 0,
+      color: PLAN_STATUS_COLORS[status],
+    }))
+    .filter((s) => s.value > 0);
+
+  const planTierMix: DashboardStatusSlice[] = Object.entries(tierMap).map(
+    ([tier, value]) => ({
+      name: planTierLabel(tier as OrganizationPlanTier),
+      value,
+      color: PLAN_TIER_COLORS[tier] ?? "#94a3b8",
+    }),
+  );
+
+  const orgsSeries =
+    orgsInPeriod.length > 0
+      ? fillDaySeries(
+          chartMeta,
+          orgsInPeriod.map((o) => o.createdAt),
+        )
+      : emptyDaySeries(chartMeta);
+
+  const appointmentsSeries =
+    apptsInPeriod.length > 0
+      ? fillDaySeries(
+          chartMeta,
+          apptsInPeriod.map((a) => a.startsAt),
+        )
+      : emptyDaySeries(chartMeta);
+
   return {
     organizations: {
       total: orgTotal,
-      trial: statusMap.TRIAL ?? 0,
-      active: statusMap.ACTIVE ?? 0,
-      pastDue: statusMap.PAST_DUE ?? 0,
-      cancelled: statusMap.CANCELLED ?? 0,
+      trial,
+      active,
+      pastDue,
+      cancelled,
       marketplaceListed: marketplaceOn,
       trialsEnding7d: trialsEnding7,
       trialsEnding14d: trialsEnding14,
       byTier: tierMap,
+    },
+    rates: {
+      marketplacePct: pct(marketplaceOn, orgTotal),
+      activePct: pct(active, orgTotal),
+      cancelledPct: pct(cancelled, orgTotal),
+      trialPct: pct(trial, orgTotal),
     },
     appointments: {
       today: appointmentsToday,
@@ -131,6 +278,14 @@ export async function getPlatformOverview() {
         reviewAgg._avg.rating != null
           ? Math.round(Number(reviewAgg._avg.rating) * 10) / 10
           : null,
+    },
+    charts: {
+      range: chartRange,
+      periodLabel: chartMeta.periodLabel,
+      organizationsSeries: orgsSeries,
+      appointmentsSeries,
+      planStatusMix,
+      planTierMix,
     },
     recentOrganizations: recentOrgs.map((o) => ({
       ...o,

@@ -30,7 +30,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/explorar` | `src/app/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
 | `/explorar/favoritos` | `src/app/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
-| `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview cross-tenant |
+| `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview com KPIs, taxas e gráficos (7d/30d) |
 | `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
 | `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + editar plano |
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
