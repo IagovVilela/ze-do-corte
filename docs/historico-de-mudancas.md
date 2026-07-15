@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-14
 
+- **Canvas — spacer e blocos tipo marca**: espaço aparece listrado com rótulo no editor (invisível no site); biblioteca com aba **Prontos** (faixa sólida, painéis, botões); seções **Faixa de cor** e **Manhã · Tarde · Noite**.
 - **Canvas — artes de fundo**: padrões mais contrastantes + novos (planta, cruzes, malha, verticais, anéis, ondas, faíscas); miniaturas reforçadas; guia do editor some quando há arte ativa.
 - **Canvas — artes de fundo**: no painel de tema (`/admin/site`), seletor **Arte de fundo** (sólido, quadriculado, pontos, diagonais, linhas, brilho, grão, xadrez); a grade fina do editor é só guia e não vai para o site.
 - **Canvas — desfazer/refazer**: botões Voltar/Avançar no editor (`/admin/site`) + atalhos Ctrl+Z / Ctrl+Y (⌘ no Mac); arrastar/redimensionar conta como um passo.

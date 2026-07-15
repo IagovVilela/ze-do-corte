@@ -67,6 +67,8 @@ type Ctx = {
   bookHref: string;
   slogans: { primary: string; secondary: string };
   interactive?: boolean;
+  /** Overlay de edição (espaçadores, etc.) — só no studio. */
+  editorChrome?: boolean;
 };
 
 function resolveHref(href: string | undefined, bookHref: string, homeHref: string) {
@@ -568,13 +570,28 @@ export function CanvasElementView({
     case "spacer":
       return (
         <div
-          className={cn(className)}
+          className={cn(
+            className,
+            ctx.editorChrome &&
+              "flex items-center justify-center border border-dashed border-brand-400/50 bg-brand-500/10",
+          )}
           style={{
             ...style,
-            backgroundColor: p.backgroundColor || "transparent",
+            backgroundColor: ctx.editorChrome
+              ? undefined
+              : p.backgroundColor || "transparent",
+            backgroundImage: ctx.editorChrome
+              ? `repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-brand-500) 18%, transparent) 0 6px, transparent 6px 12px)`
+              : undefined,
           }}
-          aria-hidden
-        />
+          aria-hidden={!ctx.editorChrome}
+        >
+          {ctx.editorChrome ? (
+            <span className="rounded-full bg-zinc-950/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-200">
+              Espaço
+            </span>
+          ) : null}
+        </div>
       );
     default: {
       const _e: never = element.type;

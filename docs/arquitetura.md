@@ -26,7 +26,7 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
 
 - **v2 (canvas)**: arteboards `desktop` / `mobile` + `elements[]` com `frame {x,y,w,h}` absolutos. Contrato em `src/lib/site-canvas.ts`. Editor visual em **`/admin/site`**. Render público: `TenantCanvasRenderer`.
 - Tipos de biblioteca: básicos (texto, botão, badge, divisor, espaço), layout (hero, painel, grid, retângulo), mídia, e blocos de negócio (menu, serviços, equipe, contato, rodapé).
-- Presets: estilos de botão/badge/painel/texto/hero, seções pré-montadas e tipografia — `src/lib/canvas-presets.ts`.
+- Presets: estilos de botão/badge/painel/texto/hero/retângulo (faixas), seções pré-montadas (incl. faixa de cor e Manhã/Tarde/Noite) e tipografia — `src/lib/canvas-presets.ts`. Biblioteca do editor: abas Itens / Seções / Prontos. Espaço (`spacer`) só mostra listras no editor.
 - **Modelos de página** (layouts completos desktop+mobile, estruturas distintas): blank; classic (centro + painéis); studio (70/30 foto); minimal (coluna 640); moderno (split 50/50); editorial (spine magazine); impacto (hero full); noir (sidebar); neon (barras + ticker); brutalista (grade bordada); ocean (faixas maré); boutique (ritual centrado); bauhaus (formas ■●■); rua (contato primeiro) — `src/lib/canvas-page-templates.ts`.
 - Tema do canvas (`theme.primary|secondary|background|surface|text` + `fontDisplay`/`fontBody`) → CSS vars via `canvasThemeStyle` / `organizationBrandStyle`.
 - **v1 (legado)**: `sections[]` ordenadas — convertido automaticamente para v2 no parse (`migrateSitePageToCanvas`).

@@ -523,11 +523,11 @@ export function createLibraryElement(
     case "rect":
       return el({
         ...base,
-        frame: { x: pad, y: atY, w: Math.min(w, 320), h: 160 },
+        frame: { x: pad, y: atY, w: fullW, h: 180 },
         props: {
-          backgroundColor: "#18181b",
-          borderColor: "#3f3f46",
-          borderRadius: 16,
+          backgroundColor: "theme.primary",
+          borderColor: "transparent",
+          borderRadius: 20,
         },
       });
     case "navbar":
@@ -650,7 +650,7 @@ export function createLibraryElement(
     case "spacer":
       return el({
         ...base,
-        frame: { x: pad, y: atY, w: fullW, h: 48 },
+        frame: { x: pad, y: atY, w: fullW, h: 64 },
         props: { backgroundColor: "transparent" },
       });
     default: {

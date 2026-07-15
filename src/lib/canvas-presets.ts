@@ -175,6 +175,8 @@ export const PANEL_STYLE_PRESETS: StylePreset[] = [
       borderRadius: 20,
       padding: 24,
       color: "#fafafa",
+      title: "Título do card",
+      description: "Texto de apoio do bloco.",
     },
   },
   {
@@ -188,6 +190,8 @@ export const PANEL_STYLE_PRESETS: StylePreset[] = [
       borderRadius: 24,
       padding: 28,
       color: "#fafafa",
+      title: "Destaque",
+      description: "Bloco suave sobre o fundo.",
     },
   },
   {
@@ -202,6 +206,8 @@ export const PANEL_STYLE_PRESETS: StylePreset[] = [
       padding: 24,
       color: "#fafafa",
       thickness: 3,
+      title: "Destaque",
+      description: "Com barra na cor principal.",
     },
   },
   {
@@ -212,10 +218,75 @@ export const PANEL_STYLE_PRESETS: StylePreset[] = [
       variant: "flat",
       backgroundColor: "#27272a",
       borderColor: "transparent",
-      borderRadius: 12,
+      borderRadius: 16,
       padding: 20,
       color: "#fafafa",
+      title: "Bloco",
+      description: "Fundo sólido, limpo.",
     },
+  },
+  {
+    id: "daypart",
+    label: "Horário",
+    hint: "Tipo manhã / tarde / noite",
+    props: {
+      variant: "card",
+      backgroundColor: "theme.surface",
+      borderColor: "transparent",
+      borderRadius: 20,
+      padding: 22,
+      color: "theme.text",
+      title: "Manhã",
+      description: "Luz natural e café. Ideal pra fade.",
+    },
+    frame: { w: 400, h: 140 },
+  },
+];
+
+export const RECT_STYLE_PRESETS: StylePreset[] = [
+  {
+    id: "band",
+    label: "Faixa sólida",
+    hint: "Bloco de cor largo (como na imagem)",
+    props: {
+      backgroundColor: "theme.primary",
+      borderColor: "transparent",
+      borderRadius: 0,
+    },
+    frame: { h: 260 },
+  },
+  {
+    id: "rounded-band",
+    label: "Faixa arredondada",
+    hint: "Bloco brand com cantos",
+    props: {
+      backgroundColor: "theme.primary",
+      borderColor: "transparent",
+      borderRadius: 24,
+    },
+    frame: { h: 200 },
+  },
+  {
+    id: "surface-slab",
+    label: "Placa superfície",
+    hint: "Fundo suave para apoio",
+    props: {
+      backgroundColor: "theme.surface",
+      borderColor: "transparent",
+      borderRadius: 20,
+    },
+    frame: { h: 220 },
+  },
+  {
+    id: "card-shape",
+    label: "Retângulo card",
+    hint: "Forma menor com borda",
+    props: {
+      backgroundColor: "theme.surface",
+      borderColor: "#ffffff22",
+      borderRadius: 16,
+    },
+    frame: { w: 360, h: 160 },
   },
 ];
 
@@ -390,7 +461,9 @@ export type PremadeSectionId =
   | "services-block"
   | "social-proof"
   | "intro-stack"
-  | "contact-footer";
+  | "contact-footer"
+  | "color-band"
+  | "dayparts";
 
 export type PremadeSectionDef = {
   id: PremadeSectionId;
@@ -399,6 +472,16 @@ export type PremadeSectionDef = {
 };
 
 export const PREMADE_SECTIONS: PremadeSectionDef[] = [
+  {
+    id: "color-band",
+    label: "Faixa de cor",
+    hint: "Bloco sólido full-width (tipo marca)",
+  },
+  {
+    id: "dayparts",
+    label: "Manhã · Tarde · Noite",
+    hint: "3 cards de período lado a lado",
+  },
   {
     id: "hero-diffs",
     label: "Hero + 3 diferenciais",
@@ -777,6 +860,70 @@ export function createPremadeSection(
       );
       break;
     }
+    case "color-band": {
+      out.push(
+        place(
+          "rect",
+          artboard,
+          boardW,
+          { x: 0, y, w: boardW, h: mobile ? 200 : 280 },
+          {
+            backgroundColor: "theme.primary",
+            borderColor: "transparent",
+            borderRadius: 0,
+          },
+          2,
+          i++,
+        ),
+      );
+      break;
+    }
+    case "dayparts": {
+      const gap = mobile ? 12 : 20;
+      const cardW = mobile
+        ? fullW
+        : Math.floor((fullW - gap * 2) / 3);
+      const cardH = mobile ? 120 : 140;
+      const parts = [
+        {
+          title: "Manhã",
+          description: "Luz natural e café. Ideal pra fade.",
+        },
+        {
+          title: "Tarde",
+          description: "Fluxo contínuo. Encaixe rápido.",
+        },
+        {
+          title: "Noite",
+          description: "Ambiente fechado, acabamento fino.",
+        },
+      ] as const;
+      parts.forEach((part, idx) => {
+        const x = mobile ? pad : pad + idx * (cardW + gap);
+        const cy = mobile ? y + idx * (cardH + gap) : y;
+        out.push(
+          place(
+            "panel",
+            artboard,
+            boardW,
+            { x, y: cy, w: cardW, h: cardH },
+            {
+              title: part.title,
+              description: part.description,
+              variant: "card",
+              backgroundColor: "theme.surface",
+              borderColor: "transparent",
+              borderRadius: 20,
+              padding: 22,
+              color: "theme.text",
+            },
+            10,
+            i++,
+          ),
+        );
+      });
+      break;
+    }
     default: {
       const _e: never = id;
       void _e;
@@ -819,6 +966,8 @@ export function stylePresetsForType(
       return TEXT_STYLE_PRESETS;
     case "hero":
       return HERO_STYLE_PRESETS;
+    case "rect":
+      return RECT_STYLE_PRESETS;
     default:
       return [];
   }
@@ -826,7 +975,7 @@ export function stylePresetsForType(
 
 /** Biblioteca rápida: elementos já com estilo aplicado. */
 export function createStyledLibraryElement(
-  type: "button" | "badge" | "text" | "panel" | "hero",
+  type: "button" | "badge" | "text" | "panel" | "hero" | "rect",
   presetId: string,
   artboard: CanvasArtboardId,
   boardW: number,
@@ -836,5 +985,30 @@ export function createStyledLibraryElement(
   const preset = presets.find((p) => p.id === presetId);
   if (!preset) return null;
   const el = createLibraryElement(type, artboard, boardW, atY);
-  return applyStylePreset(el, preset);
+  const next = applyStylePreset(el, preset);
+  // Faixas full-width: ocupar a largura do artboard.
+  if (type === "rect" && (presetId === "band" || presetId === "rounded-band")) {
+    return {
+      ...next,
+      frame: {
+        ...next.frame,
+        x: 0,
+        w: boardW,
+        h: preset.frame?.h ?? next.frame.h,
+      },
+    };
+  }
+  if (type === "rect" && presetId === "surface-slab") {
+    const pad = artboard === "mobile" ? 16 : 48;
+    return {
+      ...next,
+      frame: {
+        ...next.frame,
+        x: pad,
+        w: boardW - pad * 2,
+        h: preset.frame?.h ?? next.frame.h,
+      },
+    };
+  }
+  return next;
 }

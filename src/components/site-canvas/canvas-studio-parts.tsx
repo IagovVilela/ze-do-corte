@@ -10,7 +10,9 @@ import {
 import { CanvasElementView } from "@/components/tenant-canvas-renderer";
 import {
   BUTTON_STYLE_PRESETS,
+  PANEL_STYLE_PRESETS,
   PREMADE_SECTIONS,
+  RECT_STYLE_PRESETS,
   TYPOGRAPHY_PRESETS,
   applyStylePreset,
   createPremadeSection,
@@ -70,7 +72,11 @@ const LIBRARY_GROUPS: {
       { type: "button", label: "Botão", hint: "CTA / link" },
       { type: "badge", label: "Badge", hint: "Selo ou etiqueta" },
       { type: "divider", label: "Divisor", hint: "Linha separadora" },
-      { type: "spacer", label: "Espaço", hint: "Respiro vertical" },
+      {
+        type: "spacer",
+        label: "Espaço",
+        hint: "Respiro vertical (listrado no editor)",
+      },
     ],
   },
   {
@@ -79,7 +85,11 @@ const LIBRARY_GROUPS: {
       { type: "hero", label: "Hero", hint: "Faixa de abertura com CTA" },
       { type: "panel", label: "Painel", hint: "Card / bloco destacado" },
       { type: "grid", label: "Grid", hint: "Grade de cartões" },
-      { type: "rect", label: "Retângulo", hint: "Forma de fundo" },
+      {
+        type: "rect",
+        label: "Faixa / bloco",
+        hint: "Forma sólida de cor (fundo da marca)",
+      },
     ],
   },
   {
@@ -153,6 +163,7 @@ export function CanvasStage({
     bookHref: `/${org.slug}/agendar`,
     slogans,
     interactive: false,
+    editorChrome: true,
   };
 
   const updateElement = useCallback(
@@ -353,7 +364,7 @@ export function CanvasStage({
   );
 }
 
-type LibraryTab = "elements" | "sections" | "buttons";
+type LibraryTab = "elements" | "sections" | "ready";
 
 export function PageTemplatePicker({
   open,
@@ -471,7 +482,7 @@ export function ElementLibrary({
           [
             ["elements", "Itens"],
             ["sections", "Seções"],
-            ["buttons", "Botões"],
+            ["ready", "Prontos"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -548,70 +559,143 @@ export function ElementLibrary({
           </div>
         ) : null}
 
-        {tab === "buttons" ? (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
-              Tipos de botão
-            </p>
-            <div className="grid gap-1">
-              {BUTTON_STYLE_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  title={preset.hint}
-                  className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40"
-                  onClick={() => {
-                    const el = createStyledLibraryElement(
-                      "button",
-                      preset.id,
-                      artboard,
-                      boardW,
-                      atY,
-                    );
-                    if (el) onAdd(el);
-                  }}
-                >
-                  <span className="block text-sm text-zinc-100">
-                    {preset.label}
-                  </span>
-                  <span className="block text-[10px] text-zinc-500">
-                    {preset.hint}
-                  </span>
-                </button>
-              ))}
+        {tab === "ready" ? (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+                Faixas e blocos
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                Formas sólidas como a faixa azul larga da marca.
+              </p>
+              <div className="grid gap-1">
+                {RECT_STYLE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.hint}
+                    className="rounded-lg border border-brand-500/25 bg-brand-500/5 px-3 py-2 text-left hover:border-brand-500/50 hover:bg-brand-500/15"
+                    onClick={() => {
+                      const el = createStyledLibraryElement(
+                        "rect",
+                        preset.id,
+                        artboard,
+                        boardW,
+                        atY,
+                      );
+                      if (el) onAdd(el);
+                    }}
+                  >
+                    <span className="block text-sm text-zinc-100">
+                      {preset.label}
+                    </span>
+                    <span className="block text-[10px] text-zinc-500">
+                      {preset.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <p className="pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
-              Outros prontos
-            </p>
-            <div className="grid gap-1">
-              {(
-                [
-                  ["badge", "pill-brand", "Badge pílula"],
-                  ["badge", "outline", "Badge contorno"],
-                  ["text", "display", "Texto display"],
-                  ["text", "eyebrow", "Texto eyebrow"],
-                  ["panel", "glass", "Painel vidro"],
-                  ["hero", "cinematic", "Hero cinema"],
-                ] as const
-              ).map(([type, presetId, label]) => (
-                <button
-                  key={`${type}-${presetId}`}
-                  type="button"
-                  className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-sm text-zinc-100 hover:border-brand-500/40"
-                  onClick={() => {
-                    const el = createStyledLibraryElement(
-                      type,
-                      presetId,
-                      artboard,
-                      boardW,
-                      atY,
-                    );
-                    if (el) onAdd(el);
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+                Cards / painéis
+              </p>
+              <div className="grid gap-1">
+                {PANEL_STYLE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.hint}
+                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40"
+                    onClick={() => {
+                      const el = createStyledLibraryElement(
+                        "panel",
+                        preset.id,
+                        artboard,
+                        boardW,
+                        atY,
+                      );
+                      if (el) onAdd(el);
+                    }}
+                  >
+                    <span className="block text-sm text-zinc-100">
+                      {preset.label}
+                    </span>
+                    <span className="block text-[10px] text-zinc-500">
+                      {preset.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+                Tipos de botão
+              </p>
+              <div className="grid gap-1">
+                {BUTTON_STYLE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.hint}
+                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40"
+                    onClick={() => {
+                      const el = createStyledLibraryElement(
+                        "button",
+                        preset.id,
+                        artboard,
+                        boardW,
+                        atY,
+                      );
+                      if (el) onAdd(el);
+                    }}
+                  >
+                    <span className="block text-sm text-zinc-100">
+                      {preset.label}
+                    </span>
+                    <span className="block text-[10px] text-zinc-500">
+                      {preset.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+                Outros prontos
+              </p>
+              <div className="grid gap-1">
+                {(
+                  [
+                    ["badge", "pill-brand", "Badge pílula"],
+                    ["badge", "outline", "Badge contorno"],
+                    ["text", "display", "Texto display"],
+                    ["text", "eyebrow", "Texto eyebrow"],
+                    ["hero", "cinematic", "Hero cinema"],
+                  ] as const
+                ).map(([type, presetId, label]) => (
+                  <button
+                    key={`${type}-${presetId}`}
+                    type="button"
+                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-sm text-zinc-100 hover:border-brand-500/40"
+                    onClick={() => {
+                      const el = createStyledLibraryElement(
+                        type,
+                        presetId,
+                        artboard,
+                        boardW,
+                        atY,
+                      );
+                      if (el) onAdd(el);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
