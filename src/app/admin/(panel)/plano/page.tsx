@@ -1,15 +1,18 @@
 import Link from "next/link";
 
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
+import { PlatformCancelPlanButton } from "@/components/platform-cancel-plan-button";
 import { PlatformUpgradeButton } from "@/components/platform-upgrade-button";
 import { SectionTitle } from "@/components/section-title";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { SAAS_PLANS } from "@/lib/asaas-plans";
 import {
+  isPlanCancelScheduled,
   isTrialActive,
   needsBillingAttention,
   planStatusLabel,
   planTierLabel,
+  settleScheduledPlanCancellation,
 } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 import { formatMoney } from "@/lib/utils";
@@ -22,6 +25,8 @@ export default async function AdminPlanoPage() {
   if (!access) return null;
   if (access.role !== "OWNER") redirect("/admin");
 
+  await settleScheduledPlanCancellation(access.organizationId);
+
   const org = await prisma.organization.findUnique({
     where: { id: access.organizationId },
     select: {
@@ -30,6 +35,7 @@ export default async function AdminPlanoPage() {
       planStatus: true,
       planTier: true,
       trialEndsAt: true,
+      planCancelAt: true,
     },
   });
   if (!org) redirect("/admin");
@@ -43,6 +49,8 @@ export default async function AdminPlanoPage() {
           ),
         )
       : null;
+
+  const cancelScheduled = isPlanCancelScheduled(org);
 
   return (
     <div className="space-y-8">
@@ -66,6 +74,11 @@ export default async function AdminPlanoPage() {
         </p>
         <p className="font-display text-3xl text-white">
           {planStatusLabel(org.planStatus)}
+          {cancelScheduled ? (
+            <span className="ml-2 text-base font-sans font-normal text-amber-200/90">
+              · cancela em {org.planCancelAt!.toLocaleDateString("pt-BR")}
+            </span>
+          ) : null}
         </p>
         <p className="text-sm text-zinc-400">
           Tier: {planTierLabel(org.planTier)}
@@ -104,8 +117,13 @@ export default async function AdminPlanoPage() {
             Cobrança via Asaas (PIX recorrente). Após o pagamento o status muda para
             Ativo automaticamente.
           </p>
-          <PlatformUpgradeButton />
+          {!cancelScheduled ? <PlatformUpgradeButton /> : null}
         </div>
+
+        <PlatformCancelPlanButton
+          planStatus={org.planStatus}
+          planCancelAt={org.planCancelAt?.toISOString() ?? null}
+        />
       </div>
     </div>
   );

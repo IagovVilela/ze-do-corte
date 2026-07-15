@@ -63,6 +63,8 @@ model Organization {
   planStatus     OrganizationPlanStatus @default(TRIAL)
   planTier       OrganizationPlanTier   @default(TRIAL_FULL)
   trialEndsAt    DateTime?
+  /// Cancelamento SaaS agendado: permanece ACTIVE até esta data, depois vira CANCELLED.
+  planCancelAt   DateTime?
   /// Billing SaaS (conta Asaas da plataforma)
   asaasCustomerId     String?
   asaasSubscriptionId String?

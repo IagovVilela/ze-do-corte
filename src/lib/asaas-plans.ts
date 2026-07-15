@@ -36,6 +36,14 @@ export function saasPlanById(id: string): SaasPlanDef | null {
   return SAAS_PLANS.find((p) => p.id === id) ?? null;
 }
 
+export function saasPlanByTier(
+  tier: "STARTER" | "PRO" | "TRIAL_FULL" | string,
+): SaasPlanDef | null {
+  if (tier === "PRO") return saasPlanById("pro");
+  if (tier === "STARTER") return saasPlanById("starter");
+  return null;
+}
+
 export function saasExternalRef(orgId: string, planId: SaasPlanId): string {
   return `saas_org:${orgId}:${planId}`;
 }

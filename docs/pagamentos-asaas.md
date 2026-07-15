@@ -38,6 +38,11 @@ Idempotência: tabela `PaymentEvent` (`asaasEventId` unique).
 - Webhook `PAYMENT_RECEIVED` → `planStatus=ACTIVE` + tier.
 - `PAST_DUE` / trial expirado: banner + **Caixa** e **Clube** bloqueados (só Pro ativo mantém após trial).
 - Starter ativo: site + agenda + admin; sem caixa/clube.
+- **Cancelar plano** (só OWNER):
+  - `POST /api/platform/billing/cancel` — trial/`PAST_DUE` → `CANCELLED` na hora; `ACTIVE` cancela no Asaas, grava `planCancelAt` (fim do período) e mantém Ativo até essa data.
+  - Enquanto agendado: botão **Desfazer cancelamento** → `POST /api/platform/billing/undo-cancel`.
+  - Depois de `planCancelAt`, ao abrir `/admin/plano` (ou GET billing) o status vira `CANCELLED` e sai do marketplace (`TRIAL`/`ACTIVE` only).
+  - Ops em `/plataforma` também pode forçar `CANCELLED` no editor da barbearia.
 
 ## Salão (`/admin/pagamentos`)
 

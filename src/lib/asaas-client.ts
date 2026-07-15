@@ -213,6 +213,16 @@ export async function asaasCreateSubscription(
   });
 }
 
+export async function asaasGetSubscription(
+  apiKey: string,
+  subscriptionId: string,
+): Promise<AsaasSubscription> {
+  return asaasFetch<AsaasSubscription>(
+    apiKey,
+    `/subscriptions/${subscriptionId}`,
+  );
+}
+
 export async function asaasCancelSubscription(
   apiKey: string,
   subscriptionId: string,

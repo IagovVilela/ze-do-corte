@@ -6,16 +6,73 @@ import type {
   OrganizationPlanTier,
 } from "@prisma/client";
 
+import { prisma } from "@/lib/prisma";
+
 export type OrgBillingSlice = Pick<
   Organization,
   "planStatus" | "planTier" | "trialEndsAt"
->;
+> & {
+  planCancelAt?: Date | null;
+};
 
 /** Trial ainda válido (ou org sem data de fim = trata como trial aberto). */
 export function isTrialActive(org: OrgBillingSlice, now = new Date()): boolean {
   if (org.planStatus !== "TRIAL") return false;
   if (!org.trialEndsAt) return true;
   return org.trialEndsAt.getTime() > now.getTime();
+}
+
+/** Cancelamento do SaaS já pedido, mas ainda no período pago. */
+export function isPlanCancelScheduled(
+  org: Pick<OrgBillingSlice, "planStatus" | "planCancelAt">,
+  now = new Date(),
+): boolean {
+  if (org.planStatus !== "ACTIVE") return false;
+  if (!org.planCancelAt) return false;
+  return org.planCancelAt.getTime() > now.getTime();
+}
+
+/**
+ * Se `planCancelAt` já passou e o status ainda é ACTIVE, grava CANCELLED.
+ * Chamar em páginas/APIs de billing para materializar o fim do período.
+ */
+export async function settleScheduledPlanCancellation(
+  organizationId: string,
+  now = new Date(),
+): Promise<OrgBillingSlice | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: {
+      planStatus: true,
+      planTier: true,
+      trialEndsAt: true,
+      planCancelAt: true,
+    },
+  });
+  if (!org) return null;
+
+  if (
+    org.planStatus === "ACTIVE" &&
+    org.planCancelAt != null &&
+    org.planCancelAt.getTime() <= now.getTime()
+  ) {
+    return prisma.organization.update({
+      where: { id: organizationId },
+      data: {
+        planStatus: "CANCELLED",
+        planCancelAt: null,
+        asaasSubscriptionId: null,
+      },
+      select: {
+        planStatus: true,
+        planTier: true,
+        trialEndsAt: true,
+        planCancelAt: true,
+      },
+    });
+  }
+
+  return org;
 }
 
 /** Pode usar o produto (agenda/admin básico). */
@@ -39,6 +96,7 @@ export function needsBillingAttention(
   org: OrgBillingSlice,
   now = new Date(),
 ): boolean {
+  if (isPlanCancelScheduled(org, now)) return false;
   if (org.planStatus === "ACTIVE") return false;
   if (isTrialActive(org, now)) return false;
   return true;

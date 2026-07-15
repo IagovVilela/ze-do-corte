@@ -7,7 +7,7 @@ import { Pool } from "pg";
  * (ex.: Organization), para descartar o PrismaClient antigo guardado em `globalThis`.
  * Chave `prismaV2` evita reaproveitar client antigo de hot-reload (ratingAvg/ratingCount).
  */
-const PRISMA_CLIENT_GENERATION = 7;
+const PRISMA_CLIENT_GENERATION = 8;
 
 const globalForPrisma = globalThis as unknown as {
   prismaV2: PrismaClient | undefined;

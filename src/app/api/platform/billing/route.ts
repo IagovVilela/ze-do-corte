@@ -16,10 +16,12 @@ import { saasExternalRef, saasPlanById, SAAS_PLANS } from "@/lib/asaas-plans";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import {
   hasProFeatures,
+  isPlanCancelScheduled,
   isTrialActive,
   needsBillingAttention,
   planStatusLabel,
   planTierLabel,
+  settleScheduledPlanCancellation,
 } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
@@ -40,6 +42,8 @@ export async function GET() {
   const auth = await requireStaffApiAuth();
   if (!auth.ok) return auth.response;
 
+  await settleScheduledPlanCancellation(auth.access.organizationId);
+
   const org = await prisma.organization.findUnique({
     where: { id: auth.access.organizationId },
     select: {
@@ -49,6 +53,7 @@ export async function GET() {
       planStatus: true,
       planTier: true,
       trialEndsAt: true,
+      planCancelAt: true,
       asaasCustomerId: true,
       asaasSubscriptionId: true,
     },
@@ -69,6 +74,7 @@ export async function GET() {
         trialActive: isTrialActive(org),
         hasProFeatures: hasProFeatures(org),
         needsBillingAttention: needsBillingAttention(org),
+        cancelScheduled: isPlanCancelScheduled(org),
       },
       plans: SAAS_PLANS.map((p) => ({
         id: p.id,

@@ -67,9 +67,29 @@ async function markSaasPastDue(orgId: string) {
 }
 
 async function markSaasCancelled(orgId: string) {
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
+    select: { planCancelAt: true, planStatus: true },
+  });
+  // Cancelamento pedido pelo salão no fim do período: não zera o acesso antes da data.
+  if (
+    org?.planStatus === "ACTIVE" &&
+    org.planCancelAt != null &&
+    org.planCancelAt.getTime() > Date.now()
+  ) {
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: { asaasSubscriptionId: null },
+    });
+    return;
+  }
   await prisma.organization.update({
     where: { id: orgId },
-    data: { planStatus: "CANCELLED" },
+    data: {
+      planStatus: "CANCELLED",
+      planCancelAt: null,
+      asaasSubscriptionId: null,
+    },
   });
 }
 
