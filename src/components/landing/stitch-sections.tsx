@@ -12,8 +12,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { HeroOrb } from "@/components/landing/hero-orb";
+import { publicSurfaceUrl } from "@/lib/public-hosts";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+const explorarHref = publicSurfaceUrl("marketplace", "/explorar");
 
 function Reveal({
   children,
@@ -76,7 +78,7 @@ export function StitchNav() {
             [
               ["#identidade", "Produto"],
               ["#site", "Soluções"],
-              ["#agenda", "Operação"],
+              [explorarHref, "Barbearias"],
               ["/planos", "Planos"],
             ] as const
           ).map(([href, label]) => (
@@ -120,7 +122,7 @@ export function StitchHero() {
             <span className="ml-12 inline-block md:ml-24">Sua cara.</span>
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-[var(--ln-muted)]">
-            Esqueça os marketplaces genéricos. Tenha um sistema próprio de
+            Esqueça agendas no WhatsApp. Tenha um sistema próprio de
             agendamentos que reflete a identidade da sua marca. Construído para
             profissionais exigentes que não abrem mão da excelência em cada
             detalhe.
@@ -365,7 +367,8 @@ export function StitchFinalCta() {
           Não em semanas.
         </h2>
         <p className="mx-auto mt-6 max-w-md text-[var(--ln-muted)]">
-          Trial completo. Sem App Store. Sem diluir sua marca em marketplace.
+          Trial completo. Site com a cara da sua marca — e clientes te encontram
+          na busca Barbernegon.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
@@ -375,10 +378,10 @@ export function StitchFinalCta() {
             <MonoLabel>Começar agora</MonoLabel>
           </Link>
           <Link
-            href="/planos"
+            href={explorarHref}
             className="rounded-full border border-white/15 px-8 py-4 text-[var(--ln-muted)] transition hover:border-[var(--ln-primary)] hover:text-[var(--ln-primary)]"
           >
-            <MonoLabel>Ver planos</MonoLabel>
+            <MonoLabel>Encontrar barbearia</MonoLabel>
           </Link>
         </div>
       </Reveal>
@@ -404,6 +407,7 @@ export function StitchFooter() {
         <div className="flex flex-wrap gap-x-8 gap-y-4 md:justify-end">
           {(
             [
+              [explorarHref, "Barbearias"],
               ["/planos", "Planos"],
               ["/admin/login", "Painel"],
               ["/ze-do-corte", "Demonstração"],

@@ -93,6 +93,11 @@ model Organization {
   onboardingJson Json?
   /// Configuração do site institucional (tema + secções/blocos). Ver `src/lib/site-page.ts`.
   siteJson       Json?
+  /// Aparece na busca pública `/explorar` (marketplace Barbernegon).
+  marketplaceListed Boolean              @default(true)
+  /// Média e contagem de avaliações (cache; atualizado ao criar review).
+  ratingAvg      Decimal?               @db.Decimal(3, 2)
+  ratingCount    Int                    @default(0)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
@@ -104,9 +109,11 @@ model Organization {
   whatsappSessions   WhatsAppSession[]
   whatsappOutboundLogs WhatsAppOutboundLog[]
   paymentEvents      PaymentEvent[]
+  reviews            OrganizationReview[]
 
   @@index([planStatus])
   @@index([asaasSubscriptionId])
+  @@index([marketplaceListed, planStatus])
 }
 
 model BarbershopUnit {
@@ -264,6 +271,7 @@ model Appointment {
   bookingSource     String?           @db.VarChar(32)
   /// Lembrete WhatsApp já enviado (evita duplicar no cron).
   whatsappReminderSentAt DateTime?
+  review            OrganizationReview?
 
   @@index([startsAt])
   @@index([status])
@@ -276,6 +284,23 @@ model Appointment {
   @@index([whatsappReminderSentAt, startsAt])
   @@index([asaasPaymentId])
   @@index([paymentStatus])
+}
+
+/// Avaliação pública de uma barbearia (marketplace), tipicamente pós-atendimento.
+model OrganizationReview {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  appointmentId  String?      @unique
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  rating         Int
+  comment        String?      @db.VarChar(500)
+  clientName     String?
+  clientPhone    String
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([clientPhone, organizationId])
 }
 
 /// Plano do clube (por organização).

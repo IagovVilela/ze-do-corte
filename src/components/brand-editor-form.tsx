@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+import { publicSurfaceUrl } from "@/lib/public-hosts";
+
 type OrgForm = {
   name: string;
   slug: string;
@@ -15,6 +17,7 @@ type OrgForm = {
   instagramHref: string;
   whatsappHref: string;
   phoneLabel: string;
+  marketplaceListed: boolean;
 };
 
 const empty: OrgForm = {
@@ -29,6 +32,7 @@ const empty: OrgForm = {
   instagramHref: "",
   whatsappHref: "",
   phoneLabel: "",
+  marketplaceListed: true,
 };
 
 function normalizeHex(value: string): string {
@@ -78,6 +82,7 @@ export function BrandEditorForm() {
           instagramHref: String(o.instagramHref ?? ""),
           whatsappHref: String(o.whatsappHref ?? ""),
           phoneLabel: String(o.phoneLabel ?? ""),
+          marketplaceListed: o.marketplaceListed !== false,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erro.");
@@ -107,6 +112,7 @@ export function BrandEditorForm() {
           slogan: form.slogan || null,
           sloganSecondary: form.sloganSecondary || null,
           aboutText: form.aboutText || null,
+          marketplaceListed: form.marketplaceListed,
           onboardingJson: {
             logo: Boolean(form.logoUrl.trim()),
             branding: true,
@@ -218,6 +224,32 @@ export function BrandEditorForm() {
       )}
 
       <section className="space-y-4 rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm">
+          <input
+            type="checkbox"
+            checked={form.marketplaceListed}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, marketplaceListed: e.target.checked }))
+            }
+            className="mt-1 size-4 rounded border-white/20"
+          />
+          <span>
+            <span className="block font-medium text-zinc-100">
+              Aparecer na busca Barbernegon
+            </span>
+            <span className="mt-0.5 block text-[12px] text-zinc-500">
+              Clientes encontram seu salão em{" "}
+              <Link
+                href={publicSurfaceUrl("marketplace", "/explorar")}
+                className="text-brand-200 hover:underline"
+              >
+                {publicSurfaceUrl("marketplace", "/explorar")}
+              </Link>{" "}
+              e entram no seu site (/{form.slug || "…"}).
+            </span>
+          </span>
+        </label>
+
         {(
           [
             ["name", "Nome da barbearia"],

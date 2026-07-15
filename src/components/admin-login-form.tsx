@@ -29,7 +29,7 @@ export function AdminLoginForm({ redirectTo }: Props) {
         setError(data.message ?? "Não foi possível entrar.");
         return;
       }
-      router.push(data.redirect ?? redirectTo);
+      router.push(redirectTo || data.redirect || "/admin");
       router.refresh();
     } catch {
       setError("Erro de rede. Tente de novo.");

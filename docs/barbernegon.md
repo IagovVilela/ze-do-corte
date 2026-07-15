@@ -10,10 +10,10 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 
 | Tema | Decisão |
 |------|---------|
-| URL pública | Path slug: `barbernegon.com/[slug]` |
+| URL pública | Path slug: `barbernegon.com/[slug]`; marketplace e landing B2B em hosts distintos (opcional) |
 | MVP | Site white-label + agendamento + admin + caixa + clube de assinaturas |
 | App nativo | Fora do MVP (site + PWA depois) |
-| Domínio próprio | Fase posterior |
+| Domínio próprio | Fase posterior (salão); **split marketing/marketplace** já suportado via env |
 
 ## Diferenciação vs mercado
 
@@ -22,7 +22,7 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 | App Barber | Cancelamento burocrático, cobranças confusas | Cancelamento claro; UX enxuta |
 | Cash Barber | Travamentos, suporte lento, onboarding pesado | Setup em minutos; financeiro transparente |
 | BestBarbers | App Store caro/lento | Site com identidade forte, sem loja de apps |
-| Booksy/Trinks | Marketplace dilui marca | Site próprio da marca, zero concorrentes na tela |
+| Booksy/Trinks | Marketplace dilui marca | Site white-label próprio; descoberta em `/explorar` só encaminha ao site da marca |
 
 ## Arquitetura (resumo)
 
@@ -31,7 +31,9 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 - **StaffMember** = OWNER/ADMIN/STAFF scoped à org
 - Público: `/[slug]` (renderer por blocos), `/[slug]/agendar`
 - Admin: `/admin` filtrado por `organizationId` da sessão; **`/admin/marca`** = identidade + editor de site
-- Plataforma: `/` (landing) + `/cadastro` + `/planos`
+- Plataforma (produto B2B): `/` (landing) + `/cadastro` + `/planos` — host `NEXT_PUBLIC_MARKETING_HOST`
+- Marketplace (consumidor): `/explorar` (+ `/` no host consumer) — `NEXT_PUBLIC_MARKETPLACE_HOST`; não serve a landing B2B
+- Plataforma (ops): `/plataforma` + `/plataforma/login` — métricas, barbearias, marketplace, consumidores (`PLATFORM_ADMIN_EMAILS` / `SEED_OWNER_EMAIL`)
 
 ## Roadmap por ondas
 
@@ -47,6 +49,11 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 | Rota | Função |
 |------|--------|
 | `/` | Landing Barbernegon |
+| `/explorar` | Marketplace: busca barbearias → site `/{slug}` (+ favoritos, mapa, notas) |
+| `/explorar/favoritos` | Lista salva neste aparelho |
+| `/plataforma` | Ops Barbernegon (`/plataforma/login`) |
+| `/plataforma/marketplace` | Moderação de listagens e reviews |
+| `/plataforma/consumidores` | Agendamentos / clientes finais (cross-tenant) |
 | `/cadastro` | Onboarding do dono (cria org + OWNER + unidade + canvas classic) |
 | `/planos` | Planos da plataforma (Starter/Pro) |
 | `/[slug]` | Site institucional (canvas) |

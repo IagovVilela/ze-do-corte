@@ -6,6 +6,18 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-15
+
+- **Remarcação no salão + avisos bilaterais**: painel `/admin` pode **Remarcar** (data/hora) além de cancelar/concluir; cliente e profissional são avisados (WhatsApp + e-mail quando houver contato; push/e-mail ao barbeiro). Cliente remarcar/cancelar em `/minha-reserva` ou WhatsApp também avisa o salão (`appointment-change-notify.ts`).
+- **Ops — entrada secreta**: `/plataforma/login` só existe com `?k=PLATFORM_OPS_GATE` (senão 404); API de login exige a mesma chave; sem sessão em `/plataforma` → 404 (não revela URL); link Ops removido do admin do salão.
+- **Ops exclusivo `/plataforma`**: login próprio (`/plataforma/login` + `POST /api/plataforma/login`); shell com sidebar (visão geral, barbearias, marketplace, consumidores); overview enriquecido (trials 7/14d, agenda 30d, reviews); marketplace ops + DELETE review; consumidores = agendamentos cross-tenant. Gate deixa de usar `/admin/login`.
+- **Canvas — grade alinhada**: modelo **Estúdio** redesenhado em múltiplos de 8px (hero 70/30, galeria 3 colunas iguais); snap/guias unificados (`canvas-layout-grid.ts`); no editor: **Alinhar tudo à grade**, alinhar elemento à grade e ao arteboard (inspector).
+- **Admin — sidebar vertical**: menu do painel (`/admin`) passou de pills horizontais para sidebar fixa (drawer no mobile); layout sem a Navbar pública.
+- **Domínios separados (consumidor vs B2B)**: com `NEXT_PUBLIC_MARKETING_HOST` + `NEXT_PUBLIC_MARKETPLACE_HOST`, o `proxy.ts` isola a landing (`/`, `/cadastro`, `/planos`, admin/ops) do marketplace — no host consumer `/` reescreve para `/explorar` e rotas B2B redirecionam; no marketing, `/explorar*` redireciona ao host consumer. Helpers em `public-hosts.ts`.
+- **Painel plataforma `/plataforma`**: console exclusivo Barbernegon Ops (cross-tenant) — métricas, lista/detalhe de barbearias, alterar plano/trial/`marketplaceListed`. Acesso: `PLATFORM_ADMIN_EMAILS` + `SEED_OWNER_EMAIL`. Login em `/admin/login?from=/plataforma`.
+- **Marketplace — notas, favoritos e mapa**: cards com média de estrelas, coração (localStorage) + `/explorar/favoritos`, badge de cidade e modal “Ver no mapa”; avaliação via link `/minha-reserva/[token]` pós-atendimento (`OrganizationReview`, `ratingAvg`/`ratingCount`); admin pode **Concluir/Cancelar** agendamento. Migração `20260715230000_organization_reviews`.
+- **Marketplace `/explorar`**: busca de barbearias por serviço/cidade/categoria; cards levam ao site `/{slug}` (Ver site) ou a `/{slug}/agendar`; opt-in `Organization.marketplaceListed` em `/admin/marca`. API `GET /api/marketplace/shops`. Migração `20260715220000_marketplace_listed`.
+
 ## 2026-07-14
 
 - **Canvas — spacer e blocos tipo marca**: espaço aparece listrado com rótulo no editor (invisível no site); biblioteca com aba **Prontos** (faixa sólida, painéis, botões); seções **Faixa de cor** e **Manhã · Tarde · Noite**.

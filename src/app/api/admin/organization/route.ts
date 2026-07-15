@@ -42,6 +42,7 @@ const patchSchema = z.object({
   onboardingJson: z.record(z.string(), z.boolean()).optional(),
   siteJson: siteCanvasSchema.optional(),
   siteTemplate: z.enum(CANVAS_PAGE_TEMPLATE_IDS).optional(),
+  marketplaceListed: z.boolean().optional(),
 });
 
 function emptyToNull(v: string | null | undefined) {
@@ -183,6 +184,9 @@ export async function PATCH(request: Request) {
       ...(nextOnboarding !== undefined ? { onboardingJson: nextOnboarding } : {}),
       ...(nextSiteJson !== undefined
         ? { siteJson: nextSiteJson as Prisma.InputJsonValue }
+        : {}),
+      ...(data.marketplaceListed !== undefined
+        ? { marketplaceListed: data.marketplaceListed }
         : {}),
     },
   });

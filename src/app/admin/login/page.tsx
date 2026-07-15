@@ -4,24 +4,39 @@ import { AdminLoginForm } from "@/components/admin-login-form";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
+import { isPlatformAdminEmail } from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<{ from?: string }> };
 
+function safeRedirectPath(from: string | undefined): string {
+  if (from && from.startsWith("/") && !from.startsWith("//")) return from;
+  return "/admin";
+}
+
 export default async function AdminLoginPage({ searchParams }: Props) {
+  const { from } = await searchParams;
+  const safeFrom = safeRedirectPath(from);
+
+  // Sessão: falha de DB não deve quebrar a tela de login.
+  // `redirect()` lança NEXT_REDIRECT — deve ficar fora do try/catch.
+  let access: Awaited<ReturnType<typeof getStaffAccessOrNull>> = null;
   try {
-    const access = await getStaffAccessOrNull();
-    if (access) {
-      redirect("/admin");
-    }
+    access = await getStaffAccessOrNull();
   } catch (error) {
     console.error("[admin/login] sessão indisponível:", error);
   }
 
-  const { from } = await searchParams;
-  const safeFrom =
-    from && from.startsWith("/") && !from.startsWith("//") ? from : "/admin";
+  if (access) {
+    if (
+      safeFrom.startsWith("/plataforma") &&
+      isPlatformAdminEmail(access.email)
+    ) {
+      redirect(safeFrom);
+    }
+    redirect("/admin");
+  }
 
   return (
     <>

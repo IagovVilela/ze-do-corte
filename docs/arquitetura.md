@@ -13,7 +13,9 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
 
 ## Fluxo público (institucional + agendamento)
 
-- **`/`** — Landing da **plataforma Barbernegon** (não é o site de um tenant).
+- **`/`** — Landing da **plataforma Barbernegon** (venda B2B; não é o site de um tenant). Com split de hosts, só no **marketing host**.
+- **`/explorar`** — Marketplace: busca por serviço/cidade/categoria (`searchMarketplaceShops` / `GET /api/marketplace/shops`). Card → **site** `/{slug}` (principal) ou atalho **Agendar**; favoritos no aparelho (`/explorar/favoritos`); mapa embutido; média de avaliações. Avaliar via `POST /api/marketplace/reviews` com token da reserva. Orgs com `marketplaceListed` e plano `TRIAL`/`ACTIVE`. Com split, vive no **marketplace host** (`/` nesse host reescreve para `/explorar`).
+- **Domínios** — `NEXT_PUBLIC_MARKETING_HOST` + `NEXT_PUBLIC_MARKETPLACE_HOST` (mesmo deploy). Gate em `src/proxy.ts` + `src/lib/public-hosts.ts`: consumidor não vê landing/cadastro/planos; marketing redireciona `/explorar*` para o host consumer. Sem as duas envs, paths compartilhados (dev).
 - **`/[slug]`** — Site institucional do tenant. `Organization.siteJson` **v2 (canvas)** renderizado por `TenantCanvasRenderer`. Fallbacks de branding neutros. Constantes `BARBER_*` **não** alimentam essa rota.
 - **`/[slug]/agendar`** — Formulário cliente (`BookingForm`) scoped à org:
   - `GET /api/appointments/available` — slots livres por serviço e data; com **`staffMemberId`**, considera só conflitos desse profissional (e vagas ainda sem profissional);
@@ -36,15 +38,16 @@ CSS vars da paleta: `organizationBrandStyle` / `resolveSiteCanvas` em `src/lib/o
 
 ## Fluxo administrativo
 
-- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`).
-- **`/admin/marca`** — identidade (nome, slug, logo, cores, slogans, redes, uploads).
+- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`). Query `?from=/caminho` redireciona após login.
+- **`/plataforma`** — console **Barbernegon Ops** isolado: entrada secreta `/plataforma/login?k=PLATFORM_OPS_GATE` (404 sem chave); e-mails em `PLATFORM_ADMIN_EMAILS` / `SEED_OWNER_EMAIL`; sidebar com visão geral, barbearias, marketplace e consumidores. Sem sessão → 404 (não revela login). APIs em `/api/plataforma/*`.
+- **`/admin/marca`** — identidade (nome, slug, logo, cores, slogans, redes, uploads, opt-in marketplace).
 - **`/admin/site`** — canvas tipo Canva: biblioteca (hero/painel/grid etc.), cores do sistema, arteboards desktop/mobile, drag/resize, inspector com **upload do dispositivo** (imagem/vídeo), templates, salvar `siteJson` v2.
 - **`/admin/whatsapp`** — conecta Phone number ID + token Meta (cifrado), liga/desliga bot, logs de envio.
 - **`/admin/perfil`** — utilizador autenticado altera `displayName`, `phone`, senha (`PATCH /api/auth/profile`) e foto (`POST`/`DELETE /api/auth/profile/avatar` → Cloudinary quando configurado); a foto alimenta o cartão na home para quem é barbeiro em destaque. Opcionalmente ativa **Web Push** (VAPID + `public/sw.js`) para receber aviso de agendamento atribuído sem e-mail.
 - **`/admin/expediente`** — só **STAFF**: define o próprio `workWeekJson` via `PATCH /api/auth/work-schedule`; `null` segue só o horário global da barbearia nos slots públicos.
 - **`/admin/equipe`** — gestão de membros; para **STAFF**, texto e visibilidade na home (`PATCH /api/admin/staff/[id]`) e **expediente** por funcionário para **OWNER/ADMIN** (`GET`/`PATCH /api/admin/staff/[id]/work-schedule`).
-- **`/admin` (painel)** — Gráficos temporais agrupam por **calendário em `America/Sao_Paulo`** (`BARBER_TIMEZONE`), não pelo fuso do servidor. `getAdminDashboardSnapshot` (mesmos filtros de URL que a lista: `status`, `staff`, `unit`, `q`) + gráficos + **Resumo operacional** com formulário de filtros; **OWNER/ADMIN** têm **telemetria por unidade** abaixo das abas de período, com janela **Hoje e semana** ou **Período dos gráficos** (`?telemetryScope=chart`), agregada por `unitId`; com filtro de unidade na URL, só essa unidade aparece. `src/app/admin/(panel)/layout.tsx`: `getStaffAccessOrNull()`; sem sessão → `redirect("/admin/login")`.
-- **`src/proxy.ts`** — pass-through mínimo (Next.js 16 **proxy**); não faz auth Clerk.
+- **`/admin` (painel)** — Gráficos temporais agrupam por **calendário em `America/Sao_Paulo`** (`BARBER_TIMEZONE`), não pelo fuso do servidor. `getAdminDashboardSnapshot` (mesmos filtros de URL que a lista: `status`, `staff`, `unit`, `q`) + gráficos + **Resumo operacional** com formulário de filtros; **OWNER/ADMIN** têm **telemetria por unidade** abaixo das abas de período, com janela **Hoje e semana** ou **Período dos gráficos** (`?telemetryScope=chart`), agregada por `unitId`; com filtro de unidade na URL, só essa unidade aparece. Tabela de agendamentos: atribuir barbeiro, **remarcar** data/hora, concluir/cancelar, pagamento — cancelar/remarcar avisam o cliente (WhatsApp + e-mail). `src/app/admin/(panel)/layout.tsx`: `getStaffAccessOrNull()`; sem sessão → `redirect("/admin/login")`.
+- **`src/proxy.ts`** — Next.js 16 **proxy**: legado `/agendar`; com hosts B2B/consumer configurados, rewrite/redirect por `Host` (`public-hosts.ts`). Auth do painel é sessão no servidor.
 - **APIs `/api/admin/*`** — `requireStaffApiAuth()` e permissões por papel (export, unidades, equipe, serviços, configuração, **PATCH** em agendamentos para `staffMemberId` só OWNER/ADMIN).
 
 ### Papéis

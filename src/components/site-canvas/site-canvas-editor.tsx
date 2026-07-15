@@ -11,6 +11,7 @@ import {
   ThemePanel,
 } from "@/components/site-canvas/canvas-studio-parts";
 import { nextArtboardY } from "@/lib/canvas-presets";
+import { snapFrameToGrid } from "@/lib/canvas-layout-grid";
 import {
   applyThemeChangeToCanvas,
   bindElementsToThemeTokens,
@@ -84,6 +85,19 @@ export function SiteCanvasEditor({
   );
 
   const boardW = canvas.artboards[artboard].width;
+  const boardH = canvas.artboards[artboard].height;
+
+  function snapAllOnArtboard() {
+    commitCanvas((c) => ({
+      ...c,
+      elements: c.elements.map((e) =>
+        e.artboard === artboard
+          ? { ...e, frame: snapFrameToGrid(e.frame) }
+          : e,
+      ),
+    }));
+    setMessage(`Arteboard ${artboard}: elementos alinhados à grade.`);
+  }
 
   const patchElement = useCallback(
     (next: CanvasElement) => {
@@ -352,14 +366,23 @@ export function SiteCanvasEditor({
         </button>
 
         <div className="flex flex-wrap gap-1">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => setTemplatesOpen(true)}
-            className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
-          >
-            Modelos de página
-          </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => setTemplatesOpen(true)}
+          className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
+        >
+          Modelos de página
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={snapAllOnArtboard}
+          className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 disabled:opacity-50"
+          title="Ajusta X/Y/L/A de todos os elementos do arteboard atual para múltiplos de 8px"
+        >
+          Alinhar tudo à grade
+        </button>
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -428,6 +451,7 @@ export function SiteCanvasEditor({
         />
         <ElementInspector
           element={selected}
+          artboardSize={{ width: boardW, height: boardH }}
           onChange={patchElement}
           onDelete={deleteSelected}
           onDuplicate={duplicateSelected}

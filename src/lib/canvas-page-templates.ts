@@ -488,23 +488,40 @@ function studioTemplate(name: string): SiteCanvasConfig {
     radius: "lg",
     motion: "full",
   };
+  /* Grade 8px: pad 48 · hero 1008/432 · galeria 3×416 gap 48 · conteúdo 1344 */
+  const PAD = 48;
+  const HERO_H = 624;
+  const GALLERY_Y = 56 + HERO_H + PAD; // 728
+  const TILE_W = 416;
+  const TILE_GAP = 48;
+  const TILE_H = 240;
+  const CONTENT_W = DESK_W - PAD * 2; // 1344
+  const TEAM_Y = GALLERY_Y + TILE_H + PAD; // 1016
+  const TEAM_H = 320;
+  const SERVICES_Y = TEAM_Y + TEAM_H + PAD; // 1384
+  const SERVICES_H = 360;
+  const FOOTER_Y = SERVICES_Y + SERVICES_H + PAD; // 1792
+  const FOOTER_H = 96;
+  const PANEL_X = 1008 + 40; // 1048
+  const PANEL_INNER_W = 352;
+
   const desk = free("desktop", "studio", [
-    { type: "navbar", frame: { x: 0, y: 0, w: 1440, h: 56 }, zIndex: 40 },
+    { type: "navbar", frame: { x: 0, y: 0, w: DESK_W, h: 56 }, zIndex: 40 },
     {
       type: "media",
-      frame: { x: 0, y: 56, w: 980, h: 620 },
+      frame: { x: 0, y: 56, w: 1008, h: HERO_H },
       props: { backgroundColor: "#2e1065", borderRadius: 0 },
       zIndex: 2,
     },
     {
       type: "rect",
-      frame: { x: 980, y: 56, w: 460, h: 620 },
+      frame: { x: 1008, y: 56, w: 432, h: HERO_H },
       props: { backgroundColor: "#1a1224", borderRadius: 0 },
       zIndex: 1,
     },
     {
       type: "badge",
-      frame: { x: 1020, y: 120, w: 120, h: 28 },
+      frame: { x: PANEL_X, y: 120, w: 120, h: 32 },
       props: {
         text: "STUDIO",
         backgroundColor: "#c084fc",
@@ -517,7 +534,7 @@ function studioTemplate(name: string): SiteCanvasConfig {
     },
     {
       type: "text",
-      frame: { x: 1020, y: 180, w: 380, h: 140 },
+      frame: { x: PANEL_X, y: 184, w: PANEL_INNER_W, h: 144 },
       props: {
         text: name,
         variant: "display",
@@ -529,7 +546,7 @@ function studioTemplate(name: string): SiteCanvasConfig {
     },
     {
       type: "text",
-      frame: { x: 1020, y: 340, w: 380, h: 80 },
+      frame: { x: PANEL_X, y: 344, w: PANEL_INNER_W, h: 80 },
       props: {
         text: "Cuts feitos para a câmera. Luz, ângulo e textura.",
         fontSize: 16,
@@ -539,7 +556,7 @@ function studioTemplate(name: string): SiteCanvasConfig {
     },
     {
       type: "button",
-      frame: { x: 1020, y: 460, w: 220, h: 52 },
+      frame: { x: PANEL_X, y: 464, w: 224, h: 48 },
       props: {
         text: "Bookar sessão",
         href: "book",
@@ -552,50 +569,70 @@ function studioTemplate(name: string): SiteCanvasConfig {
     },
     {
       type: "media",
-      frame: { x: 48, y: 720, w: 420, h: 240 },
+      frame: {
+        x: PAD,
+        y: GALLERY_Y,
+        w: TILE_W,
+        h: TILE_H,
+      },
       props: { backgroundColor: "#4c1d95", borderRadius: 16 },
     },
     {
       type: "media",
-      frame: { x: 510, y: 720, w: 420, h: 240 },
+      frame: {
+        x: PAD + TILE_W + TILE_GAP,
+        y: GALLERY_Y,
+        w: TILE_W,
+        h: TILE_H,
+      },
       props: { backgroundColor: "#5b21b6", borderRadius: 16 },
     },
     {
       type: "media",
-      frame: { x: 972, y: 720, w: 420, h: 240 },
+      frame: {
+        x: PAD + (TILE_W + TILE_GAP) * 2,
+        y: GALLERY_Y,
+        w: TILE_W,
+        h: TILE_H,
+      },
       props: { backgroundColor: "#6d28d9", borderRadius: 16 },
     },
     {
       type: "team",
-      frame: { x: 48, y: 1010, w: 1344, h: 320 },
+      frame: { x: PAD, y: TEAM_Y, w: CONTENT_W, h: TEAM_H },
       props: { title: "Artistas", gridCols: 3 },
     },
     {
       type: "services",
-      frame: { x: 48, y: 1370, w: 1344, h: 360 },
+      frame: { x: PAD, y: SERVICES_Y, w: CONTENT_W, h: SERVICES_H },
       props: { title: "Sessões", gridCols: 3 },
     },
     {
       type: "footer",
-      frame: { x: 0, y: 1780, w: 1440, h: 90 },
+      frame: { x: 0, y: FOOTER_Y, w: DESK_W, h: FOOTER_H },
       props: { showPitch: true },
     },
   ]);
+  /* Mobile: pad 16 · 3 tiles 112 gap 16 */
+  const M_PAD = 16;
+  const M_TILE = 112;
+  const M_GAP = 16;
+  const M_GALLERY_Y = 520;
   const mob = free("mobile", "studio", [
-    { type: "navbar", frame: { x: 0, y: 0, w: 390, h: 52 }, zIndex: 40 },
+    { type: "navbar", frame: { x: 0, y: 0, w: MOB_W, h: 56 }, zIndex: 40 },
     {
       type: "media",
-      frame: { x: 0, y: 52, w: 390, h: 280 },
+      frame: { x: 0, y: 56, w: MOB_W, h: 280 },
       props: { backgroundColor: "#2e1065", borderRadius: 0 },
     },
     {
       type: "text",
-      frame: { x: 16, y: 360, w: 358, h: 60 },
+      frame: { x: M_PAD, y: 360, w: MOB_W - M_PAD * 2, h: 64 },
       props: { text: name, fontSize: 32, fontWeight: 700, color: "#f5f3ff" },
     },
     {
       type: "button",
-      frame: { x: 16, y: 440, w: 200, h: 48 },
+      frame: { x: M_PAD, y: 440, w: 200, h: 48 },
       props: {
         text: "Bookar",
         href: "book",
@@ -607,27 +644,42 @@ function studioTemplate(name: string): SiteCanvasConfig {
     },
     {
       type: "media",
-      frame: { x: 16, y: 520, w: 110, h: 100 },
+      frame: { x: M_PAD, y: M_GALLERY_Y, w: M_TILE, h: 104 },
       props: { backgroundColor: "#4c1d95", borderRadius: 12 },
     },
     {
       type: "media",
-      frame: { x: 140, y: 520, w: 110, h: 100 },
+      frame: {
+        x: M_PAD + M_TILE + M_GAP,
+        y: M_GALLERY_Y,
+        w: M_TILE,
+        h: 104,
+      },
       props: { backgroundColor: "#5b21b6", borderRadius: 12 },
     },
     {
       type: "media",
-      frame: { x: 264, y: 520, w: 110, h: 100 },
+      frame: {
+        x: M_PAD + (M_TILE + M_GAP) * 2,
+        y: M_GALLERY_Y,
+        w: M_TILE,
+        h: 104,
+      },
       props: { backgroundColor: "#6d28d9", borderRadius: 12 },
     },
     {
       type: "services",
-      frame: { x: 16, y: 650, w: 358, h: 480 },
+      frame: {
+        x: M_PAD,
+        y: M_GALLERY_Y + 104 + M_PAD,
+        w: MOB_W - M_PAD * 2,
+        h: 480,
+      },
       props: { title: "Sessões", gridCols: 1 },
     },
     {
       type: "footer",
-      frame: { x: 0, y: 1180, w: 390, h: 80 },
+      frame: { x: 0, y: 1184, w: MOB_W, h: 80 },
       props: { showPitch: true },
     },
   ]);

@@ -28,6 +28,13 @@ import {
   CANVAS_BG_ART_OPTIONS,
   canvasBgArtPreviewStyle,
 } from "@/lib/canvas-bg-art";
+import {
+  alignFrameToArtboard,
+  CANVAS_SNAP_GRID,
+  snapFrameToGrid,
+  snapToGrid,
+  type ArtboardAlign,
+} from "@/lib/canvas-layout-grid";
 import { PAGE_TEMPLATE_META } from "@/lib/canvas-page-templates";
 import { canvasThemeStyle } from "@/lib/canvas-theme-style";
 import type { OrganizationPublic } from "@/lib/organization";
@@ -113,9 +120,7 @@ const LIBRARY_GROUPS: {
 
 const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const;
 
-function snap(n: number, grid = 8) {
-  return Math.round(n / grid) * grid;
-}
+const snap = (n: number) => snapToGrid(n, CANVAS_SNAP_GRID);
 
 type Props = {
   canvas: SiteCanvasConfig;
@@ -301,7 +306,7 @@ export function CanvasStage({
               style={{
                 backgroundImage:
                   "linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px)",
-                backgroundSize: "32px 32px",
+                backgroundSize: `${CANVAS_SNAP_GRID}px ${CANVAS_SNAP_GRID}px`,
               }}
             />
           ) : null}
@@ -907,6 +912,7 @@ export function ThemePanel({
 
 export function ElementInspector({
   element,
+  artboardSize,
   onChange,
   onDelete,
   onDuplicate,
@@ -914,6 +920,7 @@ export function ElementInspector({
   onSendBack,
 }: {
   element: CanvasElement | null;
+  artboardSize: { width: number; height: number };
   onChange: (next: CanvasElement) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -943,6 +950,20 @@ export function ElementInspector({
       ...element!,
       props: { ...element!.props, [key]: value },
     } as CanvasElement);
+  }
+
+  function applyAlign(align: ArtboardAlign) {
+    onChange({
+      ...element!,
+      frame: alignFrameToArtboard(element!.frame, artboardSize, align),
+    });
+  }
+
+  function snapSelected() {
+    onChange({
+      ...element!,
+      frame: snapFrameToGrid(element!.frame),
+    });
   }
 
   async function uploadMedia(file: File) {
@@ -1106,6 +1127,7 @@ export function ElementInspector({
             {k.toUpperCase()}
             <input
               type="number"
+              step={CANVAS_SNAP_GRID}
               className={input}
               value={element.frame[k]}
               onChange={(e) =>
@@ -1117,9 +1139,53 @@ export function ElementInspector({
                   },
                 })
               }
+              onBlur={(e) =>
+                onChange({
+                  ...element,
+                  frame: snapFrameToGrid({
+                    ...element.frame,
+                    [k]: Number(e.target.value) || 0,
+                  }),
+                })
+              }
             />
           </label>
         ))}
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          Grade e alinhamento
+        </p>
+        <button
+          type="button"
+          onClick={snapSelected}
+          className="w-full rounded-lg border border-brand-500/40 bg-brand-500/10 px-2 py-1.5 text-[11px] font-medium text-brand-200 hover:bg-brand-500/20"
+        >
+          Alinhar à grade ({CANVAS_SNAP_GRID}px)
+        </button>
+        <div className="grid grid-cols-3 gap-1">
+          {(
+            [
+              ["left", "←"],
+              ["centerX", "↔"],
+              ["right", "→"],
+              ["top", "↑"],
+              ["centerY", "↕"],
+              ["bottom", "↓"],
+            ] as const
+          ).map(([align, label]) => (
+            <button
+              key={align}
+              type="button"
+              title={align}
+              onClick={() => applyAlign(align)}
+              className="rounded-md border border-white/15 px-1 py-1 text-[11px] text-zinc-300 hover:border-white/30 hover:bg-white/5"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {(element.type === "text" || element.type === "button") && (

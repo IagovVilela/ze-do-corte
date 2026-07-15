@@ -27,6 +27,14 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Rota | Arquivo | Notas |
 |------|---------|--------|
 | `/` | `src/app/page.tsx` | Landing **Barbernegon** (plataforma) |
+| `/explorar` | `src/app/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
+| `/explorar/favoritos` | `src/app/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
+| `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
+| `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview cross-tenant |
+| `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
+| `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + editar plano |
+| `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
+| `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic |
 | `/planos` | `src/app/planos/page.tsx` | Planos da plataforma (Starter/Pro) |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
@@ -70,7 +78,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Expediente (funcionário) | `src/app/api/auth/work-schedule/route.ts` — `GET`, `PATCH` (só **STAFF**) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
-| Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding) |
+| Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding, `marketplaceListed`) |
+| Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `reviews/route.ts` — `POST` avaliação por token |
+| Plataforma (ops) | `src/app/api/plataforma/login/route.ts`, `overview`, `organizations`, `marketplace`, `consumidores`, `reviews/[id]` |
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
@@ -93,6 +103,13 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `org-branding.ts` | CSS vars da paleta, slogans neutros, `resolveSiteConfig` |
 | `site-page.ts` | Schema v1 legado (`sections[]`) |
 | `site-canvas.ts` | Schema v2 canvas, migrate v1→v2, templates, `copyDesktopToMobile` |
+| `canvas-layout-grid.ts` | Snap 8px, alinhar frame ao arteboard |
+| `marketplace.ts` | Busca de orgs listadas para `/explorar` (server-only) |
+| `marketplace-shared.ts` | Tipos/chips seguros para Client Components |
+| `marketplace-favorites.ts` | Favoritos em localStorage |
+| `public-hosts.ts` | Split marketing vs marketplace (`NEXT_PUBLIC_*_HOST`); URLs por superfície |
+| `platform-auth.ts` | Gate Ops (`PLATFORM_ADMIN_EMAILS` / seed); redirect para `/plataforma/login` |
+| `platform-ops.ts` | Queries cross-tenant (overview, orgs, marketplace, consumidores) |
 | `canvas-page-templates.ts` | Modelos de página completa (14 layouts distintos) |
 | `canvas-presets.ts` | Estilos prontos, seções pré-montadas, tipografia |
 | `canvas-theme-style.ts` | Tokens CSS do tema do canvas (cliente + servidor) |
@@ -126,6 +143,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Componente | Pasta |
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
+| Marketplace | `marketplace/explore-search.tsx`, `marketplace/shop-card.tsx`, `marketplace/favorites-shops-list.tsx` |
+| Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` |
 | Editor de identidade | `brand-editor-form.tsx` |
 | WhatsApp admin | `whatsapp-admin-panel.tsx` |
@@ -153,5 +172,6 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 
 | Arquivo | Função |
 |---------|--------|
-| `src/proxy.ts` | Next.js 16 **proxy** (ex-middleware): `NextResponse.next()` — auth do painel é por sessão no servidor |
+| `src/proxy.ts` | Next.js 16 **proxy**: legado `/agendar`; rewrite/redirect por Host quando marketing + marketplace hosts estão definidos |
+| `src/lib/public-hosts.ts` | Helpers de superfície B2B vs consumidor |
 | `src/app/layout.tsx` | Layout raiz, fontes (Geist + display), sem provider de terceiros para auth |

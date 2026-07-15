@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 
 import type { StaffAccess } from "@/lib/staff-access";
 import { cn } from "@/lib/utils";
@@ -24,16 +26,39 @@ function sessionDisplayName(access: StaffAccess): string {
   return "";
 }
 
-export function AdminPanelNav({ access }: { access: StaffAccess }) {
+export function AdminPanelNav({
+  access,
+}: {
+  access: StaffAccess;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const name = sessionDisplayName(access);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
     router.refresh();
   }
+
   const items: NavItem[] = [
     { href: "/admin", label: "Visão geral", show: true },
     { href: "/admin/perfil", label: "Perfil", show: true },
@@ -93,77 +118,131 @@ export function AdminPanelNav({ access }: { access: StaffAccess }) {
 
   const visible = items.filter((i) => i.show);
 
-  return (
-    <nav
-      aria-label="Secções do painel"
-      className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"
-    >
-      <ul className="flex flex-wrap gap-1.5">
-        {visible.map((item) => {
-          const active =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={cn(
-                  "inline-flex rounded-full px-3.5 py-1.5 text-sm font-medium transition",
-                  active
-                    ? "bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
-                )}
-              >
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+  const sidebarBody = (
+    <>
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-4">
+        <Link
+          href="/admin"
+          className="text-base font-semibold tracking-tight text-white"
+        >
+          Painel
+        </Link>
+        <button
+          type="button"
+          className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/5 hover:text-zinc-100 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fechar menu"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
+
+      <nav
+        aria-label="Seções do painel"
+        className="flex-1 overflow-y-auto px-2 py-3"
+      >
+        <ul className="flex flex-col gap-0.5">
+          {visible.map((item) => {
+            const active =
+              item.href === "/admin"
+                ? pathname === "/admin"
+                : pathname.startsWith(item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm font-medium transition",
+                    active
+                      ? "bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40"
+                      : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="mt-auto space-y-3 border-t border-white/10 p-4">
         <Link
           href="/admin/perfil"
-          className="flex items-center gap-2 rounded-full py-0.5 pr-2 pl-0.5 ring-1 ring-transparent transition hover:bg-white/5 hover:ring-white/10"
+          className="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-white/5"
           title="Meu perfil"
         >
-          <span className="relative block size-8 shrink-0 overflow-hidden rounded-full bg-zinc-700 ring-1 ring-white/10">
+          <span className="relative block size-9 shrink-0 overflow-hidden rounded-full bg-zinc-700 ring-1 ring-white/10">
             {access.profileImageUrl ? (
               <Image
                 src={access.profileImageUrl}
                 alt=""
-                width={32}
-                height={32}
-                className="size-8 object-cover"
+                width={36}
+                height={36}
+                className="size-9 object-cover"
               />
             ) : (
-              <span className="flex size-8 items-center justify-center text-xs font-semibold text-zinc-200">
-                {(access.displayName || access.email || "?").slice(0, 1).toUpperCase()}
+              <span className="flex size-9 items-center justify-center text-xs font-semibold text-zinc-200">
+                {(access.displayName || access.email || "?")
+                  .slice(0, 1)
+                  .toUpperCase()}
               </span>
             )}
           </span>
-        </Link>
-        <p className="text-xs text-zinc-500">
-          Sessão:{" "}
-          <span className="font-medium text-zinc-300">
-            {roleLabel[access.role]}
-            {name ? (
-              <>
-                {" "}
-                <span className="text-zinc-400">·</span>{" "}
-                <span className="text-zinc-200">{name}</span>
-              </>
-            ) : null}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium text-zinc-200">
+              {name || "Perfil"}
+            </span>
+            <span className="block truncate text-xs text-zinc-500">
+              {roleLabel[access.role]}
+            </span>
           </span>
-        </p>
+        </Link>
         <button
           type="button"
           onClick={() => void logout()}
-          className="rounded-full border border-white/15 px-3 py-1 text-xs font-medium text-zinc-300 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-200"
+          className="w-full rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-200"
         >
           Sair
         </button>
       </div>
-    </nav>
+    </>
+  );
+
+  return (
+    <>
+      {/* Barra móvel */}
+      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/10 bg-[#0f1419]/95 px-4 py-3 backdrop-blur lg:hidden">
+        <button
+          type="button"
+          className="rounded-lg border border-white/15 p-2 text-zinc-200 hover:bg-white/5"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Abrir menu"
+        >
+          <Menu className="size-5" />
+        </button>
+        <span className="text-sm font-semibold text-white">Painel</span>
+      </div>
+
+      {/* Overlay móvel */}
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          aria-label="Fechar menu"
+          onClick={() => setMobileOpen(false)}
+        />
+      ) : null}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-white/10 bg-[#0c1016] transition-transform duration-200 lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        {sidebarBody}
+      </aside>
+    </>
   );
 }

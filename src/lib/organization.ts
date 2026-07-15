@@ -76,6 +76,8 @@ export const RESERVED_SLUGS = new Set([
   "www",
   "app",
   "planos",
+  "explorar",
+  "plataforma",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import {
+  notifyClientAppointmentChange,
+  notifyStaffForAppointmentId,
+} from "@/lib/appointment-change-notify";
 import { isClientManageTokenFormat } from "@/lib/client-manage-token";
 import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
-import { notifyClientWhatsAppCancellation } from "@/lib/whatsapp-notify-client";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +39,24 @@ function manageBlocked(
   return null;
 }
 
+async function resolveOrganizationId(appointment: {
+  unitId: string | null;
+  serviceId: string;
+}): Promise<string | null> {
+  if (appointment.unitId) {
+    const unit = await prisma.barbershopUnit.findUnique({
+      where: { id: appointment.unitId },
+      select: { organizationId: true },
+    });
+    return unit?.organizationId ?? null;
+  }
+  const service = await prisma.service.findUnique({
+    where: { id: appointment.serviceId },
+    select: { unit: { select: { organizationId: true } } },
+  });
+  return service?.unit.organizationId ?? null;
+}
+
 export async function GET(_request: Request, context: RouteContext) {
   const { token: raw } = await context.params;
   const token = decodeURIComponent(raw).trim();
@@ -46,9 +67,23 @@ export async function GET(_request: Request, context: RouteContext) {
   const appointment = await prisma.appointment.findUnique({
     where: { clientManageToken: token },
     include: {
-      service: true,
-      unit: { select: { name: true } },
+      service: {
+        include: {
+          unit: {
+            select: {
+              organization: { select: { slug: true, name: true } },
+            },
+          },
+        },
+      },
+      unit: {
+        select: {
+          name: true,
+          organization: { select: { slug: true, name: true } },
+        },
+      },
       staffMember: { select: { displayName: true } },
+      review: { select: { id: true, rating: true } },
     },
   });
 
@@ -57,6 +92,17 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const blocked = manageBlocked(appointment);
+  const pastOrDone =
+    appointment.status === "COMPLETED" ||
+    (appointment.status === "CONFIRMED" &&
+      appointment.startsAt.getTime() <= Date.now());
+  const canReview =
+    pastOrDone &&
+    appointment.status !== "CANCELLED" &&
+    !appointment.review;
+
+  const org =
+    appointment.unit?.organization ?? appointment.service.unit.organization;
 
   return NextResponse.json({
     appointment: {
@@ -74,10 +120,15 @@ export async function GET(_request: Request, context: RouteContext) {
         price: Number(appointment.service.price),
       },
       unitName: appointment.unit?.name ?? null,
+      organizationSlug: org?.slug ?? null,
+      organizationName: org?.name ?? null,
       staffMemberId: appointment.staffMemberId,
       staffDisplayName: appointment.staffMember?.displayName?.trim() || null,
       canManage: blocked === null,
       manageBlockedReason: blocked,
+      canReview,
+      hasReview: Boolean(appointment.review),
+      reviewRating: appointment.review?.rating ?? null,
     },
   });
 }
@@ -118,21 +169,27 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ message: blocked }, { status: 409 });
   }
 
+  const organizationId = await resolveOrganizationId(appointment);
+  if (!organizationId) {
+    return NextResponse.json(
+      { message: "Organização não encontrada." },
+      { status: 400 },
+    );
+  }
+
   if (parsed.data.action === "cancel") {
     const updated = await prisma.appointment.update({
       where: { id: appointment.id },
       data: { status: "CANCELLED" },
-      include: {
-        service: { select: { name: true } },
-        unit: { select: { organizationId: true } },
-      },
+      include: { service: true },
     });
-    if (updated.unit?.organizationId) {
-      void notifyClientWhatsAppCancellation({
-        organizationId: updated.unit.organizationId,
-        appointment: updated,
-      });
-    }
+    void notifyClientAppointmentChange({
+      organizationId,
+      appointment: updated,
+      kind: "cancelled",
+      actor: "client",
+    });
+    void notifyStaffForAppointmentId(updated.id, "cancelled", "client");
     return NextResponse.json({ ok: true, status: "CANCELLED" });
   }
 
@@ -143,6 +200,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     unitId: appointment.unitId,
     staffMemberId: appointment.staffMemberId ?? undefined,
     excludeAppointmentId: appointment.id,
+    organizationId,
   });
 
   if (!slot.ok) {
@@ -152,13 +210,29 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  await prisma.appointment.update({
+  const previousStartsAt = appointment.startsAt;
+  const updated = await prisma.appointment.update({
     where: { id: appointment.id },
     data: {
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
     },
+    include: { service: true },
   });
+
+  void notifyClientAppointmentChange({
+    organizationId,
+    appointment: updated,
+    kind: "rescheduled",
+    actor: "client",
+    previousStartsAt,
+  });
+  void notifyStaffForAppointmentId(
+    updated.id,
+    "rescheduled",
+    "client",
+    previousStartsAt,
+  );
 
   return NextResponse.json({
     ok: true,

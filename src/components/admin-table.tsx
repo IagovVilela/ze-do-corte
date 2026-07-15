@@ -101,6 +101,76 @@ function MarkPaidControls({
   );
 }
 
+function RescheduleControls({
+  item,
+  saving,
+  onPatch,
+}: {
+  item: AppointmentRow;
+  saving: boolean;
+  onPatch: (id: string, body: Record<string, unknown>) => void;
+}) {
+  const starts = new Date(item.startsAt);
+  const [date, setDate] = useState(format(starts, "yyyy-MM-dd"));
+  const [time, setTime] = useState(format(starts, "HH:mm"));
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => setOpen(true)}
+        className="rounded-lg border border-brand-500/30 px-2 py-1 text-[11px] text-brand-200 hover:bg-brand-500/10"
+      >
+        Remarcar
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex max-w-[200px] flex-col gap-1.5 rounded-lg border border-white/10 bg-zinc-950/60 p-2">
+      <input
+        type="date"
+        className={selectClass}
+        disabled={saving}
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        aria-label="Nova data"
+      />
+      <input
+        type="time"
+        className={selectClass}
+        disabled={saving}
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        aria-label="Novo horário"
+      />
+      <div className="flex gap-1">
+        <button
+          type="button"
+          disabled={saving || !date || !time}
+          onClick={() => {
+            void onPatch(item.id, { date, time });
+            setOpen(false);
+          }}
+          className="flex-1 rounded-lg bg-brand-500 px-2 py-1 text-[11px] font-semibold text-zinc-950"
+        >
+          Salvar
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => setOpen(false)}
+          className="rounded-lg border border-white/15 px-2 py-1 text-[11px] text-zinc-400"
+        >
+          X
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function barbersForRow(
   barbers: BarberOption[],
   unitId: string | null,
@@ -240,11 +310,52 @@ export function AdminTable({
                 </td>
                 <td className="px-5 py-4 text-zinc-300">{item.clientPhone}</td>
                 <td className="px-5 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
-                  >
-                    {statusLabel[item.status]}
-                  </span>
+                  <div className="flex flex-col gap-2">
+                    <span
+                      className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
+                    >
+                      {statusLabel[item.status]}
+                    </span>
+                    {item.status === "CONFIRMED" ? (
+                      <div className="flex flex-wrap gap-1">
+                        <RescheduleControls
+                          item={item}
+                          saving={savingId === item.id}
+                          onPatch={patchAppointment}
+                        />
+                        <button
+                          type="button"
+                          disabled={savingId === item.id}
+                          onClick={() =>
+                            void patchAppointment(item.id, {
+                              status: "COMPLETED",
+                            })
+                          }
+                          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+                        >
+                          Concluir
+                        </button>
+                        <button
+                          type="button"
+                          disabled={savingId === item.id}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                "Cancelar este agendamento? O cliente será avisado.",
+                              )
+                            ) {
+                              void patchAppointment(item.id, {
+                                status: "CANCELLED",
+                              });
+                            }
+                          }}
+                          className="rounded-lg border border-rose-500/30 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-500/10"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </td>
                 {canManagePayment ? (
                   <td className="px-5 py-4 align-top">

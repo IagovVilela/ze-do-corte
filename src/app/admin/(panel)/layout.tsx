@@ -3,13 +3,16 @@ import type { ReactNode } from "react";
 
 import { AdminPanelNav } from "@/components/admin-panel-nav";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
-import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { needsBillingAttention } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
-export default async function AdminPanelLayout({ children }: { children: ReactNode }) {
+export default async function AdminPanelLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const access = await getStaffAccessOrNull();
   if (!access) {
     redirect("/admin/login");
@@ -21,18 +24,17 @@ export default async function AdminPanelLayout({ children }: { children: ReactNo
   });
 
   return (
-    <>
-      <Navbar />
-      <div className="container-max pt-20 sm:pt-24">
-        <AdminPanelNav access={access} />
+    <div className="min-h-svh bg-[#0f1419] text-zinc-100">
+      <AdminPanelNav access={access} />
+      <div className="flex min-h-svh flex-col lg:pl-60">
         {org && needsBillingAttention(org) && access.role === "OWNER" ? (
-          <div className="mt-4">
+          <div className="border-b border-amber-500/20 bg-amber-500/5 px-4 py-3 sm:px-6">
             <BillingAttentionBanner />
           </div>
         ) : null}
+        <div className="flex-1">{children}</div>
+        <SiteFooter showPitch={false} />
       </div>
-      {children}
-      <SiteFooter showPitch={false} />
-    </>
+    </div>
   );
 }

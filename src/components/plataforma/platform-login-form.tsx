@@ -1,0 +1,103 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export function PlatformLoginForm({
+  gate,
+  initialError,
+}: {
+  gate: string;
+  initialError?: string | null;
+}) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(initialError ?? null);
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch("/api/plataforma/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, gate }),
+      });
+      const data = (await res.json()) as { message?: string; redirect?: string };
+      if (!res.ok) {
+        setError(data.message ?? "Não foi possível entrar.");
+        return;
+      }
+      router.push(data.redirect || "/plataforma");
+      router.refresh();
+    } catch {
+      setError("Erro de rede. Tente de novo.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const input =
+    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+
+  return (
+    <form
+      noValidate
+      onSubmit={(e) => void onSubmit(e)}
+      className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-[#161b22] p-8 shadow-2xl shadow-black/40"
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
+          Barbernegon Ops
+        </p>
+        <h1 className="mt-2 text-xl font-semibold text-white">
+          Console da plataforma
+        </h1>
+        <p className="mt-1 text-sm text-zinc-400">
+          Acesso exclusivo para gerenciar barbearias, marketplace e a base.
+        </p>
+      </div>
+
+      {error ? (
+        <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+          {error}
+        </p>
+      ) : null}
+
+      <label className="block space-y-1.5 text-sm">
+        <span className="text-zinc-400">E-mail</span>
+        <input
+          className={input}
+          type="text"
+          inputMode="email"
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </label>
+      <label className="block space-y-1.5 text-sm">
+        <span className="text-zinc-400">Senha</span>
+        <input
+          className={input}
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </label>
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="w-full rounded-full bg-brand-500 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-brand-400 disabled:opacity-50"
+      >
+        {pending ? "Entrando…" : "Entrar no Ops"}
+      </button>
+    </form>
+  );
+}

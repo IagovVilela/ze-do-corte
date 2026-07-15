@@ -5,6 +5,10 @@ import { randomUUID } from "node:crypto";
 import type { Appointment, Service } from "@prisma/client";
 
 import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
+import {
+  notifyClientAppointmentChange,
+  notifyStaffForAppointmentId,
+} from "@/lib/appointment-change-notify";
 import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
 import { prisma } from "@/lib/prisma";
 import { formatBrPhoneNational, brPhoneDigits } from "@/lib/br-phone-format";
@@ -199,6 +203,13 @@ export async function cancelAppointmentById(options: {
     data: { status: "CANCELLED" },
     include: { service: true },
   });
+  void notifyClientAppointmentChange({
+    organizationId: options.organizationId,
+    appointment: updated,
+    kind: "cancelled",
+    actor: "client",
+  });
+  void notifyStaffForAppointmentId(updated.id, "cancelled", "client");
   return { ok: true, appointment: updated };
 }
 
@@ -243,6 +254,7 @@ export async function rescheduleAppointmentById(options: {
     return { ok: false, message: slot.message, status: slot.status };
   }
 
+  const previousStartsAt = appointment.startsAt;
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
     data: {
@@ -252,6 +264,19 @@ export async function rescheduleAppointmentById(options: {
     },
     include: { service: true },
   });
+  void notifyClientAppointmentChange({
+    organizationId: options.organizationId,
+    appointment: updated,
+    kind: "rescheduled",
+    actor: "client",
+    previousStartsAt,
+  });
+  void notifyStaffForAppointmentId(
+    updated.id,
+    "rescheduled",
+    "client",
+    previousStartsAt,
+  );
   return { ok: true, appointment: updated };
 }
 

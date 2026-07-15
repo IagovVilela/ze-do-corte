@@ -4,7 +4,7 @@ import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
@@ -24,10 +24,15 @@ type ManageAppointmentPayload = {
     price: number;
   };
   unitName: string | null;
+  organizationSlug: string | null;
+  organizationName: string | null;
   staffMemberId: string | null;
   staffDisplayName: string | null;
   canManage: boolean;
   manageBlockedReason: string | null;
+  canReview: boolean;
+  hasReview: boolean;
+  reviewRating: number | null;
 };
 
 type Props = {
@@ -49,6 +54,10 @@ export function ManageReservationClient({ token }: Props) {
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSending, setReviewSending] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,6 +189,34 @@ export function ManageReservationClient({ token }: Props) {
       setActionMessage("Erro de rede.");
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function handleReview() {
+    if (!data?.canReview) return;
+    setReviewSending(true);
+    setReviewMessage(null);
+    try {
+      const res = await fetch("/api/marketplace/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manageToken: token,
+          rating: reviewRating,
+          comment: reviewComment.trim() || null,
+        }),
+      });
+      const payload = (await res.json()) as { message?: string };
+      if (!res.ok) {
+        setReviewMessage(payload.message ?? "Não foi possível enviar a avaliação.");
+        return;
+      }
+      setReviewMessage("Obrigado! Sua avaliação foi registrada.");
+      await load();
+    } catch {
+      setReviewMessage("Erro de rede.");
+    } finally {
+      setReviewSending(false);
     }
   }
 
@@ -344,6 +381,87 @@ export function ManageReservationClient({ token }: Props) {
                 Cancelar agendamento
               </button>
             </div>
+          </div>
+        ) : null}
+
+        {data.hasReview ? (
+          <div className="mt-8 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            Você avaliou este atendimento com{" "}
+            <strong>{data.reviewRating ?? "—"}</strong> estrela
+            {(data.reviewRating ?? 0) === 1 ? "" : "s"}. Obrigado!
+            {data.organizationSlug ? (
+              <>
+                {" "}
+                <Link
+                  href={`/${data.organizationSlug}`}
+                  className="underline underline-offset-2 hover:text-white"
+                >
+                  Ver site da barbearia
+                </Link>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+
+        {data.canReview ? (
+          <div className="mt-8 space-y-4 border-t border-white/10 pt-8">
+            <div>
+              <h2 className="font-display text-lg font-normal text-white">
+                Avalie este atendimento
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Sua nota aparece na busca Barbernegon
+                {data.organizationName ? ` para ${data.organizationName}` : ""}.
+              </p>
+            </div>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setReviewRating(n)}
+                  className="rounded-lg p-1.5 transition hover:bg-white/5"
+                  aria-label={`${n} estrela${n === 1 ? "" : "s"}`}
+                >
+                  <Star
+                    className={cn(
+                      "size-7",
+                      n <= reviewRating
+                        ? "fill-amber-300 text-amber-300"
+                        : "text-zinc-600",
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="Comentário opcional"
+              className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/50"
+            />
+            <button
+              type="button"
+              disabled={reviewSending}
+              onClick={() => void handleReview()}
+              className="w-full rounded-full bg-amber-400/90 py-3 text-sm font-bold text-zinc-950 disabled:opacity-50"
+            >
+              {reviewSending ? "Enviando…" : "Enviar avaliação"}
+            </button>
+            {reviewMessage ? (
+              <p
+                className={cn(
+                  "rounded-xl border px-4 py-3 text-sm",
+                  reviewMessage.includes("Obrigado")
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                    : "border-rose-500/30 bg-rose-500/10 text-rose-200",
+                )}
+              >
+                {reviewMessage}
+              </p>
+            ) : null}
           </div>
         ) : null}
 

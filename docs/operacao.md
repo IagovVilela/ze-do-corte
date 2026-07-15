@@ -35,6 +35,26 @@ cp .env.example .env
 
 Descrição detalhada das variáveis: [README.md](../README.md) (tabela) e [.env.example](../.env.example).
 
+### Barbernegon Ops (entrada secreta)
+
+| Variável | Função |
+|----------|--------|
+| `PLATFORM_ADMIN_EMAILS` | E-mails autorizados (além de `SEED_OWNER_EMAIL`) |
+| `PLATFORM_OPS_GATE` | Segredo da URL — sem ele, `/plataforma/login` responde **404** |
+
+URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`
+
+### Domínios marketing vs marketplace
+
+Opcional. No **mesmo** serviço (ex. Railway), aponte dois domínios customizados HTTPS:
+
+| Variável | Exemplo | Público |
+|----------|---------|---------|
+| `NEXT_PUBLIC_MARKETING_HOST` | `barbernegon.com` | Landing, cadastro, planos, `/admin`, `/plataforma` |
+| `NEXT_PUBLIC_MARKETPLACE_HOST` | `explorar.barbernegon.com` | Marketplace (`/` → explorar), sites `/{slug}`, reservas |
+
+Sem as duas variáveis, a app continua com paths no mesmo host (adequado ao desenvolvimento local). Com ambas, o [`src/proxy.ts`](../src/proxy.ts) redireciona/reescreve para o consumidor **não** ver a página institucional B2B.
+
 ### Cloudinary (foto de perfil no painel)
 
 Opcional. Sem `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`, a página **`/admin/perfil`** continua a permitir nome, telefone e senha; os botões de foto mostram aviso e as APIs de avatar respondem **503**. As imagens ficam na pasta `ze-do-corte/profiles` na conta Cloudinary. **Não commite** a API Secret no repositório.
