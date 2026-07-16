@@ -818,6 +818,7 @@ export async function getAdminAppointmentsPaginated(
         staffMemberId: true,
         paidAt: true,
         paymentMethod: true,
+        clientManageToken: true,
         service: { select: { name: true } },
       },
     }),
@@ -845,6 +846,7 @@ export async function getAdminAppointmentsPaginated(
       : null,
     paidAt: item.paidAt?.toISOString() ?? null,
     paymentMethod: item.paymentMethod,
+    clientManageToken: item.clientManageToken,
   }));
 
   return { rows, total, page: safePage, pageSize: safeSize };

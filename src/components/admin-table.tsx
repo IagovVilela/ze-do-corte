@@ -101,6 +101,75 @@ function MarkPaidControls({
   );
 }
 
+function ClientManageLinkControls({
+  item,
+}: {
+  item: AppointmentRow;
+}) {
+  const [copied, setCopied] = useState(false);
+  const token = item.clientManageToken?.trim();
+  if (!token) {
+    return (
+      <span className="text-[11px] text-zinc-500" title="Reservas antigas ou sem link">
+        Sem link
+      </span>
+    );
+  }
+
+  const path = `/minha-reserva/${encodeURIComponent(token)}`;
+
+  async function copyLink() {
+    const absolute =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${path}`
+        : path;
+    try {
+      await navigator.clipboard.writeText(absolute);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copie o link da reserva:", absolute);
+    }
+  }
+
+  const phoneDigits = item.clientPhone.replace(/\D/g, "");
+  const canWhatsApp = phoneDigits.length >= 10;
+
+  function openWhatsApp() {
+    const absolute = `${window.location.origin}${path}`;
+    const digits = phoneDigits.replace(/^55/, "");
+    const text = `Olá${item.clientName ? `, ${item.clientName.split(/\s+/)[0]}` : ""}! Segue o link da sua reserva: ${absolute}`;
+    window.open(
+      `https://wa.me/55${digits}?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      <button
+        type="button"
+        onClick={() => void copyLink()}
+        className="rounded-lg border border-white/15 px-2 py-1 text-[11px] text-zinc-300 hover:border-brand-500/40 hover:text-brand-200"
+        title="Copiar link /minha-reserva para reenviar ao cliente"
+      >
+        {copied ? "Copiado!" : "Copiar link"}
+      </button>
+      {canWhatsApp ? (
+        <button
+          type="button"
+          onClick={openWhatsApp}
+          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+          title="Abrir WhatsApp com o link da reserva"
+        >
+          WhatsApp
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function RescheduleControls({
   item,
   saving,
@@ -316,6 +385,7 @@ export function AdminTable({
                     >
                       {statusLabel[item.status]}
                     </span>
+                    <ClientManageLinkControls item={item} />
                     {item.status === "CONFIRMED" ? (
                       <div className="flex flex-wrap gap-1">
                         <RescheduleControls

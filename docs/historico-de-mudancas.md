@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-15
 
+- **Admin — link da reserva do cliente**: na tabela de agendamentos, **Copiar link** e **WhatsApp** reenviam `/minha-reserva/[token]`. O token **não expira por data**; remarcar/cancelar só com status Confirmado e horário futuro; ver/avaliar continua depois.
 - **Explorar — comentários das avaliações**: clique na nota do card abre modal com estrelas, primeiro nome e comentário (`GET /api/marketplace/reviews?slug=`).
 - **Ops — gráficos na visão geral**: `/plataforma` com taxas (% marketplace/ativos/trial/canceladas), abas **7d/30d**, áreas de cadastros e agendamentos, pizzas de mix de plano e tier (`getPlatformOverview` + Recharts).
 - **Cancelar plano SaaS (`/admin/plano`)**: dono cancela a assinatura Barbernegon — trial/pagamento pendente vira Cancelado na hora; plano Ativo para cobranças e segue até o fim do período (`planCancelAt`), com opção de desfazer. APIs `POST /api/platform/billing/cancel` e `/undo-cancel`. Migração `20260716010000_organization_plan_cancel_at`.

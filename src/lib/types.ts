@@ -108,6 +108,8 @@ export type AppointmentRow = {
   assignedStaffLabel: string | null;
   paidAt: string | null;
   paymentMethod: string | null;
+  /** Token do link `/minha-reserva/...` (null em reservas antigas). */
+  clientManageToken: string | null;
 };
 
 export type ContactInfo = {
