@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  cityMatchesQuery,
+  resolveFuzzyCityMatches,
+} from "@/lib/city-fuzzy";
 import { prisma } from "@/lib/prisma";
 import {
   parseMarketplaceCategory,
@@ -18,21 +22,52 @@ export {
   marketplaceCategoryLabel,
 } from "@/lib/marketplace-shared";
 
+async function knownMarketplaceCities(): Promise<string[]> {
+  const rows = await prisma.barbershopUnit.findMany({
+    where: {
+      isActive: true,
+      city: { not: null },
+      organization: {
+        marketplaceListed: true,
+        planStatus: { in: ["TRIAL", "ACTIVE"] },
+      },
+    },
+    select: { city: true },
+    take: 800,
+  });
+  const set = new Set<string>();
+  for (const r of rows) {
+    const c = r.city?.trim();
+    if (c) set.add(c);
+  }
+  return [...set];
+}
+
 /**
  * Lista organizações visíveis no marketplace público.
- * Critérios: opt-in, plano TRIAL/ACTIVE, ao menos 1 unidade ativa + 1 serviço ativo.
+ * Cidade: fuzzy sem depender de ILIKE com acento (ex.: "sao" → "São José dos Campos").
  */
 export async function searchMarketplaceShops(
   input: MarketplaceSearchInput = {},
 ): Promise<MarketplaceShop[]> {
   const q = input.q?.trim() || "";
-  const city = input.city?.trim() || "";
+  const cityRaw = input.city?.trim() || "";
   const category = parseMarketplaceCategory(input.category);
   const slugs = (input.slugs ?? [])
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean)
     .slice(0, 80);
   const limit = Math.min(Math.max(input.limit ?? 48, 1), 100);
+
+  // Amplia o take no SQL quando há cidade: filtra de verdade em memória (acentos/parcial).
+  const sqlTake = cityRaw.length >= 2 ? Math.min(200, limit * 4) : limit;
+
+  let cityIn: string[] | null = null;
+  if (cityRaw.length >= 2) {
+    const known = await knownMarketplaceCities();
+    const fuzzy = resolveFuzzyCityMatches(cityRaw, known);
+    if (fuzzy.length > 0) cityIn = fuzzy;
+  }
 
   const orgs = await prisma.organization.findMany({
     where: {
@@ -44,9 +79,7 @@ export async function searchMarketplaceShops(
           units: {
             some: {
               isActive: true,
-              ...(city
-                ? { city: { contains: city, mode: "insensitive" } }
-                : {}),
+              ...(cityIn ? { city: { in: cityIn } } : {}),
               services: {
                 some: {
                   isActive: true,
@@ -130,14 +163,19 @@ export async function searchMarketplaceShops(
       },
     },
     orderBy: [{ ratingCount: "desc" }, { name: "asc" }],
-    take: limit,
+    take: sqlTake,
   });
 
-  const shops: MarketplaceShop[] = [];
+  let shops: MarketplaceShop[] = [];
   for (const org of orgs) {
+    // Preferir unidade cuja cidade casa com a busca (quando houver)
+    const withServices = org.units.filter((u) => u.services.length > 0);
     const preferred =
-      org.units.find((u) => u.isDefault && u.services.length > 0) ??
-      org.units.find((u) => u.services.length > 0) ??
+      (cityRaw.length >= 2
+        ? withServices.find((u) => cityMatchesQuery(cityRaw, u.city))
+        : undefined) ??
+      withServices.find((u) => u.isDefault) ??
+      withServices[0] ??
       org.units[0];
     if (!preferred || preferred.services.length === 0) continue;
 
@@ -163,6 +201,10 @@ export async function searchMarketplaceShops(
     });
   }
 
+  if (cityRaw.length >= 2) {
+    shops = shops.filter((s) => cityMatchesQuery(cityRaw, s.city));
+  }
+
   if (slugs.length > 0) {
     const order = new Map(slugs.map((s, i) => [s, i]));
     shops.sort(
@@ -170,5 +212,5 @@ export async function searchMarketplaceShops(
     );
   }
 
-  return shops;
+  return shops.slice(0, limit);
 }
