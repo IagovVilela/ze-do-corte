@@ -3,10 +3,12 @@
 import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
 
+import { ColorWheelField } from "@/components/color-wheel-field";
 import { CanvasElementView } from "@/components/tenant-canvas-renderer";
 import {
   BUTTON_STYLE_PRESETS,
@@ -156,8 +158,54 @@ export function CanvasStage({
   const board = canvas.artboards[artboard];
   const elements = elementsForArtboard(canvas, artboard);
   const stageRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.55);
+  const [userZoomed, setUserZoomed] = useState(false);
   const drag = useRef<DragMode | null>(null);
+
+  const resetScrollHome = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+    el.scrollTop = 0;
+  }, []);
+
+  const fitZoom = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const narrow = window.matchMedia("(max-width: 1023px)").matches;
+    const pad = narrow ? 24 : 64;
+    const avail = Math.max(120, el.clientWidth - pad);
+    const next = Math.min(1.15, Math.max(0.18, avail / board.width));
+    setZoom(Number(next.toFixed(2)));
+    setUserZoomed(false);
+    // Depois do layout do scale, volta o scroll para o canto superior esquerdo.
+    requestAnimationFrame(() => {
+      resetScrollHome();
+      requestAnimationFrame(resetScrollHome);
+    });
+  }, [board.width, resetScrollHome]);
+
+  useEffect(() => {
+    setUserZoomed(false);
+  }, [artboard, board.width]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const sync = () => {
+      if (userZoomed) return;
+      fitZoom();
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fitZoom, userZoomed]);
+
+  useEffect(() => {
+    resetScrollHome();
+  }, [artboard, zoom, resetScrollHome]);
 
   const ctx = {
     org,
@@ -267,102 +315,139 @@ export function CanvasStage({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-900">
-      <div className="flex items-center gap-3 border-b border-white/10 px-3 py-2 text-xs text-zinc-400">
-        <span>Zoom</span>
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2 text-xs text-zinc-400">
+        <span className="shrink-0">Zoom</span>
         <input
           type="range"
-          min={0.25}
+          min={0.18}
           max={1.2}
-          step={0.05}
+          step={0.02}
           value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          className="w-32"
+          onChange={(e) => {
+            setUserZoomed(true);
+            setZoom(Number(e.target.value));
+          }}
+          className="w-24 sm:w-32"
+          aria-label="Zoom do canvas"
         />
-        <span>{Math.round(zoom * 100)}%</span>
-        <span className="ml-auto text-zinc-500">
-          {board.width}×{board.height}px · clique para selecionar · arraste para mover
+        <span className="tabular-nums">{Math.round(zoom * 100)}%</span>
+        <button
+          type="button"
+          onClick={fitZoom}
+          className="rounded-md border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 hover:bg-white/5"
+        >
+          Ajustar
+        </button>
+        <span className="ml-auto hidden text-zinc-500 lg:inline">
+          {board.width}×{board.height}px · clique para selecionar · arraste para
+          mover
+        </span>
+        <span className="ml-auto text-[10px] text-zinc-500 lg:hidden">
+          {board.width}×{board.height}
         </span>
       </div>
       <div
-        className="min-h-0 flex-1 overflow-auto p-8"
+        ref={scrollerRef}
+        className="min-h-0 flex-1 touch-pan-x touch-pan-y overflow-auto p-3 sm:p-6 lg:p-8"
         onClick={() => onSelect(null)}
       >
+        {/*
+          Wrapper com o tamanho *visual* (já com zoom). Sem isso, o scale
+          mantém 1440px no layout e o scroll abre no meio da página.
+        */}
         <div
-          ref={stageRef}
-          className="relative mx-auto origin-top shadow-2xl shadow-black/60 ring-1 ring-white/10"
+          className="mx-auto"
           style={{
-            ...canvasThemeStyle(canvas.theme, org.primaryColor),
-            width: board.width,
-            height: board.height,
-            transform: `scale(${zoom})`,
-            transformOrigin: "top center",
+            width: board.width * zoom,
+            height: board.height * zoom,
           }}
         >
-          {/* Guias só do editor — somem quando há arte de fundo ativa. */}
-          {(canvas.theme?.bgArt ?? "none") === "none" ? (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 z-0 opacity-[0.28]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px)",
-                backgroundSize: `${CANVAS_SNAP_GRID}px ${CANVAS_SNAP_GRID}px`,
-              }}
-            />
-          ) : null}
-          {elements.map((el) => {
-            const selected = el.id === selectedId;
-            return (
+          <div
+            ref={stageRef}
+            className="relative shadow-2xl shadow-black/60 ring-1 ring-white/10"
+            style={{
+              ...canvasThemeStyle(canvas.theme, org.primaryColor),
+              width: board.width,
+              height: board.height,
+              transform: `scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
+          >
+            {(canvas.theme?.bgArt ?? "none") === "none" ? (
               <div
-                key={el.id}
-                className={cn(
-                  "absolute outline-offset-0",
-                  selected && "outline outline-2 outline-brand-400 ring-1 ring-brand-400/40",
-                  el.locked && "pointer-events-none opacity-70",
-                )}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-0 opacity-[0.28]"
                 style={{
-                  left: el.frame.x,
-                  top: el.frame.y,
-                  width: el.frame.w,
-                  height: el.frame.h,
-                  zIndex: el.zIndex,
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px)",
+                  backgroundSize: `${CANVAS_SNAP_GRID}px ${CANVAS_SNAP_GRID}px`,
                 }}
-                onPointerDown={(e) => startMove(e, el.id)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(el.id);
-                }}
-              >
-                <div className="pointer-events-none h-full w-full [&_a]:pointer-events-none">
-                  <CanvasElementView
-                    element={el}
-                    board={board}
-                    ctx={ctx}
-                    layout="fill"
-                  />
+              />
+            ) : null}
+            {elements.map((el) => {
+              const selected = el.id === selectedId;
+              return (
+                <div
+                  key={el.id}
+                  className={cn(
+                    "absolute touch-none outline-offset-0",
+                    selected &&
+                      "outline outline-2 outline-brand-400 ring-1 ring-brand-400/40",
+                    el.locked && "pointer-events-none opacity-70",
+                  )}
+                  style={{
+                    left: el.frame.x,
+                    top: el.frame.y,
+                    width: el.frame.w,
+                    height: el.frame.h,
+                    zIndex: el.zIndex,
+                  }}
+                  onPointerDown={(e) => startMove(e, el.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(el.id);
+                  }}
+                >
+                  <div className="pointer-events-none h-full w-full [&_a]:pointer-events-none">
+                    <CanvasElementView
+                      element={el}
+                      board={board}
+                      ctx={ctx}
+                      layout="fill"
+                    />
+                  </div>
+                  {selected
+                    ? HANDLES.map((h) => (
+                        <span
+                          key={h}
+                          onPointerDown={(e) => startResize(e, el.id, h)}
+                          className={cn(
+                            "absolute z-10 touch-none rounded-sm border border-brand-300 bg-brand-500",
+                            "h-4 w-4 lg:h-3 lg:w-3",
+                            h === "nw" &&
+                              "-left-2 -top-2 cursor-nwse-resize lg:-left-1.5 lg:-top-1.5",
+                            h === "n" &&
+                              "-top-2 left-1/2 -translate-x-1/2 cursor-ns-resize lg:-top-1.5",
+                            h === "ne" &&
+                              "-right-2 -top-2 cursor-nesw-resize lg:-right-1.5 lg:-top-1.5",
+                            h === "e" &&
+                              "-right-2 top-1/2 -translate-y-1/2 cursor-ew-resize lg:-right-1.5",
+                            h === "se" &&
+                              "-bottom-2 -right-2 cursor-nwse-resize lg:-bottom-1.5 lg:-right-1.5",
+                            h === "s" &&
+                              "-bottom-2 left-1/2 -translate-x-1/2 cursor-ns-resize lg:-bottom-1.5",
+                            h === "sw" &&
+                              "-bottom-2 -left-2 cursor-nesw-resize lg:-bottom-1.5 lg:-left-1.5",
+                            h === "w" &&
+                              "-left-2 top-1/2 -translate-y-1/2 cursor-ew-resize lg:-left-1.5",
+                          )}
+                        />
+                      ))
+                    : null}
                 </div>
-                {selected
-                  ? HANDLES.map((h) => (
-                      <span
-                        key={h}
-                        onPointerDown={(e) => startResize(e, el.id, h)}
-                        className={cn(
-                          "absolute z-10 h-3 w-3 rounded-sm border border-brand-300 bg-brand-500",
-                          h === "nw" && "-left-1.5 -top-1.5 cursor-nwse-resize",
-                          h === "n" && "-top-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize",
-                          h === "ne" && "-right-1.5 -top-1.5 cursor-nesw-resize",
-                          h === "e" && "-right-1.5 top-1/2 -translate-y-1/2 cursor-ew-resize",
-                          h === "se" && "-bottom-1.5 -right-1.5 cursor-nwse-resize",
-                          h === "s" && "-bottom-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize",
-                          h === "sw" && "-bottom-1.5 -left-1.5 cursor-nesw-resize",
-                          h === "w" && "-left-1.5 top-1/2 -translate-y-1/2 cursor-ew-resize",
-                        )}
-                      />
-                    ))
-                  : null}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -385,23 +470,23 @@ export function PageTemplatePicker({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black/70"
         aria-label="Fechar"
         onClick={onClose}
       />
-      <div className="relative z-[1] max-h-[min(90vh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl">
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+      <div className="relative z-[1] max-h-[min(92svh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl max-sm:max-h-[92svh] max-sm:rounded-t-2xl max-sm:rounded-b-none">
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
               Modelos de página
             </p>
-            <h2 className="mt-1 font-display text-2xl tracking-wide text-white">
+            <h2 className="mt-1 font-display text-xl tracking-wide text-white sm:text-2xl">
               Escolha um layout completo
             </h2>
-            <p className="mt-1 max-w-xl text-sm text-zinc-400">
+            <p className="mt-1 max-w-xl text-sm text-zinc-400 max-sm:text-xs">
               Cada modelo tem composição, cores e tipografia próprias. Aplicar
               substitui o canvas atual (desktop + mobile).
             </p>
@@ -409,12 +494,12 @@ export function PageTemplatePicker({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
+            className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
           >
             Fechar
           </button>
         </div>
-        <div className="grid max-h-[min(70vh,560px)] gap-3 overflow-y-auto p-5 sm:grid-cols-2">
+        <div className="grid max-h-[min(70vh,560px)] gap-3 overflow-y-auto p-4 sm:grid-cols-2 sm:p-5 max-sm:max-h-[calc(92svh-7rem)]">
           {PAGE_TEMPLATE_META.map((tpl) => (
             <button
               key={tpl.id}
@@ -458,12 +543,14 @@ export function ElementLibrary({
   atY,
   onAdd,
   onAddMany,
+  className,
 }: {
   artboard: CanvasArtboardId;
   boardW: number;
   atY: number;
   onAdd: (el: CanvasElement) => void;
   onAddMany: (els: CanvasElement[]) => void;
+  className?: string;
 }) {
   const [tab, setTab] = useState<LibraryTab>("elements");
 
@@ -472,7 +559,12 @@ export function ElementLibrary({
   }
 
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-2 overflow-hidden p-3">
+    <aside
+      className={cn(
+        "flex h-full min-h-0 flex-col gap-2 overflow-hidden p-3",
+        className,
+      )}
+    >
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
           Biblioteca
@@ -713,10 +805,12 @@ export function ThemePanel({
   theme,
   onChange,
   onBindElements,
+  className,
 }: {
   theme: SiteCanvasConfig["theme"];
   onChange: (theme: NonNullable<SiteCanvasConfig["theme"]>) => void;
   onBindElements?: () => void;
+  className?: string;
 }) {
   const t = theme ?? {};
   const row =
@@ -737,7 +831,12 @@ export function ThemePanel({
     )?.id ?? null;
 
   return (
-    <div className="max-h-[42vh] space-y-3 overflow-y-auto border-b border-white/10 px-3 pb-3">
+    <div
+      className={cn(
+        "max-h-[42vh] space-y-3 overflow-y-auto border-b border-white/10 px-3 pb-3",
+        className,
+      )}
+    >
       <div className="space-y-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
           Cores do sistema
@@ -756,22 +855,23 @@ export function ThemePanel({
             ["text", "Texto", "#fafafa"],
           ] as const
         ).map(([key, label, fallback]) => (
-          <label
+          <div
             key={key}
             className="flex items-center justify-between gap-2 text-xs text-zinc-400"
           >
             <span>{label}</span>
-            <input
-              type="color"
-              className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
+            <ColorWheelField
+              aria-label={`Cor ${label}`}
+              fallback={fallback}
               value={
                 (t[key] as string | undefined)?.startsWith("#")
                   ? (t[key] as string)
                   : fallback
               }
-              onChange={(e) => set(key, e.target.value)}
+              onChange={(hex) => set(key, hex)}
+              className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
             />
-          </label>
+          </div>
         ))}
 
         <div className="pt-1">
@@ -823,11 +923,11 @@ export function ThemePanel({
           </div>
           {(t.bgArt ?? "none") !== "none" ? (
             <div className="mt-2 space-y-2 rounded-lg border border-white/10 bg-zinc-900/40 p-2">
-              <label className="flex items-center justify-between gap-2 text-xs text-zinc-400">
+              <div className="flex items-center justify-between gap-2 text-xs text-zinc-400">
                 <span>Cor das linhas</span>
-                <input
-                  type="color"
-                  className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
+                <ColorWheelField
+                  aria-label="Cor das linhas"
+                  fallback="#a1a1aa"
                   value={
                     t.bgArtColor?.startsWith("#")
                       ? t.bgArtColor
@@ -835,9 +935,10 @@ export function ThemePanel({
                         ? t.primary
                         : "#a1a1aa"
                   }
-                  onChange={(e) => set("bgArtColor", e.target.value)}
+                  onChange={(hex) => set("bgArtColor", hex)}
+                  className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
                 />
-              </label>
+              </div>
               <label className="block space-y-1 text-xs text-zinc-400">
                 <span className="flex justify-between">
                   Intensidade
@@ -918,6 +1019,7 @@ export function ElementInspector({
   onDuplicate,
   onBringFront,
   onSendBack,
+  className,
 }: {
   element: CanvasElement | null;
   artboardSize: { width: number; height: number };
@@ -926,6 +1028,7 @@ export function ElementInspector({
   onDuplicate: () => void;
   onBringFront: () => void;
   onSendBack: () => void;
+  className?: string;
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -933,7 +1036,12 @@ export function ElementInspector({
 
   if (!element) {
     return (
-      <aside className="flex w-64 shrink-0 flex-col border-l border-white/10 bg-zinc-950 p-4 text-sm text-zinc-500">
+      <aside
+        className={cn(
+          "flex w-64 shrink-0 flex-col border-l border-white/10 bg-zinc-950 p-4 text-sm text-zinc-500",
+          className,
+        )}
+      >
         Selecione um elemento no canvas.
       </aside>
     );
@@ -1086,7 +1194,12 @@ export function ElementInspector({
   }
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/10 bg-zinc-950 p-4">
+    <aside
+      className={cn(
+        "flex w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/10 bg-zinc-950 p-4",
+        className,
+      )}
+    >
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
           {element.type}
@@ -1208,15 +1321,16 @@ export function ElementInspector({
               onChange={(e) => setProp("fontSize", Number(e.target.value))}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Cor
-            <input
-              type="color"
-              className={cn(input, "h-9")}
+            <ColorWheelField
+              aria-label="Cor do texto"
+              fallback="#fafafa"
               value={p.color?.startsWith("#") ? p.color : "#fafafa"}
-              onChange={(e) => setProp("color", e.target.value)}
+              onChange={(hex) => setProp("color", hex)}
+              className={cn(input, "mt-1 h-9 w-full")}
             />
-          </label>
+          </div>
         </>
       )}
 
@@ -1230,19 +1344,20 @@ export function ElementInspector({
               onChange={(e) => setProp("href", e.target.value)}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Fundo
-            <input
-              type="color"
-              className={cn(input, "h-9")}
+            <ColorWheelField
+              aria-label="Cor de fundo do botão"
+              fallback="#3b82f6"
               value={
                 p.backgroundColor?.startsWith("#")
                   ? p.backgroundColor
                   : "#3b82f6"
               }
-              onChange={(e) => setProp("backgroundColor", e.target.value)}
+              onChange={(hex) => setProp("backgroundColor", hex)}
+              className={cn(input, "mt-1 h-9 w-full")}
             />
-          </label>
+          </div>
         </>
       )}
 
@@ -1253,17 +1368,18 @@ export function ElementInspector({
         })}
 
       {element.type === "rect" && (
-        <label className="text-xs text-zinc-400">
+        <div className="text-xs text-zinc-400">
           Fundo
-          <input
-            type="color"
-            className={cn(input, "h-9")}
+          <ColorWheelField
+            aria-label="Cor de fundo do bloco"
+            fallback="#18181b"
             value={
               p.backgroundColor?.startsWith("#") ? p.backgroundColor : "#18181b"
             }
-            onChange={(e) => setProp("backgroundColor", e.target.value)}
+            onChange={(hex) => setProp("backgroundColor", hex)}
+            className={cn(input, "mt-1 h-9 w-full")}
           />
-        </label>
+        </div>
       )}
 
       {(element.type === "services" ||
@@ -1356,19 +1472,20 @@ export function ElementInspector({
               })}
             </>
           ) : null}
-          <label className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Fundo
-            <input
-              type="color"
-              className={cn(input, "h-9")}
+            <ColorWheelField
+              aria-label="Cor de fundo do painel"
+              fallback="#18181b"
               value={
                 p.backgroundColor?.startsWith("#")
                   ? p.backgroundColor
                   : "#18181b"
               }
-              onChange={(e) => setProp("backgroundColor", e.target.value)}
+              onChange={(hex) => setProp("backgroundColor", hex)}
+              className={cn(input, "mt-1 h-9 w-full")}
             />
-          </label>
+          </div>
         </div>
       )}
 
@@ -1427,15 +1544,16 @@ export function ElementInspector({
 
       {element.type === "divider" && (
         <>
-          <label className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Cor
-            <input
-              type="color"
-              className={cn(input, "h-9")}
+            <ColorWheelField
+              aria-label="Cor do divisor"
+              fallback="#3f3f46"
               value={p.color?.startsWith("#") ? p.color : "#3f3f46"}
-              onChange={(e) => setProp("color", e.target.value)}
+              onChange={(hex) => setProp("color", hex)}
+              className={cn(input, "mt-1 h-9 w-full")}
             />
-          </label>
+          </div>
           <label className="text-xs text-zinc-400">
             Espessura
             <input
@@ -1458,19 +1576,20 @@ export function ElementInspector({
               onChange={(e) => setProp("text", e.target.value)}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Fundo
-            <input
-              type="color"
-              className={cn(input, "h-9")}
+            <ColorWheelField
+              aria-label="Cor de fundo do badge"
+              fallback="#3b82f6"
               value={
                 p.backgroundColor?.startsWith("#")
                   ? p.backgroundColor
                   : "#3b82f6"
               }
-              onChange={(e) => setProp("backgroundColor", e.target.value)}
+              onChange={(hex) => setProp("backgroundColor", hex)}
+              className={cn(input, "mt-1 h-9 w-full")}
             />
-          </label>
+          </div>
         </>
       )}
 

@@ -28,6 +28,7 @@ import {
 } from "@/lib/site-canvas";
 import type { PublicBarber, ServiceSummary } from "@/lib/types";
 import { useCanvasHistory } from "@/lib/use-canvas-history";
+import { cn } from "@/lib/utils";
 
 type UnitInfo = {
   id: string;
@@ -44,6 +45,8 @@ type Props = {
   units: UnitInfo[];
   slogans: { primary: string; secondary: string };
 };
+
+type MobileSheet = "library" | "inspector" | "tools" | null;
 
 export function SiteCanvasEditor({
   initialOrg,
@@ -73,11 +76,21 @@ export function SiteCanvasEditor({
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [mobileSheet, setMobileSheet] = useState<MobileSheet>(null);
 
   useEffect(() => {
     replaceCanvas(parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name));
     setOrg(initialOrg);
   }, [initialOrg, replaceCanvas]);
+
+  useEffect(() => {
+    if (!mobileSheet) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileSheet(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileSheet]);
 
   const selected = useMemo(
     () => canvas.elements.find((e) => e.id === selectedId) ?? null,
@@ -97,6 +110,7 @@ export function SiteCanvasEditor({
       ),
     }));
     setMessage(`Arteboard ${artboard}: elementos alinhados à grade.`);
+    setMobileSheet(null);
   }
 
   const patchElement = useCallback(
@@ -108,6 +122,10 @@ export function SiteCanvasEditor({
     },
     [setCanvas],
   );
+
+  const selectElement = useCallback((id: string | null) => {
+    setSelectedId(id);
+  }, []);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -169,6 +187,7 @@ export function SiteCanvasEditor({
         );
       }
       setMessage("Canvas salvo.");
+      setMobileSheet(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro.");
     } finally {
@@ -211,6 +230,7 @@ export function SiteCanvasEditor({
       if (data.organization) setOrg(data.organization);
       setSelectedId(null);
       setTemplatesOpen(false);
+      setMobileSheet(null);
       setMessage(`Modelo “${id}” aplicado.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro.");
@@ -222,6 +242,7 @@ export function SiteCanvasEditor({
   function addElement(el: CanvasElement) {
     commitCanvas((c) => ({ ...c, elements: [...c.elements, el] }));
     setSelectedId(el.id);
+    setMobileSheet("inspector");
   }
 
   function addElements(els: CanvasElement[]) {
@@ -241,6 +262,7 @@ export function SiteCanvasEditor({
     });
     setSelectedId(els[els.length - 1]?.id ?? null);
     setMessage(`${els.length} elementos da seção adicionados.`);
+    setMobileSheet("inspector");
   }
 
   function deleteSelected() {
@@ -250,6 +272,7 @@ export function SiteCanvasEditor({
       elements: c.elements.filter((e) => e.id !== selectedId),
     }));
     setSelectedId(null);
+    setMobileSheet(null);
   }
 
   function duplicateSelected() {
@@ -297,18 +320,74 @@ export function SiteCanvasEditor({
     });
   }
 
+  function copyDeskToMobile() {
+    commitCanvas((c) => copyDesktopToMobile(c));
+    setArtboard("mobile");
+    setSelectedId(null);
+    setMessage("Layout desktop copiado para mobile (escalado).");
+    setMobileSheet(null);
+  }
+
   const historyBtn =
     "inline-flex size-8 items-center justify-center rounded-lg border border-white/15 text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
 
+  const dockBtn =
+    "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-2 text-[10px] font-semibold transition";
+
+  const libraryBlock = (
+    <>
+      <ThemePanel
+        theme={canvas.theme}
+        onChange={(theme) =>
+          setCanvas((c) => applyThemeChangeToCanvas(c, theme))
+        }
+        onBindElements={() => {
+          commitCanvas((c) => ({
+            ...c,
+            elements: bindElementsToThemeTokens(c.elements),
+          }));
+          setMessage(
+            "Cores do tema aplicadas aos elementos (texto, botões, painéis…).",
+          );
+        }}
+      />
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <ElementLibrary
+          artboard={artboard}
+          boardW={boardW}
+          atY={nextArtboardY(canvas, artboard)}
+          onAdd={addElement}
+          onAddMany={addElements}
+        />
+      </div>
+    </>
+  );
+
+  const inspectorProps = {
+    element: selected,
+    artboardSize: { width: boardW, height: boardH },
+    onChange: patchElement,
+    onDelete: deleteSelected,
+    onDuplicate: duplicateSelected,
+    onBringFront: bringFront,
+    onSendBack: sendBack,
+  };
+
   return (
-    <div className="flex h-[calc(100svh-5.5rem)] min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950">
+    <div
+      className={cn(
+        "relative flex flex-col overflow-hidden border border-white/10 bg-zinc-950",
+        "h-[calc(100svh-5.5rem)] min-h-[520px] rounded-2xl",
+        "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-14 max-lg:z-20 max-lg:h-auto max-lg:min-h-0 max-lg:rounded-none max-lg:border-x-0 max-lg:border-b-0",
+      )}
+    >
       <PageTemplatePicker
         open={templatesOpen}
         busy={saving}
         onClose={() => setTemplatesOpen(false)}
         onPick={(id) => void applyTemplate(id)}
       />
-      <header className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2">
+      <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 px-2 py-2 sm:px-3">
         <div className="flex rounded-full border border-white/10 p-0.5">
           {(["desktop", "mobile"] as const).map((id) => (
             <button
@@ -320,11 +399,14 @@ export function SiteCanvasEditor({
               }}
               className={
                 artboard === id
-                  ? "rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-zinc-950"
-                  : "rounded-full px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
+                  ? "rounded-full bg-brand-500 px-2.5 py-1 text-xs font-bold text-zinc-950 sm:px-3"
+                  : "rounded-full px-2.5 py-1 text-xs text-zinc-300 hover:bg-white/5 sm:px-3"
               }
             >
-              {id === "desktop" ? "Desktop" : "Mobile"}
+              {id === "desktop" ? "Desk" : "Mob"}
+              <span className="hidden sm:inline">
+                {id === "desktop" ? "top" : "ile"}
+              </span>
             </button>
           ))}
         </div>
@@ -352,48 +434,48 @@ export function SiteCanvasEditor({
           </button>
         </div>
 
-        <button
-          type="button"
-          className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
-          onClick={() => {
-            commitCanvas((c) => copyDesktopToMobile(c));
-            setArtboard("mobile");
-            setSelectedId(null);
-            setMessage("Layout desktop copiado para mobile (escalado).");
-          }}
-        >
-          Copiar desk → mobile
-        </button>
-
-        <div className="flex flex-wrap gap-1">
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => setTemplatesOpen(true)}
-          className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
-        >
-          Modelos de página
-        </button>
-        <button
-          type="button"
-          disabled={saving}
-          onClick={snapAllOnArtboard}
-          className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 disabled:opacity-50"
-          title="Ajusta X/Y/L/A de todos os elementos do arteboard atual para múltiplos de 8px"
-        >
-          Alinhar tudo à grade
-        </button>
+        <div className="hidden flex-wrap gap-1 lg:flex">
+          <button
+            type="button"
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+            onClick={copyDeskToMobile}
+          >
+            Copiar desk → mobile
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setTemplatesOpen(true)}
+            className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
+          >
+            Modelos de página
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={snapAllOnArtboard}
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 disabled:opacity-50"
+            title="Ajusta X/Y/L/A de todos os elementos do arteboard atual para múltiplos de 8px"
+          >
+            Alinhar tudo à grade
+          </button>
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {message ? (
-            <span className="text-xs text-emerald-300">{message}</span>
+            <span className="hidden max-w-[12rem] truncate text-xs text-emerald-300 sm:inline">
+              {message}
+            </span>
           ) : null}
-          {error ? <span className="text-xs text-rose-300">{error}</span> : null}
+          {error ? (
+            <span className="max-w-[10rem] truncate text-xs text-rose-300 sm:max-w-none">
+              {error}
+            </span>
+          ) : null}
           <Link
             href={`/${org.slug}`}
             target="_blank"
-            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+            className="hidden rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 lg:inline-flex"
           >
             Ver site
           </Link>
@@ -401,39 +483,16 @@ export function SiteCanvasEditor({
             type="button"
             disabled={saving}
             onClick={() => void save()}
-            className="rounded-full bg-brand-400 px-4 py-1.5 text-xs font-bold text-zinc-950 disabled:opacity-60"
+            className="rounded-full bg-brand-400 px-3 py-1.5 text-xs font-bold text-zinc-950 disabled:opacity-60 sm:px-4"
           >
-            {saving ? "Salvando…" : "Salvar canvas"}
+            {saving ? "…" : "Salvar"}
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-56 shrink-0 flex-col border-r border-white/10 bg-zinc-950">
-          <ThemePanel
-            theme={canvas.theme}
-            onChange={(theme) =>
-              setCanvas((c) => applyThemeChangeToCanvas(c, theme))
-            }
-            onBindElements={() => {
-              commitCanvas((c) => ({
-                ...c,
-                elements: bindElementsToThemeTokens(c.elements),
-              }));
-              setMessage(
-                "Cores do tema aplicadas aos elementos (texto, botões, painéis…).",
-              );
-            }}
-          />
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <ElementLibrary
-              artboard={artboard}
-              boardW={boardW}
-              atY={nextArtboardY(canvas, artboard)}
-              onAdd={addElement}
-              onAddMany={addElements}
-            />
-          </div>
+        <div className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex">
+          {libraryBlock}
         </div>
         <CanvasStage
           canvas={canvas}
@@ -442,23 +501,197 @@ export function SiteCanvasEditor({
           onInteractionEnd={endInteraction}
           artboard={artboard}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={selectElement}
           org={org}
           services={services}
           barbers={barbers}
           units={units}
           slogans={slogans}
         />
-        <ElementInspector
-          element={selected}
-          artboardSize={{ width: boardW, height: boardH }}
-          onChange={patchElement}
-          onDelete={deleteSelected}
-          onDuplicate={duplicateSelected}
-          onBringFront={bringFront}
-          onSendBack={sendBack}
-        />
+        <div className="hidden lg:contents">
+          <ElementInspector {...inspectorProps} />
+        </div>
       </div>
+
+      <nav
+        className="flex shrink-0 gap-1 border-t border-white/10 bg-zinc-950/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
+        aria-label="Ferramentas do canvas"
+      >
+        <button
+          type="button"
+          className={cn(
+            dockBtn,
+            mobileSheet === "library"
+              ? "bg-brand-500/20 text-brand-200"
+              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+          )}
+          onClick={() =>
+            setMobileSheet((s) => (s === "library" ? null : "library"))
+          }
+        >
+          <LibraryIcon />
+          Biblioteca
+        </button>
+        <button
+          type="button"
+          className={cn(
+            dockBtn,
+            mobileSheet === "inspector"
+              ? "bg-brand-500/20 text-brand-200"
+              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+          )}
+          onClick={() =>
+            setMobileSheet((s) => (s === "inspector" ? null : "inspector"))
+          }
+        >
+          <InspectIcon />
+          {selected ? "Editar" : "Propriedades"}
+        </button>
+        <button
+          type="button"
+          className={cn(
+            dockBtn,
+            mobileSheet === "tools"
+              ? "bg-brand-500/20 text-brand-200"
+              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+          )}
+          onClick={() =>
+            setMobileSheet((s) => (s === "tools" ? null : "tools"))
+          }
+        >
+          <MoreIcon />
+          Mais
+        </button>
+      </nav>
+
+      {mobileSheet ? (
+        <div className="absolute inset-0 z-30 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55"
+            aria-label="Fechar painel"
+            onClick={() => setMobileSheet(null)}
+          />
+          <div
+            className={cn(
+              "absolute inset-x-0 bottom-0 flex max-h-[min(78svh,640px)] flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-zinc-950 shadow-2xl",
+              "pb-[max(0.25rem,env(safe-area-inset-bottom))]",
+            )}
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              mobileSheet === "library"
+                ? "Biblioteca"
+                : mobileSheet === "inspector"
+                  ? "Propriedades"
+                  : "Mais opções"
+            }
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
+              <p className="text-sm font-semibold text-zinc-100">
+                {mobileSheet === "library"
+                  ? "Biblioteca e tema"
+                  : mobileSheet === "inspector"
+                    ? selected
+                      ? `Editar · ${selected.type}`
+                      : "Propriedades"
+                    : "Ferramentas"}
+              </p>
+              <button
+                type="button"
+                onClick={() => setMobileSheet(null)}
+                className="rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {mobileSheet === "library" ? (
+                <div className="flex h-full min-h-[50svh] flex-col">
+                  <ThemePanel
+                    theme={canvas.theme}
+                    className="max-h-[28svh] shrink-0"
+                    onChange={(theme) =>
+                      setCanvas((c) => applyThemeChangeToCanvas(c, theme))
+                    }
+                    onBindElements={() => {
+                      commitCanvas((c) => ({
+                        ...c,
+                        elements: bindElementsToThemeTokens(c.elements),
+                      }));
+                      setMessage(
+                        "Cores do tema aplicadas aos elementos (texto, botões, painéis…).",
+                      );
+                    }}
+                  />
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <ElementLibrary
+                      artboard={artboard}
+                      boardW={boardW}
+                      atY={nextArtboardY(canvas, artboard)}
+                      onAdd={addElement}
+                      onAddMany={addElements}
+                    />
+                  </div>
+                </div>
+              ) : null}
+              {mobileSheet === "inspector" ? (
+                <ElementInspector
+                  {...inspectorProps}
+                  className="w-full border-l-0"
+                />
+              ) : null}
+              {mobileSheet === "tools" ? (
+                <div className="space-y-2 p-4">
+                  {message ? (
+                    <p className="text-xs text-emerald-300">{message}</p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={copyDeskToMobile}
+                  >
+                    Copiar desk → mobile
+                    <span className="mt-0.5 block text-[11px] text-zinc-500">
+                      Escala o layout desktop para o arteboard mobile
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    className="w-full rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-left text-sm font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
+                    onClick={() => {
+                      setMobileSheet(null);
+                      setTemplatesOpen(true);
+                    }}
+                  >
+                    Modelos de página
+                    <span className="mt-0.5 block text-[11px] font-normal text-brand-200/70">
+                      Substitui desktop e mobile
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    className="w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5 disabled:opacity-50"
+                    onClick={snapAllOnArtboard}
+                  >
+                    Alinhar tudo à grade
+                  </button>
+                  <Link
+                    href={`/${org.slug}`}
+                    target="_blank"
+                    className="block w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={() => setMobileSheet(null)}
+                  >
+                    Ver site público
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -501,6 +734,73 @@ function RedoIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function LibraryIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="3"
+        y="4"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <rect
+        x="14"
+        y="4"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <rect
+        x="3"
+        y="13"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <rect
+        x="14"
+        y="13"
+        width="7"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+    </svg>
+  );
+}
+
+function InspectIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 7h16M4 12h10M4 17h7"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <circle cx="17" cy="16" r="3.25" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="6" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="18" r="1.5" fill="currentColor" />
     </svg>
   );
 }

@@ -36,8 +36,8 @@ export default async function AdminSitePage() {
   const slogans = orgDisplaySlogan(org);
 
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="space-y-4 max-lg:space-y-0">
+      <div className="max-lg:hidden">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
           Site
         </p>
@@ -47,7 +47,10 @@ export default async function AdminSitePage() {
         <p className="mt-1 max-w-2xl text-sm text-zinc-400">
           Monte a página no canvas: arraste, redimensione e edite. Desktop e
           mobile são layouts separados. Identidade (logo, slug, redes) fica em{" "}
-          <a href="/admin/marca" className="text-brand-200 underline-offset-2 hover:underline">
+          <a
+            href="/admin/marca"
+            className="text-brand-200 underline-offset-2 hover:underline"
+          >
             Marca
           </a>
           .

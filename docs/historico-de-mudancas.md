@@ -8,6 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-15
 
+- **Seletor de cor (roda)**: no canvas e em Marca, o `input type="color"` nativo (3 canais) foi trocado por roda com anel de matiz + bolinha no quadrado — arrastar até a cor; `ColorWheelField`.
+- **Canvas editor responsivo**: em celular/tablet (`/admin/site`) o studio fica em tela cheia com dock (Biblioteca / Editar / Mais) e folhas inferiores; zoom **Ajustar** ao tamanho da tela; alças de resize maiores ao toque. Desktop mantém as 3 colunas.
 - **Explorar — cidade fuzzy + localização**: busca parcial/fuzzy sem acento (ex.: `sao` / `sao jose` → São José dos Campos); resultados **enquanto digita** (debounce); botão **Perto de mim** (`GET /api/marketplace/geocode`).
 - **Admin — link da reserva do cliente**: na tabela de agendamentos, **Copiar link** e **WhatsApp** reenviam `/minha-reserva/[token]`. O token **não expira por data**; remarcar/cancelar só com status Confirmado e horário futuro; ver/avaliar continua depois.
 - **Explorar — comentários das avaliações**: clique na nota do card abre modal com estrelas, primeiro nome e comentário (`GET /api/marketplace/reviews?slug=`).

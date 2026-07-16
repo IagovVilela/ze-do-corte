@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+import {
+  ColorWheelField,
+  normalizeHexColor,
+} from "@/components/color-wheel-field";
 import { publicSurfaceUrl } from "@/lib/public-hosts";
 
 type OrgForm = {
@@ -37,9 +41,8 @@ const empty: OrgForm = {
 
 function normalizeHex(value: string): string {
   const v = value.trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(v)) return v.toLowerCase();
   if (/^[0-9A-Fa-f]{6}$/.test(v)) return `#${v.toLowerCase()}`;
-  return "#3b82f6";
+  return normalizeHexColor(v, "#3b82f6");
 }
 
 function isVideoUrl(url: string): boolean {
@@ -274,14 +277,13 @@ export function BrandEditorForm() {
         <div className="space-y-1.5 text-sm">
           <span className="text-zinc-300">Cor principal</span>
           <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={colorValue}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, primaryColor: e.target.value }))
-              }
-              className="h-11 w-14 cursor-pointer rounded-lg border border-white/10 bg-transparent p-1"
+            <ColorWheelField
               aria-label="Escolher cor principal"
+              value={colorValue}
+              onChange={(hex) =>
+                setForm((f) => ({ ...f, primaryColor: hex }))
+              }
+              className="h-11 w-14 rounded-lg border border-white/10 bg-transparent p-1"
             />
             <input
               value={form.primaryColor}
@@ -305,7 +307,7 @@ export function BrandEditorForm() {
             />
           </div>
           <p className="text-[11px] text-zinc-500">
-            Clique no quadrado de cor para abrir o seletor.
+            Toque no quadrado e arraste a bolinha até a cor desejada.
           </p>
         </div>
 
