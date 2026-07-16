@@ -5,6 +5,7 @@ import { Heart, MapPin, Star, X } from "lucide-react";
 import { useState } from "react";
 
 import { LocationMap } from "@/components/location-map";
+import { ShopReviewsModal } from "@/components/marketplace/shop-reviews-modal";
 import { useMarketplaceFavorites } from "@/lib/marketplace-favorites";
 import {
   marketplaceCategoryLabel,
@@ -19,9 +20,11 @@ type Props = {
 function RatingBadge({
   avg,
   count,
+  onOpen,
 }: {
   avg: number | null;
   count: number;
+  onOpen: () => void;
 }) {
   if (!count || avg == null) {
     return (
@@ -31,13 +34,23 @@ function RatingBadge({
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-amber-200 backdrop-blur">
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onOpen();
+      }}
+      className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-amber-200 backdrop-blur transition hover:bg-black/75"
+      aria-label={`Ver ${count} avaliações`}
+      title="Ver avaliações"
+    >
       <Star className="size-3 fill-amber-300 text-amber-300" />
       {avg.toFixed(1)}
       <span className="font-normal text-zinc-400">
         · {count} {count === 1 ? "avaliação" : "avaliações"}
       </span>
-    </span>
+    </button>
   );
 }
 
@@ -48,6 +61,7 @@ export function MarketplaceShopCard({ shop }: Props) {
   const accent = shop.primaryColor || "#3b82f6";
   const { isFavorite, toggleFavorite, hydrated } = useMarketplaceFavorites();
   const [mapOpen, setMapOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
   const fav = hydrated && isFavorite(shop.slug);
 
   return (
@@ -87,7 +101,11 @@ export function MarketplaceShopCard({ shop }: Props) {
               </div>
             )}
             <div className="absolute left-3 top-3">
-              <RatingBadge avg={shop.ratingAvg} count={shop.ratingCount} />
+              <RatingBadge
+                avg={shop.ratingAvg}
+                count={shop.ratingCount}
+                onOpen={() => setReviewsOpen(true)}
+              />
             </div>
             {shop.city ? (
               <div className="absolute bottom-3 left-3">
@@ -225,6 +243,13 @@ export function MarketplaceShopCard({ shop }: Props) {
           </div>
         </div>
       ) : null}
+
+      <ShopReviewsModal
+        slug={shop.slug}
+        shopName={shop.name}
+        open={reviewsOpen}
+        onClose={() => setReviewsOpen(false)}
+      />
     </>
   );
 }

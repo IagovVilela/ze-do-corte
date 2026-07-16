@@ -79,7 +79,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
 | Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding, `marketplaceListed`) |
-| Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `reviews/route.ts` — `POST` avaliação por token |
+| Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `reviews/route.ts` — `GET` lista publicamente por slug + `POST` avaliação por token |
 | Plataforma (ops) | `src/app/api/plataforma/login/route.ts`, `overview`, `organizations`, `marketplace`, `consumidores`, `reviews/[id]` |
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |

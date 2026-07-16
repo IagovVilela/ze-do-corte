@@ -29,6 +29,79 @@ function canLeaveReview(row: {
   return "Este atendimento não pode ser avaliado.";
 }
 
+function publicDisplayName(full: string | null | undefined): string {
+  const first = full?.trim().split(/\s+/)[0];
+  if (!first) return "Cliente";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+/**
+ * Avaliações públicas de uma barbearia listada no marketplace.
+ * GET /api/marketplace/reviews?slug=...
+ */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const slug = searchParams.get("slug")?.trim().toLowerCase() ?? "";
+  if (!slug || slug.length > 80) {
+    return NextResponse.json({ message: "Slug inválido." }, { status: 400 });
+  }
+
+  const org = await prisma.organization.findFirst({
+    where: {
+      slug,
+      marketplaceListed: true,
+      planStatus: { in: ["TRIAL", "ACTIVE"] },
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      ratingAvg: true,
+      ratingCount: true,
+    },
+  });
+
+  if (!org) {
+    return NextResponse.json(
+      { message: "Barbearia não encontrada no marketplace." },
+      { status: 404 },
+    );
+  }
+
+  const rows = await prisma.organizationReview.findMany({
+    where: { organizationId: org.id },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      clientName: true,
+      createdAt: true,
+    },
+  });
+
+  return NextResponse.json({
+    shop: {
+      name: org.name,
+      slug: org.slug,
+      ratingAvg: org.ratingAvg != null ? Number(org.ratingAvg) : null,
+      ratingCount: org.ratingCount,
+    },
+    reviews: rows.map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      comment: r.comment,
+      displayName: publicDisplayName(r.clientName),
+      createdAt: r.createdAt.toISOString(),
+    })),
+  });
+}
+
+/**
+ * Cliente avalia pós-atendimento com o token da reserva.
+ * POST /api/marketplace/reviews
+ */
 export async function POST(request: Request) {
   let body: unknown;
   try {
