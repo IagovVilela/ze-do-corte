@@ -369,8 +369,8 @@ export function CanvasStage({
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-900">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2 text-xs text-zinc-400">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bn-surface-container)]">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--bn-border)] px-3 py-2 text-xs text-[var(--bn-on-variant)]">
         <span className="shrink-0">Zoom</span>
         <input
           type="range"
@@ -389,15 +389,15 @@ export function CanvasStage({
         <button
           type="button"
           onClick={fitZoom}
-          className="rounded-md border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 hover:bg-white/5"
+          className="rounded-md border border-[var(--bn-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bn-on-variant)] hover:bg-white/5"
         >
           Ajustar
         </button>
-        <span className="ml-auto hidden text-zinc-500 lg:inline">
+        <span className="ml-auto hidden text-[var(--bn-muted)] lg:inline">
           {board.width}×{board.height}px · clique para selecionar · arraste para
           mover
         </span>
-        <span className="ml-auto text-[10px] text-zinc-500 lg:hidden">
+        <span className="ml-auto text-[10px] text-[var(--bn-muted)] lg:hidden">
           {board.width}×{board.height}
         </span>
       </div>
@@ -477,7 +477,7 @@ export function CanvasStage({
                   className={cn(
                     "absolute touch-none outline-offset-0",
                     selected &&
-                      "outline outline-2 outline-brand-400 ring-1 ring-brand-400/40",
+                      "outline outline-2 outline-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/40",
                     el.locked && "opacity-70",
                   )}
                   style={{
@@ -495,7 +495,7 @@ export function CanvasStage({
                 >
                   {selected ? (
                     <div
-                      className="pointer-events-auto absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/20 bg-zinc-950/95 p-1 shadow-xl backdrop-blur-sm"
+                      className="pointer-events-auto absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/20 bg-[var(--bn-surface-lowest)]/95 p-1 shadow-xl backdrop-blur-sm"
                       style={{ top: -46 }}
                       onPointerDown={(e) => {
                         e.stopPropagation();
@@ -599,7 +599,7 @@ export function CanvasStage({
                           key={h}
                           onPointerDown={(e) => startResize(e, el.id, h)}
                           className={cn(
-                            "absolute z-10 touch-none rounded-sm border border-brand-300 bg-brand-500",
+                            "absolute z-10 touch-none rounded-sm border border-[var(--bn-primary)] bg-[var(--bn-primary-container)]",
                             "h-4 w-4 lg:h-3 lg:w-3",
                             h === "nw" &&
                               "-left-2 -top-2 cursor-nwse-resize lg:-left-1.5 lg:-top-1.5",
@@ -655,9 +655,9 @@ function ToolbarBtn({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-full text-zinc-200 transition hover:bg-white/10",
+        "inline-flex size-8 items-center justify-center rounded-full text-[var(--bn-on)] transition hover:bg-white/10",
         danger && "text-rose-300 hover:bg-rose-500/20",
-        active && "bg-brand-500/25 text-brand-200",
+        active && "bg-[var(--bn-primary-container)]/25 text-[var(--bn-primary)]",
         className,
       )}
     >
@@ -685,28 +685,31 @@ export function PageTemplatePicker({
     <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-black/85"
         aria-label="Fechar"
         onClick={onClose}
       />
-      <div className="relative z-[1] max-h-[min(92svh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl max-sm:max-h-[92svh] max-sm:rounded-t-2xl max-sm:rounded-b-none">
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5 sm:py-4">
+      <div
+        className="relative z-[1] max-h-[min(92svh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-[#2F3336] shadow-2xl max-sm:max-h-[92svh] max-sm:rounded-t-2xl max-sm:rounded-b-none"
+        style={{ backgroundColor: "#25282B" }}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--bn-border)] px-4 py-3 sm:px-5 sm:py-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
               Modelos de página
             </p>
-            <h2 className="mt-1 font-display text-xl tracking-wide text-white sm:text-2xl">
+            <h2 className="mt-1 font-brand-headline text-xl font-bold tracking-tight text-[var(--bn-on)] sm:text-2xl">
               Escolha um layout completo
             </h2>
-            <p className="mt-1 max-w-xl text-sm text-zinc-400 max-sm:text-xs">
+            <p className="mt-1 max-w-xl text-sm text-[var(--bn-on-variant)] max-sm:text-xs">
               Cada modelo tem composição, cores e tipografia próprias. Aplicar
-              substitui o canvas atual (desktop + mobile).
+              substitui o canvas atual (desktop e celular).
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
+            className="shrink-0 rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-on-variant)] hover:bg-white/5"
           >
             Fechar
           </button>
@@ -718,27 +721,27 @@ export function PageTemplatePicker({
               type="button"
               disabled={busy}
               onClick={() => onPick(tpl.id)}
-              className="group rounded-xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:border-brand-500/40 hover:bg-brand-500/10 disabled:opacity-50"
+              className="group rounded-xl border border-[var(--bn-border)] bg-white/[0.03] p-3 text-left transition hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10 disabled:opacity-50"
             >
               <div
-                className="mb-3 h-16 overflow-hidden rounded-lg border border-white/10"
+                className="mb-3 h-16 overflow-hidden rounded-lg border border-[var(--bn-border)]"
                 style={{
                   background: `linear-gradient(135deg, ${tpl.swatch} 0%, #09090b 72%)`,
                 }}
               >
                 <div className="flex h-full items-end p-2">
-                  <span className="rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white/80">
+                  <span className="rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-[var(--bn-on)]/80">
                     {tpl.vibe}
                   </span>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-zinc-100 group-hover:text-white">
+              <p className="text-sm font-semibold text-[var(--bn-on)] group-hover:text-[var(--bn-on)]">
                 {tpl.label}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--bn-muted)]">
                 {tpl.tagline}
               </p>
-              <p className="mt-2 font-mono text-[10px] text-zinc-600">
+              <p className="mt-2 font-mono text-[10px] text-[var(--bn-muted)]">
                 {tpl.layoutHint}
               </p>
             </button>
@@ -778,15 +781,15 @@ export function ElementLibrary({
       )}
     >
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
           Biblioteca
         </p>
-        <p className="mt-1 text-[11px] text-zinc-500">
+        <p className="mt-1 text-[11px] text-[var(--bn-muted)]">
           Solta em Y≈{Math.round(atY)} no arteboard {artboard}.
         </p>
       </div>
 
-      <div className="flex gap-1 rounded-lg border border-white/10 p-0.5">
+      <div className="flex gap-1 rounded-lg border border-[var(--bn-border)] p-0.5">
         {(
           [
             ["elements", "Itens"],
@@ -801,8 +804,8 @@ export function ElementLibrary({
             className={cn(
               "flex-1 rounded-md px-1.5 py-1 text-[10px] font-semibold",
               tab === id
-                ? "bg-brand-500 text-zinc-950"
-                : "text-zinc-400 hover:bg-white/5",
+                ? "bg-[var(--bn-primary-container)] text-white"
+                : "text-[var(--bn-on-variant)] hover:bg-white/5",
             )}
           >
             {label}
@@ -814,7 +817,7 @@ export function ElementLibrary({
         {tab === "elements" ? (
           LIBRARY_GROUPS.map((group) => (
             <div key={group.title} className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                 {group.title}
               </p>
               <div className="grid gap-1">
@@ -823,17 +826,17 @@ export function ElementLibrary({
                     key={item.type}
                     type="button"
                     title={item.hint}
-                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40 hover:bg-brand-500/10"
+                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10"
                     onClick={() =>
                       onAdd(
                         createLibraryElement(item.type, artboard, boardW, atY),
                       )
                     }
                   >
-                    <span className="block text-sm text-zinc-100">
+                    <span className="block text-sm text-[var(--bn-on)]">
                       {item.label}
                     </span>
-                    <span className="block text-[10px] text-zinc-500">
+                    <span className="block text-[10px] text-[var(--bn-muted)]">
                       {item.hint}
                     </span>
                   </button>
@@ -845,10 +848,10 @@ export function ElementLibrary({
 
         {tab === "sections" ? (
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
               Seções pré-montadas
             </p>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-[var(--bn-muted)]">
               Insere vários elementos de uma vez, já posicionados.
             </p>
             <div className="grid gap-1">
@@ -857,11 +860,11 @@ export function ElementLibrary({
                   key={s.id}
                   type="button"
                   title={s.hint}
-                  className="rounded-lg border border-brand-500/25 bg-brand-500/5 px-3 py-2 text-left hover:border-brand-500/50 hover:bg-brand-500/15"
+                  className="rounded-lg border border-[var(--bn-primary)]/25 bg-[var(--bn-primary-container)]/5 px-3 py-2 text-left hover:border-[var(--bn-primary)]/50 hover:bg-[var(--bn-primary-container)]/15"
                   onClick={() => addSection(s.id)}
                 >
-                  <span className="block text-sm text-zinc-100">{s.label}</span>
-                  <span className="block text-[10px] text-zinc-500">{s.hint}</span>
+                  <span className="block text-sm text-[var(--bn-on)]">{s.label}</span>
+                  <span className="block text-[10px] text-[var(--bn-muted)]">{s.hint}</span>
                 </button>
               ))}
             </div>
@@ -871,10 +874,10 @@ export function ElementLibrary({
         {tab === "ready" ? (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                 Faixas e blocos
               </p>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-[var(--bn-muted)]">
                 Formas sólidas como a faixa azul larga da marca.
               </p>
               <div className="grid gap-1">
@@ -883,7 +886,7 @@ export function ElementLibrary({
                     key={preset.id}
                     type="button"
                     title={preset.hint}
-                    className="rounded-lg border border-brand-500/25 bg-brand-500/5 px-3 py-2 text-left hover:border-brand-500/50 hover:bg-brand-500/15"
+                    className="rounded-lg border border-[var(--bn-primary)]/25 bg-[var(--bn-primary-container)]/5 px-3 py-2 text-left hover:border-[var(--bn-primary)]/50 hover:bg-[var(--bn-primary-container)]/15"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         "rect",
@@ -895,10 +898,10 @@ export function ElementLibrary({
                       if (el) onAdd(el);
                     }}
                   >
-                    <span className="block text-sm text-zinc-100">
+                    <span className="block text-sm text-[var(--bn-on)]">
                       {preset.label}
                     </span>
-                    <span className="block text-[10px] text-zinc-500">
+                    <span className="block text-[10px] text-[var(--bn-muted)]">
                       {preset.hint}
                     </span>
                   </button>
@@ -907,7 +910,7 @@ export function ElementLibrary({
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                 Cards / painéis
               </p>
               <div className="grid gap-1">
@@ -916,7 +919,7 @@ export function ElementLibrary({
                     key={preset.id}
                     type="button"
                     title={preset.hint}
-                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         "panel",
@@ -928,10 +931,10 @@ export function ElementLibrary({
                       if (el) onAdd(el);
                     }}
                   >
-                    <span className="block text-sm text-zinc-100">
+                    <span className="block text-sm text-[var(--bn-on)]">
                       {preset.label}
                     </span>
-                    <span className="block text-[10px] text-zinc-500">
+                    <span className="block text-[10px] text-[var(--bn-muted)]">
                       {preset.hint}
                     </span>
                   </button>
@@ -940,7 +943,7 @@ export function ElementLibrary({
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                 Tipos de botão
               </p>
               <div className="grid gap-1">
@@ -949,7 +952,7 @@ export function ElementLibrary({
                     key={preset.id}
                     type="button"
                     title={preset.hint}
-                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-brand-500/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         "button",
@@ -961,10 +964,10 @@ export function ElementLibrary({
                       if (el) onAdd(el);
                     }}
                   >
-                    <span className="block text-sm text-zinc-100">
+                    <span className="block text-sm text-[var(--bn-on)]">
                       {preset.label}
                     </span>
-                    <span className="block text-[10px] text-zinc-500">
+                    <span className="block text-[10px] text-[var(--bn-muted)]">
                       {preset.hint}
                     </span>
                   </button>
@@ -973,7 +976,7 @@ export function ElementLibrary({
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                 Outros prontos
               </p>
               <div className="grid gap-1">
@@ -989,7 +992,7 @@ export function ElementLibrary({
                   <button
                     key={`${type}-${presetId}`}
                     type="button"
-                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-sm text-zinc-100 hover:border-brand-500/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left text-sm text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         type,
@@ -1026,7 +1029,7 @@ export function ThemePanel({
 }) {
   const t = theme ?? {};
   const row =
-    "mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100";
+    "mt-1 w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)] px-2 py-1.5 text-sm text-[var(--bn-on)]";
 
   function set(
     key: keyof NonNullable<SiteCanvasConfig["theme"]>,
@@ -1045,15 +1048,15 @@ export function ThemePanel({
   return (
     <div
       className={cn(
-        "max-h-[42vh] space-y-3 overflow-y-auto border-b border-white/10 px-3 pb-3",
+        "max-h-[42vh] space-y-3 overflow-y-auto border-b border-[var(--bn-border)] px-3 pb-3",
         className,
       )}
     >
       <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
           Cores do sistema
         </p>
-        <p className="text-[11px] leading-relaxed text-zinc-500">
+        <p className="text-[11px] leading-relaxed text-[var(--bn-muted)]">
           Controla o site inteiro no canvas: fundo, textos, painéis, botões e o
           Catálogo (preço/badge = Principal). Use “Aplicar cores aos elementos”
           se algum bloco ainda estiver com cor fixa.
@@ -1069,7 +1072,7 @@ export function ThemePanel({
         ).map(([key, label, fallback]) => (
           <div
             key={key}
-            className="flex items-center justify-between gap-2 text-xs text-zinc-400"
+            className="flex items-center justify-between gap-2 text-xs text-[var(--bn-on-variant)]"
           >
             <span>{label}</span>
             <ColorWheelField
@@ -1087,10 +1090,10 @@ export function ThemePanel({
         ))}
 
         <div className="pt-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
             Arte de fundo
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--bn-muted)]">
             Textura ou padrão sobre a cor de fundo (aparece no site ao salvar).
           </p>
           <div className="mt-2 grid grid-cols-2 gap-1.5">
@@ -1110,8 +1113,8 @@ export function ThemePanel({
                   className={cn(
                     "overflow-hidden rounded-lg border text-left transition",
                     active
-                      ? "border-brand-400 ring-1 ring-brand-400/50"
-                      : "border-white/10 hover:border-white/25",
+                      ? "border-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/50"
+                      : "border-[var(--bn-border)] hover:border-white/25",
                   )}
                 >
                   <div
@@ -1126,7 +1129,7 @@ export function ThemePanel({
                       },
                     )}
                   />
-                  <span className="block px-1.5 py-1 text-[10px] font-medium text-zinc-300">
+                  <span className="block px-1.5 py-1 text-[10px] font-medium text-[var(--bn-on-variant)]">
                     {opt.label}
                   </span>
                 </button>
@@ -1134,8 +1137,8 @@ export function ThemePanel({
             })}
           </div>
           {(t.bgArt ?? "none") !== "none" ? (
-            <div className="mt-2 space-y-2 rounded-lg border border-white/10 bg-zinc-900/40 p-2">
-              <div className="flex items-center justify-between gap-2 text-xs text-zinc-400">
+            <div className="mt-2 space-y-2 rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)]/40 p-2">
+              <div className="flex items-center justify-between gap-2 text-xs text-[var(--bn-on-variant)]">
                 <span>Cor das linhas</span>
                 <ColorWheelField
                   aria-label="Cor das linhas"
@@ -1151,10 +1154,10 @@ export function ThemePanel({
                   className={cn(row, "h-8 w-14 shrink-0 p-0.5")}
                 />
               </div>
-              <label className="block space-y-1 text-xs text-zinc-400">
+              <label className="block space-y-1 text-xs text-[var(--bn-on-variant)]">
                 <span className="flex justify-between">
                   Intensidade
-                  <span className="text-zinc-500">{t.bgArtStrength ?? 45}%</span>
+                  <span className="text-[var(--bn-muted)]">{t.bgArtStrength ?? 45}%</span>
                 </span>
                 <input
                   type="range"
@@ -1179,7 +1182,7 @@ export function ThemePanel({
           <button
             type="button"
             onClick={onBindElements}
-            className="mt-1 w-full rounded-lg border border-brand-500/40 bg-brand-500/10 px-2 py-2 text-[11px] font-semibold text-brand-200 hover:bg-brand-500/20"
+            className="mt-1 w-full rounded-lg border border-[var(--bn-primary)]/40 bg-[var(--bn-primary-container)]/10 px-2 py-2 text-[11px] font-semibold text-[var(--bn-primary)] hover:bg-[var(--bn-primary-container)]/20"
           >
             Aplicar cores aos elementos
           </button>
@@ -1187,10 +1190,10 @@ export function ThemePanel({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
           Tipografia
         </p>
-        <p className="text-[11px] text-zinc-500">
+        <p className="text-[11px] text-[var(--bn-muted)]">
           Variantes prontas para títulos (display) e corpo.
         </p>
         <div className="grid gap-1">
@@ -1209,12 +1212,12 @@ export function ThemePanel({
               className={cn(
                 "rounded-lg border px-2.5 py-1.5 text-left",
                 activeTypo === preset.id
-                  ? "border-brand-500/60 bg-brand-500/15"
-                  : "border-white/10 bg-white/[0.03] hover:border-white/25",
+                  ? "border-[var(--bn-primary)]/60 bg-[var(--bn-primary-container)]/15"
+                  : "border-[var(--bn-border)] bg-white/[0.03] hover:border-white/25",
               )}
             >
-              <span className="block text-xs text-zinc-100">{preset.label}</span>
-              <span className="block text-[10px] text-zinc-500">{preset.hint}</span>
+              <span className="block text-xs text-[var(--bn-on)]">{preset.label}</span>
+              <span className="block text-[10px] text-[var(--bn-muted)]">{preset.hint}</span>
             </button>
           ))}
         </div>
@@ -1250,7 +1253,7 @@ export function ElementInspector({
     return (
       <aside
         className={cn(
-          "flex w-64 shrink-0 flex-col border-l border-white/10 bg-zinc-950 p-4 text-sm text-zinc-500",
+          "flex w-64 shrink-0 flex-col border-l border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] p-4 text-sm text-[var(--bn-muted)]",
           className,
         )}
       >
@@ -1261,7 +1264,7 @@ export function ElementInspector({
 
   const p = element.props ?? {};
   const input =
-    "mt-1 w-full rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100";
+    "mt-1 w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)] px-2 py-1.5 text-sm text-[var(--bn-on)]";
   const stylePresets = stylePresetsForType(element.type);
   const mediaAccept = CANVAS_MEDIA_ACCEPT;
 
@@ -1319,12 +1322,12 @@ export function ElementInspector({
 
     return (
       <div className="space-y-2">
-        <p className="text-xs font-medium text-zinc-300">{title}</p>
+        <p className="text-xs font-medium text-[var(--bn-on-variant)]">{title}</p>
         {url ? (
           isVideo ? (
             <video
               src={url}
-              className="max-h-28 w-full rounded-lg border border-white/10 object-cover"
+              className="max-h-28 w-full rounded-lg border border-[var(--bn-border)] object-cover"
               muted
               playsInline
               preload="metadata"
@@ -1334,11 +1337,11 @@ export function ElementInspector({
             <img
               src={url}
               alt=""
-              className="max-h-28 w-full rounded-lg border border-white/10 object-cover"
+              className="max-h-28 w-full rounded-lg border border-[var(--bn-border)] object-cover"
             />
           )
         ) : (
-          <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-white/15 text-[11px] text-zinc-500">
+          <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-[var(--bn-border)] text-[11px] text-[var(--bn-muted)]">
             Nenhum arquivo
           </div>
         )}
@@ -1361,7 +1364,7 @@ export function ElementInspector({
           type="button"
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
-          className="w-full rounded-lg bg-brand-500 px-3 py-2.5 text-sm font-semibold text-brand-950 transition hover:bg-brand-400 disabled:opacity-50"
+          className="w-full rounded-lg bg-[var(--bn-primary-container)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--bn-primary-container)] disabled:opacity-50"
         >
           {uploading
             ? "Enviando…"
@@ -1375,23 +1378,23 @@ export function ElementInspector({
             type="button"
             disabled={uploading}
             onClick={() => setProp("mediaUrl", "")}
-            className="w-full rounded-lg border border-white/15 px-3 py-1.5 text-[11px] text-zinc-400 hover:border-white/30 hover:text-zinc-200 disabled:opacity-50"
+            className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)] disabled:opacity-50"
           >
             Remover mídia
           </button>
         ) : null}
 
-        <p className="text-[10px] leading-relaxed text-zinc-500">{hint}</p>
+        <p className="text-[10px] leading-relaxed text-[var(--bn-muted)]">{hint}</p>
 
         {uploadError ? (
           <p className="text-[11px] text-rose-300">{uploadError}</p>
         ) : null}
 
-        <details className="rounded-lg border border-white/10 bg-zinc-900/40 px-2 py-1.5">
-          <summary className="cursor-pointer text-[11px] text-zinc-500 hover:text-zinc-300">
+        <details className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)]/40 px-2 py-1.5">
+          <summary className="cursor-pointer text-[11px] text-[var(--bn-muted)] hover:text-[var(--bn-on-variant)]">
             Ou usar link externo
           </summary>
-          <label className="mt-2 block text-xs text-zinc-400">
+          <label className="mt-2 block text-xs text-[var(--bn-on-variant)]">
             URL
             <input
               className={input}
@@ -1408,20 +1411,20 @@ export function ElementInspector({
   return (
     <aside
       className={cn(
-        "flex w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/10 bg-zinc-950 p-4",
+        "flex w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] p-4",
         className,
       )}
     >
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
           {ELEMENT_TYPE_LABEL[element.type] ?? element.type}
         </p>
-        <p className="text-sm font-medium text-zinc-100">Editar conteúdo</p>
+        <p className="text-sm font-medium text-[var(--bn-on)]">Editar conteúdo</p>
       </div>
 
       {stylePresets.length ? (
         <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
             Estilo pronto
           </p>
           <div className="flex flex-wrap gap-1">
@@ -1434,8 +1437,8 @@ export function ElementInspector({
                 className={cn(
                   "rounded-full border px-2 py-0.5 text-[10px]",
                   p.variant === preset.id
-                    ? "border-brand-500 bg-brand-500/20 text-brand-200"
-                    : "border-white/15 text-zinc-400 hover:border-white/30 hover:text-zinc-200",
+                    ? "border-[var(--bn-primary)] bg-[var(--bn-primary-container)]/20 text-[var(--bn-primary)]"
+                    : "border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)]",
                 )}
               >
                 {preset.label}
@@ -1447,7 +1450,7 @@ export function ElementInspector({
 
       {(element.type === "text" || element.type === "button") && (
         <>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Texto
             <textarea
               className={input}
@@ -1456,7 +1459,7 @@ export function ElementInspector({
               onChange={(e) => setProp("text", e.target.value)}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Tamanho
             <input
               type="number"
@@ -1465,7 +1468,7 @@ export function ElementInspector({
               onChange={(e) => setProp("fontSize", Number(e.target.value))}
             />
           </label>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-[var(--bn-on-variant)]">
             Cor
             <ColorWheelField
               aria-label="Cor do texto"
@@ -1480,7 +1483,7 @@ export function ElementInspector({
 
       {element.type === "button" && (
         <>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Link (book = agendar)
             <input
               className={input}
@@ -1488,7 +1491,7 @@ export function ElementInspector({
               onChange={(e) => setProp("href", e.target.value)}
             />
           </label>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-[var(--bn-on-variant)]">
             Fundo
             <ColorWheelField
               aria-label="Cor de fundo do botão"
@@ -1512,7 +1515,7 @@ export function ElementInspector({
         })}
 
       {element.type === "rect" && (
-        <div className="text-xs text-zinc-400">
+        <div className="text-xs text-[var(--bn-on-variant)]">
           Fundo
           <ColorWheelField
             aria-label="Cor de fundo do bloco"
@@ -1530,7 +1533,7 @@ export function ElementInspector({
         element.type === "team" ||
         element.type === "contact") && (
         <div className="space-y-2">
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Título
             <input
               className={input}
@@ -1539,17 +1542,17 @@ export function ElementInspector({
             />
           </label>
           {element.type === "services" ? (
-            <p className="text-[11px] leading-relaxed text-zinc-500">
-              Preço e badge seguem <span className="text-zinc-300">Principal</span>.
-              Fundo do card: <span className="text-zinc-300">Superfície</span>. Título:
-              <span className="text-zinc-300"> Texto</span>. Ajuste em Cores do sistema.
+            <p className="text-[11px] leading-relaxed text-[var(--bn-muted)]">
+              Preço e badge seguem <span className="text-[var(--bn-on-variant)]">Principal</span>.
+              Fundo do card: <span className="text-[var(--bn-on-variant)]">Superfície</span>. Título:
+              <span className="text-[var(--bn-on-variant)]"> Texto</span>. Ajuste em Cores do sistema.
             </p>
           ) : null}
         </div>
       )}
 
       {element.type === "footer" && (
-        <label className="flex items-center gap-2 text-xs text-zinc-300">
+        <label className="flex items-center gap-2 text-xs text-[var(--bn-on-variant)]">
           <input
             type="checkbox"
             checked={p.showPitch !== false}
@@ -1562,7 +1565,7 @@ export function ElementInspector({
       {(element.type === "hero" || element.type === "panel") && (
         <div className="space-y-2">
           {element.type === "hero" ? (
-            <label className="text-xs text-zinc-400">
+            <label className="text-xs text-[var(--bn-on-variant)]">
               Eyebrow
               <input
                 className={input}
@@ -1571,7 +1574,7 @@ export function ElementInspector({
               />
             </label>
           ) : null}
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Título
             <input
               className={input}
@@ -1579,7 +1582,7 @@ export function ElementInspector({
               onChange={(e) => setProp("title", e.target.value)}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Descrição
             <textarea
               className={input}
@@ -1590,7 +1593,7 @@ export function ElementInspector({
           </label>
           {element.type === "hero" ? (
             <>
-              <label className="text-xs text-zinc-400">
+              <label className="text-xs text-[var(--bn-on-variant)]">
                 Texto do CTA
                 <input
                   className={input}
@@ -1598,8 +1601,8 @@ export function ElementInspector({
                   onChange={(e) => setProp("ctaLabel", e.target.value)}
                 />
               </label>
-              <label className="text-xs text-zinc-400">
-                Overlay (0–1)
+              <label className="text-xs text-[var(--bn-on-variant)]">
+                Escurecer fundo
                 <input
                   type="number"
                   step="0.05"
@@ -1608,6 +1611,7 @@ export function ElementInspector({
                   className={input}
                   value={p.overlay ?? 0.45}
                   onChange={(e) => setProp("overlay", Number(e.target.value))}
+                  title="0 = claro · 1 = bem escuro sobre a foto"
                 />
               </label>
               {renderMediaUploadBlock({
@@ -1616,7 +1620,7 @@ export function ElementInspector({
               })}
             </>
           ) : null}
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-[var(--bn-on-variant)]">
             Fundo
             <ColorWheelField
               aria-label="Cor de fundo do painel"
@@ -1635,7 +1639,7 @@ export function ElementInspector({
 
       {element.type === "grid" && (
         <div className="space-y-2">
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Título
             <input
               className={input}
@@ -1643,7 +1647,7 @@ export function ElementInspector({
               onChange={(e) => setProp("title", e.target.value)}
             />
           </label>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Colunas
             <select
               className={input}
@@ -1658,7 +1662,7 @@ export function ElementInspector({
               <option value={4}>4</option>
             </select>
           </label>
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-[11px] text-[var(--bn-muted)]">
             Cartões (título | descrição, um por linha)
           </p>
           <textarea
@@ -1688,7 +1692,7 @@ export function ElementInspector({
 
       {element.type === "divider" && (
         <>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-[var(--bn-on-variant)]">
             Cor
             <ColorWheelField
               aria-label="Cor do divisor"
@@ -1698,7 +1702,7 @@ export function ElementInspector({
               className={cn(input, "mt-1 h-9 w-full")}
             />
           </div>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Espessura
             <input
               type="number"
@@ -1712,7 +1716,7 @@ export function ElementInspector({
 
       {element.type === "badge" && (
         <>
-          <label className="text-xs text-zinc-400">
+          <label className="text-xs text-[var(--bn-on-variant)]">
             Texto
             <input
               className={input}
@@ -1720,7 +1724,7 @@ export function ElementInspector({
               onChange={(e) => setProp("text", e.target.value)}
             />
           </label>
-          <div className="text-xs text-zinc-400">
+          <div className="text-xs text-[var(--bn-on-variant)]">
             Fundo
             <ColorWheelField
               aria-label="Cor de fundo do badge"
@@ -1740,7 +1744,7 @@ export function ElementInspector({
       <div className="mt-1 flex flex-col gap-1.5">
         <button
           type="button"
-          className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+          className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
           onClick={onDuplicate}
         >
           Duplicar
@@ -1754,21 +1758,32 @@ export function ElementInspector({
         </button>
       </div>
 
-      <details className="rounded-xl border border-white/10 bg-zinc-900/40 open:bg-zinc-900/60">
-        <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-zinc-200 marker:content-none [&::-webkit-details-marker]:hidden">
+      <details className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-container)]/40 open:bg-[var(--bn-surface-container)]/60">
+        <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-[var(--bn-on)] marker:content-none [&::-webkit-details-marker]:hidden">
           Posição e tamanho
-          <span className="mt-0.5 block text-[10px] font-normal text-zinc-500">
-            X/Y/L/A, grade, alinhamento e camada
+          <span className="mt-0.5 block text-[10px] font-normal text-[var(--bn-muted)]">
+            Avançado — posição, tamanho, grade e ordem
           </span>
         </summary>
-        <div className="space-y-3 border-t border-white/10 px-3 pb-3 pt-2">
-          <p className="text-[11px] text-zinc-500">
-            Camada z-index: {element.zIndex}
+        <div className="space-y-3 border-t border-[var(--bn-border)] px-3 pb-3 pt-2">
+          <p className="text-[11px] text-[var(--bn-muted)]">
+            Ordem (frente/atrás): {element.zIndex}
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {(["x", "y", "w", "h"] as const).map((k) => (
-              <label key={k} className="text-zinc-400">
-                {k.toUpperCase()}
+            {(
+              [
+                ["x", "Esquerda (X)"],
+                ["y", "Topo (Y)"],
+                ["w", "Largura"],
+                ["h", "Altura"],
+              ] as const
+            ).map(([k, label]) => (
+              <label
+                key={k}
+                className="text-[var(--bn-on-variant)]"
+                title={label}
+              >
+                {label}
                 <input
                   type="number"
                   step={CANVAS_SNAP_GRID}
@@ -1798,13 +1813,13 @@ export function ElementInspector({
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
               Grade e alinhamento
             </p>
             <button
               type="button"
               onClick={snapSelected}
-              className="w-full rounded-lg border border-brand-500/40 bg-brand-500/10 px-2 py-1.5 text-[11px] font-medium text-brand-200 hover:bg-brand-500/20"
+              className="w-full rounded-lg border border-[var(--bn-primary)]/40 bg-[var(--bn-primary-container)]/10 px-2 py-1.5 text-[11px] font-medium text-[var(--bn-primary)] hover:bg-[var(--bn-primary-container)]/20"
             >
               Alinhar à grade ({CANVAS_SNAP_GRID}px)
             </button>
@@ -1824,7 +1839,7 @@ export function ElementInspector({
                   type="button"
                   title={align}
                   onClick={() => applyAlign(align)}
-                  className="rounded-md border border-white/15 px-1 py-1 text-[11px] text-zinc-300 hover:border-white/30 hover:bg-white/5"
+                  className="rounded-md border border-[var(--bn-border)] px-1 py-1 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:bg-white/5"
                 >
                   {label}
                 </button>
@@ -1832,7 +1847,7 @@ export function ElementInspector({
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-zinc-300">
+          <label className="flex items-center gap-2 text-xs text-[var(--bn-on-variant)]">
             <input
               type="checkbox"
               checked={Boolean(element.locked)}
@@ -1846,7 +1861,7 @@ export function ElementInspector({
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1857,7 +1872,7 @@ export function ElementInspector({
             </button>
             <button
               type="button"
-              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

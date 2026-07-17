@@ -152,7 +152,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |
 | Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
-| Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` (desktop 3 colunas; mobile dock + folhas; barra flutuante Canva-lite; cores via `color-wheel-field.tsx`) |
+| Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx`, `canvas-confirm-modal.tsx`, `canvas-layers-panel.tsx`, `canvas-onboarding.tsx`, `canvas-phone-preview.tsx` (chrome BN; desktop 3 colunas + abas Biblioteca/Camadas; mobile dock + folhas; preview celular; onboarding por modelos) |
 | Editor de identidade | `brand-editor-form.tsx` |
 | WhatsApp admin | `whatsapp-admin-panel.tsx` |
 | Pagamentos admin | `payments-admin-panel.tsx` |

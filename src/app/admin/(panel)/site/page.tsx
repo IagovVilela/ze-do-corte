@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { SiteCanvasEditor } from "@/components/site-canvas/site-canvas-editor";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import {
@@ -23,7 +24,7 @@ export default async function AdminSitePage() {
 
   const org = await prisma.organization.findUnique({
     where: { id: access.organizationId },
-    select: orgSelect,
+    select: { ...orgSelect, onboardingJson: true },
   });
   if (!org) redirect("/admin");
 
@@ -34,34 +35,44 @@ export default async function AdminSitePage() {
   ]);
 
   const slogans = orgDisplaySlogan(org);
+  const flags =
+    org.onboardingJson &&
+    typeof org.onboardingJson === "object" &&
+    !Array.isArray(org.onboardingJson)
+      ? (org.onboardingJson as Record<string, unknown>)
+      : {};
+  const canvasStudioSeen = flags.canvasStudioSeen === true;
+
+  const { onboardingJson: _omit, ...publicOrg } = org;
 
   return (
     <div className="max-lg:-mx-4 max-lg:space-y-0 sm:max-lg:-mx-6 lg:space-y-4">
       <div className="max-lg:hidden">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
-          Site
-        </p>
-        <h1 className="mt-1 font-display text-3xl tracking-wide text-white">
-          Canvas da página
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-400">
-          Monte a página no canvas: arraste, redimensione e edite. Desktop e
-          mobile são layouts separados. Identidade (logo, slug, redes) fica em{" "}
-          <a
-            href="/admin/marca"
-            className="text-brand-200 underline-offset-2 hover:underline"
-          >
-            Marca
-          </a>
-          .
-        </p>
+        <AdminPageHeader
+          eyebrow="Site"
+          title="Monte o site da sua barbearia"
+          description={
+            <>
+              Arraste, edite textos e fotos. Desktop e celular são telas
+              separadas. Logo, slug e redes ficam em{" "}
+              <a
+                href="/admin/marca"
+                className="text-[var(--bn-primary)] underline-offset-2 hover:underline"
+              >
+                Marca
+              </a>
+              .
+            </>
+          }
+        />
       </div>
       <SiteCanvasEditor
-        initialOrg={org as OrganizationPublic}
+        initialOrg={publicOrg as OrganizationPublic}
         services={services}
         barbers={barbers}
         units={units}
         slogans={slogans}
+        initialCanvasStudioSeen={canvasStudioSeen}
       />
     </div>
   );

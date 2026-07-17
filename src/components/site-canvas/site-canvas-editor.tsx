@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CanvasConfirmModal } from "@/components/site-canvas/canvas-confirm-modal";
+import { CanvasLayersPanel } from "@/components/site-canvas/canvas-layers-panel";
+import { CanvasOnboarding } from "@/components/site-canvas/canvas-onboarding";
+import { CanvasPhonePreview } from "@/components/site-canvas/canvas-phone-preview";
 import {
   CanvasStage,
   ELEMENT_TYPE_LABEL,
@@ -12,7 +16,11 @@ import {
   ThemePanel,
 } from "@/components/site-canvas/canvas-studio-parts";
 import { nextArtboardY } from "@/lib/canvas-presets";
-import { alignFrameToArtboard, snapFrameToGrid } from "@/lib/canvas-layout-grid";
+import {
+  alignFrameToArtboard,
+  CANVAS_SNAP_GRID,
+  snapFrameToGrid,
+} from "@/lib/canvas-layout-grid";
 import {
   applyThemeChangeToCanvas,
   bindElementsToThemeTokens,
@@ -21,6 +29,7 @@ import type { OrganizationPublic } from "@/lib/organization";
 import {
   copyDesktopToMobile,
   createLibraryElement,
+  elementsForArtboard,
   getCanvasTemplate,
   parseSiteCanvasConfig,
   type CanvasArtboardId,
@@ -46,9 +55,30 @@ type Props = {
   barbers: PublicBarber[];
   units: UnitInfo[];
   slogans: { primary: string; secondary: string };
+  initialCanvasStudioSeen?: boolean;
 };
 
-type MobileSheet = "library" | "inspector" | "tools" | "options" | null;
+type MobileSheet =
+  | "library"
+  | "inspector"
+  | "tools"
+  | "options"
+  | "layers"
+  | null;
+
+type ConfirmState =
+  | { type: "template"; id: CanvasTemplateId }
+  | { type: "generate-mobile" }
+  | null;
+
+/** Nunca mostra erro técnico (ex.: mensagem de validação do Zod) para o dono da barbearia. */
+function friendlyError(e: unknown, fallback: string) {
+  const msg = e instanceof Error ? e.message : "";
+  if (!msg || /expected|invalid|zod|must be|required/i.test(msg)) {
+    return fallback;
+  }
+  return msg;
+}
 
 export function SiteCanvasEditor({
   initialOrg,
@@ -56,6 +86,7 @@ export function SiteCanvasEditor({
   barbers,
   units,
   slogans,
+  initialCanvasStudioSeen,
 }: Props) {
   const [org, setOrg] = useState(initialOrg);
   const {
@@ -72,16 +103,35 @@ export function SiteCanvasEditor({
   } = useCanvasHistory(
     parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name),
   );
+  const [lastSavedCanvas, setLastSavedCanvas] = useState<SiteCanvasConfig>(
+    () => parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name),
+  );
   const [artboard, setArtboard] = useState<CanvasArtboardId>("desktop");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState("");
   const [error, setError] = useState("");
   const [mobileSheet, setMobileSheet] = useState<MobileSheet>(null);
+  const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const [onboardingOpen, setOnboardingOpen] = useState(
+    () => !initialCanvasStudioSeen,
+  );
+  const [phonePreviewOpen, setPhonePreviewOpen] = useState(false);
+  const [leftPanel, setLeftPanel] = useState<"library" | "layers">("library");
+
+  const dirty = JSON.stringify(canvas) !== JSON.stringify(lastSavedCanvas);
 
   useEffect(() => {
-    replaceCanvas(parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name));
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  useEffect(() => {
+    const parsed = parseSiteCanvasConfig(initialOrg.siteJson, initialOrg.name);
+    replaceCanvas(parsed);
+    setLastSavedCanvas(parsed);
     setOrg(initialOrg);
   }, [initialOrg, replaceCanvas]);
 
@@ -99,6 +149,16 @@ export function SiteCanvasEditor({
     [canvas.elements, selectedId],
   );
 
+  const layerElements = useMemo(
+    () => canvas.elements.filter((e) => e.artboard === artboard),
+    [canvas.elements, artboard],
+  );
+
+  const stageEmpty = useMemo(
+    () => elementsForArtboard(canvas, artboard).length === 0,
+    [canvas, artboard],
+  );
+
   const boardW = canvas.artboards[artboard].width;
   const boardH = canvas.artboards[artboard].height;
 
@@ -111,7 +171,9 @@ export function SiteCanvasEditor({
           : e,
       ),
     }));
-    setMessage(`Arteboard ${artboard}: elementos alinhados à grade.`);
+    setToast(
+      `Tela ${artboard === "desktop" ? "Desktop" : "Celular"}: elementos alinhados à grade.`,
+    );
     setMobileSheet(null);
   }
 
@@ -153,40 +215,21 @@ export function SiteCanvasEditor({
     }));
   }
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement | null;
-      const tag = target?.tagName;
-      if (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        tag === "SELECT" ||
-        target?.isContentEditable
-      ) {
-        return;
-      }
-
-      const mod = e.ctrlKey || e.metaKey;
-      if (!mod) return;
-
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-        return;
-      }
-      if (key === "y" || (key === "z" && e.shiftKey)) {
-        e.preventDefault();
-        redo();
-      }
+  async function markSeen() {
+    try {
+      await fetch("/api/admin/organization", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ onboardingJson: { canvasStudioSeen: true } }),
+      });
+    } catch {
+      // melhor esforço — não bloqueia o fluxo do editor
     }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo]);
+  }
 
   async function save() {
     setSaving(true);
-    setMessage("");
+    setToast("");
     setError("");
     try {
       const res = await fetch("/api/admin/organization", {
@@ -195,7 +238,7 @@ export function SiteCanvasEditor({
         body: JSON.stringify({
           siteJson: canvas,
           primaryColor: canvas.theme?.primary ?? undefined,
-          onboardingJson: { branding: true },
+          onboardingJson: { branding: true, canvasStudioSeen: true },
         }),
       });
       const data = (await res.json()) as {
@@ -205,32 +248,27 @@ export function SiteCanvasEditor({
       if (!res.ok) throw new Error(data.message ?? "Falha ao salvar.");
       if (data.organization) {
         setOrg(data.organization);
-        replaceCanvas(
-          parseSiteCanvasConfig(
-            data.organization.siteJson,
-            data.organization.name,
-          ),
+        const next = parseSiteCanvasConfig(
+          data.organization.siteJson,
+          data.organization.name,
         );
+        replaceCanvas(next);
+        setLastSavedCanvas(next);
+      } else {
+        setLastSavedCanvas(canvas);
       }
-      setMessage("Canvas salvo.");
+      setToast("Alterações no ar — o site público já mostra isso.");
       setMobileSheet(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro.");
+      setError(friendlyError(e, "Não foi possível salvar. Tente novamente."));
     } finally {
       setSaving(false);
     }
   }
 
-  async function applyTemplate(id: CanvasTemplateId) {
-    if (
-      !window.confirm(
-        "Aplicar este modelo substitui o layout atual (desktop e mobile). Continuar?",
-      )
-    ) {
-      return;
-    }
+  async function doApplyTemplate(id: CanvasTemplateId) {
     setSaving(true);
-    setMessage("");
+    setToast("");
     setError("");
     try {
       const local = getCanvasTemplate(id, org.name);
@@ -247,22 +285,30 @@ export function SiteCanvasEditor({
         message?: string;
         organization?: OrganizationPublic;
       };
-      if (!res.ok) throw new Error(data.message ?? "Falha no template.");
+      if (!res.ok) throw new Error(data.message ?? "Falha no modelo.");
       const next = parseSiteCanvasConfig(
         data.organization?.siteJson ?? local,
         org.name,
       );
       commitCanvas(next);
+      setLastSavedCanvas(next);
       if (data.organization) setOrg(data.organization);
       setSelectedId(null);
       setTemplatesOpen(false);
       setMobileSheet(null);
-      setMessage(`Modelo “${id}” aplicado.`);
+      setConfirm(null);
+      setToast("Modelo aplicado.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro.");
+      setError(
+        friendlyError(e, "Não foi possível aplicar o modelo. Tente novamente."),
+      );
     } finally {
       setSaving(false);
     }
+  }
+
+  function applyTemplate(id: CanvasTemplateId) {
+    setConfirm({ type: "template", id });
   }
 
   function addElement(el: CanvasElement) {
@@ -287,7 +333,7 @@ export function SiteCanvasEditor({
       };
     });
     setSelectedId(els[els.length - 1]?.id ?? null);
-    setMessage(`${els.length} elementos da seção adicionados.`);
+    setToast(`${els.length} elementos da seção adicionados.`);
     setMobileSheet("inspector");
   }
 
@@ -317,58 +363,182 @@ export function SiteCanvasEditor({
     setSelectedId(copy.id);
   }
 
-  function bringFront() {
-    if (!selectedId) return;
-    commitCanvas((c) => {
-      const peers = c.elements.filter((e) => e.artboard === artboard);
-      const maxZ = peers.reduce((m, e) => Math.max(m, e.zIndex), 0);
-      return {
+  const bringFront = useCallback(
+    (id?: string) => {
+      const targetId = id ?? selectedId;
+      if (!targetId) return;
+      commitCanvas((c) => {
+        const peers = c.elements.filter((e) => e.artboard === artboard);
+        const maxZ = peers.reduce((m, e) => Math.max(m, e.zIndex), 0);
+        return {
+          ...c,
+          elements: c.elements.map((e) =>
+            e.id === targetId ? { ...e, zIndex: maxZ + 1 } : e,
+          ),
+        };
+      });
+    },
+    [artboard, commitCanvas, selectedId],
+  );
+
+  const sendBack = useCallback(
+    (id?: string) => {
+      const targetId = id ?? selectedId;
+      if (!targetId) return;
+      commitCanvas((c) => {
+        const peers = c.elements.filter((e) => e.artboard === artboard);
+        const minZ = peers.reduce((m, e) => Math.min(m, e.zIndex), 999);
+        const nextZ = Math.max(0, minZ - 1);
+        return {
+          ...c,
+          elements: c.elements.map((e) =>
+            e.id === targetId ? { ...e, zIndex: nextZ } : e,
+          ),
+        };
+      });
+    },
+    [artboard, commitCanvas, selectedId],
+  );
+
+  const toggleLock = useCallback(
+    (id?: string) => {
+      const targetId = id ?? selectedId;
+      if (!targetId) return;
+      commitCanvas((c) => ({
         ...c,
         elements: c.elements.map((e) =>
-          e.id === selectedId ? { ...e, zIndex: maxZ + 1 } : e,
+          e.id === targetId ? { ...e, locked: !e.locked } : e,
         ),
-      };
-    });
-  }
+      }));
+    },
+    [commitCanvas, selectedId],
+  );
 
-  function sendBack() {
-    if (!selectedId) return;
-    commitCanvas((c) => {
-      const peers = c.elements.filter((e) => e.artboard === artboard);
-      const minZ = peers.reduce((m, e) => Math.min(m, e.zIndex), 999);
-      const nextZ = Math.max(0, minZ - 1);
-      return {
+  const toggleHidden = useCallback(
+    (id?: string) => {
+      const targetId = id ?? selectedId;
+      if (!targetId) return;
+      commitCanvas((c) => ({
         ...c,
         elements: c.elements.map((e) =>
-          e.id === selectedId ? { ...e, zIndex: nextZ } : e,
+          e.id === targetId ? { ...e, hidden: !e.hidden } : e,
         ),
-      };
-    });
-  }
+      }));
+    },
+    [commitCanvas, selectedId],
+  );
 
-  function toggleLockSelected() {
-    if (!selected) return;
-    commitCanvas((c) => ({
-      ...c,
-      elements: c.elements.map((e) =>
-        e.id === selected.id ? { ...e, locked: !e.locked } : e,
-      ),
-    }));
-  }
-
-  function copyDeskToMobile() {
+  function applyGenerateMobile() {
     commitCanvas((c) => copyDesktopToMobile(c));
     setArtboard("mobile");
     setSelectedId(null);
-    setMessage("Layout desktop copiado para mobile (escalado).");
+    setToast("Versão celular gerada a partir do desktop.");
     setMobileSheet(null);
+    setConfirm(null);
   }
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      const mod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      if (mod && key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if (mod && (key === "y" || (key === "z" && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      if (mod && key === "d") {
+        e.preventDefault();
+        duplicateSelected();
+        return;
+      }
+      if (mod && key === "s") {
+        e.preventDefault();
+        void save();
+        return;
+      }
+      if (!mod && (e.key === "Delete" || e.key === "Backspace")) {
+        if (selected && !selected.locked) {
+          e.preventDefault();
+          deleteSelected();
+        }
+        return;
+      }
+      if (!mod && e.key === "Escape") {
+        setSelectedId(null);
+        setMobileSheet(null);
+        return;
+      }
+      if (
+        !mod &&
+        (e.key === "ArrowUp" ||
+          e.key === "ArrowDown" ||
+          e.key === "ArrowLeft" ||
+          e.key === "ArrowRight")
+      ) {
+        if (!selected || selected.locked) return;
+        e.preventDefault();
+        const step = e.shiftKey ? CANVAS_SNAP_GRID : 1;
+        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+        const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+        const targetId = selected.id;
+        commitCanvas((c) => ({
+          ...c,
+          elements: c.elements.map((el) =>
+            el.id === targetId
+              ? { ...el, frame: { ...el.frame, x: el.frame.x + dx, y: el.frame.y + dy } }
+              : el,
+          ),
+        }));
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    artboard,
+    commitCanvas,
+    deleteSelected,
+    duplicateSelected,
+    redo,
+    save,
+    selected,
+    selectedId,
+    undo,
+  ]);
+
   const historyBtn =
-    "inline-flex size-8 items-center justify-center rounded-lg border border-white/15 text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
+    "inline-flex size-8 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
+
+  const secondaryBtn =
+    "rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:bg-white/5 disabled:opacity-50";
+
+  const primaryBtn =
+    "rounded-lg bg-[var(--bn-primary-container)] px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50";
 
   const dockBtn =
     "flex min-w-[4.25rem] flex-1 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-semibold transition";
+  const dockBtnActive = "bg-[var(--bn-primary-container)]/20 text-[var(--bn-primary)]";
+  const dockBtnIdle =
+    "text-[var(--bn-muted)] hover:bg-white/5 hover:text-[var(--bn-on)]";
+
+  const sheetListBtn =
+    "w-full rounded-xl px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5";
 
   const libraryBlock = (
     <>
@@ -382,7 +552,7 @@ export function SiteCanvasEditor({
             ...c,
             elements: bindElementsToThemeTokens(c.elements),
           }));
-          setMessage(
+          setToast(
             "Cores do tema aplicadas aos elementos (texto, botões, painéis…).",
           );
         }}
@@ -412,7 +582,7 @@ export function SiteCanvasEditor({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden border border-white/10 bg-zinc-950",
+        "relative flex flex-col overflow-hidden border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]",
         "h-[calc(100svh-5.5rem)] min-h-[520px] rounded-2xl",
         "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-14 max-lg:z-20 max-lg:h-auto max-lg:min-h-0 max-lg:rounded-none max-lg:border-x-0 max-lg:border-b-0",
       )}
@@ -421,10 +591,72 @@ export function SiteCanvasEditor({
         open={templatesOpen}
         busy={saving}
         onClose={() => setTemplatesOpen(false)}
-        onPick={(id) => void applyTemplate(id)}
+        onPick={(id) => applyTemplate(id)}
       />
-      <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 px-2 py-2 sm:px-3">
-        <div className="flex rounded-full border border-white/10 p-0.5">
+
+      <CanvasConfirmModal
+        open={confirm !== null}
+        title={
+          confirm?.type === "template"
+            ? "Aplicar este modelo?"
+            : "Gerar versão celular?"
+        }
+        description={
+          confirm?.type === "template"
+            ? "Isso substitui o layout atual (desktop e celular) por este modelo. Você pode desfazer com Ctrl+Z."
+            : "Substitui a tela Celular com uma versão escalada do Desktop. Você pode desfazer (Ctrl+Z)."
+        }
+        confirmLabel={confirm?.type === "template" ? "Aplicar modelo" : "Gerar celular"}
+        busy={confirm?.type === "template" ? saving : false}
+        onConfirm={() => {
+          if (!confirm) return;
+          if (confirm.type === "template") {
+            void doApplyTemplate(confirm.id);
+          } else {
+            applyGenerateMobile();
+          }
+        }}
+        onCancel={() => setConfirm(null)}
+      />
+
+      <CanvasOnboarding
+        open={onboardingOpen}
+        busy={saving}
+        orgSlug={org.slug}
+        onPickTemplate={(id) => void doApplyTemplate(id)}
+        onOpenTheme={() => {
+          setLeftPanel("library");
+          setMobileSheet("library");
+          setOnboardingOpen(false);
+          void markSeen();
+        }}
+        onPublish={() => {
+          void (async () => {
+            await save();
+            void markSeen();
+            window.open(`/${org.slug}`, "_blank");
+            setOnboardingOpen(false);
+          })();
+        }}
+        onSkip={() => {
+          void markSeen();
+          setOnboardingOpen(false);
+        }}
+      />
+
+      <CanvasPhonePreview
+        open={phonePreviewOpen}
+        canvas={canvas}
+        org={org}
+        services={services}
+        barbers={barbers}
+        units={units}
+        slogans={slogans}
+        onClose={() => setPhonePreviewOpen(false)}
+      />
+
+      <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--bn-border)] px-2 py-2 sm:px-3">
+        <div className="flex rounded-lg border border-[var(--bn-border)] p-0.5">
           {(["desktop", "mobile"] as const).map((id) => (
             <button
               key={id}
@@ -433,16 +665,14 @@ export function SiteCanvasEditor({
                 setArtboard(id);
                 setSelectedId(null);
               }}
-              className={
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs font-semibold transition sm:px-3",
                 artboard === id
-                  ? "rounded-full bg-brand-500 px-2.5 py-1 text-xs font-bold text-zinc-950 sm:px-3"
-                  : "rounded-full px-2.5 py-1 text-xs text-zinc-300 hover:bg-white/5 sm:px-3"
-              }
+                  ? "bg-[var(--bn-primary-container)] text-white"
+                  : "text-[var(--bn-muted)] hover:bg-white/5 hover:text-[var(--bn-on)]",
+              )}
             >
-              {id === "desktop" ? "Desk" : "Mob"}
-              <span className="hidden sm:inline">
-                {id === "desktop" ? "top" : "ile"}
-              </span>
+              {id === "desktop" ? "Desktop" : "Celular"}
             </button>
           ))}
         </div>
@@ -470,37 +700,44 @@ export function SiteCanvasEditor({
           </button>
         </div>
 
-        <div className="hidden flex-wrap gap-1 lg:flex">
+        <div className="hidden flex-wrap gap-1.5 lg:flex">
           <button
             type="button"
-            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
-            onClick={copyDeskToMobile}
+            className={secondaryBtn}
+            onClick={() => setConfirm({ type: "generate-mobile" })}
           >
-            Copiar desk → mobile
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => setTemplatesOpen(true)}
-            className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
-          >
-            Modelos de página
+            Gerar versão celular
           </button>
           <button
             type="button"
             disabled={saving}
             onClick={snapAllOnArtboard}
-            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 disabled:opacity-50"
-            title="Ajusta X/Y/L/A de todos os elementos do arteboard atual para múltiplos de 8px"
+            className={secondaryBtn}
+            title="Ajusta X/Y/L/A de todos os elementos da tela atual para múltiplos de 8px"
           >
             Alinhar tudo à grade
+          </button>
+          <button
+            type="button"
+            className={secondaryBtn}
+            onClick={() => setPhonePreviewOpen(true)}
+          >
+            Preview celular
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setTemplatesOpen(true)}
+            className={primaryBtn}
+          >
+            Modelos de página
           </button>
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {message ? (
-            <span className="hidden max-w-[12rem] truncate text-xs text-emerald-300 sm:inline">
-              {message}
+          {toast ? (
+            <span className="hidden max-w-[16rem] truncate rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 sm:inline">
+              {toast}
             </span>
           ) : null}
           {error ? (
@@ -508,10 +745,20 @@ export function SiteCanvasEditor({
               {error}
             </span>
           ) : null}
+          <span
+            className={cn(
+              "hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:inline-flex",
+              dirty
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+            )}
+          >
+            {dirty ? "Não salvo" : "No ar"}
+          </span>
           <Link
             href={`/${org.slug}`}
             target="_blank"
-            className="hidden rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5 lg:inline-flex"
+            className={cn(secondaryBtn, "hidden lg:inline-flex")}
           >
             Ver site
           </Link>
@@ -519,16 +766,17 @@ export function SiteCanvasEditor({
             type="button"
             disabled={saving}
             onClick={() => void save()}
-            className="rounded-full bg-brand-400 px-3 py-1.5 text-xs font-bold text-zinc-950 disabled:opacity-60 sm:px-4"
+            title="Salva e atualiza o site"
+            className={cn(primaryBtn, "px-3 py-1.5 sm:px-4")}
           >
-            {saving ? "…" : "Salvar"}
+            {saving ? "…" : "Publicar"}
           </button>
         </div>
       </header>
 
       {/* Barra Canva-lite no topo (mobile) */}
       <nav
-        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-white/10 bg-zinc-950/95 px-1 py-1.5 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/95 px-1 py-1.5 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Ferramentas do canvas"
       >
         {selected ? (
@@ -537,9 +785,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "library"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+                mobileSheet === "library" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "library" ? null : "library"))
@@ -550,7 +796,20 @@ export function SiteCanvasEditor({
             </button>
             <button
               type="button"
-              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              className={cn(
+                dockBtn,
+                mobileSheet === "layers" ? dockBtnActive : dockBtnIdle,
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "layers" ? null : "layers"))
+              }
+            >
+              <LibraryIcon />
+              Camadas
+            </button>
+            <button
+              type="button"
+              className={cn(dockBtn, dockBtnIdle)}
               onClick={duplicateSelected}
             >
               <DupIcon />
@@ -560,9 +819,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "inspector"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-300 hover:bg-white/5",
+                mobileSheet === "inspector" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) =>
@@ -577,9 +834,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "options"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-300 hover:bg-white/5",
+                mobileSheet === "options" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "options" ? null : "options"))
@@ -601,10 +856,7 @@ export function SiteCanvasEditor({
           <>
             <button
               type="button"
-              className={cn(
-                dockBtn,
-                "text-zinc-300 hover:bg-white/5 hover:text-zinc-100",
-              )}
+              className={cn(dockBtn, dockBtnIdle)}
               onClick={() => setTemplatesOpen(true)}
             >
               <TemplatesIcon />
@@ -614,9 +866,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "library"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-300 hover:bg-white/5 hover:text-zinc-100",
+                mobileSheet === "library" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "library" ? null : "library"))
@@ -627,7 +877,20 @@ export function SiteCanvasEditor({
             </button>
             <button
               type="button"
-              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              className={cn(
+                dockBtn,
+                mobileSheet === "layers" ? dockBtnActive : dockBtnIdle,
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "layers" ? null : "layers"))
+              }
+            >
+              <InspectIcon />
+              Camadas
+            </button>
+            <button
+              type="button"
+              className={cn(dockBtn, dockBtnIdle)}
               onClick={() =>
                 addElement(
                   createLibraryElement(
@@ -644,7 +907,7 @@ export function SiteCanvasEditor({
             </button>
             <button
               type="button"
-              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              className={cn(dockBtn, dockBtnIdle)}
               onClick={() =>
                 addElement(
                   createLibraryElement(
@@ -663,9 +926,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "library"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-300 hover:bg-white/5",
+                mobileSheet === "library" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "library" ? null : "library"))
@@ -679,9 +940,7 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
-                mobileSheet === "tools"
-                  ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-300 hover:bg-white/5",
+                mobileSheet === "tools" ? dockBtnActive : dockBtnIdle,
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "tools" ? null : "tools"))
@@ -695,30 +954,92 @@ export function SiteCanvasEditor({
       </nav>
 
       <div className="flex min-h-0 flex-1">
-        <div className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex">
-          {libraryBlock}
+        <div className="hidden w-56 shrink-0 flex-col border-r border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] lg:flex">
+          <div className="flex shrink-0 border-b border-[var(--bn-border)]">
+            <button
+              type="button"
+              onClick={() => setLeftPanel("library")}
+              className={cn(
+                "flex-1 px-3 py-2 text-xs font-semibold transition",
+                leftPanel === "library"
+                  ? "border-b-2 border-[var(--bn-primary)] text-[var(--bn-on)]"
+                  : "text-[var(--bn-muted)] hover:text-[var(--bn-on)]",
+              )}
+            >
+              Biblioteca
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeftPanel("layers")}
+              className={cn(
+                "flex-1 px-3 py-2 text-xs font-semibold transition",
+                leftPanel === "layers"
+                  ? "border-b-2 border-[var(--bn-primary)] text-[var(--bn-on)]"
+                  : "text-[var(--bn-muted)] hover:text-[var(--bn-on)]",
+              )}
+            >
+              Camadas
+            </button>
+          </div>
+          {leftPanel === "library" ? (
+            libraryBlock
+          ) : (
+            <CanvasLayersPanel
+              elements={layerElements}
+              selectedId={selectedId}
+              onSelect={selectElement}
+              onToggleHidden={toggleHidden}
+              onToggleLock={toggleLock}
+              onBringFront={bringFront}
+              onSendBack={sendBack}
+              className="min-h-0 flex-1"
+            />
+          )}
         </div>
-        <CanvasStage
-          canvas={canvas}
-          onChange={(next: SiteCanvasConfig) => setCanvas(next)}
-          onInteractionStart={beginInteraction}
-          onInteractionEnd={endInteraction}
-          artboard={artboard}
-          selectedId={selectedId}
-          onSelect={selectElement}
-          org={org}
-          services={services}
-          barbers={barbers}
-          units={units}
-          slogans={slogans}
-          onDuplicate={duplicateSelected}
-          onDelete={deleteSelected}
-          onBringFront={bringFront}
-          onSendBack={sendBack}
-          onToggleLock={toggleLockSelected}
-          onOpenInspector={() => setMobileSheet("inspector")}
-          onOpenOptions={() => setMobileSheet("options")}
-        />
+
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <CanvasStage
+            canvas={canvas}
+            onChange={(next: SiteCanvasConfig) => setCanvas(next)}
+            onInteractionStart={beginInteraction}
+            onInteractionEnd={endInteraction}
+            artboard={artboard}
+            selectedId={selectedId}
+            onSelect={selectElement}
+            org={org}
+            services={services}
+            barbers={barbers}
+            units={units}
+            slogans={slogans}
+            onDuplicate={duplicateSelected}
+            onDelete={deleteSelected}
+            onBringFront={bringFront}
+            onSendBack={sendBack}
+            onToggleLock={toggleLock}
+            onOpenInspector={() => setMobileSheet("inspector")}
+            onOpenOptions={() => setMobileSheet("options")}
+          />
+          {stageEmpty ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
+              <div
+                className="pointer-events-auto flex max-w-xs flex-col items-center gap-3 rounded-2xl border border-[#2F3336] px-6 py-8 text-center shadow-2xl"
+                style={{ backgroundColor: "#25282B" }}
+              >
+                <p className="text-sm text-[var(--bn-on-variant)]">
+                  Esta tela ainda não tem elementos.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setTemplatesOpen(true)}
+                  className="rounded-lg bg-[var(--bn-primary-container)] px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+                >
+                  Começar com um modelo
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
         <div className="hidden lg:contents">
           <ElementInspector {...inspectorProps} />
         </div>
@@ -728,45 +1049,50 @@ export function SiteCanvasEditor({
         <div className="absolute inset-0 z-30 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/55"
+            className="absolute inset-0 bg-black/80"
             aria-label="Fechar painel"
             onClick={() => setMobileSheet(null)}
           />
           <div
             className={cn(
-              "absolute inset-x-0 bottom-0 flex max-h-[min(78svh,640px)] flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-zinc-950 shadow-2xl",
+              "absolute inset-x-0 bottom-0 flex max-h-[min(78svh,640px)] flex-col overflow-hidden rounded-t-2xl border border-[#2F3336] shadow-2xl",
               "pb-[max(0.25rem,env(safe-area-inset-bottom))]",
             )}
+            style={{ backgroundColor: "#25282B" }}
             role="dialog"
             aria-modal="true"
             aria-label={
               mobileSheet === "library"
                 ? "Biblioteca"
-                : mobileSheet === "inspector"
-                  ? "Propriedades"
-                  : mobileSheet === "options"
-                    ? "Opções do elemento"
-                    : "Mais opções"
+                : mobileSheet === "layers"
+                  ? "Camadas"
+                  : mobileSheet === "inspector"
+                    ? "Propriedades"
+                    : mobileSheet === "options"
+                      ? "Opções do elemento"
+                      : "Mais opções"
             }
           >
-            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
-              <p className="text-sm font-semibold text-zinc-100">
+            <div className="flex shrink-0 items-center justify-between border-b border-[var(--bn-border)] px-4 py-3">
+              <p className="text-sm font-semibold text-[var(--bn-on)]">
                 {mobileSheet === "library"
                   ? "Biblioteca e tema"
-                  : mobileSheet === "inspector"
-                    ? selected
-                      ? `Editar · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
-                      : "Propriedades"
-                    : mobileSheet === "options"
+                  : mobileSheet === "layers"
+                    ? "Camadas"
+                    : mobileSheet === "inspector"
                       ? selected
-                        ? `Opções · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
-                        : "Opções"
-                      : "Ferramentas"}
+                        ? `Editar · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
+                        : "Propriedades"
+                      : mobileSheet === "options"
+                        ? selected
+                          ? `Opções · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
+                          : "Opções"
+                        : "Ferramentas"}
               </p>
               <button
                 type="button"
                 onClick={() => setMobileSheet(null)}
-                className="rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-300 hover:bg-white/5"
+                className="rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-muted)] hover:bg-white/5"
               >
                 Fechar
               </button>
@@ -785,7 +1111,7 @@ export function SiteCanvasEditor({
                         ...c,
                         elements: bindElementsToThemeTokens(c.elements),
                       }));
-                      setMessage(
+                      setToast(
                         "Cores do tema aplicadas aos elementos (texto, botões, painéis…).",
                       );
                     }}
@@ -801,6 +1127,18 @@ export function SiteCanvasEditor({
                   </div>
                 </div>
               ) : null}
+              {mobileSheet === "layers" ? (
+                <CanvasLayersPanel
+                  elements={layerElements}
+                  selectedId={selectedId}
+                  onSelect={selectElement}
+                  onToggleHidden={toggleHidden}
+                  onToggleLock={toggleLock}
+                  onBringFront={bringFront}
+                  onSendBack={sendBack}
+                  className="min-h-[50svh] flex-1"
+                />
+              ) : null}
               {mobileSheet === "inspector" ? (
                 <ElementInspector
                   {...inspectorProps}
@@ -811,7 +1149,7 @@ export function SiteCanvasEditor({
                 <div className="space-y-1 p-3">
                   <button
                     type="button"
-                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    className={sheetListBtn}
                     onClick={() => {
                       duplicateSelected();
                       setMobileSheet(null);
@@ -821,9 +1159,9 @@ export function SiteCanvasEditor({
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    className={sheetListBtn}
                     onClick={() => {
-                      toggleLockSelected();
+                      toggleLock();
                       setMobileSheet(null);
                     }}
                   >
@@ -831,7 +1169,17 @@ export function SiteCanvasEditor({
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    className={sheetListBtn}
+                    onClick={() => {
+                      toggleHidden();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    {selected.hidden ? "Mostrar" : "Ocultar"}
+                  </button>
+                  <button
+                    type="button"
+                    className={sheetListBtn}
                     onClick={() => {
                       bringFront();
                       setMobileSheet(null);
@@ -841,7 +1189,7 @@ export function SiteCanvasEditor({
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    className={sheetListBtn}
                     onClick={() => {
                       sendBack();
                       setMobileSheet(null);
@@ -849,7 +1197,7 @@ export function SiteCanvasEditor({
                   >
                     Enviar para trás
                   </button>
-                  <p className="px-4 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                  <p className="px-4 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
                     Alinhar à página
                   </p>
                   <div className="grid grid-cols-3 gap-1.5 px-2 pb-2">
@@ -866,7 +1214,7 @@ export function SiteCanvasEditor({
                       <button
                         key={align}
                         type="button"
-                        className="rounded-lg border border-white/15 px-2 py-2.5 text-[11px] text-zinc-200 hover:bg-white/5"
+                        className="rounded-lg border border-[var(--bn-border)] px-2 py-2.5 text-[11px] text-[var(--bn-on-variant)] hover:bg-white/5"
                         onClick={() => {
                           alignSelected(align);
                           setMobileSheet(null);
@@ -890,37 +1238,53 @@ export function SiteCanvasEditor({
               ) : null}
               {mobileSheet === "tools" ? (
                 <div className="space-y-2 p-4">
-                  {message ? (
-                    <p className="text-xs text-emerald-300">{message}</p>
+                  {toast ? (
+                    <p className="text-xs text-emerald-300">{toast}</p>
                   ) : null}
                   <button
                     type="button"
-                    className="w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
-                    onClick={copyDeskToMobile}
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
+                    onClick={() => {
+                      setMobileSheet(null);
+                      setConfirm({ type: "generate-mobile" });
+                    }}
                   >
-                    Copiar desk → mobile
-                    <span className="mt-0.5 block text-[11px] text-zinc-500">
-                      Escala o layout desktop para o arteboard mobile
+                    Gerar versão celular
+                    <span className="mt-0.5 block text-[11px] text-[var(--bn-muted)]">
+                      Escala o layout desktop para a tela celular
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
+                    onClick={() => {
+                      setMobileSheet(null);
+                      setPhonePreviewOpen(true);
+                    }}
+                  >
+                    Preview celular
+                    <span className="mt-0.5 block text-[11px] text-[var(--bn-muted)]">
+                      Veja como fica no celular sem publicar
                     </span>
                   </button>
                   <button
                     type="button"
                     disabled={saving}
-                    className="w-full rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-left text-sm font-semibold text-brand-200 hover:bg-brand-500/20 disabled:opacity-50"
+                    className="w-full rounded-xl bg-[var(--bn-primary-container)] px-4 py-3 text-left text-sm font-bold text-white hover:brightness-110 disabled:opacity-50"
                     onClick={() => {
                       setMobileSheet(null);
                       setTemplatesOpen(true);
                     }}
                   >
                     Modelos de página
-                    <span className="mt-0.5 block text-[11px] font-normal text-brand-200/70">
-                      Substitui desktop e mobile
+                    <span className="mt-0.5 block text-[11px] font-normal text-white/70">
+                      Substitui desktop e celular
                     </span>
                   </button>
                   <button
                     type="button"
                     disabled={saving}
-                    className="w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5 disabled:opacity-50"
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5 disabled:opacity-50"
                     onClick={snapAllOnArtboard}
                   >
                     Alinhar tudo à grade
@@ -928,7 +1292,7 @@ export function SiteCanvasEditor({
                   <Link
                     href={`/${org.slug}`}
                     target="_blank"
-                    className="block w-full rounded-xl border border-white/15 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    className="block w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
                     onClick={() => setMobileSheet(null)}
                   >
                     Ver site público

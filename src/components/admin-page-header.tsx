@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 type Props = {
   eyebrow?: string;
   title: ReactNode;
-  description?: string;
+  description?: ReactNode;
   /** Alias de description (compatível com SectionTitle). */
-  subtitle?: string;
+  subtitle?: ReactNode;
   className?: string;
 };
 

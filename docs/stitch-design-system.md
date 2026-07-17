@@ -67,7 +67,7 @@ Product surfaces:
 
 1. **Marketing** — `/`, `/planos` (route group `(public)` + `PublicBrandShell`), `/cadastro`, `/admin/login`
 2. **Tenant** — `/{slug}` (themeable `brand-*`)
-3. **Admin** — `/admin/*` chrome = BN (P1): `.brand-onyx`, sidebar agrupada, `AdminPageHeader`, footer “Barbernegon · Painel”. Features internas ainda podem misturar `brand-*`/`glass-card` até P1.1+.
+3. **Admin** — `/admin/*` chrome = BN (P1): `.brand-onyx`, sidebar agrupada, `AdminPageHeader`, footer “Barbernegon · Painel”. **Canvas `/admin/site`**: chrome do studio também BN; elementos do tenant no palco continuam com `brand-*` do tema.
 4. **Marketplace** — `/explorar` (Onyx & Azure sibling)
 
 Language: **pt-BR**.
@@ -85,6 +85,7 @@ Language: **pt-BR**.
 - Page headers: `admin-page-header.tsx` (sentence case, LabelCaps eyebrow)
 - Onboarding: `onboarding-checklist.tsx` (UI BN; lógica `computeOnboardingChecklist` inalterada)
 - KPI envelopes: superfície `border --bn-border` + `bg --bn-surface-elevated` (sem `.glass-card` na visão geral)
+- **Canvas studio** (`/admin/site`): chrome BN + onboarding por modelos + camadas + preview celular; conteúdo desenhado = tema do tenant (`canvasThemeStyle` / `brand-*`)
 
 ## Screen inventory
 
@@ -95,10 +96,11 @@ Language: **pt-BR**.
 | Cadastro | AuthShell split + photo |
 | Admin login | AuthShell centered |
 | Admin panel | Chrome BN + menu agrupado; product footer (not tenant SiteFooter) |
+| Admin site `/admin/site` | Studio BN; Desktop/Celular; Publicar; preview celular local |
 | Explorar | Marketplace Onyx & Azure |
 
 ## Do / Don't
 
-**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos **e chrome do admin**; Montserrat for marketing/admin titles; keep tenant `brand-*` for canvas.
+**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos **e chrome do admin/canvas**; Montserrat for marketing/admin titles; keep tenant `brand-*` for elementos do site no canvas.
 
-**Don't** — `#0f1419` / `#8eb6ff` on new marketing/admin chrome; Bebas on plan prices or admin page headers; SiteFooter tenant chrome inside `/admin` panel.
+**Don't** — `#0f1419` / `#8eb6ff` on new marketing/admin chrome; Bebas on plan prices or admin page headers; SiteFooter tenant chrome inside `/admin` panel; jargão de design (arteboard/overlay/z-index) na UI do dono.
