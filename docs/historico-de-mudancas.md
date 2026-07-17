@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-17
 
+- **Explorar — mobile + toque no card**: hero e busca adaptados ao celular (altura natural, chips com scroll, dica inline); toque na área do card abre `/{slug}/agendar` (não só o botão Agendar).
 - **Explorar — redesign Onyx & Azure**: `/explorar` replica o layout Stitch imersivo (hero full-bleed com carrossel Ken Burns, busca centralizada, chips e cards tonais); tipografia Montserrat nos títulos; header sticky + footer compartilhados com `/explorar/favoritos`. Busca fuzzy, geolocalização, favoritos, mapa e avaliações permanecem.
 
 ## 2026-07-16

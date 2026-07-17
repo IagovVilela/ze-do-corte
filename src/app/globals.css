@@ -227,6 +227,22 @@ input[type="checkbox"]:indeterminate {
   transform: translateY(-2px);
 }
 
+@media (hover: none) {
+  .explore-shop-card:hover {
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .explore-hero-overlay {
   background: linear-gradient(
     to bottom,

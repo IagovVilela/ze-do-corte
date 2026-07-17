@@ -71,120 +71,137 @@ export function MarketplaceShopCard({ shop }: Props) {
           "transition-all duration-300",
         )}
       >
-        <div className="relative h-48 overflow-hidden bg-[#32353c]">
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt=""
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div
-              className="flex h-full w-full items-center justify-center"
-              style={{
-                background: `linear-gradient(145deg, ${accent}44 0%, #10131a 75%)`,
-              }}
-            />
-          )}
+        {/* Toque no card → agendar (favoritos/mapa/site ficam fora) */}
+        <Link
+          href={`/${shop.slug}/agendar`}
+          className="absolute inset-0 z-0"
+          aria-label={`Agendar em ${shop.name}`}
+        />
 
-          <div className="absolute left-4 top-4 z-[1] flex gap-2">
-            <RatingBadge
-              avg={shop.ratingAvg}
-              count={shop.ratingCount}
-              onOpen={() => setReviewsOpen(true)}
-            />
+        <div className="pointer-events-none relative z-[1]">
+          <div className="relative h-40 overflow-hidden bg-[#32353c] sm:h-48">
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt=""
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <div
+                className="flex h-full w-full items-center justify-center"
+                style={{
+                  background: `linear-gradient(145deg, ${accent}44 0%, #10131a 75%)`,
+                }}
+              />
+            )}
+
+            <div className="absolute left-3 top-3 flex gap-2 sm:left-4 sm:top-4">
+              <RatingBadge
+                avg={shop.ratingAvg}
+                count={shop.ratingCount}
+                onOpen={() => setReviewsOpen(true)}
+              />
+            </div>
+
+            <div className="absolute bottom-3 left-3 flex size-10 items-center justify-center rounded-lg border border-[#2F3336] bg-[#25282B]/90 font-explore-headline text-lg font-semibold text-[#adc6ff] backdrop-blur-md sm:bottom-4 sm:left-4 sm:size-12 sm:text-xl">
+              {initial}
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleFavorite(shop.slug);
-            }}
-            className={cn(
-              "absolute right-4 top-4 z-[2] inline-flex size-10 items-center justify-center rounded-lg border backdrop-blur-md transition",
-              fav
-                ? "border-rose-400/40 bg-rose-500/20 text-rose-300"
-                : "border-[#2F3336] bg-[#25282B]/90 text-[#c2c6d6] hover:text-rose-200",
+          <div className="flex flex-col p-4 sm:p-6">
+            {shop.unitName ? (
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF]">
+                {shop.unitName}
+              </p>
+            ) : (
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF]">
+                Unidade principal
+              </p>
             )}
-            aria-label={fav ? "Remover dos favoritos" : "Favoritar"}
-            title={fav ? "Remover dos favoritos" : "Favoritar"}
-          >
-            <Heart className={cn("size-4", fav && "fill-current")} />
-          </button>
+            <h3 className="mb-2 font-explore-headline text-lg font-semibold leading-snug text-[#e1e2ec] sm:text-xl">
+              {shop.name}
+            </h3>
+            {shop.slogan ? (
+              <p className="mb-3 line-clamp-2 text-sm text-[#c2c6d6] sm:mb-4 sm:line-clamp-1">
+                {shop.slogan}
+              </p>
+            ) : null}
 
-          <div className="absolute bottom-4 left-4 z-[1] flex size-12 items-center justify-center rounded-lg border border-[#2F3336] bg-[#25282B]/90 font-explore-headline text-xl font-semibold text-[#adc6ff] backdrop-blur-md">
-            {initial}
+            {shop.services.length > 0 ? (
+              <div className="mb-4 flex flex-wrap gap-2 sm:mb-6">
+                {shop.services.slice(0, 3).map((svc) => (
+                  <span
+                    key={svc.id}
+                    className="rounded border border-[#2F3336] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]"
+                  >
+                    {svc.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="mb-4 sm:mb-6" />
+            )}
           </div>
         </div>
 
-        <div className="flex flex-grow flex-col p-6">
-          {shop.unitName ? (
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF]">
-              {shop.unitName}
-            </p>
-          ) : (
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF]">
-              Unidade principal
-            </p>
-          )}
-          <h3 className="mb-2 font-explore-headline text-xl font-semibold leading-snug text-[#e1e2ec]">
-            {shop.name}
-          </h3>
-          {shop.slogan ? (
-            <p className="mb-4 line-clamp-1 text-sm text-[#c2c6d6]">
-              {shop.slogan}
-            </p>
-          ) : null}
+        <div className="relative z-[2] mt-auto space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(shop.slug);
+              }}
+              className={cn(
+                "inline-flex size-10 shrink-0 items-center justify-center rounded-lg border transition",
+                fav
+                  ? "border-rose-400/40 bg-rose-500/20 text-rose-300"
+                  : "border-[#2F3336] bg-[#25282B] text-[#c2c6d6] hover:text-rose-200",
+              )}
+              aria-label={fav ? "Remover dos favoritos" : "Favoritar"}
+              title={fav ? "Remover dos favoritos" : "Favoritar"}
+            >
+              <Heart className={cn("size-4", fav && "fill-current")} />
+            </button>
 
-          {shop.services.length > 0 ? (
-            <div className="mb-6 flex flex-wrap gap-2">
-              {shop.services.slice(0, 3).map((svc) => (
-                <span
-                  key={svc.id}
-                  className="rounded border border-[#2F3336] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]"
-                >
-                  {svc.name}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="mb-6" />
-          )}
-
-          <div className="mt-auto space-y-3">
             {mapQuery ? (
               <button
                 type="button"
-                onClick={() => setMapOpen(true)}
-                className="mb-1 flex w-full items-center gap-2 text-left text-[13px] text-[#9CA3AF] transition hover:text-[#adc6ff]"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMapOpen(true);
+                }}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left text-[13px] text-[#9CA3AF] transition hover:text-[#adc6ff]"
               >
                 <MapPin className="size-4 shrink-0" />
                 <span className="line-clamp-1">{location}</span>
               </button>
             ) : (
-              <div className="mb-1 flex items-center gap-2 text-[13px] text-[#9CA3AF]">
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-[13px] text-[#9CA3AF]">
                 <MapPinOff className="size-4 shrink-0" />
-                Sem endereço cadastrado
+                <span className="line-clamp-1">Sem endereço cadastrado</span>
               </div>
             )}
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                href={`/${shop.slug}`}
-                className="flex items-center justify-center rounded-lg border border-[#2F3336] py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#e1e2ec] transition hover:bg-[#32353c]"
-              >
-                Ver site
-              </Link>
-              <Link
-                href={`/${shop.slug}/agendar`}
-                className="flex items-center justify-center rounded-lg bg-[#adc6ff] py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#00285d] transition hover:brightness-110"
-              >
-                Agendar
-              </Link>
-            </div>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Link
+              href={`/${shop.slug}`}
+              className="flex items-center justify-center rounded-lg border border-[#2F3336] py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#e1e2ec] transition hover:bg-[#32353c]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Ver site
+            </Link>
+            <Link
+              href={`/${shop.slug}/agendar`}
+              className="flex items-center justify-center rounded-lg bg-[#adc6ff] py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#00285d] transition hover:brightness-110"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Agendar
+            </Link>
           </div>
         </div>
       </article>

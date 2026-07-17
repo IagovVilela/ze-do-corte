@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   FormEvent,
@@ -155,70 +154,82 @@ export function ExploreMarketplaceClient({
   return (
     <ExploreChrome>
       <main className="min-h-screen">
-        <section className="relative flex min-h-[600px] h-[80vh] items-center justify-center overflow-hidden">
-          <ExploreHeroCarousel />
-          <div className="explore-hero-overlay absolute inset-0 z-10" />
+        {/* Mobile: altura natural; desktop: hero imersivo */}
+        <section className="relative flex flex-col overflow-hidden md:min-h-[600px] md:h-[80vh] md:items-center md:justify-center">
+          <div className="pointer-events-none absolute inset-0 max-md:min-h-[280px] max-md:h-[42vh]">
+            <ExploreHeroCarousel />
+            <div className="explore-hero-overlay absolute inset-0 z-10" />
+          </div>
 
-          <div className="relative z-20 mx-auto w-full max-w-[1280px] px-4 text-center sm:px-6">
-            <div className="mx-auto max-w-4xl">
-              <span className="mb-4 block text-xs font-bold uppercase tracking-[0.2em] text-[#adc6ff]">
+          <div className="relative z-20 mx-auto flex w-full max-w-[1280px] flex-1 flex-col justify-center px-4 pb-6 pt-8 sm:px-6 md:pb-20 md:pt-0">
+            <div className="mx-auto w-full max-w-4xl text-center">
+              <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#adc6ff] sm:mb-4 sm:text-xs">
                 Marketplace
               </span>
-              <h1 className="mb-4 font-explore-headline text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-[#e1e2ec] sm:text-5xl">
+              <h1 className="mb-3 font-explore-headline text-[1.75rem] font-bold leading-[1.15] tracking-[-0.02em] text-[#e1e2ec] sm:mb-4 sm:text-4xl md:text-5xl">
                 Encontre sua barbearia
               </h1>
-              <p className="mx-auto mb-8 max-w-2xl text-base text-[#e1e2ec]/90 sm:text-lg">
-                Digite a cidade mesmo incompleta. Os resultados atualizam enquanto
-                você digita. Use{" "}
-                <strong className="font-semibold text-[#e1e2ec]">
-                  Perto de mim
-                </strong>{" "}
-                com permissão de localização.
+              <p className="mx-auto mb-5 max-w-2xl text-sm text-[#e1e2ec]/90 sm:mb-8 sm:text-base md:text-lg">
+                <span className="md:hidden">
+                  Busque por serviço ou cidade. Use{" "}
+                  <strong className="font-semibold">Perto de mim</strong> com
+                  GPS.
+                </span>
+                <span className="hidden md:inline">
+                  Digite a cidade mesmo incompleta. Os resultados atualizam
+                  enquanto você digita. Use{" "}
+                  <strong className="font-semibold text-[#e1e2ec]">
+                    Perto de mim
+                  </strong>{" "}
+                  com permissão de localização.
+                </span>
               </p>
 
               <form
                 onSubmit={onSubmit}
-                className="explore-search-container flex flex-col items-stretch gap-2 rounded-xl border border-white/10 bg-[#25282B]/80 p-2 shadow-2xl backdrop-blur-xl transition-all md:flex-row md:p-3"
+                className="explore-search-container flex flex-col items-stretch gap-2 rounded-xl border border-white/10 bg-[#25282B]/90 p-2 shadow-2xl backdrop-blur-xl transition-all md:flex-row md:p-3"
               >
-                <label className="flex flex-grow items-center gap-3 px-4">
+                <label className="flex min-h-11 flex-grow items-center gap-3 px-3 sm:px-4">
                   <Search className="size-5 shrink-0 text-[#9CA3AF]" />
                   <input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="Pesquise serviços ou empresas"
-                    className="w-full bg-transparent py-3 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF]"
+                    placeholder="Serviço ou barbearia"
+                    className="w-full bg-transparent py-2.5 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF] sm:py-3"
                     aria-label="Serviço ou barbearia"
                   />
                 </label>
-                <div className="my-2 hidden w-px bg-[#2F3336] md:block" />
-                <label className="flex flex-grow items-center gap-3 px-4">
+                <div className="my-1 hidden w-px bg-[#2F3336] md:my-2 md:block" />
+                <label className="flex min-h-11 flex-grow items-center gap-3 px-3 sm:px-4">
                   <MapPin className="size-5 shrink-0 text-[#9CA3AF]" />
                   <input
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Cidade (ex.: sao jose)"
-                    className="w-full bg-transparent py-3 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF]"
+                    className="w-full bg-transparent py-2.5 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF] sm:py-3"
                     aria-label="Cidade"
                     autoComplete="address-level2"
                   />
                 </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row">
                   <button
                     type="button"
                     onClick={() => void useMyLocation()}
                     disabled={locating}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#2F3336] bg-white/5 px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#e1e2ec] transition hover:bg-[#1d2027] disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#2F3336] bg-white/5 px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#e1e2ec] transition hover:bg-[#1d2027] disabled:opacity-60 sm:gap-2 sm:px-6 sm:text-xs sm:tracking-[0.1em]"
                   >
                     {locating ? (
-                      <LoaderCircle className="size-[18px] animate-spin" />
+                      <LoaderCircle className="size-4 animate-spin sm:size-[18px]" />
                     ) : (
-                      <LocateFixed className="size-[18px]" />
+                      <LocateFixed className="size-4 sm:size-[18px]" />
                     )}
-                    {locating ? "Detectando…" : "Perto de mim"}
+                    <span className="truncate">
+                      {locating ? "GPS…" : "Perto de mim"}
+                    </span>
                   </button>
                   <button
                     type="submit"
-                    className="rounded-lg bg-[#adc6ff] px-10 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#00285d] shadow-lg shadow-[#adc6ff]/20 transition hover:brightness-110 active:scale-[0.97]"
+                    className="min-h-11 rounded-lg bg-[#adc6ff] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#00285d] shadow-lg shadow-[#adc6ff]/20 transition hover:brightness-110 active:scale-[0.97] sm:px-10 sm:text-xs sm:tracking-[0.1em]"
                   >
                     Buscar
                   </button>
@@ -226,10 +237,12 @@ export function ExploreMarketplaceClient({
               </form>
 
               {locMessage ? (
-                <p className="mt-3 text-sm text-[#9CA3AF]">{locMessage}</p>
+                <p className="mt-3 text-left text-sm text-[#9CA3AF] sm:text-center">
+                  {locMessage}
+                </p>
               ) : null}
 
-              <div className="mt-8 flex flex-wrap justify-center gap-2">
+              <div className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:mt-8 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0">
                 {MARKETPLACE_CATEGORY_CHIPS.map((chip) => {
                   const active =
                     (chip.id === "" && !category) || chip.id === category;
@@ -239,7 +252,7 @@ export function ExploreMarketplaceClient({
                       type="button"
                       onClick={() => setCategory(chip.id)}
                       className={cn(
-                        "rounded-full border px-6 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-all",
+                        "shrink-0 rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.1em] transition-all sm:px-6 sm:text-xs",
                         active
                           ? "border-[#adc6ff] bg-[#adc6ff] font-bold text-[#00285d] shadow-lg shadow-[#adc6ff]/20"
                           : "border-white/10 bg-[#25282B]/50 text-[#c2c6d6] backdrop-blur-md hover:border-[#adc6ff] hover:text-[#adc6ff]",
@@ -250,10 +263,20 @@ export function ExploreMarketplaceClient({
                   );
                 })}
               </div>
+
+              {/* Dica inline no mobile (no desktop fica flutuante embaixo) */}
+              <div className="mt-4 flex items-start gap-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-left text-xs text-[#9CA3AF] backdrop-blur-md sm:items-center sm:rounded-full sm:px-4 sm:text-sm md:hidden">
+                <Info className="mt-0.5 size-4 shrink-0 sm:mt-0" />
+                <p>
+                  Dica: digite parte da cidade (ex.{" "}
+                  <span className="font-bold text-[#e1e2ec]">sao</span>) — a
+                  lista atualiza sozinha.
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 z-20 w-full max-w-2xl -translate-x-1/2 px-4">
+          <div className="absolute bottom-8 left-1/2 z-20 hidden w-full max-w-2xl -translate-x-1/2 px-4 md:block">
             <div className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-black/40 px-6 py-3 text-sm text-[#9CA3AF] backdrop-blur-md">
               <Info className="size-[18px] shrink-0" />
               <p>
@@ -268,16 +291,16 @@ export function ExploreMarketplaceClient({
         <section
           ref={resultsRef}
           id="resultados"
-          className="mx-auto max-w-[1280px] px-4 pb-16 pt-16 sm:px-6"
+          className="mx-auto max-w-[1280px] px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 md:pt-16"
         >
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="font-explore-headline text-2xl font-semibold tracking-tight text-[#e1e2ec] sm:text-[32px] sm:leading-[1.2]">
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-8 sm:items-end">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <h2 className="font-explore-headline text-xl font-semibold leading-snug tracking-tight text-[#e1e2ec] sm:text-2xl md:text-[32px] md:leading-[1.2]">
                 {heading}
               </h2>
               {loading ? (
                 <LoaderCircle
-                  className="size-5 animate-spin text-[#adc6ff]"
+                  className="size-4 shrink-0 animate-spin text-[#adc6ff] sm:size-5"
                   aria-label="Atualizando resultados"
                 />
               ) : null}
@@ -286,7 +309,7 @@ export function ExploreMarketplaceClient({
               <button
                 type="button"
                 onClick={clearFilters}
-                className="shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-[#adc6ff] hover:underline"
+                className="shrink-0 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#adc6ff] hover:underline sm:text-xs"
               >
                 Ver todas
               </button>
@@ -308,7 +331,7 @@ export function ExploreMarketplaceClient({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {shops.map((shop) => (
                 <MarketplaceShopCard key={shop.id} shop={shop} />
               ))}
