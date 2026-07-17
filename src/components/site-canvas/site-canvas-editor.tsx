@@ -20,6 +20,7 @@ import {
 import type { OrganizationPublic } from "@/lib/organization";
 import {
   copyDesktopToMobile,
+  createLibraryElement,
   getCanvasTemplate,
   parseSiteCanvasConfig,
   type CanvasArtboardId,
@@ -367,7 +368,7 @@ export function SiteCanvasEditor({
     "inline-flex size-8 items-center justify-center rounded-lg border border-white/15 text-zinc-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
 
   const dockBtn =
-    "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-2 text-[10px] font-semibold transition";
+    "flex min-w-[4.25rem] flex-1 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-semibold transition";
 
   const libraryBlock = (
     <>
@@ -525,38 +526,9 @@ export function SiteCanvasEditor({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex">
-          {libraryBlock}
-        </div>
-        <CanvasStage
-          canvas={canvas}
-          onChange={(next: SiteCanvasConfig) => setCanvas(next)}
-          onInteractionStart={beginInteraction}
-          onInteractionEnd={endInteraction}
-          artboard={artboard}
-          selectedId={selectedId}
-          onSelect={selectElement}
-          org={org}
-          services={services}
-          barbers={barbers}
-          units={units}
-          slogans={slogans}
-          onDuplicate={duplicateSelected}
-          onDelete={deleteSelected}
-          onBringFront={bringFront}
-          onSendBack={sendBack}
-          onToggleLock={toggleLockSelected}
-          onOpenInspector={() => setMobileSheet("inspector")}
-          onOpenOptions={() => setMobileSheet("options")}
-        />
-        <div className="hidden lg:contents">
-          <ElementInspector {...inspectorProps} />
-        </div>
-      </div>
-
+      {/* Barra Canva-lite no topo (mobile) */}
       <nav
-        className="flex shrink-0 gap-1 border-t border-white/10 bg-zinc-950/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
+        className="flex shrink-0 gap-0.5 overflow-x-auto border-b border-white/10 bg-zinc-950/95 px-1 py-1.5 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Ferramentas do canvas"
       >
         {selected ? (
@@ -574,7 +546,7 @@ export function SiteCanvasEditor({
               }
             >
               <LibraryIcon />
-              Biblioteca
+              Elementos
             </button>
             <button
               type="button"
@@ -618,10 +590,7 @@ export function SiteCanvasEditor({
             </button>
             <button
               type="button"
-              className={cn(
-                dockBtn,
-                "text-rose-300 hover:bg-rose-500/15",
-              )}
+              className={cn(dockBtn, "text-rose-300 hover:bg-rose-500/15")}
               onClick={deleteSelected}
             >
               <TrashIcon />
@@ -634,27 +603,77 @@ export function SiteCanvasEditor({
               type="button"
               className={cn(
                 dockBtn,
+                "text-zinc-300 hover:bg-white/5 hover:text-zinc-100",
+              )}
+              onClick={() => setTemplatesOpen(true)}
+            >
+              <TemplatesIcon />
+              Modelos
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
                 mobileSheet === "library"
                   ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+                  : "text-zinc-300 hover:bg-white/5 hover:text-zinc-100",
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "library" ? null : "library"))
               }
             >
               <LibraryIcon />
-              Biblioteca
+              Elementos
+            </button>
+            <button
+              type="button"
+              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              onClick={() =>
+                addElement(
+                  createLibraryElement(
+                    "text",
+                    artboard,
+                    boardW,
+                    nextArtboardY(canvas, artboard),
+                  ),
+                )
+              }
+            >
+              <TextToolIcon />
+              Texto
+            </button>
+            <button
+              type="button"
+              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              onClick={() =>
+                addElement(
+                  createLibraryElement(
+                    "image",
+                    artboard,
+                    boardW,
+                    nextArtboardY(canvas, artboard),
+                  ),
+                )
+              }
+            >
+              <GalleryIcon />
+              Galeria
             </button>
             <button
               type="button"
               className={cn(
                 dockBtn,
-                "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+                mobileSheet === "library"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-300 hover:bg-white/5",
               )}
-              onClick={() => setMobileSheet("inspector")}
+              onClick={() =>
+                setMobileSheet((s) => (s === "library" ? null : "library"))
+              }
+              title="Cores e tema da marca"
             >
-              <InspectIcon />
-              Propriedades
+              <BrandIcon />
+              Marca
             </button>
             <button
               type="button"
@@ -662,7 +681,7 @@ export function SiteCanvasEditor({
                 dockBtn,
                 mobileSheet === "tools"
                   ? "bg-brand-500/20 text-brand-200"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+                  : "text-zinc-300 hover:bg-white/5",
               )}
               onClick={() =>
                 setMobileSheet((s) => (s === "tools" ? null : "tools"))
@@ -674,6 +693,36 @@ export function SiteCanvasEditor({
           </>
         )}
       </nav>
+
+      <div className="flex min-h-0 flex-1">
+        <div className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-zinc-950 lg:flex">
+          {libraryBlock}
+        </div>
+        <CanvasStage
+          canvas={canvas}
+          onChange={(next: SiteCanvasConfig) => setCanvas(next)}
+          onInteractionStart={beginInteraction}
+          onInteractionEnd={endInteraction}
+          artboard={artboard}
+          selectedId={selectedId}
+          onSelect={selectElement}
+          org={org}
+          services={services}
+          barbers={barbers}
+          units={units}
+          slogans={slogans}
+          onDuplicate={duplicateSelected}
+          onDelete={deleteSelected}
+          onBringFront={bringFront}
+          onSendBack={sendBack}
+          onToggleLock={toggleLockSelected}
+          onOpenInspector={() => setMobileSheet("inspector")}
+          onOpenOptions={() => setMobileSheet("options")}
+        />
+        <div className="hidden lg:contents">
+          <ElementInspector {...inspectorProps} />
+        </div>
+      </div>
 
       {mobileSheet ? (
         <div className="absolute inset-0 z-30 lg:hidden">
@@ -1030,6 +1079,96 @@ function TrashIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M6 8h12M10 8V6h4v2M9 8v10h6V8"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function TemplatesIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="3"
+        y="4"
+        width="8"
+        height="16"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <rect
+        x="13"
+        y="4"
+        width="8"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <rect
+        x="13"
+        y="13"
+        width="8"
+        height="7"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+    </svg>
+  );
+}
+
+function TextToolIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 19h4M8 19V6h3l5 13h3"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 12h6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function GalleryIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 7h3l1.5-2h7L17 7h3v12H4V7z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13" r="3" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+function BrandIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="4"
+        y="6"
+        width="16"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M8 12h8M10 9v6"
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinecap="round"
