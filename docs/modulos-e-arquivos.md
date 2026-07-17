@@ -97,6 +97,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `prisma.ts` | Cliente Prisma (adapter pg quando aplicável) |
 | `types.ts` | Tipos compartilhados + schema Zod de criação de agendamento |
 | `utils.ts` | `cn`, dinheiro, datas, cálculo de slots |
+| `br-input-masks.ts` | Máscaras pt-BR (CPF/CNPJ, telefone, dinheiro, CEP, inteiros) |
+| `br-phone-format.ts` | Formatação de telefone BR (usado também via `br-input-masks`) |
 | `constants.ts` | `BARBER_*` / `HERO_VIDEO_SRC` — **legado piloto + defaults de slots/fuso**; não usar como fallback de branding em `/{slug}` |
 | `contact-links.ts` | Helpers legados a partir das constantes (não usados no renderer do tenant) |
 | `organization.ts` | `getOrganizationBySlug`, `OrganizationPublic` (inclui `siteJson`), slugs reservados |

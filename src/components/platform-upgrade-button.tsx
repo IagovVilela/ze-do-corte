@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { SAAS_PLANS, type SaasPlanId } from "@/lib/asaas-plans";
+import { cpfCnpjDigits, formatCpfCnpj } from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
 
 type PixPayload = {
@@ -21,6 +22,11 @@ export function PlatformUpgradeButton() {
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
 
   async function subscribe(planId: SaasPlanId) {
+    const digits = cpfCnpjDigits(cpfCnpj);
+    if (digits.length !== 11 && digits.length !== 14) {
+      setMessage("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) antes de assinar.");
+      return;
+    }
     setLoading(true);
     setMessage("");
     setPix(null);
@@ -31,7 +37,7 @@ export function PlatformUpgradeButton() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId,
-          ...(cpfCnpj.trim() ? { cpfCnpj: cpfCnpj.trim() } : {}),
+          cpfCnpj: digits,
         }),
       });
       const data = (await res.json()) as {
@@ -58,8 +64,10 @@ export function PlatformUpgradeButton() {
         <span className="text-zinc-400">CPF/CNPJ do responsável (Asaas)</span>
         <input
           value={cpfCnpj}
-          onChange={(e) => setCpfCnpj(e.target.value)}
-          placeholder="Somente números"
+          onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
+          placeholder="000.000.000-00"
+          inputMode="numeric"
+          autoComplete="off"
           className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
         />
       </label>

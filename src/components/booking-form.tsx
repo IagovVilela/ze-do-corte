@@ -8,7 +8,7 @@ import { LoaderCircle, Copy, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
-import { formatBrPhoneNational } from "@/lib/br-phone-format";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import type { ServiceSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AppointmentPixPay } from "@/components/appointment-pix-pay";

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Fragment, useState } from "react";
 
-import { formatBrPhoneNational } from "@/lib/br-phone-format";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import { cn } from "@/lib/utils";
 
 type UnitRow = {

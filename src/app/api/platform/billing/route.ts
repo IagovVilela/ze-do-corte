@@ -8,6 +8,7 @@ import {
   asaasFindCustomerByExternalRef,
   asaasGetPixQrCode,
   asaasListSubscriptionPayments,
+  asaasUpdateCustomer,
   getPlatformAsaasApiKey,
   isPlatformAsaasConfigured,
   todayIsoDate,
@@ -32,10 +33,10 @@ const postSchema = z.object({
   cpfCnpj: z
     .string()
     .trim()
-    .min(11)
-    .max(18)
-    .optional()
-    .or(z.literal("")),
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => v.length === 11 || v.length === 14, {
+      message: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).",
+    }),
 });
 
 export async function GET() {
@@ -138,6 +139,8 @@ export async function POST(request: Request) {
 
   try {
     let customerId = org.asaasCustomerId;
+    const document = parsed.data.cpfCnpj;
+
     if (!customerId) {
       const existing = await asaasFindCustomerByExternalRef(
         apiKey,
@@ -149,7 +152,7 @@ export async function POST(request: Request) {
         const created = await asaasCreateCustomer(apiKey, {
           name: org.name,
           email: ownerEmail,
-          cpfCnpj: parsed.data.cpfCnpj || null,
+          cpfCnpj: document,
           externalReference: externalCustomerRef,
         });
         customerId = created.id;
@@ -159,6 +162,13 @@ export async function POST(request: Request) {
         data: { asaasCustomerId: customerId },
       });
     }
+
+    // Cliente antigo pode ter sido criado sem CPF — Asaas exige documento no PIX.
+    await asaasUpdateCustomer(apiKey, customerId, {
+      name: org.name,
+      email: ownerEmail,
+      cpfCnpj: document,
+    });
 
     const subscription = await asaasCreateSubscription(apiKey, {
       customer: customerId,

@@ -9,6 +9,11 @@ import {
   type ServiceCategoryUi,
   isServiceCategory,
 } from "@/lib/service-category";
+import {
+  formatBrMoneyFromNumber,
+  parseBrMoneyInput,
+  parseIntegerDigits,
+} from "@/lib/br-input-masks";
 import { cn, formatMoney } from "@/lib/utils";
 
 type ServiceRow = {
@@ -418,16 +423,13 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           <label className="space-y-1 text-sm">
             <span className="text-zinc-400">Duração (min)</span>
             <input
-              type="number"
-              min={5}
-              max={480}
-              step={5}
+              inputMode="numeric"
               className={input}
-              value={newForm.durationMinutes}
+              value={String(newForm.durationMinutes)}
               onChange={(e) =>
                 setNewForm((f) => ({
                   ...f,
-                  durationMinutes: Number.parseInt(e.target.value, 10) || 5,
+                  durationMinutes: parseIntegerDigits(e.target.value, 5) || 5,
                 }))
               }
             />
@@ -435,17 +437,16 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           <label className="space-y-1 text-sm">
             <span className="text-zinc-400">Preço (R$)</span>
             <input
-              type="number"
-              min={0}
-              step={0.01}
+              inputMode="decimal"
               className={input}
-              value={newForm.price}
+              value={formatBrMoneyFromNumber(newForm.price)}
               onChange={(e) =>
                 setNewForm((f) => ({
                   ...f,
-                  price: Number.parseFloat(e.target.value) || 0,
+                  price: parseBrMoneyInput(e.target.value),
                 }))
               }
+              placeholder="0,00"
             />
           </label>
           <label className="flex items-center gap-2 text-sm text-zinc-300 sm:col-span-2">
@@ -480,24 +481,54 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                         />
                       </label>
                       <input
-                        type="number"
-                        placeholder={`R$ ${newForm.price}`}
-                        className="w-24 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
-                        value={ov.price === null ? "" : ov.price}
-                        onChange={(e) => setNewForm(f => ({
-                          ...f,
-                          unitOverrides: { ...f.unitOverrides, [unit.id]: { ...ov, price: e.target.value === "" ? null : Number(e.target.value) } }
-                        }))}
+                        inputMode="decimal"
+                        placeholder={formatBrMoneyFromNumber(newForm.price) || "0,00"}
+                        className="w-28 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                        value={
+                          ov.price === null
+                            ? ""
+                            : formatBrMoneyFromNumber(ov.price)
+                        }
+                        onChange={(e) =>
+                          setNewForm((f) => ({
+                            ...f,
+                            unitOverrides: {
+                              ...f.unitOverrides,
+                              [unit.id]: {
+                                ...ov,
+                                price:
+                                  e.target.value === ""
+                                    ? null
+                                    : parseBrMoneyInput(e.target.value),
+                              },
+                            },
+                          }))
+                        }
                       />
                       <input
-                        type="number"
+                        inputMode="numeric"
                         placeholder={`${newForm.durationMinutes}m`}
                         className="w-20 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
-                        value={ov.durationMinutes === null ? "" : ov.durationMinutes}
-                        onChange={(e) => setNewForm(f => ({
-                          ...f,
-                          unitOverrides: { ...f.unitOverrides, [unit.id]: { ...ov, durationMinutes: e.target.value === "" ? null : Number(e.target.value) } }
-                        }))}
+                        value={
+                          ov.durationMinutes === null
+                            ? ""
+                            : String(ov.durationMinutes)
+                        }
+                        onChange={(e) =>
+                          setNewForm((f) => ({
+                            ...f,
+                            unitOverrides: {
+                              ...f.unitOverrides,
+                              [unit.id]: {
+                                ...ov,
+                                durationMinutes:
+                                  e.target.value === ""
+                                    ? null
+                                    : parseIntegerDigits(e.target.value),
+                              },
+                            },
+                          }))
+                        }
                       />
                     </div>
                   );
@@ -748,19 +779,16 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     <label className="space-y-1 text-xs">
                       <span className="text-zinc-500">Duração (min)</span>
                       <input
-                        type="number"
-                        min={5}
-                        max={480}
-                        step={5}
+                        inputMode="numeric"
                         className={input}
-                        value={draft.durationMinutes}
+                        value={String(draft.durationMinutes)}
                         onChange={(e) =>
                           setDraft((d) =>
                             d
                               ? {
                                   ...d,
                                   durationMinutes:
-                                    Number.parseInt(e.target.value, 10) || 5,
+                                    parseIntegerDigits(e.target.value, 5) || 5,
                                 }
                               : d,
                           )
@@ -770,21 +798,20 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     <label className="space-y-1 text-xs">
                       <span className="text-zinc-500">Preço (R$)</span>
                       <input
-                        type="number"
-                        min={0}
-                        step={0.01}
+                        inputMode="decimal"
                         className={input}
-                        value={draft.price}
+                        value={formatBrMoneyFromNumber(draft.price)}
                         onChange={(e) =>
                           setDraft((d) =>
                             d
                               ? {
                                   ...d,
-                                  price: Number.parseFloat(e.target.value) || 0,
+                                  price: parseBrMoneyInput(e.target.value),
                                 }
                               : d,
                           )
                         }
+                        placeholder="0,00"
                       />
                     </label>
                     <label className="flex items-center gap-2 text-xs text-zinc-400 sm:col-span-2">
@@ -820,24 +847,68 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                                   />
                                 </label>
                                 <input
-                                  type="number"
-                                  placeholder={`R$ ${draft.price}`}
-                                  className="w-20 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
-                                  value={ov.price === null ? "" : ov.price}
-                                  onChange={(e) => setDraft(d => d ? {
-                                    ...d,
-                                    unitOverrides: { ...d.unitOverrides, [unit.id]: { ...ov, price: e.target.value === "" ? null : Number(e.target.value) } }
-                                  } : d)}
+                                  inputMode="decimal"
+                                  placeholder={
+                                    formatBrMoneyFromNumber(draft.price) || "0,00"
+                                  }
+                                  className="w-24 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+                                  value={
+                                    ov.price === null
+                                      ? ""
+                                      : formatBrMoneyFromNumber(ov.price)
+                                  }
+                                  onChange={(e) =>
+                                    setDraft((d) =>
+                                      d
+                                        ? {
+                                            ...d,
+                                            unitOverrides: {
+                                              ...d.unitOverrides,
+                                              [unit.id]: {
+                                                ...ov,
+                                                price:
+                                                  e.target.value === ""
+                                                    ? null
+                                                    : parseBrMoneyInput(
+                                                        e.target.value,
+                                                      ),
+                                              },
+                                            },
+                                          }
+                                        : d,
+                                    )
+                                  }
                                 />
                                 <input
-                                  type="number"
+                                  inputMode="numeric"
                                   placeholder={`${draft.durationMinutes}m`}
                                   className="w-16 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
-                                  value={ov.durationMinutes === null ? "" : ov.durationMinutes}
-                                  onChange={(e) => setDraft(d => d ? {
-                                    ...d,
-                                    unitOverrides: { ...d.unitOverrides, [unit.id]: { ...ov, durationMinutes: e.target.value === "" ? null : Number(e.target.value) } }
-                                  } : d)}
+                                  value={
+                                    ov.durationMinutes === null
+                                      ? ""
+                                      : String(ov.durationMinutes)
+                                  }
+                                  onChange={(e) =>
+                                    setDraft((d) =>
+                                      d
+                                        ? {
+                                            ...d,
+                                            unitOverrides: {
+                                              ...d.unitOverrides,
+                                              [unit.id]: {
+                                                ...ov,
+                                                durationMinutes:
+                                                  e.target.value === ""
+                                                    ? null
+                                                    : parseIntegerDigits(
+                                                        e.target.value,
+                                                      ),
+                                              },
+                                            },
+                                          }
+                                        : d,
+                                    )
+                                  }
                                 />
                               </div>
                             );

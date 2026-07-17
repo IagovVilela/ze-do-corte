@@ -2,6 +2,13 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
+import {
+  formatBrMoneyFromNumber,
+  formatBrMoneyInput,
+  formatBrPhoneNational,
+  formatIntegerDigits,
+  parseBrMoneyInput,
+} from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
 
 type Plan = {
@@ -37,7 +44,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
   const [error, setError] = useState("");
 
   const [planName, setPlanName] = useState("");
-  const [planPrice, setPlanPrice] = useState("99");
+  const [planPrice, setPlanPrice] = useState(() => formatBrMoneyFromNumber(99));
   const [planCycle, setPlanCycle] = useState("30");
   const [planVisits, setPlanVisits] = useState("");
   const [planServices, setPlanServices] = useState<string[]>([]);
@@ -84,7 +91,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: planName,
-        price: Number(planPrice),
+        price: parseBrMoneyInput(planPrice),
         cycleDays: Number(planCycle) || 30,
         visitsIncluded: planVisits ? Number(planVisits) : null,
         serviceIds: planServices,
@@ -96,6 +103,9 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
       return;
     }
     setPlanName("");
+    setPlanPrice(formatBrMoneyFromNumber(99));
+    setPlanCycle("30");
+    setPlanVisits("");
     setMessage("Plano criado.");
     await reload();
   }
@@ -178,28 +188,24 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
           <div className="grid min-w-0 grid-cols-3 gap-2">
             <input
               required
-              type="number"
-              step="0.01"
-              min="1"
-              placeholder="Preço"
+              inputMode="decimal"
+              placeholder="Preço (R$)"
               value={planPrice}
-              onChange={(e) => setPlanPrice(e.target.value)}
+              onChange={(e) => setPlanPrice(formatBrMoneyInput(e.target.value))}
               className={`${inputClass} min-w-0`}
             />
             <input
-              type="number"
-              min="7"
+              inputMode="numeric"
               placeholder="Ciclo (dias)"
               value={planCycle}
-              onChange={(e) => setPlanCycle(e.target.value)}
+              onChange={(e) => setPlanCycle(formatIntegerDigits(e.target.value, 4))}
               className={`${inputClass} min-w-0`}
             />
             <input
-              type="number"
-              min="1"
+              inputMode="numeric"
               placeholder="Visitas (opc.)"
               value={planVisits}
-              onChange={(e) => setPlanVisits(e.target.value)}
+              onChange={(e) => setPlanVisits(formatIntegerDigits(e.target.value, 4))}
               className={`${inputClass} min-w-0`}
             />
           </div>
@@ -268,9 +274,11 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
           />
           <input
             required
-            placeholder="Telefone"
+            type="tel"
+            inputMode="tel"
+            placeholder="(11) 99999-0000"
             value={clientPhone}
-            onChange={(e) => setClientPhone(e.target.value)}
+            onChange={(e) => setClientPhone(formatBrPhoneNational(e.target.value))}
             className={inputClass}
           />
           <button

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { formatBrPhoneNational } from "@/lib/br-phone-format";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 type Props = {

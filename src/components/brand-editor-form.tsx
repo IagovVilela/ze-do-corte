@@ -7,6 +7,7 @@ import {
   ColorWheelField,
   normalizeHexColor,
 } from "@/components/color-wheel-field";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import { publicSurfaceUrl } from "@/lib/public-hosts";
 
 type OrgForm = {
@@ -84,7 +85,7 @@ export function BrandEditorForm() {
           aboutText: String(o.aboutText ?? ""),
           instagramHref: String(o.instagramHref ?? ""),
           whatsappHref: String(o.whatsappHref ?? ""),
-          phoneLabel: String(o.phoneLabel ?? ""),
+          phoneLabel: formatBrPhoneNational(String(o.phoneLabel ?? "")),
           marketplaceListed: o.marketplaceListed !== false,
         });
       } catch (e) {
@@ -268,7 +269,19 @@ export function BrandEditorForm() {
             <span className="text-zinc-300">{label}</span>
             <input
               value={form[key]}
-              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+              type={key === "phoneLabel" ? "tel" : "text"}
+              inputMode={key === "phoneLabel" ? "tel" : undefined}
+              placeholder={
+                key === "phoneLabel" ? "(11) 99999-0000" : undefined
+              }
+              onChange={(e) => {
+                const raw = e.target.value;
+                setForm((f) => ({
+                  ...f,
+                  [key]:
+                    key === "phoneLabel" ? formatBrPhoneNational(raw) : raw,
+                }));
+              }}
               className={inputClass}
             />
           </label>

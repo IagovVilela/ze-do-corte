@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
+
 type PlatformInfo = {
   webhookConfigured: boolean;
   encryptionConfigured: boolean;
@@ -61,7 +63,9 @@ export function WhatsAppAdminPanel() {
       setLogs(data.logs ?? []);
       setPhoneNumberId(data.connection?.whatsappPhoneNumberId ?? "");
       setWabaId(data.connection?.whatsappWabaId ?? "");
-      setDisplayPhone(data.connection?.whatsappDisplayPhone ?? "");
+      setDisplayPhone(
+        formatBrPhoneNational(data.connection?.whatsappDisplayPhone ?? ""),
+      );
       setBotEnabled(data.connection?.whatsappBotEnabled ?? false);
       if (
         data.connection?.whatsappPhoneNumberId ||
@@ -212,14 +216,17 @@ export function WhatsAppAdminPanel() {
             <span className="text-zinc-200">Número de WhatsApp da barbearia</span>
             <input
               className={inputClass}
-              value={displayPhone}
-              onChange={(e) => setDisplayPhone(e.target.value)}
-              placeholder="(11) 99999-0000"
+              type="tel"
               inputMode="tel"
+              value={displayPhone}
+              onChange={(e) =>
+                setDisplayPhone(formatBrPhoneNational(e.target.value))
+              }
+              placeholder="(11) 99999-0000"
               autoComplete="tel"
             />
             <span className="block text-xs text-zinc-500">
-              Com DDD. Ex.: 11999990000 ou +55 11 99999-0000
+              Com DDD. A máscara formata enquanto você digita.
             </span>
           </label>
         </div>

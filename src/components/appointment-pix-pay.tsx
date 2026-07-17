@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { cpfCnpjDigits, formatCpfCnpj } from "@/lib/br-input-masks";
+
 type PixResult = {
   encodedImage: string | null;
   payload: string | null;
@@ -40,7 +42,9 @@ export function AppointmentPixPay({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           manageToken,
-          ...(cpf.trim() ? { cpfCnpj: cpf.trim() } : {}),
+          ...(cpf.trim()
+            ? { cpfCnpj: cpfCnpjDigits(cpf) }
+            : {}),
         }),
       });
       const data = (await res.json()) as {
@@ -78,8 +82,10 @@ export function AppointmentPixPay({
       </p>
       <input
         value={cpf}
-        onChange={(e) => setCpf(e.target.value)}
-        placeholder="CPF/CNPJ (se necessário)"
+        onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
+        placeholder="000.000.000-00"
+        inputMode="numeric"
+        autoComplete="off"
         className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
       />
       <button

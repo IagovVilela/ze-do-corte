@@ -150,6 +150,25 @@ export async function asaasCreateCustomer(
   });
 }
 
+export async function asaasUpdateCustomer(
+  apiKey: string,
+  customerId: string,
+  data: {
+    name?: string;
+    email?: string | null;
+    cpfCnpj?: string | null;
+  },
+): Promise<AsaasCustomer> {
+  return asaasFetch<AsaasCustomer>(apiKey, `/customers/${customerId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: data.name || undefined,
+      email: data.email || undefined,
+      cpfCnpj: data.cpfCnpj?.replace(/\D/g, "") || undefined,
+    }),
+  });
+}
+
 export async function asaasFindCustomerByExternalRef(
   apiKey: string,
   externalReference: string,
