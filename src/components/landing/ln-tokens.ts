@@ -1,23 +1,23 @@
 /**
- * Tokens da landing Stitch — paleta azul (substitui Electric Violet).
- * Superfícies levemente frias; primary = electric blue.
+ * Tokens da landing premium Stitch (Dark Cinematic).
+ * Superfícies frias; primary = electric blue.
  */
 export const LN = {
-  bg: "#0f1419",
-  surface: "#121820",
-  surfaceLow: "#161d27",
-  surfaceHigh: "#1e2733",
-  surfaceHighest: "#283242",
-  surfaceLowest: "#0a0e13",
-  onSurface: "#e2eaf4",
-  onSurfaceVariant: "#a8b6c9",
-  outline: "#7a889c",
-  outlineVariant: "#3a4454",
-  primary: "#8eb6ff",
-  primaryContainer: "#3b82f6",
-  onPrimary: "#001a4d",
-  secondary: "#adc6ff",
-  tertiary: "#ffb869",
-  glow: "rgba(59, 130, 246, 0.35)",
-  glowSoft: "rgba(142, 182, 255, 0.25)",
+  bg: "#10131a",
+  surface: "#10131a",
+  surfaceLow: "#191b23",
+  surfaceElevated: "#25282B",
+  surfaceContainer: "#1d2027",
+  surfaceLowest: "#0b0e15",
+  onSurface: "#e1e2ec",
+  onSurfaceVariant: "#c2c6d6",
+  textMuted: "#9CA3AF",
+  outline: "#8c909f",
+  borderSubtle: "#2F3336",
+  primary: "#adc6ff",
+  primaryContainer: "#3B82F6",
+  onPrimary: "#002e6a",
+  accentGold: "#C5A059",
+  error: "#ffb4ab",
+  glow: "rgba(59, 130, 246, 0.15)",
 } as const;

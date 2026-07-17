@@ -161,7 +161,7 @@ export function ExploreMarketplaceClient({
             <div className="explore-hero-overlay absolute inset-0 z-10" />
           </div>
 
-          <div className="relative z-20 mx-auto flex w-full max-w-[1280px] flex-1 flex-col justify-center px-4 pb-6 pt-8 sm:px-6 md:pb-20 md:pt-0">
+          <div className="relative z-20 mx-auto flex w-full max-w-[1280px] flex-1 flex-col justify-center px-4 pt-24 pb-6 sm:px-6 md:pt-16 md:pb-20">
             <div className="mx-auto w-full max-w-4xl text-center">
               <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-[#adc6ff] sm:mb-4 sm:text-xs">
                 Marketplace

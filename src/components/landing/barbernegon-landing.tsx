@@ -2,14 +2,11 @@
 
 import type { CSSProperties } from "react";
 
-import { ShaderBackground } from "@/components/landing/shader-background";
 import {
   StitchFinalCta,
-  StitchFooter,
   StitchHero,
   StitchIdentity,
   StitchIntelligence,
-  StitchNav,
   StitchSiteSection,
 } from "@/components/landing/stitch-sections";
 
@@ -18,37 +15,39 @@ type Props = {
 };
 
 const themeVars = {
-  "--ln-bg": "#0f1419",
-  "--ln-on": "#e2eaf4",
-  "--ln-muted": "#a8b6c9",
-  "--ln-primary": "#8eb6ff",
-  "--ln-primary-container": "#3b82f6",
-  "--ln-on-primary": "#001a4d",
-  "--ln-surface-high": "#1e2733",
-  "--ln-surface-lowest": "#0a0e13",
-  "--ln-outline": "#7a889c",
+  "--ln-bg": "#10131a",
+  "--ln-on": "#e1e2ec",
+  "--ln-on-variant": "#c2c6d6",
+  "--ln-muted": "#9CA3AF",
+  "--ln-primary": "#adc6ff",
+  "--ln-primary-container": "#3B82F6",
+  "--ln-surface-low": "#191b23",
+  "--ln-surface-elevated": "#25282B",
+  "--ln-surface-container": "#1d2027",
+  "--ln-surface-lowest": "#0b0e15",
+  "--ln-border": "#2F3336",
+  "--ln-outline": "#8c909f",
+  "--ln-accent-gold": "#C5A059",
+  "--ln-error": "#ffb4ab",
 } as CSSProperties;
 
 /**
- * Landing Barbernegon — design Stitch (Dark Cinematic Minimalism),
- * paleta Electric Blue no lugar do violeta original.
+ * Landing Barbernegon — design Stitch premium (hero fotográfico full-bleed).
+ * Nav/footer vêm do layout `(public)`.
  */
 export function BarbernegonLanding({ className = "" }: Props) {
   return (
     <div
-      className={`${className} relative min-h-svh overflow-x-clip bg-[var(--ln-bg)] font-[family-name:var(--font-ln-body)] text-[var(--ln-on)] antialiased selection:bg-[var(--ln-primary-container)] selection:text-white`}
+      className={`${className} relative overflow-x-clip bg-[var(--ln-bg)] font-[family-name:var(--font-ln-body)] text-[var(--ln-on)] antialiased selection:bg-[var(--ln-primary-container)] selection:text-white`}
       style={themeVars}
     >
-      <ShaderBackground />
-      <StitchNav />
-      <main className="relative z-10 pt-0">
+      <main className="relative z-10">
         <StitchHero />
         <StitchIdentity />
         <StitchSiteSection />
         <StitchIntelligence />
         <StitchFinalCta />
       </main>
-      <StitchFooter />
     </div>
   );
 }

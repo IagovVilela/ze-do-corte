@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function ExplorarFavoritosPage() {
   return (
-    <ExploreChrome favoritesActive>
-      <main className="mx-auto w-full max-w-[1280px] space-y-6 px-4 py-10 sm:px-6 sm:py-14">
+    <ExploreChrome>
+      <main className="mx-auto w-full max-w-[1280px] space-y-6 px-4 pt-24 pb-10 sm:px-6 sm:pt-28 sm:pb-14">
         <div>
-          <span className="mb-3 block text-xs font-bold uppercase tracking-[0.2em] text-[#adc6ff]">
+          <span className="mb-3 block text-xs font-bold tracking-[0.2em] text-[#adc6ff] uppercase">
             Marketplace
           </span>
           <h1 className="font-explore-headline text-3xl font-bold tracking-tight text-[#e1e2ec] sm:text-4xl">

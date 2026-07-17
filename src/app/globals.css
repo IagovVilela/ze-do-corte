@@ -213,8 +213,10 @@ input[type="checkbox"]:indeterminate {
   background-color: #10131a;
 }
 
+.font-brand-headline,
 .font-explore-headline {
-  font-family: var(--font-explore-headline), var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-brand-headline), var(--font-explore-headline),
+    var(--font-geist-sans), system-ui, sans-serif;
 }
 
 .explore-search-container:focus-within {

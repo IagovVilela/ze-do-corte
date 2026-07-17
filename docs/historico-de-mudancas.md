@@ -8,6 +8,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-17
 
+- **Navegação pública unificada**: grupo de rotas `src/app/(public)/` com shell compartilhado (`PublicBrandShell`) — mesma nav/footer em Home, Barbearias e Favoritos; underline animado; transição de página (fade/slide); tipografia Montserrat via `--font-brand-headline`.
+- **Nav compartilhada Barbernegon**: `BarbernegonNav` em `src/components/brand/barbernegon-nav.tsx` — mesma navegação na landing e em `/explorar*` (Home, Barbearias, Favoritos, Para o salão, Entrar); logo e Home voltam à landing.
+- **Landing premium Stitch**: `/` passa a usar o layout *barbernegon_landing_page_premium* — hero full-bleed com foto, nav Home/Favoritos/Para o salão, seções Identidade Real / Site / Operação / CTA; imagens em `public/images/landing/`; Montserrat nos títulos. Componentes em `src/components/landing/`.
+- **Docs Stitch — design system**: criado [`docs/stitch-design-system.md`](./stitch-design-system.md) (formato Google Stitch `DESIGN.md`) a partir do design real da landing Barbernegon Electric Blue, tokens globais, tenant e inventário de telas.
 - **Explorar — mobile + toque no card**: hero e busca adaptados ao celular (altura natural, chips com scroll, dica inline); toque na área do card abre `/{slug}/agendar` (não só o botão Agendar).
 - **Explorar — redesign Onyx & Azure**: `/explorar` replica o layout Stitch imersivo (hero full-bleed com carrossel Ken Burns, busca centralizada, chips e cards tonais); tipografia Montserrat nos títulos; header sticky + footer compartilhados com `/explorar/favoritos`. Busca fuzzy, geolocalização, favoritos, mapa e avaliações permanecem.
 

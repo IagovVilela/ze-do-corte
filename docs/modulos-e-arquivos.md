@@ -26,9 +26,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 
 | Rota | Arquivo | Notas |
 |------|---------|--------|
-| `/` | `src/app/page.tsx` | Landing **Barbernegon** (plataforma) |
-| `/explorar` | `src/app/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
-| `/explorar/favoritos` | `src/app/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
+| `/` | `src/app/(public)/page.tsx` | Landing **Barbernegon** premium (shell em `(public)/layout.tsx`) |
+| `/explorar` | `src/app/(public)/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
+| `/explorar/favoritos` | `src/app/(public)/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
 | `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview com KPIs, taxas e gráficos (7d/30d) |
 | `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
@@ -145,6 +145,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Componente | Pasta |
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
+| Nav pública (landing + explorar) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
+| Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx`, `landing/ln-tokens.ts` — assets em `public/images/landing/` |
 | Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` (desktop 3 colunas; mobile dock + folhas; barra flutuante Canva-lite; cores via `color-wheel-field.tsx`) |
