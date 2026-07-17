@@ -1,4 +1,4 @@
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
@@ -81,7 +81,7 @@ export default async function AdminCaixaPage({
 
   return (
     <div className="space-y-8 py-6">
-      <SectionTitle
+      <AdminPageHeader
         eyebrow="Caixa"
         title="Relatório de recebimentos"
         description={`Pagamentos marcados no balcão · ${periodLabel}`}

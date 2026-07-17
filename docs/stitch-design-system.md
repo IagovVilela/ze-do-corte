@@ -67,7 +67,7 @@ Product surfaces:
 
 1. **Marketing** — `/`, `/planos` (route group `(public)` + `PublicBrandShell`), `/cadastro`, `/admin/login`
 2. **Tenant** — `/{slug}` (themeable `brand-*`)
-3. **Admin** — `/admin/*` (legado visual; footer mínimo “Barbernegon · Painel”)
+3. **Admin** — `/admin/*` chrome = BN (P1): `.brand-onyx`, sidebar agrupada, `AdminPageHeader`, footer “Barbernegon · Painel”. Features internas ainda podem misturar `brand-*`/`glass-card` até P1.1+.
 4. **Marketplace** — `/explorar` (Onyx & Azure sibling)
 
 Language: **pt-BR**.
@@ -78,6 +78,14 @@ Language: **pt-BR**.
 - Body: **Geist**
 - Do **not** use Bebas Neue on marketing/plan prices (Bebas is tenant display only)
 
+## Admin chrome (P1)
+
+- Layout: `src/app/admin/(panel)/layout.tsx` — `.brand-onyx` + Montserrat
+- Nav: `admin-panel-nav.tsx` — grupos Operação / Marca & presença / Financeiro / Conta; ativo com primary BN
+- Page headers: `admin-page-header.tsx` (sentence case, LabelCaps eyebrow)
+- Onboarding: `onboarding-checklist.tsx` (UI BN; lógica `computeOnboardingChecklist` inalterada)
+- KPI envelopes: superfície `border --bn-border` + `bg --bn-surface-elevated` (sem `.glass-card` na visão geral)
+
 ## Screen inventory
 
 | Screen | Notes |
@@ -86,11 +94,11 @@ Language: **pt-BR**.
 | Planos `/planos` | Same public chrome; `SaasPlanComparison` with BN tokens |
 | Cadastro | AuthShell split + photo |
 | Admin login | AuthShell centered |
-| Admin panel | Sidebar legado; product footer (not tenant SiteFooter) |
+| Admin panel | Chrome BN + menu agrupado; product footer (not tenant SiteFooter) |
 | Explorar | Marketplace Onyx & Azure |
 
 ## Do / Don't
 
-**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos; Montserrat for marketing titles; keep tenant `brand-*` for canvas.
+**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos **e chrome do admin**; Montserrat for marketing/admin titles; keep tenant `brand-*` for canvas.
 
-**Don't** — `#0f1419` / `#8eb6ff` on new marketing screens; Bebas on plan prices; SiteFooter tenant chrome inside `/admin` panel.
+**Don't** — `#0f1419` / `#8eb6ff` on new marketing/admin chrome; Bebas on plan prices or admin page headers; SiteFooter tenant chrome inside `/admin` panel.

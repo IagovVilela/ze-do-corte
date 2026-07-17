@@ -19,7 +19,7 @@ import {
   OnboardingChecklist,
   computeOnboardingChecklist,
 } from "@/components/onboarding-checklist";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { cn } from "@/lib/utils";
 import {
@@ -104,20 +104,23 @@ export default async function AdminPage({
   }));
 
   const listSubtitle = hasActiveListFilters(listFilters)
-    ? `${total} registo(s) no total · página ${page} · filtros ativos`
-    : `${total} registo(s) no total · página ${page}`;
+    ? `${total} registro(s) no total · página ${page} · filtros ativos`
+    : `${total} registro(s) no total · página ${page}`;
 
   const overviewSubtitle =
     access.role === "STAFF"
       ? "Só vê agendamentos atribuídos a você. Peça ao administrador para associar reservas novas."
       : undefined;
 
+  const kpiSurface =
+    "rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5";
+
   return (
     <main className="flex-1">
-      <section className="container-max pt-6 pb-8 md:pt-8">
+      <section className="container-max space-y-6 pb-8 pt-2 md:pt-4">
         <AnimatedSection>
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <SectionTitle
+            <AdminPageHeader
               eyebrow="Painel administrativo"
               title="Visão da operação"
               subtitle={overviewSubtitle}
@@ -127,9 +130,7 @@ export default async function AdminPage({
         </AnimatedSection>
 
         {onboardingItems.length > 0 ? (
-          <div className="mt-8">
-            <OnboardingChecklist items={onboardingItems} />
-          </div>
+          <OnboardingChecklist items={onboardingItems} />
         ) : null}
       </section>
 
@@ -141,52 +142,58 @@ export default async function AdminPage({
               showRevenue ? "xl:grid-cols-6" : "xl:grid-cols-4",
             )}
           >
-            <div className="glass-card rounded-2xl p-5">
-              <p className="text-sm text-zinc-400">Agendamentos hoje</p>
-              <p className="mt-2 text-3xl font-semibold text-white">
+            <div className={kpiSurface}>
+              <p className="text-sm text-[var(--bn-muted)]">Agendamentos hoje</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--bn-on)]">
                 {metrics.totalToday}
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-5">
-              <p className="text-sm text-zinc-400">Agendamentos na semana</p>
-              <p className="mt-2 text-3xl font-semibold text-white">
+            <div className={kpiSurface}>
+              <p className="text-sm text-[var(--bn-muted)]">Agendamentos na semana</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--bn-on)]">
                 {metrics.totalWeek}
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-5">
-              <p className="text-sm text-zinc-400">Clientes (cadastro telefone)</p>
-              <p className="mt-2 text-3xl font-semibold text-white">
+            <div className={kpiSurface}>
+              <p className="text-sm text-[var(--bn-muted)]">Clientes (cadastro telefone)</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--bn-on)]">
                 {metrics.distinctClients}
               </p>
             </div>
             {showRevenue ? (
               <>
-                <div className="glass-card rounded-2xl border border-sky-500/15 p-5">
-                  <p className="text-sm text-zinc-400">Faturamento (mês, concluídos)</p>
-                  <p className="mt-2 text-3xl font-semibold text-brand-300">
+                <div className={kpiSurface}>
+                  <p className="text-sm text-[var(--bn-muted)]">
+                    Faturamento (mês, concluídos)
+                  </p>
+                  <p className="mt-2 text-3xl font-semibold text-[var(--bn-primary)]">
                     R$ {metrics.revenueMonth.toFixed(2)}
                   </p>
                 </div>
-                <div className="glass-card rounded-2xl border border-orange-500/20 p-5">
-                  <p className="text-sm text-zinc-400">A receber (concluídos)</p>
+                <div className={kpiSurface}>
+                  <p className="text-sm text-[var(--bn-muted)]">A receber (concluídos)</p>
                   <p className="mt-2 text-3xl font-semibold text-orange-300">
                     {metrics.pendingPaymentTotal}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">Sem pagamento registado</p>
+                  <p className="mt-1 text-xs text-[var(--bn-muted)]">
+                    Sem pagamento registrado
+                  </p>
                 </div>
-                <div className="glass-card rounded-2xl p-5 sm:col-span-2 xl:col-span-1">
-                  <p className="text-sm text-zinc-400">Recebido (período gráficos)</p>
+                <div className={cn(kpiSurface, "sm:col-span-2 xl:col-span-1")}>
+                  <p className="text-sm text-[var(--bn-muted)]">
+                    Recebido (período gráficos)
+                  </p>
                   <p className="mt-2 text-xl font-semibold text-emerald-300">
                     R$ {metrics.receivedInPeriod.toFixed(2)}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">{periodLabel}</p>
+                  <p className="mt-1 text-xs text-[var(--bn-muted)]">{periodLabel}</p>
                 </div>
               </>
             ) : null}
             {!showRevenue ? (
-              <div className="glass-card rounded-2xl p-5 sm:col-span-2 xl:col-span-1">
-                <p className="text-sm text-zinc-400">Próximo horário</p>
-                <p className="mt-2 text-lg font-semibold leading-snug text-brand-300">
+              <div className={cn(kpiSurface, "sm:col-span-2 xl:col-span-1")}>
+                <p className="text-sm text-[var(--bn-muted)]">Próximo horário</p>
+                <p className="mt-2 text-lg font-semibold leading-snug text-[var(--bn-primary)]">
                   {nextAppointment
                     ? `${nextAppointment.clientName} · ${format(
                         nextAppointment.startsAt,
@@ -198,9 +205,9 @@ export default async function AdminPage({
             ) : null}
           </div>
           {showRevenue ? (
-            <div className="mt-4 glass-card rounded-2xl p-5">
-              <p className="text-sm text-zinc-400">Próximo horário</p>
-              <p className="mt-2 text-lg font-semibold leading-snug text-brand-300">
+            <div className={cn("mt-4", kpiSurface)}>
+              <p className="text-sm text-[var(--bn-muted)]">Próximo horário</p>
+              <p className="mt-2 text-lg font-semibold leading-snug text-[var(--bn-primary)]">
                 {nextAppointment
                   ? `${nextAppointment.clientName} · ${format(
                       nextAppointment.startsAt,

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AdminSettingsManager } from "@/components/admin-settings-manager";
 import { AnimatedSection } from "@/components/animated-section";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
@@ -46,7 +46,7 @@ export default async function AdminConfiguracaoPage() {
     <main className="flex-1">
       <section className="container-max pt-6 pb-16">
         <AnimatedSection>
-          <SectionTitle
+          <AdminPageHeader
             eyebrow="Marca"
             title="Informações da barbearia"
             subtitle="Conteúdo auxiliar guardado na base de dados. Pode expandir chaves via API se precisar."

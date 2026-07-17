@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AdminUnitsManager } from "@/components/admin-units-manager";
 import { AnimatedSection } from "@/components/animated-section";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { unitScopeWhere } from "@/lib/staff-access";
@@ -35,7 +35,7 @@ export default async function AdminUnitsPage() {
     <main className="flex-1">
       <section className="container-max pt-6 pb-16">
         <AnimatedSection>
-          <SectionTitle
+          <AdminPageHeader
             eyebrow="Operação"
             title="Unidades da barbearia"
             subtitle="Cada unidade tem sua agenda. O site público agenda na unidade definida como padrão. O proprietário pode editar dados cadastrais (nome, slug, endereço, telefone) em Editar dados."

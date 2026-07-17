@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AdminStaffManager } from "@/components/admin-staff-manager";
 import { AnimatedSection } from "@/components/animated-section";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { staffMemberScopeWhere, unitScopeWhere } from "@/lib/staff-access";
@@ -56,7 +56,7 @@ export default async function AdminEquipePage() {
     <main className="flex-1">
       <section className="container-max pt-6 pb-16">
         <AnimatedSection>
-          <SectionTitle eyebrow="Acesso" title="Equipe do painel" />
+          <AdminPageHeader eyebrow="Acesso" title="Equipe do painel" />
           <div className="mt-8">
             <AdminStaffManager
               initialStaff={staffRows}

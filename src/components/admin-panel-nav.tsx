@@ -19,8 +19,13 @@ type NavItem = {
   href: string;
   label: string;
   show: boolean;
-  /** Ex.: recurso só no Pro */
   badge?: string | null;
+};
+
+type NavGroup = {
+  id: string;
+  label: string;
+  items: NavItem[];
 };
 
 function sessionDisplayName(access: StaffAccess): string {
@@ -32,12 +37,111 @@ function sessionDisplayName(access: StaffAccess): string {
   return "";
 }
 
+function buildGroups(
+  access: StaffAccess,
+  proUnlocked: boolean,
+): NavGroup[] {
+  return [
+    {
+      id: "overview",
+      label: "Visão geral",
+      items: [{ href: "/admin", label: "Visão geral", show: true }],
+    },
+    {
+      id: "operation",
+      label: "Operação",
+      items: [
+        {
+          href: "/admin/unidades",
+          label: "Unidades",
+          show: access.permissions.manageUnits,
+        },
+        {
+          href: "/admin/equipe",
+          label: "Equipe",
+          show: access.permissions.manageStaff !== "none",
+        },
+        {
+          href: "/admin/servicos",
+          label: "Serviços",
+          show: access.permissions.manageServices,
+        },
+        {
+          href: "/admin/expediente",
+          label: "Meu expediente",
+          show: access.role === "STAFF",
+        },
+      ],
+    },
+    {
+      id: "brand",
+      label: "Marca & presença",
+      items: [
+        {
+          href: "/admin/marca",
+          label: "Marca",
+          show: access.permissions.manageBranding,
+        },
+        {
+          href: "/admin/site",
+          label: "Site",
+          show: access.permissions.manageBranding,
+        },
+        {
+          href: "/admin/whatsapp",
+          label: "WhatsApp",
+          show: access.permissions.manageBranding,
+        },
+      ],
+    },
+    {
+      id: "finance",
+      label: "Financeiro",
+      items: [
+        {
+          href: "/admin/caixa",
+          label: "Caixa",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+        },
+        {
+          href: "/admin/pagamentos",
+          label: "Pagamentos",
+          show: access.role === "OWNER" || access.permissions.manageSettings,
+        },
+        {
+          href: "/admin/clube",
+          label: "Clube",
+          show: access.permissions.manageSubscriptions,
+          badge: proUnlocked ? null : "Pro",
+        },
+        {
+          href: "/admin/plano",
+          label: "Plano",
+          show: access.role === "OWNER",
+        },
+      ],
+    },
+    {
+      id: "account",
+      label: "Conta",
+      items: [
+        { href: "/admin/perfil", label: "Perfil", show: true },
+        {
+          href: "/admin/configuracao",
+          label: "Configuração",
+          show: access.permissions.manageSettings,
+        },
+      ],
+    },
+  ];
+}
+
 export function AdminPanelNav({
   access,
   proUnlocked = true,
 }: {
   access: StaffAccess;
-  /** Caixa/Clube liberados (trial ou Pro ativo) */
   proUnlocked?: boolean;
 }) {
   const pathname = usePathname();
@@ -68,79 +172,22 @@ export function AdminPanelNav({
     router.refresh();
   }
 
-  const items: NavItem[] = [
-    { href: "/admin", label: "Visão geral", show: true },
-    { href: "/admin/perfil", label: "Perfil", show: true },
-    {
-      href: "/admin/expediente",
-      label: "Meu expediente",
-      show: access.role === "STAFF",
-    },
-    { href: "/admin/unidades", label: "Unidades", show: access.permissions.manageUnits },
-    { href: "/admin/equipe", label: "Equipe", show: access.permissions.manageStaff !== "none" },
-    {
-      href: "/admin/servicos",
-      label: "Serviços",
-      show: access.permissions.manageServices,
-    },
-    {
-      href: "/admin/marca",
-      label: "Marca",
-      show: access.permissions.manageBranding,
-    },
-    {
-      href: "/admin/site",
-      label: "Site",
-      show: access.permissions.manageBranding,
-    },
-    {
-      href: "/admin/whatsapp",
-      label: "WhatsApp",
-      show: access.permissions.manageBranding,
-    },
-    {
-      href: "/admin/caixa",
-      label: "Caixa",
-      show: access.permissions.viewRevenue,
-      badge: proUnlocked ? null : "Pro",
-    },
-    {
-      href: "/admin/pagamentos",
-      label: "Pagamentos",
-      show: access.role === "OWNER" || access.permissions.manageSettings,
-    },
-    {
-      href: "/admin/clube",
-      label: "Clube",
-      show: access.permissions.manageSubscriptions,
-      badge: proUnlocked ? null : "Pro",
-    },
-    {
-      href: "/admin/plano",
-      label: "Plano",
-      show: access.role === "OWNER",
-    },
-    {
-      href: "/admin/configuracao",
-      label: "Configuração",
-      show: access.permissions.manageSettings,
-    },
-  ];
-
-  const visible = items.filter((i) => i.show);
+  const groups = buildGroups(access, proUnlocked)
+    .map((g) => ({ ...g, items: g.items.filter((i) => i.show) }))
+    .filter((g) => g.items.length > 0);
 
   const sidebarBody = (
     <>
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-4">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--bn-border)] px-4 py-4">
         <Link
           href="/admin"
-          className="text-base font-semibold tracking-tight text-white"
+          className="font-brand-headline text-base font-bold tracking-tight text-[var(--bn-on)]"
         >
-          Painel
+          Barbernegon
         </Link>
         <button
           type="button"
-          className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/5 hover:text-zinc-100 lg:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-lg text-[var(--bn-muted)] transition hover:bg-white/5 hover:text-[var(--bn-on)] lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-label="Fechar menu"
         >
@@ -152,43 +199,60 @@ export function AdminPanelNav({
         aria-label="Seções do painel"
         className="flex-1 overflow-y-auto px-2 py-3"
       >
-        <ul className="flex flex-col gap-0.5">
-          {visible.map((item) => {
-            const active =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : pathname.startsWith(item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
-                    active
-                      ? "bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40"
-                      : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
-                  )}
-                >
-                  <span>{item.label}</span>
-                  {item.badge ? (
-                    <span className="rounded-full bg-brand-400/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-200">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="flex flex-col gap-5">
+          {groups.map((group) => (
+            <div key={group.id}>
+              <p className="mb-1.5 px-3 text-[11px] font-bold tracking-[0.1em] text-[var(--bn-muted)] uppercase">
+                {group.label}
+              </p>
+              <ul className="flex flex-col gap-0.5">
+                {group.items.map((item) => {
+                  const active =
+                    item.href === "/admin"
+                      ? pathname === "/admin"
+                      : pathname.startsWith(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
+                          active
+                            ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/25"
+                            : "text-[var(--bn-on-variant)] hover:bg-white/5 hover:text-[var(--bn-on)]",
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          {active ? (
+                            <span
+                              aria-hidden
+                              className="h-4 w-0.5 rounded-full bg-[var(--bn-primary)]"
+                            />
+                          ) : null}
+                          {item.label}
+                        </span>
+                        {item.badge ? (
+                          <span className="rounded-md bg-[var(--bn-primary)]/20 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[var(--bn-primary)] uppercase">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
-      <div className="mt-auto space-y-3 border-t border-white/10 p-4">
+      <div className="mt-auto space-y-3 border-t border-[var(--bn-border)] p-4">
         <Link
           href="/admin/perfil"
           className="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-white/5"
           title="Meu perfil"
         >
-          <span className="relative block size-9 shrink-0 overflow-hidden rounded-full bg-zinc-700 ring-1 ring-white/10">
+          <span className="relative block size-9 shrink-0 overflow-hidden rounded-full bg-[var(--bn-surface-container)] ring-1 ring-[var(--bn-border)]">
             {access.profileImageUrl ? (
               <Image
                 src={access.profileImageUrl}
@@ -198,7 +262,7 @@ export function AdminPanelNav({
                 className="size-9 object-cover"
               />
             ) : (
-              <span className="flex size-9 items-center justify-center text-xs font-semibold text-zinc-200">
+              <span className="flex size-9 items-center justify-center text-xs font-semibold text-[var(--bn-on-variant)]">
                 {(access.displayName || access.email || "?")
                   .slice(0, 1)
                   .toUpperCase()}
@@ -206,10 +270,10 @@ export function AdminPanelNav({
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium text-zinc-200">
+            <span className="block truncate text-sm font-medium text-[var(--bn-on)]">
               {name || "Perfil"}
             </span>
-            <span className="block truncate text-xs text-zinc-500">
+            <span className="block truncate text-xs text-[var(--bn-muted)]">
               {roleLabel[access.role]}
             </span>
           </span>
@@ -217,7 +281,7 @@ export function AdminPanelNav({
         <button
           type="button"
           onClick={() => void logout()}
-          className="w-full rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-200"
+          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-2.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-200"
         >
           Sair
         </button>
@@ -227,20 +291,20 @@ export function AdminPanelNav({
 
   return (
     <>
-      {/* Barra móvel */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-white/10 bg-[#0f1419]/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--bn-border)] bg-[var(--bn-bg)]/90 px-4 py-3 backdrop-blur pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
         <button
           type="button"
-          className="rounded-lg border border-white/15 p-2 text-zinc-200 hover:bg-white/5"
+          className="inline-flex size-11 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on)] transition hover:bg-white/5"
           onClick={() => setMobileOpen(true)}
           aria-label="Abrir menu"
         >
           <Menu className="size-5" />
         </button>
-        <span className="text-sm font-semibold text-white">Painel</span>
+        <span className="font-brand-headline text-sm font-bold text-[var(--bn-on)]">
+          Painel
+        </span>
       </div>
 
-      {/* Overlay móvel */}
       {mobileOpen ? (
         <button
           type="button"
@@ -250,10 +314,9 @@ export function AdminPanelNav({
         />
       ) : null}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-white/10 bg-[#0c1016] transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] transition-transform duration-200 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

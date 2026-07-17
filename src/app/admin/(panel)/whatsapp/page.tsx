@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { WhatsAppAdminPanel } from "@/components/whatsapp-admin-panel";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 
@@ -15,7 +15,7 @@ export default async function AdminWhatsAppPage() {
 
   return (
     <div className="space-y-8 py-6">
-      <SectionTitle
+      <AdminPageHeader
         eyebrow="Atendimento"
         title="WhatsApp"
         description="Cadastre o número da barbearia para o site. Se quiser, depois ligue o assistente que agenda sozinho."

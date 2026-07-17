@@ -1,7 +1,7 @@
 /**
  * Tokens corporativos Barbernegon (Onyx + Electric Blue).
- * Fonte de verdade para marketing, auth e planos.
- * Tenant/admin legado continuam com `brand-*` em globals.css.
+ * Fonte de verdade para marketing, auth, planos e chrome do painel `/admin`.
+ * Tenant (site público) continua com `brand-*` em globals.css.
  */
 export const BN = {
   bg: "#10131a",

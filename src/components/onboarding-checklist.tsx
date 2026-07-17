@@ -109,37 +109,69 @@ export async function computeOnboardingChecklist(
 export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
   const doneCount = items.filter((i) => i.done).length;
   if (doneCount === items.length) return null;
+  const progress = Math.round((doneCount / items.length) * 100);
 
   return (
-    <section className="rounded-2xl border border-brand-500/25 bg-gradient-to-br from-brand-500/10 via-transparent to-transparent p-5">
-      <div className="flex flex-wrap items-end justify-between gap-2">
+    <section className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5 shadow-[0_0_40px_-24px_rgba(59,130,246,0.35)]">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
+          <p className="text-[11px] font-bold tracking-[0.1em] text-[var(--bn-primary)] uppercase sm:text-[12px]">
             Primeiros passos
           </p>
-          <h2 className="mt-1 font-display text-2xl tracking-wide text-white">
+          <h2 className="font-brand-headline mt-1 text-xl font-bold tracking-tight text-[var(--bn-on)] sm:text-2xl">
             Configure sua barbearia
           </h2>
-          <p className="mt-1 text-sm text-zinc-400">
-            {doneCount} de {items.length} concluídos — setup em minutos.
+          <p className="mt-1 text-sm text-[var(--bn-muted)]">
+            {doneCount} de {items.length} concluídos — pronto em minutos.
           </p>
         </div>
+        <span className="text-xs font-semibold text-[var(--bn-primary)]">
+          {progress}%
+        </span>
       </div>
+
+      <div
+        className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--bn-surface-container)]"
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Progresso do setup"
+      >
+        <div
+          className="h-full rounded-full bg-[var(--bn-primary-container)] transition-[width] duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
       <ul className="mt-5 space-y-2">
         {items.map((item) => (
           <li key={item.key}>
             <Link
               href={item.href}
               className={cn(
-                "flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm transition",
+                "flex min-h-11 items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition",
                 item.done
-                  ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
-                  : "border-white/10 bg-white/[0.03] text-zinc-200 hover:border-brand-500/30 hover:bg-brand-500/5",
+                  ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-100"
+                  : "border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 text-[var(--bn-on)] hover:border-[var(--bn-primary)]/35 hover:bg-[var(--bn-primary-container)]/10",
               )}
             >
-              <span>{item.label}</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                {item.done ? "ok" : "fazer"}
+              <span className="flex items-center gap-2.5">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                    item.done
+                      ? "bg-emerald-500/20 text-emerald-200"
+                      : "bg-[var(--bn-surface-container)] text-[var(--bn-muted)]",
+                  )}
+                >
+                  {item.done ? "✓" : ""}
+                </span>
+                {item.label}
+              </span>
+              <span className="shrink-0 text-xs font-medium text-[var(--bn-muted)]">
+                {item.done ? "Feito" : "Abrir →"}
               </span>
             </Link>
           </li>

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { ClubAdminPanel } from "@/components/club-admin-panel";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
@@ -35,7 +35,7 @@ export default async function AdminClubePage() {
 
   return (
     <div className="space-y-8 py-6">
-      <SectionTitle
+      <AdminPageHeader
         eyebrow="Clube"
         title="Assinaturas da casa"
         description="Crie planos, compartilhe o link público e receba o PIX na sua Asaas. O crédito entra no agendamento pelo telefone."

@@ -4,7 +4,7 @@ import { BillingAttentionBanner } from "@/components/billing-attention-banner";
 import { PlatformCancelPlanButton } from "@/components/platform-cancel-plan-button";
 import { PlatformUpgradeButton } from "@/components/platform-upgrade-button";
 import { SaasPlanComparison } from "@/components/saas-plan-comparison";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import type { SaasPlanId } from "@/lib/asaas-plans";
 import {
@@ -64,7 +64,7 @@ export default async function AdminPlanoPage() {
 
   return (
     <div className="space-y-8 py-6">
-      <SectionTitle
+      <AdminPageHeader
         eyebrow="Plataforma"
         title="Seu plano Barbernegon"
         description="Assinatura da plataforma (site + painel). Separada do PIX e do clube dos seus clientes."

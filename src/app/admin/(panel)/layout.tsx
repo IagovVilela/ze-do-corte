@@ -1,3 +1,4 @@
+import { Montserrat } from "next/font/google";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -7,10 +8,17 @@ import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { hasProFeatures, needsBillingAttention } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
+const brandHeadline = Montserrat({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-brand-headline",
+  display: "swap",
+});
+
 function AdminProductFooter() {
   return (
-    <footer className="mt-auto border-t border-[#2F3336] px-4 py-4 sm:px-6">
-      <p className="text-center text-xs text-[#9CA3AF] sm:text-left">
+    <footer className="mt-auto border-t border-[var(--bn-border)] px-4 py-4 sm:px-6">
+      <p className="text-center text-xs text-[var(--bn-muted)] sm:text-left">
         Barbernegon · Painel · © {new Date().getFullYear()}
       </p>
     </footer>
@@ -35,7 +43,9 @@ export default async function AdminPanelLayout({
   const proUnlocked = org ? hasProFeatures(org) : false;
 
   return (
-    <div className="min-h-svh bg-[#0f1419] text-zinc-100">
+    <div
+      className={`brand-onyx min-h-svh bg-[var(--bn-bg)] text-[var(--bn-on)] ${brandHeadline.variable}`}
+    >
       <AdminPanelNav access={access} proUnlocked={proUnlocked} />
       <div className="flex min-h-svh flex-col lg:pl-60">
         {org && needsBillingAttention(org) && access.role === "OWNER" ? (
@@ -43,7 +53,7 @@ export default async function AdminPanelLayout({
             <BillingAttentionBanner />
           </div>
         ) : null}
-        <div className="flex-1 px-4 sm:px-6">{children}</div>
+        <div className="flex-1 px-4 py-6 sm:px-6">{children}</div>
         <AdminProductFooter />
       </div>
     </div>

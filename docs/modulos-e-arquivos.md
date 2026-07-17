@@ -146,7 +146,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
 | Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
-| Tokens corporativos BN | `lib/brand-tokens.ts` + classe `.brand-onyx` em `globals.css` (marketing/auth/planos) |
+| Tokens corporativos BN | `lib/brand-tokens.ts` + classe `.brand-onyx` em `globals.css` (marketing/auth/planos/**chrome admin**) |
 | Nav pública (landing + explorar + planos) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
 | Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx` — assets em `public/images/landing/` |
 | Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |
@@ -161,7 +161,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
 | Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |

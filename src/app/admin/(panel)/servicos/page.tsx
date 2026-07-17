@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AdminServicesManager } from "@/components/admin-services-manager";
 import { AnimatedSection } from "@/components/animated-section";
-import { SectionTitle } from "@/components/section-title";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { serviceScopeWhere, unitScopeWhere } from "@/lib/staff-access";
@@ -60,7 +60,7 @@ export default async function AdminServicosPage() {
     <main className="flex-1">
       <section className="container-max pt-6 pb-16">
         <AnimatedSection>
-          <SectionTitle
+          <AdminPageHeader
             eyebrow="Catálogo"
             title="Serviços e preços"
             subtitle="Cada serviço pertence a uma unidade (preço e catálogo podem diferir por loja). Filtre por tipo ou unidade, edite ou exclua (se não houver reservas). Alterações ativas refletem no site e no agendamento."
