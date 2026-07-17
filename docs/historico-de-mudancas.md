@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-16
 
+- **Fix Asaas 404 na assinatura**: base URL da API atualizada para `https://api.asaas.com/v3` (produção) e `https://api-sandbox.asaas.com/v3` (sandbox) — a rota antiga `/api/v3` passou a responder 404.
 - **Canvas Canva-lite (guias + barra)**: linhas-guia roxas ao centralizar/alinhar no arraste; barra de ferramentas **no topo** no mobile (Modelos / Elementos / Texto / Galeria / Marca); ao selecionar: Duplicar / Editar / Opções / Excluir; inspector com conteúdo primeiro. Gutter no painel admin evita corte lateral.
 - **UX admin + canvas Canva-lite**: gutter horizontal no layout do painel (páginas como Clube deixam de cortar na lateral); no canvas, barra flutuante ao selecionar (duplicar/excluir/camada/bloquear), propriedades de conteúdo primeiro e **Posição e tamanho** recolhido; no celular, clicar no elemento abre a folha de edição.
 

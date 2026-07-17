@@ -65,10 +65,11 @@ function platformBaseUrl(): string {
   if (process.env.ASAAS_API_URL?.trim()) {
     return process.env.ASAAS_API_URL.trim().replace(/\/$/, "");
   }
+  // Docs atuais: https://api.asaas.com/v3 (sem /api). URL antiga /api/v3 retorna 404.
   if (env === "production" || env === "prod") {
-    return "https://api.asaas.com/api/v3";
+    return "https://api.asaas.com/v3";
   }
-  return "https://api-sandbox.asaas.com/api/v3";
+  return "https://api-sandbox.asaas.com/v3";
 }
 
 export function getPlatformAsaasApiKey(): string | null {
@@ -95,6 +96,7 @@ async function asaasFetch<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": "Barbernegon/1.0 (Next.js; platform-billing)",
       access_token: apiKey,
       ...(init?.headers ?? {}),
     },
