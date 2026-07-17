@@ -53,7 +53,7 @@ export default async function AdminPlanoPage() {
   const cancelScheduled = isPlanCancelScheduled(org);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Plataforma"
         title="Seu plano Barbernegon"

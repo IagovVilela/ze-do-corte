@@ -14,7 +14,7 @@ export default async function AdminWhatsAppPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Atendimento"
         title="WhatsApp"

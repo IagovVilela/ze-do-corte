@@ -175,7 +175,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
             onChange={(e) => setPlanName(e.target.value)}
             className={inputClass}
           />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid min-w-0 grid-cols-3 gap-2">
             <input
               required
               type="number"
@@ -184,7 +184,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
               placeholder="Preço"
               value={planPrice}
               onChange={(e) => setPlanPrice(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} min-w-0`}
             />
             <input
               type="number"
@@ -192,7 +192,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
               placeholder="Ciclo (dias)"
               value={planCycle}
               onChange={(e) => setPlanCycle(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} min-w-0`}
             />
             <input
               type="number"
@@ -200,7 +200,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
               placeholder="Visitas (opc.)"
               value={planVisits}
               onChange={(e) => setPlanVisits(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} min-w-0`}
             />
           </div>
           {services.length > 0 ? (

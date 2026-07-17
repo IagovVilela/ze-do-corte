@@ -80,7 +80,7 @@ export default async function AdminCaixaPage({
       : `${format(from, "dd/MM", { locale: ptBR })} — ${format(to, "dd/MM", { locale: ptBR })}`;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Caixa"
         title="Relatório de recebimentos"

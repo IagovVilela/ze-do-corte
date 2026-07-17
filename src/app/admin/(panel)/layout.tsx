@@ -32,7 +32,7 @@ export default async function AdminPanelLayout({
             <BillingAttentionBanner />
           </div>
         ) : null}
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 px-4 sm:px-6">{children}</div>
         <SiteFooter showPitch={false} />
       </div>
     </div>

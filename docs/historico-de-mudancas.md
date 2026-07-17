@@ -6,6 +6,11 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-16
+
+- **Canvas Canva-lite (guias + barra)**: linhas-guia roxas ao centralizar/alinhar no arraste; barra flutuante e dock contextual (Duplicar / Editar / Opções / Excluir); menu Opções com alinhar à página. Gutter no painel admin evita corte lateral.
+- **UX admin + canvas Canva-lite**: gutter horizontal no layout do painel (páginas como Clube deixam de cortar na lateral); no canvas, barra flutuante ao selecionar (duplicar/excluir/camada/bloquear), propriedades de conteúdo primeiro e **Posição e tamanho** recolhido; no celular, clicar no elemento abre a folha de edição.
+
 ## 2026-07-15
 
 - **Seletor de cor (roda)**: no canvas e em Marca, o `input type="color"` nativo (3 canais) foi trocado por roda com anel de matiz + bolinha no quadrado — arrastar até a cor; `ColorWheelField`.

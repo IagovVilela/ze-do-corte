@@ -2,6 +2,7 @@
 
 import {
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useRef,
@@ -33,9 +34,12 @@ import {
 import {
   alignFrameToArtboard,
   CANVAS_SNAP_GRID,
+  guidesForCenteredFrame,
   snapFrameToGrid,
+  snapFrameWithSmartGuides,
   snapToGrid,
   type ArtboardAlign,
+  type SmartGuide,
 } from "@/lib/canvas-layout-grid";
 import { PAGE_TEMPLATE_META } from "@/lib/canvas-page-templates";
 import { canvasThemeStyle } from "@/lib/canvas-theme-style";
@@ -139,6 +143,32 @@ type Props = {
   barbers: PublicBarber[];
   units: UnitInfo[];
   slogans: { primary: string; secondary: string };
+  onDuplicate?: () => void;
+  onDelete?: () => void;
+  onBringFront?: () => void;
+  onSendBack?: () => void;
+  onToggleLock?: () => void;
+  onOpenInspector?: () => void;
+  onOpenOptions?: () => void;
+};
+
+export const ELEMENT_TYPE_LABEL: Record<CanvasElementType, string> = {
+  text: "Texto",
+  button: "Botão",
+  badge: "Badge",
+  divider: "Divisor",
+  spacer: "Espaço",
+  hero: "Hero",
+  panel: "Painel",
+  grid: "Grid",
+  rect: "Faixa / bloco",
+  image: "Imagem",
+  media: "Mídia",
+  navbar: "Menu",
+  services: "Serviços",
+  team: "Equipe",
+  contact: "Contato",
+  footer: "Rodapé",
 };
 
 export function CanvasStage({
@@ -154,6 +184,13 @@ export function CanvasStage({
   barbers,
   units,
   slogans,
+  onDuplicate,
+  onDelete,
+  onBringFront,
+  onSendBack,
+  onToggleLock,
+  onOpenInspector,
+  onOpenOptions,
 }: Props) {
   const board = canvas.artboards[artboard];
   const elements = elementsForArtboard(canvas, artboard);
@@ -161,6 +198,7 @@ export function CanvasStage({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.55);
   const [userZoomed, setUserZoomed] = useState(false);
+  const [activeGuides, setActiveGuides] = useState<SmartGuide[]>([]);
   const drag = useRef<DragMode | null>(null);
 
   const resetScrollHome = useCallback(() => {
@@ -241,13 +279,21 @@ export function CanvasStage({
       const dy = (e.clientY - mode.startY) / zoom;
 
       if (mode.kind === "move") {
-        updateElement(selectedId, {
-          frame: {
-            ...el.frame,
-            x: snap(mode.ox + dx),
-            y: snap(mode.oy + dy),
-          },
-        });
+        const peers = canvas.elements
+          .filter((x) => x.artboard === artboard && x.id !== selectedId)
+          .map((x) => x.frame);
+        const raw = {
+          ...el.frame,
+          x: mode.ox + dx,
+          y: mode.oy + dy,
+        };
+        const { frame, guides } = snapFrameWithSmartGuides(
+          raw,
+          board,
+          peers,
+        );
+        setActiveGuides(guides);
+        updateElement(selectedId, { frame });
         return;
       }
 
@@ -265,13 +311,22 @@ export function CanvasStage({
         f.y = snap(mode.frame.y + (mode.frame.h - nh));
         f.h = nh;
       }
+      setActiveGuides([]);
       updateElement(selectedId, { frame: f });
     },
-    [canvas.elements, selectedId, updateElement, zoom],
+    [
+      artboard,
+      board,
+      canvas.elements,
+      selectedId,
+      updateElement,
+      zoom,
+    ],
   );
 
   const endDrag = useCallback(() => {
     drag.current = null;
+    setActiveGuides([]);
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", endDrag);
     onInteractionEnd?.();
@@ -384,6 +439,36 @@ export function CanvasStage({
                 }}
               />
             ) : null}
+            {(activeGuides.length
+              ? activeGuides
+              : selectedId
+                ? guidesForCenteredFrame(
+                    canvas.elements.find((e) => e.id === selectedId)?.frame ?? {
+                      x: 0,
+                      y: 0,
+                      w: 0,
+                      h: 0,
+                    },
+                    board,
+                  )
+                : []
+            ).map((g, i) =>
+              g.axis === "v" ? (
+                <div
+                  key={`vg-${i}-${g.pos}`}
+                  aria-hidden
+                  className="pointer-events-none absolute top-0 z-[5] w-0.5 bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.9)]"
+                  style={{ left: g.pos, height: board.height }}
+                />
+              ) : (
+                <div
+                  key={`hg-${i}-${g.pos}`}
+                  aria-hidden
+                  className="pointer-events-none absolute left-0 z-[5] h-0.5 bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.9)]"
+                  style={{ top: g.pos, width: board.width }}
+                />
+              ),
+            )}
             {elements.map((el) => {
               const selected = el.id === selectedId;
               return (
@@ -393,7 +478,7 @@ export function CanvasStage({
                     "absolute touch-none outline-offset-0",
                     selected &&
                       "outline outline-2 outline-brand-400 ring-1 ring-brand-400/40",
-                    el.locked && "pointer-events-none opacity-70",
+                    el.locked && "opacity-70",
                   )}
                   style={{
                     left: el.frame.x,
@@ -408,6 +493,98 @@ export function CanvasStage({
                     onSelect(el.id);
                   }}
                 >
+                  {selected ? (
+                    <div
+                      className="pointer-events-auto absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/20 bg-zinc-950/95 p-1 shadow-xl backdrop-blur-sm"
+                      style={{ top: -46 }}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ToolbarBtn
+                        label="Duplicar"
+                        onClick={() => onDuplicate?.()}
+                      >
+                        <path
+                          d="M8 8h10v12H8zM6 6h10"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                        />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label="Trazer à frente"
+                        onClick={() => onBringFront?.()}
+                      >
+                        <path
+                          d="M12 16V6M8 10l4-4 4 4"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label="Enviar para trás"
+                        onClick={() => onSendBack?.()}
+                      >
+                        <path
+                          d="M12 8v10M8 14l4 4 4-4"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label={el.locked ? "Desbloquear" : "Bloquear"}
+                        active={Boolean(el.locked)}
+                        onClick={() => onToggleLock?.()}
+                      >
+                        <path
+                          d="M8 11V8a4 4 0 0 1 8 0v3M7 11h10v9H7z"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                        />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label="Editar"
+                        className="lg:hidden"
+                        onClick={() => onOpenInspector?.()}
+                      >
+                        <path
+                          d="M4 17v3h3L17 10l-3-3L4 17z"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                        />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label="Opções"
+                        className="lg:hidden"
+                        onClick={() => onOpenOptions?.()}
+                      >
+                        <circle cx="6" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="18" cy="12" r="1.5" fill="currentColor" />
+                      </ToolbarBtn>
+                      <ToolbarBtn
+                        label="Excluir"
+                        danger
+                        onClick={() => onDelete?.()}
+                      >
+                        <path
+                          d="M6 8h12M10 8V6h4v2M9 8v10h6V8"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          fill="none"
+                        />
+                      </ToolbarBtn>
+                    </div>
+                  ) : null}
                   <div className="pointer-events-none h-full w-full [&_a]:pointer-events-none">
                     <CanvasElementView
                       element={el}
@@ -455,6 +632,41 @@ export function CanvasStage({
 }
 
 type LibraryTab = "elements" | "sections" | "ready";
+
+function ToolbarBtn({
+  label,
+  onClick,
+  children,
+  danger,
+  active,
+  className,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  danger?: boolean;
+  active?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className={cn(
+        "inline-flex size-8 items-center justify-center rounded-full text-zinc-200 transition hover:bg-white/10",
+        danger && "text-rose-300 hover:bg-rose-500/20",
+        active && "bg-brand-500/25 text-brand-200",
+        className,
+      )}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+        {children}
+      </svg>
+    </button>
+  );
+}
 
 export function PageTemplatePicker({
   open,
@@ -1202,10 +1414,9 @@ export function ElementInspector({
     >
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-          {element.type}
+          {ELEMENT_TYPE_LABEL[element.type] ?? element.type}
         </p>
-        <p className="truncate text-xs text-zinc-600">{element.id}</p>
-        <p className="mt-1 text-[11px] text-zinc-500">Camada z-index: {element.zIndex}</p>
+        <p className="text-sm font-medium text-zinc-100">Editar conteúdo</p>
       </div>
 
       {stylePresets.length ? (
@@ -1233,73 +1444,6 @@ export function ElementInspector({
           </div>
         </div>
       ) : null}
-
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        {(["x", "y", "w", "h"] as const).map((k) => (
-          <label key={k} className="text-zinc-400">
-            {k.toUpperCase()}
-            <input
-              type="number"
-              step={CANVAS_SNAP_GRID}
-              className={input}
-              value={element.frame[k]}
-              onChange={(e) =>
-                onChange({
-                  ...element,
-                  frame: {
-                    ...element.frame,
-                    [k]: Number(e.target.value) || 0,
-                  },
-                })
-              }
-              onBlur={(e) =>
-                onChange({
-                  ...element,
-                  frame: snapFrameToGrid({
-                    ...element.frame,
-                    [k]: Number(e.target.value) || 0,
-                  }),
-                })
-              }
-            />
-          </label>
-        ))}
-      </div>
-
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-          Grade e alinhamento
-        </p>
-        <button
-          type="button"
-          onClick={snapSelected}
-          className="w-full rounded-lg border border-brand-500/40 bg-brand-500/10 px-2 py-1.5 text-[11px] font-medium text-brand-200 hover:bg-brand-500/20"
-        >
-          Alinhar à grade ({CANVAS_SNAP_GRID}px)
-        </button>
-        <div className="grid grid-cols-3 gap-1">
-          {(
-            [
-              ["left", "←"],
-              ["centerX", "↔"],
-              ["right", "→"],
-              ["top", "↑"],
-              ["centerY", "↕"],
-              ["bottom", "↓"],
-            ] as const
-          ).map(([align, label]) => (
-            <button
-              key={align}
-              type="button"
-              title={align}
-              onClick={() => applyAlign(align)}
-              className="rounded-md border border-white/15 px-1 py-1 text-[11px] text-zinc-300 hover:border-white/30 hover:bg-white/5"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {(element.type === "text" || element.type === "button") && (
         <>
@@ -1593,16 +1737,7 @@ export function ElementInspector({
         </>
       )}
 
-      <label className="flex items-center gap-2 text-xs text-zinc-300">
-        <input
-          type="checkbox"
-          checked={Boolean(element.locked)}
-          onChange={(e) => onChange({ ...element, locked: e.target.checked })}
-        />
-        Bloquear posição
-      </label>
-
-      <div className="mt-2 flex flex-col gap-1.5">
+      <div className="mt-1 flex flex-col gap-1.5">
         <button
           type="button"
           className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
@@ -1612,34 +1747,128 @@ export function ElementInspector({
         </button>
         <button
           type="button"
-          className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onBringFront();
-          }}
-        >
-          Trazer à frente
-        </button>
-        <button
-          type="button"
-          className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSendBack();
-          }}
-        >
-          Enviar para trás
-        </button>
-        <button
-          type="button"
           className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-xs text-rose-200 hover:bg-rose-500/10"
           onClick={onDelete}
         >
           Excluir
         </button>
       </div>
+
+      <details className="rounded-xl border border-white/10 bg-zinc-900/40 open:bg-zinc-900/60">
+        <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-zinc-200 marker:content-none [&::-webkit-details-marker]:hidden">
+          Posição e tamanho
+          <span className="mt-0.5 block text-[10px] font-normal text-zinc-500">
+            X/Y/L/A, grade, alinhamento e camada
+          </span>
+        </summary>
+        <div className="space-y-3 border-t border-white/10 px-3 pb-3 pt-2">
+          <p className="text-[11px] text-zinc-500">
+            Camada z-index: {element.zIndex}
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {(["x", "y", "w", "h"] as const).map((k) => (
+              <label key={k} className="text-zinc-400">
+                {k.toUpperCase()}
+                <input
+                  type="number"
+                  step={CANVAS_SNAP_GRID}
+                  className={input}
+                  value={element.frame[k]}
+                  onChange={(e) =>
+                    onChange({
+                      ...element,
+                      frame: {
+                        ...element.frame,
+                        [k]: Number(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  onBlur={(e) =>
+                    onChange({
+                      ...element,
+                      frame: snapFrameToGrid({
+                        ...element.frame,
+                        [k]: Number(e.target.value) || 0,
+                      }),
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              Grade e alinhamento
+            </p>
+            <button
+              type="button"
+              onClick={snapSelected}
+              className="w-full rounded-lg border border-brand-500/40 bg-brand-500/10 px-2 py-1.5 text-[11px] font-medium text-brand-200 hover:bg-brand-500/20"
+            >
+              Alinhar à grade ({CANVAS_SNAP_GRID}px)
+            </button>
+            <div className="grid grid-cols-3 gap-1">
+              {(
+                [
+                  ["left", "←"],
+                  ["centerX", "↔"],
+                  ["right", "→"],
+                  ["top", "↑"],
+                  ["centerY", "↕"],
+                  ["bottom", "↓"],
+                ] as const
+              ).map(([align, label]) => (
+                <button
+                  key={align}
+                  type="button"
+                  title={align}
+                  onClick={() => applyAlign(align)}
+                  className="rounded-md border border-white/15 px-1 py-1 text-[11px] text-zinc-300 hover:border-white/30 hover:bg-white/5"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-zinc-300">
+            <input
+              type="checkbox"
+              checked={Boolean(element.locked)}
+              onChange={(e) =>
+                onChange({ ...element, locked: e.target.checked })
+              }
+            />
+            Bloquear posição
+          </label>
+
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onBringFront();
+              }}
+            >
+              Trazer à frente
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSendBack();
+              }}
+            >
+              Enviar para trás
+            </button>
+          </div>
+        </div>
+      </details>
     </aside>
   );
 }

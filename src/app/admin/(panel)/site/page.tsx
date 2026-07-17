@@ -36,7 +36,7 @@ export default async function AdminSitePage() {
   const slogans = orgDisplaySlogan(org);
 
   return (
-    <div className="space-y-4 max-lg:space-y-0">
+    <div className="max-lg:-mx-4 max-lg:space-y-0 sm:max-lg:-mx-6 lg:space-y-4">
       <div className="max-lg:hidden">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
           Site

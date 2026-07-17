@@ -14,7 +14,7 @@ export default async function AdminPagamentosPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Receber clientes"
         title="Pagamentos"

@@ -29,7 +29,7 @@ export default async function AdminClubePage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Clube"
         title="Assinaturas da casa"

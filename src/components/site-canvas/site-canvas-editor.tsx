@@ -5,13 +5,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   CanvasStage,
+  ELEMENT_TYPE_LABEL,
   ElementInspector,
   ElementLibrary,
   PageTemplatePicker,
   ThemePanel,
 } from "@/components/site-canvas/canvas-studio-parts";
 import { nextArtboardY } from "@/lib/canvas-presets";
-import { snapFrameToGrid } from "@/lib/canvas-layout-grid";
+import { alignFrameToArtboard, snapFrameToGrid } from "@/lib/canvas-layout-grid";
 import {
   applyThemeChangeToCanvas,
   bindElementsToThemeTokens,
@@ -46,7 +47,7 @@ type Props = {
   slogans: { primary: string; secondary: string };
 };
 
-type MobileSheet = "library" | "inspector" | "tools" | null;
+type MobileSheet = "library" | "inspector" | "tools" | "options" | null;
 
 export function SiteCanvasEditor({
   initialOrg,
@@ -125,7 +126,31 @@ export function SiteCanvasEditor({
 
   const selectElement = useCallback((id: string | null) => {
     setSelectedId(id);
+    // Canva-lite: ao clicar, mostra barra/opções — não abre o formulário inteiro.
+    setMobileSheet((s) =>
+      s === "inspector" || s === "options" || s === "library" ? null : s,
+    );
   }, []);
+
+  function alignSelected(
+    align: Parameters<typeof alignFrameToArtboard>[2],
+  ) {
+    if (!selected) return;
+    commitCanvas((c) => ({
+      ...c,
+      elements: c.elements.map((e) =>
+        e.id === selected.id
+          ? {
+              ...e,
+              frame: alignFrameToArtboard(e.frame, {
+                width: boardW,
+                height: boardH,
+              }, align),
+            }
+          : e,
+      ),
+    }));
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -320,6 +345,16 @@ export function SiteCanvasEditor({
     });
   }
 
+  function toggleLockSelected() {
+    if (!selected) return;
+    commitCanvas((c) => ({
+      ...c,
+      elements: c.elements.map((e) =>
+        e.id === selected.id ? { ...e, locked: !e.locked } : e,
+      ),
+    }));
+  }
+
   function copyDeskToMobile() {
     commitCanvas((c) => copyDesktopToMobile(c));
     setArtboard("mobile");
@@ -507,6 +542,13 @@ export function SiteCanvasEditor({
           barbers={barbers}
           units={units}
           slogans={slogans}
+          onDuplicate={duplicateSelected}
+          onDelete={deleteSelected}
+          onBringFront={bringFront}
+          onSendBack={sendBack}
+          onToggleLock={toggleLockSelected}
+          onOpenInspector={() => setMobileSheet("inspector")}
+          onOpenOptions={() => setMobileSheet("options")}
         />
         <div className="hidden lg:contents">
           <ElementInspector {...inspectorProps} />
@@ -517,51 +559,120 @@ export function SiteCanvasEditor({
         className="flex shrink-0 gap-1 border-t border-white/10 bg-zinc-950/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
         aria-label="Ferramentas do canvas"
       >
-        <button
-          type="button"
-          className={cn(
-            dockBtn,
-            mobileSheet === "library"
-              ? "bg-brand-500/20 text-brand-200"
-              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
-          )}
-          onClick={() =>
-            setMobileSheet((s) => (s === "library" ? null : "library"))
-          }
-        >
-          <LibraryIcon />
-          Biblioteca
-        </button>
-        <button
-          type="button"
-          className={cn(
-            dockBtn,
-            mobileSheet === "inspector"
-              ? "bg-brand-500/20 text-brand-200"
-              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
-          )}
-          onClick={() =>
-            setMobileSheet((s) => (s === "inspector" ? null : "inspector"))
-          }
-        >
-          <InspectIcon />
-          {selected ? "Editar" : "Propriedades"}
-        </button>
-        <button
-          type="button"
-          className={cn(
-            dockBtn,
-            mobileSheet === "tools"
-              ? "bg-brand-500/20 text-brand-200"
-              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
-          )}
-          onClick={() =>
-            setMobileSheet((s) => (s === "tools" ? null : "tools"))
-          }
-        >
-          <MoreIcon />
-          Mais
-        </button>
+        {selected ? (
+          <>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                mobileSheet === "library"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "library" ? null : "library"))
+              }
+            >
+              <LibraryIcon />
+              Biblioteca
+            </button>
+            <button
+              type="button"
+              className={cn(dockBtn, "text-zinc-300 hover:bg-white/5")}
+              onClick={duplicateSelected}
+            >
+              <DupIcon />
+              Duplicar
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                mobileSheet === "inspector"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-300 hover:bg-white/5",
+              )}
+              onClick={() =>
+                setMobileSheet((s) =>
+                  s === "inspector" ? null : "inspector",
+                )
+              }
+            >
+              <InspectIcon />
+              Editar
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                mobileSheet === "options"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-300 hover:bg-white/5",
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "options" ? null : "options"))
+              }
+            >
+              <MoreIcon />
+              Opções
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                "text-rose-300 hover:bg-rose-500/15",
+              )}
+              onClick={deleteSelected}
+            >
+              <TrashIcon />
+              Excluir
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                mobileSheet === "library"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "library" ? null : "library"))
+              }
+            >
+              <LibraryIcon />
+              Biblioteca
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+              )}
+              onClick={() => setMobileSheet("inspector")}
+            >
+              <InspectIcon />
+              Propriedades
+            </button>
+            <button
+              type="button"
+              className={cn(
+                dockBtn,
+                mobileSheet === "tools"
+                  ? "bg-brand-500/20 text-brand-200"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
+              )}
+              onClick={() =>
+                setMobileSheet((s) => (s === "tools" ? null : "tools"))
+              }
+            >
+              <MoreIcon />
+              Mais
+            </button>
+          </>
+        )}
       </nav>
 
       {mobileSheet ? (
@@ -584,7 +695,9 @@ export function SiteCanvasEditor({
                 ? "Biblioteca"
                 : mobileSheet === "inspector"
                   ? "Propriedades"
-                  : "Mais opções"
+                  : mobileSheet === "options"
+                    ? "Opções do elemento"
+                    : "Mais opções"
             }
           >
             <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
@@ -593,9 +706,13 @@ export function SiteCanvasEditor({
                   ? "Biblioteca e tema"
                   : mobileSheet === "inspector"
                     ? selected
-                      ? `Editar · ${selected.type}`
+                      ? `Editar · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
                       : "Propriedades"
-                    : "Ferramentas"}
+                    : mobileSheet === "options"
+                      ? selected
+                        ? `Opções · ${ELEMENT_TYPE_LABEL[selected.type] ?? selected.type}`
+                        : "Opções"
+                      : "Ferramentas"}
               </p>
               <button
                 type="button"
@@ -640,6 +757,87 @@ export function SiteCanvasEditor({
                   {...inspectorProps}
                   className="w-full border-l-0"
                 />
+              ) : null}
+              {mobileSheet === "options" && selected ? (
+                <div className="space-y-1 p-3">
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={() => {
+                      duplicateSelected();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    Duplicar
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={() => {
+                      toggleLockSelected();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    {selected.locked ? "Desbloquear" : "Bloquear"}
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={() => {
+                      bringFront();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    Trazer à frente
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-zinc-100 hover:bg-white/5"
+                    onClick={() => {
+                      sendBack();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    Enviar para trás
+                  </button>
+                  <p className="px-4 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Alinhar à página
+                  </p>
+                  <div className="grid grid-cols-3 gap-1.5 px-2 pb-2">
+                    {(
+                      [
+                        ["left", "Esquerda"],
+                        ["centerX", "Centro ↔"],
+                        ["right", "Direita"],
+                        ["top", "Topo"],
+                        ["centerY", "Centro ↕"],
+                        ["bottom", "Base"],
+                      ] as const
+                    ).map(([align, label]) => (
+                      <button
+                        key={align}
+                        type="button"
+                        className="rounded-lg border border-white/15 px-2 py-2.5 text-[11px] text-zinc-200 hover:bg-white/5"
+                        onClick={() => {
+                          alignSelected(align);
+                          setMobileSheet(null);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-rose-300 hover:bg-rose-500/10"
+                    onClick={() => {
+                      deleteSelected();
+                      setMobileSheet(null);
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </div>
               ) : null}
               {mobileSheet === "tools" ? (
                 <div className="space-y-2 p-4">
@@ -801,6 +999,41 @@ function MoreIcon() {
       <circle cx="12" cy="6" r="1.5" fill="currentColor" />
       <circle cx="12" cy="12" r="1.5" fill="currentColor" />
       <circle cx="12" cy="18" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function DupIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect
+        x="8"
+        y="8"
+        width="10"
+        height="12"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="M6 16V6a1.5 1.5 0 0 1 1.5-1.5H14"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6 8h12M10 8V6h4v2M9 8v10h6V8"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

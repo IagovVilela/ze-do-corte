@@ -13,7 +13,7 @@ export default async function AdminMarcaPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-6">
       <SectionTitle
         eyebrow="Marca"
         title="Identidade"
