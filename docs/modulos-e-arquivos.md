@@ -35,7 +35,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + editar plano |
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
-| `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic |
+| `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
 | `/planos` | `src/app/planos/page.tsx` | Planos da plataforma (Starter/Pro) |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
@@ -53,7 +53,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/expediente` | `src/app/admin/(panel)/expediente/page.tsx` | Expediente semanal do **STAFF** (`admin-work-schedule-form.tsx`) |
 | `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
 | `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Textos `BarbershopSetting` (só proprietário) |
-| `/admin/login` | `src/app/admin/login/page.tsx` | Formulário de login |
+| `/admin/login` | `src/app/admin/login/page.tsx` | Login premium do painel (`admin-login-form.tsx` + `auth/`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
 | Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` |
 
@@ -145,6 +145,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Componente | Pasta |
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
+| Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
 | Nav pública (landing + explorar) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
 | Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx`, `landing/ln-tokens.ts` — assets em `public/images/landing/` |
 | Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |

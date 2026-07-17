@@ -1,12 +1,24 @@
+import { Geist, Montserrat } from "next/font/google";
 import { redirect } from "next/navigation";
 
 import { AdminLoginForm } from "@/components/admin-login-form";
-import { Navbar } from "@/components/navbar";
-import { SiteFooter } from "@/components/site-footer";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { isPlatformAdminEmail } from "@/lib/platform-auth";
 
 export const dynamic = "force-dynamic";
+
+const body = Geist({
+  subsets: ["latin"],
+  variable: "--font-auth-body",
+  display: "swap",
+});
+
+const headline = Montserrat({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-auth-headline",
+  display: "swap",
+});
 
 type Props = { searchParams: Promise<{ from?: string }> };
 
@@ -15,12 +27,15 @@ function safeRedirectPath(from: string | undefined): string {
   return "/admin";
 }
 
+export const metadata = {
+  title: "Entrar no painel | Barbernegon",
+  description: "Acesse o painel da sua barbearia na Barbernegon.",
+};
+
 export default async function AdminLoginPage({ searchParams }: Props) {
   const { from } = await searchParams;
   const safeFrom = safeRedirectPath(from);
 
-  // Sessão: falha de DB não deve quebrar a tela de login.
-  // `redirect()` lança NEXT_REDIRECT — deve ficar fora do try/catch.
   let access: Awaited<ReturnType<typeof getStaffAccessOrNull>> = null;
   try {
     access = await getStaffAccessOrNull();
@@ -39,14 +54,9 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   }
 
   return (
-    <>
-      <Navbar />
-      <main className="flex flex-1 flex-col pt-20 sm:pt-24">
-        <div className="container-max flex min-h-[60vh] flex-col items-center justify-center py-16">
-          <AdminLoginForm redirectTo={safeFrom} />
-        </div>
-      </main>
-      <SiteFooter showPitch={false} />
-    </>
+    <AdminLoginForm
+      redirectTo={safeFrom}
+      className={`${body.variable} ${headline.variable} font-[family-name:var(--font-auth-body)]`}
+    />
   );
 }

@@ -1,13 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import {
+  AuthError,
+  AuthField,
+  AuthLabelCaps,
+  AuthPasswordField,
+  AuthSubmitButton,
+} from "@/components/auth/auth-fields";
+import { AuthShell } from "@/components/auth/auth-shell";
+
 type Props = {
   redirectTo: string;
+  className?: string;
 };
 
-export function AdminLoginForm({ redirectTo }: Props) {
+export function AdminLoginForm({ redirectTo, className }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +37,7 @@ export function AdminLoginForm({ redirectTo }: Props) {
       });
       const data = (await res.json()) as { message?: string; redirect?: string };
       if (!res.ok) {
-        setError(data.message ?? "Não foi possível entrar.");
+        setError(data.message ?? "E-mail ou senha inválidos.");
         return;
       }
       router.push(redirectTo || data.redirect || "/admin");
@@ -38,59 +49,56 @@ export function AdminLoginForm({ redirectTo }: Props) {
     }
   }
 
-  const input =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
-
   return (
-    <form
-      noValidate
-      onSubmit={(e) => void onSubmit(e)}
-      className="glass-card w-full max-w-md space-y-4 rounded-2xl border border-white/10 p-8"
-    >
-      <div>
-        <h1 className="text-xl font-semibold text-white">Entrar no painel</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Use o e-mail e a senha cadastrados na equipe.
+    <AuthShell className={className}>
+      <div className="rounded-xl border border-[#2F3336] bg-[#25282B]/55 p-6 shadow-[0_24px_64px_-32px_rgba(0,0,0,0.65)] backdrop-blur-md sm:p-8">
+        <AuthLabelCaps>Painel</AuthLabelCaps>
+        <h1 className="mt-2 font-[family-name:var(--font-auth-headline)] text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          Entrar no painel
+        </h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-[#c2c6d6]">
+          Use o e-mail e a senha da sua equipe.
+        </p>
+
+        <form
+          noValidate
+          onSubmit={(e) => void onSubmit(e)}
+          className="mt-7 space-y-4"
+        >
+          {error ? <AuthError>{error}</AuthError> : null}
+
+          <AuthField
+            label="E-mail"
+            type="text"
+            inputMode="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <AuthPasswordField
+            label="Senha"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <AuthSubmitButton pending={pending} pendingLabel="Entrando…">
+            Entrar
+          </AuthSubmitButton>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-[#9CA3AF]">
+          Ainda não tem barbearia?{" "}
+          <Link
+            href="/cadastro"
+            className="font-medium text-[#adc6ff] underline-offset-2 hover:underline"
+          >
+            Criar conta
+          </Link>
         </p>
       </div>
-
-      {error ? (
-        <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-          {error}
-        </p>
-      ) : null}
-
-      <label className="block space-y-1.5 text-sm">
-        <span className="text-zinc-400">E-mail</span>
-        <input
-          className={input}
-          type="text"
-          inputMode="email"
-          autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </label>
-      <label className="block space-y-1.5 text-sm">
-        <span className="text-zinc-400">Senha</span>
-        <input
-          className={input}
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </label>
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-full bg-brand-500 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-brand-400 disabled:opacity-50"
-      >
-        {pending ? "Entrando…" : "Entrar"}
-      </button>
-    </form>
+    </AuthShell>
   );
 }
