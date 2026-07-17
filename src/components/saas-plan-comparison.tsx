@@ -18,6 +18,10 @@ type Props = {
   className?: string;
 };
 
+/**
+ * Comparação Starter/Pro — tokens BN (Onyx).
+ * Usado em `/planos` (marketing) e `/admin/plano`.
+ */
 export function SaasPlanComparison({
   currentPlanId = null,
   trialActive = false,
@@ -26,70 +30,73 @@ export function SaasPlanComparison({
   className,
 }: Props) {
   return (
-    <div className={cn("space-y-6", className)}>
-      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+    <div className={cn("brand-onyx space-y-6", className)}>
+      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
         <p className="font-semibold text-emerald-50">{SAAS_TRIAL_COPY.title}</p>
         <p className="mt-1 text-emerald-100/80">{SAAS_TRIAL_COPY.body}</p>
       </div>
 
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul className="grid items-stretch gap-4 md:grid-cols-2 md:gap-5">
         {SAAS_PLANS.map((plan) => {
           const isCurrent =
             !trialActive &&
             currentPlanId != null &&
             currentPlanId === plan.id;
           const isPro = plan.id === "pro";
+          const hasExcluded =
+            Boolean(plan.notIncluded) && plan.notIncluded!.length > 0;
 
           return (
             <li
               key={plan.id}
               className={cn(
-                "relative flex flex-col rounded-2xl border p-5 sm:p-6",
+                "relative flex h-full flex-col rounded-xl border bg-[var(--bn-surface-elevated)] p-5 sm:p-6",
                 isPro
-                  ? "border-brand-500/45 bg-brand-500/10 shadow-[0_0_40px_-20px_rgba(59,130,246,0.55)]"
-                  : "border-white/10 bg-white/[0.03]",
-                isCurrent && "ring-2 ring-brand-400/60",
+                  ? "border-[var(--bn-primary-container)]/55 shadow-[0_0_48px_-18px_rgba(59,130,246,0.55)]"
+                  : "border-[var(--bn-border)]",
+                isCurrent && "ring-2 ring-[var(--bn-primary)]/50",
               )}
             >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-xl font-semibold text-white">
-                      {plan.name}
-                    </h3>
-                    {plan.badge ? (
-                      <span className="rounded-full bg-brand-400 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-950">
-                        {plan.badge}
-                      </span>
-                    ) : null}
-                    {isCurrent ? (
-                      <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-200">
-                        Seu plano
-                      </span>
-                    ) : null}
-                    {trialActive && isPro ? (
-                      <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-100">
-                        Liberado no trial
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1.5 text-sm text-zinc-400">{plan.blurb}</p>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-brand-headline text-xl font-semibold text-[var(--bn-on)]">
+                  {plan.name}
+                </h3>
+                {plan.badge ? (
+                  <span className="rounded-md bg-[var(--bn-primary)] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#002e6a] uppercase">
+                    {plan.badge}
+                  </span>
+                ) : null}
+                {isCurrent ? (
+                  <span className="rounded-md border border-[var(--bn-border)] px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-[var(--bn-on-variant)] uppercase">
+                    Seu plano
+                  </span>
+                ) : null}
+                {trialActive && isPro ? (
+                  <span className="rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-100 uppercase">
+                    Liberado no trial
+                  </span>
+                ) : null}
               </div>
 
-              <p className="mt-4 font-display text-3xl text-brand-200">
+              <p className="mt-1.5 min-h-[2.5rem] text-sm leading-snug text-[var(--bn-muted)]">
+                {plan.blurb}
+              </p>
+
+              <p className="font-brand-headline mt-4 text-3xl font-bold tracking-tight text-[var(--bn-primary)]">
                 {formatMoney(plan.priceMonthly)}
-                <span className="text-base font-sans font-medium text-zinc-500">
+                <span className="text-base font-sans font-medium text-[var(--bn-muted)]">
                   /mês
                 </span>
               </p>
-              <p className="mt-1 text-xs text-zinc-500">{plan.ctaHint}</p>
+              <p className="mt-1 min-h-[2rem] text-xs leading-snug text-[var(--bn-muted)]">
+                {plan.ctaHint}
+              </p>
 
-              <ul className="mt-5 flex-1 space-y-2.5 text-sm text-zinc-200">
+              <ul className="mt-5 flex-1 space-y-2.5 text-sm text-[var(--bn-on-variant)]">
                 {plan.features.map((f) => (
                   <li key={f} className="flex gap-2">
                     <span
-                      className="mt-0.5 shrink-0 text-brand-300"
+                      className="mt-0.5 shrink-0 text-[var(--bn-primary)]"
                       aria-hidden
                     >
                       ✓
@@ -99,32 +106,39 @@ export function SaasPlanComparison({
                 ))}
               </ul>
 
-              {plan.notIncluded && plan.notIncluded.length > 0 ? (
-                <ul className="mt-4 space-y-1.5 border-t border-white/10 pt-4 text-sm text-zinc-500">
-                  {plan.notIncluded.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <span className="shrink-0" aria-hidden>
-                        —
-                      </span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+              <div className="mt-auto pt-4">
+                {hasExcluded ? (
+                  <ul className="mb-5 space-y-1.5 border-t border-[var(--bn-border)] pt-4 text-sm text-[var(--bn-muted)]">
+                    {plan.notIncluded!.map((f) => (
+                      <li key={f} className="flex gap-2">
+                        <span className="shrink-0" aria-hidden>
+                          —
+                        </span>
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div
+                    className="mb-5 border-t border-transparent pt-4"
+                    aria-hidden
+                  />
+                )}
 
-              {showCta ? (
-                <Link
-                  href={ctaHref}
-                  className={cn(
-                    "mt-6 inline-flex justify-center rounded-full px-5 py-2.5 text-center text-sm font-bold transition",
-                    isPro
-                      ? "bg-brand-400 text-zinc-950 hover:bg-brand-300"
-                      : "border border-white/15 text-zinc-100 hover:bg-white/5",
-                  )}
-                >
-                  {isPro ? "Começar com Pro (trial)" : "Começar grátis"}
-                </Link>
-              ) : null}
+                {showCta ? (
+                  <Link
+                    href={ctaHref}
+                    className={cn(
+                      "inline-flex w-full min-h-11 items-center justify-center rounded-lg px-5 py-2.5 text-center text-sm font-bold transition active:scale-[0.98]",
+                      isPro
+                        ? "bg-[var(--bn-primary-container)] text-white shadow-[0_0_24px_-8px_rgba(59,130,246,0.55)] hover:brightness-110"
+                        : "border border-[var(--bn-border)] bg-transparent text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40 hover:bg-white/[0.04]",
+                    )}
+                  >
+                    {isPro ? "Começar com Pro (trial)" : "Começar grátis"}
+                  </Link>
+                ) : null}
+              </div>
             </li>
           );
         })}

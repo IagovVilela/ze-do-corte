@@ -208,6 +208,24 @@ input[type="checkbox"]:indeterminate {
   }
 }
 
+/* Barbernegon corporativo — Onyx + Electric Blue (marketing / auth / planos) */
+.brand-onyx {
+  --bn-bg: #10131a;
+  --bn-surface-elevated: #25282b;
+  --bn-surface-container: #1d2027;
+  --bn-surface-lowest: #0b0e15;
+  --bn-surface-low: #191b23;
+  --bn-on: #e1e2ec;
+  --bn-on-variant: #c2c6d6;
+  --bn-muted: #9ca3af;
+  --bn-border: #2f3336;
+  --bn-primary: #adc6ff;
+  --bn-primary-container: #3b82f6;
+  --bn-outline: #8c909f;
+  background-color: var(--bn-bg);
+  color: var(--bn-on);
+}
+
 /* Marketplace /explorar — Onyx & Azure (Stitch) */
 .explore-onyx {
   background-color: #10131a;

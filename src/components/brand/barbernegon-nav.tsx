@@ -10,11 +10,16 @@ import { ExploreFavoritesLink } from "@/components/marketplace/explore-favorites
 import { publicSurfaceUrl } from "@/lib/public-hosts";
 import { cn } from "@/lib/utils";
 
-export type BarbernegonNavActive = "home" | "barbearias" | "favoritos";
+export type BarbernegonNavActive =
+  | "home"
+  | "barbearias"
+  | "favoritos"
+  | "planos";
 
 const homeHref = publicSurfaceUrl("marketing", "/");
 const explorarHref = publicSurfaceUrl("marketplace", "/explorar");
 const favoritosHref = publicSurfaceUrl("marketplace", "/explorar/favoritos");
+const planosHref = publicSurfaceUrl("marketing", "/planos");
 const loginHref = publicSurfaceUrl("marketing", "/admin/login");
 const paraSalaoHref = `${publicSurfaceUrl("marketing", "/")}#operations`;
 
@@ -41,13 +46,13 @@ function resolveActive(pathname: string | null): BarbernegonNavActive | null {
   if (!pathname) return null;
   if (pathname.startsWith("/explorar/favoritos")) return "favoritos";
   if (pathname.startsWith("/explorar")) return "barbearias";
+  if (pathname.startsWith("/planos")) return "planos";
   if (pathname === "/") return "home";
   return null;
 }
 
 /**
  * Nav pública Barbernegon — persistente no layout `(public)`.
- * Mesmo visual em Home, Barbearias e Favoritos.
  */
 export function BarbernegonNav() {
   const pathname = usePathname();
@@ -84,34 +89,24 @@ export function BarbernegonNav() {
 
   const linkClass = (isActive: boolean) =>
     cn(
-      "relative pb-1 transition-colors duration-200",
-      isActive ? "text-[#adc6ff]" : "text-[#c2c6d6] hover:text-[#adc6ff]",
+      "relative pb-1.5 transition-colors duration-200",
+      isActive
+        ? "border-b-2 border-[var(--bn-primary)] text-[var(--bn-primary)]"
+        : "border-b-2 border-transparent text-[var(--bn-on-variant)] hover:text-[var(--bn-primary)]",
     );
-
-  const underline = (show: boolean) =>
-    show ? (
-      <motion.span
-        layoutId="brand-nav-underline"
-        className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#adc6ff]"
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { type: "spring", stiffness: 380, damping: 30 }
-        }
-      />
-    ) : null;
 
   const mobileLinks = [
     [homeHref, "Home", active === "home"],
     [explorarHref, "Barbearias", active === "barbearias"],
     [favoritosHref, "Favoritos", active === "favoritos"],
+    [planosHref, "Planos", active === "planos"],
     [paraSalaoHref, "Para o salão", false],
   ] as const;
 
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 left-0 z-50 border-b border-[#2F3336]/80 bg-[#10131a]/85 backdrop-blur-md transition-[padding,background-color] duration-300",
+        "fixed top-0 right-0 left-0 z-50 border-b border-[var(--bn-border)]/80 bg-[var(--bn-bg)]/85 backdrop-blur-md transition-[padding,background-color] duration-300",
         "pt-[max(0.5rem,env(safe-area-inset-top))]",
         scrolled ? "pb-1.5" : "pb-2.5",
       )}
@@ -119,26 +114,24 @@ export function BarbernegonNav() {
       <nav className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 md:h-14 md:px-6">
         <Link
           href={homeHref}
-          className="font-brand-headline min-w-0 truncate text-lg font-bold tracking-tight text-[#e1e2ec] transition-opacity hover:opacity-90 sm:text-xl md:text-2xl"
+          className="font-brand-headline min-w-0 truncate text-lg font-bold tracking-tight text-[var(--bn-on)] transition-opacity hover:opacity-90 sm:text-xl md:text-2xl"
         >
           Barbernegon
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-7 lg:gap-8 md:flex">
           <Link href={homeHref} className={linkClass(active === "home")}>
             <LabelCaps>Home</LabelCaps>
-            {underline(active === "home")}
           </Link>
           <Link
             href={explorarHref}
             className={linkClass(active === "barbearias")}
           >
             <LabelCaps>Barbearias</LabelCaps>
-            {underline(active === "barbearias")}
           </Link>
           {showFavoritesCount ? (
             <div className={linkClass(false)}>
-              <ExploreFavoritesLink className="text-[12px] font-bold tracking-[0.1em] text-inherit uppercase hover:text-[#adc6ff]" />
+              <ExploreFavoritesLink className="text-[12px] font-bold tracking-[0.1em] text-inherit uppercase hover:text-[var(--bn-primary)]" />
             </div>
           ) : (
             <Link
@@ -146,9 +139,11 @@ export function BarbernegonNav() {
               className={linkClass(active === "favoritos")}
             >
               <LabelCaps>Favoritos</LabelCaps>
-              {underline(active === "favoritos")}
             </Link>
           )}
+          <Link href={planosHref} className={linkClass(active === "planos")}>
+            <LabelCaps>Planos</LabelCaps>
+          </Link>
           <Link href={paraSalaoHref} className={linkClass(false)}>
             <LabelCaps>Para o salão</LabelCaps>
           </Link>
@@ -157,13 +152,13 @@ export function BarbernegonNav() {
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href={loginHref}
-            className="hidden rounded bg-[#3B82F6] px-6 py-2 text-sm font-bold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.97] md:inline-flex"
+            className="hidden rounded bg-[var(--bn-primary-container)] px-6 py-2 text-sm font-bold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.97] md:inline-flex"
           >
             Entrar
           </Link>
           <button
             type="button"
-            className="inline-flex size-11 items-center justify-center rounded-lg text-[#e1e2ec] transition-colors hover:bg-white/5 md:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-lg text-[var(--bn-on)] transition-colors hover:bg-white/5 md:hidden"
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -185,7 +180,7 @@ export function BarbernegonNav() {
           ease: [0.16, 1, 0.3, 1],
         }}
         className={cn(
-          "overflow-hidden border-t border-[#2F3336] bg-[#10131a]/98 backdrop-blur-md md:hidden",
+          "overflow-hidden border-t border-[var(--bn-border)] bg-[var(--bn-bg)]/98 backdrop-blur-md md:hidden",
           !menuOpen && "pointer-events-none",
         )}
       >
@@ -197,7 +192,9 @@ export function BarbernegonNav() {
               onClick={() => setMenuOpen(false)}
               className={cn(
                 "rounded-lg px-3 py-3.5 text-[15px] font-semibold transition-colors active:bg-white/10",
-                isActive ? "bg-white/5 text-[#adc6ff]" : "text-[#c2c6d6]",
+                isActive
+                  ? "bg-white/5 text-[var(--bn-primary)]"
+                  : "text-[var(--bn-on-variant)]",
               )}
             >
               {label}
@@ -206,7 +203,7 @@ export function BarbernegonNav() {
           <Link
             href={loginHref}
             onClick={() => setMenuOpen(false)}
-            className="mt-2 rounded-lg bg-[#3B82F6] px-3 py-3.5 text-center text-[15px] font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
+            className="mt-2 rounded-lg bg-[var(--bn-primary-container)] px-3 py-3.5 text-center text-[15px] font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
           >
             Entrar
           </Link>

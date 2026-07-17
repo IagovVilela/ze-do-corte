@@ -27,12 +27,12 @@ export function AuthShell({ children, className, aside, mobileBanner }: Props) {
 
   if (!aside) {
     return (
-      <div
-        className={cn(
-          "relative min-h-svh overflow-x-clip bg-[#10131a] text-[#e1e2ec] antialiased",
-          className,
-        )}
-      >
+    <div
+      className={cn(
+        "brand-onyx relative min-h-svh overflow-x-clip bg-[var(--bn-bg)] text-[var(--bn-on)] antialiased",
+        className,
+      )}
+    >
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.26),transparent_55%),radial-gradient(ellipse_45%_35%_at_95%_15%,rgba(173,198,255,0.10),transparent_50%)]"
@@ -70,7 +70,7 @@ export function AuthShell({ children, className, aside, mobileBanner }: Props) {
   return (
     <div
       className={cn(
-        "relative min-h-svh overflow-x-clip bg-[#10131a] text-[#e1e2ec] antialiased lg:grid lg:grid-cols-[1.1fr_1fr]",
+        "brand-onyx relative min-h-svh overflow-x-clip bg-[var(--bn-bg)] text-[var(--bn-on)] antialiased lg:grid lg:grid-cols-[1.1fr_1fr]",
         className,
       )}
     >

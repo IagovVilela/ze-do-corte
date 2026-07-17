@@ -27,6 +27,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Rota | Arquivo | Notas |
 |------|---------|--------|
 | `/` | `src/app/(public)/page.tsx` | Landing **Barbernegon** premium (shell em `(public)/layout.tsx`) |
+| `/planos` | `src/app/(public)/planos/page.tsx` | Planos Starter/Pro (nav pública + `SaasPlanComparison` tokens BN) |
 | `/explorar` | `src/app/(public)/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
 | `/explorar/favoritos` | `src/app/(public)/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
@@ -36,7 +37,6 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
-| `/planos` | `src/app/planos/page.tsx` | Planos da plataforma (Starter/Pro) |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
@@ -146,8 +146,10 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
 | Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
-| Nav pública (landing + explorar) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
-| Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx`, `landing/ln-tokens.ts` — assets em `public/images/landing/` |
+| Tokens corporativos BN | `lib/brand-tokens.ts` + classe `.brand-onyx` em `globals.css` (marketing/auth/planos) |
+| Nav pública (landing + explorar + planos) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
+| Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx` — assets em `public/images/landing/` |
+| Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |
 | Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` (desktop 3 colunas; mobile dock + folhas; barra flutuante Canva-lite; cores via `color-wheel-field.tsx`) |

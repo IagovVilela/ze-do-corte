@@ -13,7 +13,7 @@ type Props = {
 /** Shell público: nav fixa + transição de página + footer. */
 export function PublicBrandShell({ children }: Props) {
   return (
-    <div className="min-h-svh bg-[#10131a] text-[#e1e2ec]">
+    <div className="brand-onyx min-h-svh bg-[var(--bn-bg)] text-[var(--bn-on)]">
       <BarbernegonNav />
       <BrandPageTransition>{children}</BrandPageTransition>
       <BarbernegonFooter />
