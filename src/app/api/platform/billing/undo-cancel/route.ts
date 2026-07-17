@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import {
   AsaasApiError,
@@ -6,6 +7,7 @@ import {
   getPlatformAsaasApiKey,
   isPlatformAsaasConfigured,
   todayIsoDate,
+  type AsaasBillingType,
 } from "@/lib/asaas-client";
 import { saasExternalRef, saasPlanByTier } from "@/lib/asaas-plans";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
@@ -17,16 +19,38 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+const postSchema = z.object({
+  billingType: z.enum(["PIX", "CREDIT_CARD"]).optional().default("PIX"),
+});
+
 /**
  * Desfaz cancelamento agendado enquanto ainda há período pago.
  * POST /api/platform/billing/undo-cancel
  */
-export async function POST() {
+export async function POST(request: Request) {
   const auth = await requireStaffApiAuth();
   if (!auth.ok) return auth.response;
   if (auth.access.role !== "OWNER") {
     return NextResponse.json({ message: "Apenas o proprietário." }, { status: 403 });
   }
+
+  let body: unknown = {};
+  try {
+    const text = await request.text();
+    if (text.trim()) body = JSON.parse(text) as unknown;
+  } catch {
+    return NextResponse.json({ message: "JSON inválido." }, { status: 400 });
+  }
+
+  const parsed = postSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: parsed.error.issues[0]?.message ?? "Dados inválidos." },
+      { status: 400 },
+    );
+  }
+
+  const billingType = parsed.data.billingType as AsaasBillingType;
 
   await settleScheduledPlanCancellation(auth.access.organizationId);
 
@@ -70,7 +94,7 @@ export async function POST() {
         org.planCancelAt?.toISOString().slice(0, 10) ?? todayIsoDate();
       const subscription = await asaasCreateSubscription(apiKey, {
         customer: org.asaasCustomerId,
-        billingType: "PIX",
+        billingType,
         value: plan.priceMonthly,
         nextDueDate: nextDue,
         cycle: "MONTHLY",
@@ -105,6 +129,7 @@ export async function POST() {
 
   return NextResponse.json({
     ok: true,
+    billingType,
     organization: updated,
     message: asaasSubscriptionId
       ? "Cancelamento desfeito. A cobrança mensal voltará a ser gerada no Asaas."

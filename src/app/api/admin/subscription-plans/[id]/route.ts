@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,16 +18,38 @@ const patchSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function PATCH(request: Request, context: RouteContext) {
+async function requireProSubscriptions() {
   const auth = await requireStaffApiAuth();
-  if (!auth.ok) return auth.response;
+  if (!auth.ok) return auth;
   if (!auth.access.permissions.manageSubscriptions) {
-    return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
+    return {
+      ok: false as const,
+      response: NextResponse.json({ message: "Sem permissão." }, { status: 403 }),
+    };
   }
+  const org = await prisma.organization.findUnique({
+    where: { id: auth.access.organizationId },
+    select: { planStatus: true, planTier: true, trialEndsAt: true },
+  });
+  if (!org || !hasProFeatures(org)) {
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { message: "Clube disponível no plano Pro (ou no trial)." },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true as const, access: auth.access };
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const gate = await requireProSubscriptions();
+  if (!gate.ok) return gate.response;
 
   const { id } = await context.params;
   const existing = await prisma.subscriptionPlan.findFirst({
-    where: { id, organizationId: auth.access.organizationId },
+    where: { id, organizationId: gate.access.organizationId },
   });
   if (!existing) {
     return NextResponse.json({ message: "Plano não encontrado." }, { status: 404 });
@@ -55,15 +78,12 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const auth = await requireStaffApiAuth();
-  if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageSubscriptions) {
-    return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
-  }
+  const gate = await requireProSubscriptions();
+  if (!gate.ok) return gate.response;
 
   const { id } = await context.params;
   const existing = await prisma.subscriptionPlan.findFirst({
-    where: { id, organizationId: auth.access.organizationId },
+    where: { id, organizationId: gate.access.organizationId },
     include: { _count: { select: { subscriptions: true } } },
   });
   if (!existing) {

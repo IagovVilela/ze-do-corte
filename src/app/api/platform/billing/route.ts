@@ -30,6 +30,7 @@ export const dynamic = "force-dynamic";
 
 const postSchema = z.object({
   planId: z.enum(["starter", "pro"]),
+  billingType: z.enum(["PIX", "CREDIT_CARD"]).default("PIX"),
   cpfCnpj: z
     .string()
     .trim()
@@ -170,9 +171,11 @@ export async function POST(request: Request) {
       cpfCnpj: document,
     });
 
+    const billingType = parsed.data.billingType;
+
     const subscription = await asaasCreateSubscription(apiKey, {
       customer: customerId,
-      billingType: "PIX",
+      billingType,
       value: plan.priceMonthly,
       nextDueDate: todayIsoDate(),
       cycle: "MONTHLY",
@@ -195,7 +198,7 @@ export async function POST(request: Request) {
       null;
     let invoiceUrl: string | null = first?.invoiceUrl ?? null;
 
-    if (first?.id) {
+    if (billingType === "PIX" && first?.id) {
       try {
         pix = await asaasGetPixQrCode(apiKey, first.id);
       } catch {
@@ -203,14 +206,19 @@ export async function POST(request: Request) {
       }
     }
 
+    const message =
+      billingType === "CREDIT_CARD"
+        ? "Assinatura criada. Abra a fatura Asaas, cadastre o cartão uma vez — as próximas cobranças são automáticas."
+        : "Assinatura criada. Pague o PIX (ou o link da fatura) para ativar o plano. Todo mês uma nova fatura será gerada para pagar.";
+
     return NextResponse.json({
       ok: true,
+      billingType,
       subscriptionId: subscription.id,
       paymentId: first?.id ?? null,
       invoiceUrl,
       pix,
-      message:
-        "Assinatura criada. Pague o PIX (ou o link da fatura) para ativar o plano.",
+      message,
     });
   } catch (error) {
     console.error("POST /api/platform/billing", error);

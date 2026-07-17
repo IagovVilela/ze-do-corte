@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getStoredSaasBillingType } from "@/components/platform-upgrade-button";
+
 type Props = {
   planStatus: "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED";
   planCancelAt: string | null;
@@ -60,8 +62,11 @@ export function PlatformCancelPlanButton({ planStatus, planCancelAt }: Props) {
     setLoading(true);
     setMessage("");
     try {
+      const billingType = getStoredSaasBillingType();
       const res = await fetch("/api/platform/billing/undo-cancel", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingType }),
       });
       const data = (await res.json()) as { message?: string };
       setMessage(data.message ?? (res.ok ? "Ok." : "Falha."));

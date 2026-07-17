@@ -15,7 +15,13 @@ const roleLabel: Record<StaffAccess["role"], string> = {
   STAFF: "Funcionário",
 };
 
-type NavItem = { href: string; label: string; show: boolean };
+type NavItem = {
+  href: string;
+  label: string;
+  show: boolean;
+  /** Ex.: recurso só no Pro */
+  badge?: string | null;
+};
 
 function sessionDisplayName(access: StaffAccess): string {
   const trimmed = access.displayName?.trim();
@@ -28,8 +34,11 @@ function sessionDisplayName(access: StaffAccess): string {
 
 export function AdminPanelNav({
   access,
+  proUnlocked = true,
 }: {
   access: StaffAccess;
+  /** Caixa/Clube liberados (trial ou Pro ativo) */
+  proUnlocked?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -93,6 +102,7 @@ export function AdminPanelNav({
       href: "/admin/caixa",
       label: "Caixa",
       show: access.permissions.viewRevenue,
+      badge: proUnlocked ? null : "Pro",
     },
     {
       href: "/admin/pagamentos",
@@ -103,6 +113,7 @@ export function AdminPanelNav({
       href: "/admin/clube",
       label: "Clube",
       show: access.permissions.manageSubscriptions,
+      badge: proUnlocked ? null : "Pro",
     },
     {
       href: "/admin/plano",
@@ -152,13 +163,18 @@ export function AdminPanelNav({
                 <Link
                   href={item.href}
                   className={cn(
-                    "block rounded-lg px-3 py-2 text-sm font-medium transition",
+                    "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
                     active
                       ? "bg-brand-500/20 text-brand-200 ring-1 ring-brand-500/40"
                       : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
                   )}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.badge ? (
+                    <span className="rounded-full bg-brand-400/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-200">
+                      {item.badge}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             );

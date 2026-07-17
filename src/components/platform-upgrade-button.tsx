@@ -7,24 +7,51 @@ import { SAAS_PLANS, type SaasPlanId } from "@/lib/asaas-plans";
 import { cpfCnpjDigits, formatCpfCnpj } from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
 
+export type SaasBillingType = "PIX" | "CREDIT_CARD";
+
+/** Lembra o método na mesma aba (desfazer cancelamento). */
+export const SAAS_BILLING_TYPE_STORAGE_KEY = "bn_saas_billing_type";
+
 type PixPayload = {
   encodedImage?: string | null;
   payload?: string | null;
   expirationDate?: string | null;
 };
 
+function readStoredBillingType(): SaasBillingType {
+  if (typeof window === "undefined") return "PIX";
+  try {
+    const v = sessionStorage.getItem(SAAS_BILLING_TYPE_STORAGE_KEY);
+    if (v === "CREDIT_CARD" || v === "PIX") return v;
+  } catch {
+    /* ignore */
+  }
+  return "PIX";
+}
+
+function storeBillingType(type: SaasBillingType) {
+  try {
+    sessionStorage.setItem(SAAS_BILLING_TYPE_STORAGE_KEY, type);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function PlatformUpgradeButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [cpfCnpj, setCpfCnpj] = useState("");
+  const [billingType, setBillingType] = useState<SaasBillingType>("PIX");
   const [pix, setPix] = useState<PixPayload | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
 
   async function subscribe(planId: SaasPlanId) {
     const digits = cpfCnpjDigits(cpfCnpj);
     if (digits.length !== 11 && digits.length !== 14) {
-      setMessage("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) antes de assinar.");
+      setMessage(
+        "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) antes de assinar.",
+      );
       return;
     }
     setLoading(true);
@@ -38,15 +65,18 @@ export function PlatformUpgradeButton() {
         body: JSON.stringify({
           planId,
           cpfCnpj: digits,
+          billingType,
         }),
       });
       const data = (await res.json()) as {
         message?: string;
         invoiceUrl?: string | null;
         pix?: PixPayload | null;
+        billingType?: SaasBillingType;
       };
       setMessage(data.message ?? (res.ok ? "Ok." : "Falha."));
       if (res.ok) {
+        storeBillingType(data.billingType ?? billingType);
         setPix(data.pix ?? null);
         setInvoiceUrl(data.invoiceUrl ?? null);
         router.refresh();
@@ -60,6 +90,60 @@ export function PlatformUpgradeButton() {
 
   return (
     <div className="space-y-4">
+      <fieldset className="space-y-2">
+        <legend className="text-sm text-zinc-400">Forma de pagamento</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label
+            className={
+              billingType === "PIX"
+                ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
+                : "cursor-pointer rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-3 hover:bg-white/5"
+            }
+          >
+            <input
+              type="radio"
+              name="saas-billing"
+              className="sr-only"
+              checked={billingType === "PIX"}
+              onChange={() => {
+                setBillingType("PIX");
+                storeBillingType("PIX");
+              }}
+            />
+            <span className="block text-sm font-semibold text-zinc-100">
+              PIX
+            </span>
+            <span className="mt-0.5 block text-xs text-zinc-500">
+              Você paga a fatura todo mês (como hoje)
+            </span>
+          </label>
+          <label
+            className={
+              billingType === "CREDIT_CARD"
+                ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
+                : "cursor-pointer rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-3 hover:bg-white/5"
+            }
+          >
+            <input
+              type="radio"
+              name="saas-billing"
+              className="sr-only"
+              checked={billingType === "CREDIT_CARD"}
+              onChange={() => {
+                setBillingType("CREDIT_CARD");
+                storeBillingType("CREDIT_CARD");
+              }}
+            />
+            <span className="block text-sm font-semibold text-zinc-100">
+              Cartão de crédito
+            </span>
+            <span className="mt-0.5 block text-xs text-zinc-500">
+              Cobrança automática todo mês após cadastrar o cartão
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
       <label className="block space-y-1.5 text-sm">
         <span className="text-zinc-400">CPF/CNPJ do responsável (Asaas)</span>
         <input
@@ -99,13 +183,15 @@ export function PlatformUpgradeButton() {
           href={invoiceUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex text-sm text-brand-200 underline"
+          className="inline-flex rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-2 text-sm font-semibold text-brand-100 hover:bg-brand-500/20"
         >
-          Abrir fatura Asaas
+          {billingType === "CREDIT_CARD"
+            ? "Abrir fatura Asaas e cadastrar cartão"
+            : "Abrir fatura Asaas"}
         </a>
       ) : null}
 
-      {pix?.encodedImage ? (
+      {billingType === "PIX" && pix?.encodedImage ? (
         <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-4">
           <p className="text-sm text-zinc-300">PIX para ativar o plano</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -119,6 +205,11 @@ export function PlatformUpgradeButton() {
       ) : null}
     </div>
   );
+}
+
+/** Usado pelo botão de desfazer cancelamento. */
+export function getStoredSaasBillingType(): SaasBillingType {
+  return readStoredBillingType();
 }
 
 function CopyPixPayload({ payload }: { payload: string }) {

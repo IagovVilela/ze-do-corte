@@ -34,13 +34,16 @@ Idempotência: tabela `PaymentEvent` (`asaasEventId` unique).
 ## SaaS (`/admin/plano`)
 
 - Trial 14 dias (`planTier=TRIAL_FULL`) libera caixa + clube.
-- OWNER assina Starter (R$ 79) ou Pro (R$ 129) via `POST /api/platform/billing` → subscription PIX Asaas.
-- Webhook `PAYMENT_RECEIVED` → `planStatus=ACTIVE` + tier.
+- OWNER assina Starter (R$ 79) ou Pro (R$ 129) via `POST /api/platform/billing` com `billingType`:
+  - **`PIX`** (padrão) — Asaas gera fatura/QR todo mês; o dono paga cada cobrança manualmente.
+  - **`CREDIT_CARD`** — abre a fatura Asaas para cadastrar o cartão uma vez; meses seguintes com débito automático.
+- **O que desbloqueia de verdade**: Starter = site, agenda, painel, canvas, WhatsApp, PIX do salão, marketplace. **Pro** (ou trial ativo) = tudo isso + **Caixa** (`/admin/caixa`) + **Clube** (`/admin/clube` e APIs). Textos em `SAAS_PLANS` / `SaasPlanComparison`.
+- Webhook `PAYMENT_RECEIVED` / `PAYMENT_CONFIRMED` → `planStatus=ACTIVE` + tier.
 - `PAST_DUE` / trial expirado: banner + **Caixa** e **Clube** bloqueados (só Pro ativo mantém após trial).
 - Starter ativo: site + agenda + admin; sem caixa/clube.
 - **Cancelar plano** (só OWNER):
   - `POST /api/platform/billing/cancel` — trial/`PAST_DUE` → `CANCELLED` na hora; `ACTIVE` cancela no Asaas, grava `planCancelAt` (fim do período) e mantém Ativo até essa data.
-  - Enquanto agendado: botão **Desfazer cancelamento** → `POST /api/platform/billing/undo-cancel`.
+  - Enquanto agendado: botão **Desfazer cancelamento** → `POST /api/platform/billing/undo-cancel` (recria assinatura com o mesmo `billingType` lembrado na sessão, default PIX).
   - Depois de `planCancelAt`, ao abrir `/admin/plano` (ou GET billing) o status vira `CANCELLED` e sai do marketplace (`TRIAL`/`ACTIVE` only).
   - Ops em `/plataforma` também pode forçar `CANCELLED` no editor da barbearia.
 

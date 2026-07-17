@@ -5,7 +5,7 @@ import { AdminPanelNav } from "@/components/admin-panel-nav";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
-import { needsBillingAttention } from "@/lib/org-entitlements";
+import { hasProFeatures, needsBillingAttention } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminPanelLayout({
@@ -23,9 +23,11 @@ export default async function AdminPanelLayout({
     select: { planStatus: true, planTier: true, trialEndsAt: true },
   });
 
+  const proUnlocked = org ? hasProFeatures(org) : false;
+
   return (
     <div className="min-h-svh bg-[#0f1419] text-zinc-100">
-      <AdminPanelNav access={access} />
+      <AdminPanelNav access={access} proUnlocked={proUnlocked} />
       <div className="flex min-h-svh flex-col lg:pl-60">
         {org && needsBillingAttention(org) && access.role === "OWNER" ? (
           <div className="border-b border-amber-500/20 bg-amber-500/5 px-4 py-3 sm:px-6">

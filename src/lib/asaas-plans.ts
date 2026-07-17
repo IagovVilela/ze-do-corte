@@ -5,32 +5,68 @@ export type SaasPlanDef = {
   name: string;
   priceMonthly: number;
   tier: "STARTER" | "PRO";
+  /** Frase curta sob o nome */
   blurb: string;
+  /** Selo opcional no card (ex.: Mais completo) */
+  badge: string | null;
+  /** O que o plano inclui (linguagem leiga) */
   features: string[];
+  /** O que não inclui (só Starter costuma listar) */
+  notIncluded?: string[];
+  /** CTA sugerido */
+  ctaHint: string;
 };
 
+/**
+ * Fonte única de verdade para marketing e /admin/plano.
+ * Espelha o que o código realmente libera: Pro = Caixa + Clube
+ * (trial ativo = acesso Pro completo por 14 dias).
+ */
 export const SAAS_PLANS: SaasPlanDef[] = [
   {
     id: "starter",
     name: "Starter",
     priceMonthly: 79,
     tier: "STARTER",
-    blurb: "Site white-label, agendamento e admin.",
-    features: ["Site /sua-marca", "Agendamento online", "Painel e equipe"],
+    blurb: "Sua barbearia online: site, agenda e painel.",
+    badge: null,
+    features: [
+      "Site com a marca da sua barbearia",
+      "Clientes agendam sozinhos pelo celular",
+      "Painel: agenda, equipe, serviços e unidades",
+      "Editor visual do site (arrastar e soltar)",
+      "WhatsApp no site (+ assistente, se ligar)",
+      "Receber PIX dos clientes (sua conta Asaas)",
+      "Aparecer no Explorar (marketplace)",
+    ],
+    notIncluded: [
+      "Caixa e relatório de quanto entrou",
+      "Clube de assinaturas dos clientes",
+    ],
+    ctaHint: "Ideal para começar a operar online.",
   },
   {
     id: "pro",
     name: "Pro",
     priceMonthly: 129,
     tier: "PRO",
-    blurb: "Tudo do Starter + caixa e clube de assinaturas.",
+    blurb: "Tudo do Starter + dinheiro e fidelização sob controle.",
+    badge: "Mais completo",
     features: [
-      "Relatório de caixa",
-      "Clube com cancelamento claro",
-      "Prioridade no roadmap",
+      "Tudo que está no Starter",
+      "Caixa: quanto entrou, período e visão clara",
+      "Clube: planos mensais com visitas e cancelamento fácil",
+      "Cobrança do clube na sua conta Asaas (quando ligada)",
     ],
+    ctaHint: "Para quem quer crescer com recorrência e controle financeiro.",
   },
 ];
+
+/** Texto padrão do trial (não é um plano cobrável). */
+export const SAAS_TRIAL_COPY = {
+  title: "14 dias grátis com tudo do Pro",
+  body: "No trial você testa Caixa, Clube e o restante do produto. Depois escolha Starter ou Pro — o status vira Ativo após o pagamento.",
+};
 
 export function saasPlanById(id: string): SaasPlanDef | null {
   return SAAS_PLANS.find((p) => p.id === id) ?? null;
