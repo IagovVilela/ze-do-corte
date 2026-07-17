@@ -137,6 +137,7 @@ async function markClubPaid(subscriptionId: string, asaasSubId?: string | null) 
     data: {
       status: "ACTIVE",
       currentPeriodEnd: periodEnd,
+      visitsUsed: 0,
       ...(asaasSubId ? { asaasSubscriptionId: asaasSubId } : {}),
     },
   });

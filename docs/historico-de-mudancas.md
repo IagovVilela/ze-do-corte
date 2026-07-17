@@ -10,6 +10,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 - **Assinatura SaaS PIX ou cartão**: em `/admin/plano` o dono escolhe **PIX** (paga a fatura todo mês) ou **cartão** (cadastra na fatura Asaas; cobrança mensal automática). `POST /api/platform/billing` e `undo-cancel` aceitam `billingType`.
 - **Planos legíveis + gates claros**: cards Starter/Pro com o que entra (e o que não) alinhados ao código — **Pro libera Caixa e Clube**; trial 14 dias = Pro completo; menu marca “Pro” quando bloqueado; `/planos` e `/admin/plano` usam a mesma comparação.
+- **Clube completo para o cliente**: página pública `/{slug}/clube` + PIX/QR na adesão (admin e público); reset de `visitsUsed` a cada pagamento/renovação no webhook; link copiável no painel.
 - **Fix Asaas 404 na assinatura**: base URL da API atualizada para `https://api.asaas.com/v3` (produção) e `https://api-sandbox.asaas.com/v3` (sandbox) — a rota antiga `/api/v3` passou a responder 404.
 - **Fix Asaas CPF na assinatura**: se o cliente Asaas já existia sem documento, o CPF/CNPJ digitado em `/admin/plano` agora atualiza o cliente antes de criar a cobrança PIX.
 - **Máscaras de input (pt-BR)**: CPF/CNPJ, telefone e dinheiro em `br-input-masks.ts` — plano, PIX do agendamento, clube, WhatsApp, marca, serviços (preço/duração), agendamento, perfil e unidades.

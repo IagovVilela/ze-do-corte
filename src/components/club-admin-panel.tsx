@@ -6,6 +6,7 @@ import {
   formatBrMoneyFromNumber,
   formatBrMoneyInput,
   formatBrPhoneNational,
+  formatCpfCnpj,
   formatIntegerDigits,
   parseBrMoneyInput,
 } from "@/lib/br-input-masks";
@@ -36,7 +37,18 @@ type Subscription = {
 
 type ServiceOpt = { id: string; name: string };
 
-export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
+type PixPayload = {
+  encodedImage?: string | null;
+  payload?: string | null;
+};
+
+export function ClubAdminPanel({
+  services,
+  orgSlug,
+}: {
+  services: ServiceOpt[];
+  orgSlug: string;
+}) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +64,9 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
   const [subPlanId, setSubPlanId] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [clientCpf, setClientCpf] = useState("");
+  const [lastPix, setLastPix] = useState<PixPayload | null>(null);
+  const [lastInvoiceUrl, setLastInvoiceUrl] = useState<string | null>(null);
 
   async function reload() {
     const [pRes, sRes] = await Promise.all([
@@ -114,6 +129,9 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
     e.preventDefault();
     setError("");
     setMessage("");
+    setLastPix(null);
+    setLastInvoiceUrl(null);
+    const cpfDigits = clientCpf.replace(/\D/g, "");
     const res = await fetch("/api/admin/client-subscriptions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -121,16 +139,26 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
         planId: subPlanId,
         clientName,
         clientPhone,
+        clientCpfCnpj: cpfDigits || undefined,
+        // Sem CPF → cadastro local ativo (balcão); com CPF → PIX Asaas se ligado
+        chargeOnline: cpfDigits.length >= 11 ? true : false,
       }),
     });
-    const data = (await res.json()) as { message?: string };
+    const data = (await res.json()) as {
+      message?: string;
+      pix?: PixPayload | null;
+      invoiceUrl?: string | null;
+    };
     if (!res.ok) {
       setError(data.message ?? "Falha ao vincular cliente.");
       return;
     }
     setClientName("");
     setClientPhone("");
-    setMessage("Cliente adicionado ao clube.");
+    setClientCpf("");
+    setLastPix(data.pix ?? null);
+    setLastInvoiceUrl(data.invoiceUrl ?? null);
+    setMessage(data.message ?? "Cliente adicionado ao clube.");
     await reload();
   }
 
@@ -156,14 +184,22 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
     await reload();
   }
 
+  async function copyPublicLink() {
+    const url = `${window.location.origin}/${orgSlug}/clube`;
+    await navigator.clipboard.writeText(url);
+    setMessage("Link do clube copiado.");
+  }
+
   const inputClass =
     "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
 
-  if (loading) return <p className="text-sm text-zinc-400">Carregando clube…</p>;
+  if (loading) {
+    return <p className="text-sm text-zinc-500">Carregando clube…</p>;
+  }
 
   return (
-    <div className="space-y-10">
-      {(message || error) && (
+    <div className="space-y-8">
+      {(error || message) && (
         <p
           className={
             error
@@ -174,6 +210,34 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
           {error || message}
         </p>
       )}
+
+      <div className="rounded-2xl border border-brand-500/30 bg-brand-500/10 px-4 py-4 text-sm">
+        <p className="font-semibold text-brand-100">Link para o cliente assinar</p>
+        <p className="mt-1 text-xs text-brand-200/80">
+          Compartilhe no WhatsApp ou no Instagram. O cliente escolhe o plano, paga o
+          PIX e agenda com o mesmo telefone.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <code className="max-w-full truncate rounded-lg border border-white/10 bg-zinc-950/50 px-3 py-2 text-xs text-zinc-300">
+            /{orgSlug}/clube
+          </code>
+          <button
+            type="button"
+            onClick={() => void copyPublicLink()}
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+          >
+            Copiar link
+          </button>
+          <a
+            href={`/${orgSlug}/clube`}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-brand-200 hover:bg-white/5"
+          >
+            Abrir página
+          </a>
+        </div>
+      </div>
 
       <section className="grid gap-8 lg:grid-cols-2">
         <form onSubmit={createPlan} className="space-y-3 rounded-2xl border border-white/10 p-5">
@@ -245,10 +309,10 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
         </form>
 
         <form onSubmit={createSub} className="space-y-3 rounded-2xl border border-white/10 p-5">
-          <h3 className="font-semibold text-white">Vincular cliente</h3>
+          <h3 className="font-semibold text-white">Vincular cliente (balcão)</h3>
           <p className="text-xs text-zinc-500">
-            Cobrança recorrente automática fica para a próxima onda — aqui você marca o assinante e
-            controla o cancelamento com clareza.
+            Gera PIX na sua Asaas. Com Asaas desligado, o cliente entra ativo sem cobrança
+            online. Prefira o link público quando o cliente for assinar sozinho.
           </p>
           <select
             required
@@ -281,12 +345,52 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
             onChange={(e) => setClientPhone(formatBrPhoneNational(e.target.value))}
             className={inputClass}
           />
+          <input
+            inputMode="numeric"
+            placeholder="CPF/CNPJ (obrigatório com PIX online)"
+            value={clientCpf}
+            onChange={(e) => setClientCpf(formatCpfCnpj(e.target.value))}
+            className={inputClass}
+          />
           <button
             type="submit"
             className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-zinc-950"
           >
-            Adicionar ao clube
+            Gerar adesão / PIX
           </button>
+
+          {lastInvoiceUrl ? (
+            <a
+              href={lastInvoiceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex text-sm text-brand-200 underline"
+            >
+              Abrir fatura Asaas
+            </a>
+          ) : null}
+          {lastPix?.encodedImage ? (
+            <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
+              <p className="text-xs text-zinc-400">Mostre o QR para o cliente pagar</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`data:image/png;base64,${lastPix.encodedImage}`}
+                alt="QR PIX clube"
+                className="mx-auto h-40 w-40 rounded-lg bg-white p-2"
+              />
+              {lastPix.payload ? (
+                <button
+                  type="button"
+                  className="w-full truncate rounded-lg border border-white/10 px-2 py-2 text-left text-[10px] text-zinc-500"
+                  onClick={() =>
+                    void navigator.clipboard.writeText(lastPix.payload!)
+                  }
+                >
+                  Copiar código PIX
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </form>
       </section>
 
@@ -351,7 +455,7 @@ export function ClubAdminPanel({ services }: { services: ServiceOpt[] }) {
                     {s.plan.visitsIncluded != null ? ` / ${s.plan.visitsIncluded}` : ""}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {s.status === "ACTIVE" ? (
+                    {s.status === "ACTIVE" || s.status === "PAST_DUE" ? (
                       <button
                         type="button"
                         onClick={() => void cancelSub(s.id)}

@@ -59,9 +59,12 @@ Após reservar no site: “Pagar agora com PIX” → `POST /api/appointments/[i
 
 ### Clube
 
-`POST /api/admin/client-subscriptions` cria subscription Asaas (se Asaas ligado). Status inicial `PAST_DUE` até o pagamento; cancelamento no painel também cancela no Asaas.
-
-Ao agendar, se houver clube ativo do mesmo telefone cobrindo o serviço e com visitas, aplica `usedSubscriptionId` + `visitsUsed++` e marca pago como “Clube”.
+1. Plano Pro/trial + Asaas do salão ligado em `/admin/pagamentos`.
+2. Criar planos em `/admin/clube`.
+3. **Cliente assina sozinho** em `/{slug}/clube` (escolhe plano, CPF, paga PIX) — API `GET/POST /api/public/club/[slug]`.
+4. **Balcão**: vincular em `/admin/clube` com CPF gera QR/fatura; sem CPF cadastra ativo offline.
+5. Webhook `PAYMENT_RECEIVED`/`CONFIRMED` → clube **ACTIVE**, novo `currentPeriodEnd` e **`visitsUsed = 0`** (reset do ciclo).
+6. Ao agendar com o mesmo telefone + serviço incluso, aplica crédito do clube. Cancelamento no painel também cancela no Asaas.
 
 ## Migração
 

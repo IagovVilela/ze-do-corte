@@ -2,17 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
-import {
-  AsaasApiError,
-  asaasCreateCustomer,
-  asaasCreateSubscription,
-  asaasFindCustomerByExternalRef,
-  cycleFromDays,
-  todayIsoDate,
-} from "@/lib/asaas-client";
-import { getOrgAsaasApiKey } from "@/lib/asaas-org";
-import { clubExternalRef } from "@/lib/asaas-plans";
-import { formatBrPhoneNational } from "@/lib/br-phone-format";
+import { createClubSubscription } from "@/lib/club-subscribe";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
@@ -97,122 +87,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const plan = await prisma.subscriptionPlan.findFirst({
-    where: {
-      id: parsed.data.planId,
-      organizationId: auth.access.organizationId,
-      isActive: true,
-    },
-  });
-  if (!plan) {
-    return NextResponse.json({ message: "Plano inválido." }, { status: 400 });
-  }
-
-  const currentPeriodEnd = new Date();
-  currentPeriodEnd.setDate(currentPeriodEnd.getDate() + plan.cycleDays);
-  const phoneStored = formatBrPhoneNational(parsed.data.clientPhone);
-
-  const apiKey = await getOrgAsaasApiKey(auth.access.organizationId);
-  const chargeOnline = parsed.data.chargeOnline ?? Boolean(apiKey);
-
-  if (!chargeOnline || !apiKey) {
-    const subscription = await prisma.clientSubscription.create({
-      data: {
-        organizationId: auth.access.organizationId,
-        planId: plan.id,
-        clientName: parsed.data.clientName,
-        clientPhone: phoneStored,
-        clientEmail: parsed.data.clientEmail || null,
-        notes: parsed.data.notes ?? null,
-        status: "ACTIVE",
-        currentPeriodEnd,
-      },
-      include: { plan: { select: { name: true } } },
-    });
-    return NextResponse.json(
-      {
-        subscription,
-        message: "Assinante cadastrado (sem cobrança online).",
-      },
-      { status: 201 },
-    );
-  }
-
-  const subscription = await prisma.clientSubscription.create({
-    data: {
-      organizationId: auth.access.organizationId,
-      planId: plan.id,
-      clientName: parsed.data.clientName,
-      clientPhone: phoneStored,
-      clientEmail: parsed.data.clientEmail || null,
-      notes: parsed.data.notes ?? null,
-      status: "PAST_DUE",
-      currentPeriodEnd,
-    },
-    include: { plan: { select: { name: true } } },
+  const result = await createClubSubscription({
+    organizationId: auth.access.organizationId,
+    planId: parsed.data.planId,
+    clientName: parsed.data.clientName,
+    clientPhone: parsed.data.clientPhone,
+    clientEmail: parsed.data.clientEmail || null,
+    clientCpfCnpj: parsed.data.clientCpfCnpj || null,
+    notes: parsed.data.notes ?? null,
+    chargeOnline: parsed.data.chargeOnline,
   });
 
-  try {
-    const customerRef = `club_customer:${auth.access.organizationId}:${phoneStored.replace(/\D/g, "")}`;
-    let customer = await asaasFindCustomerByExternalRef(apiKey, customerRef);
-    if (!customer) {
-      customer = await asaasCreateCustomer(apiKey, {
-        name: parsed.data.clientName,
-        email: parsed.data.clientEmail || null,
-        mobilePhone: phoneStored.replace(/\D/g, "").slice(-11),
-        cpfCnpj: parsed.data.clientCpfCnpj || null,
-        externalReference: customerRef,
-      });
-    }
-
-    const asaasSub = await asaasCreateSubscription(apiKey, {
-      customer: customer.id,
-      billingType: "PIX",
-      value: Number(plan.price),
-      nextDueDate: todayIsoDate(),
-      cycle: cycleFromDays(plan.cycleDays),
-      description: `Clube · ${plan.name}`,
-      externalReference: clubExternalRef(subscription.id),
-    });
-
-    const updated = await prisma.clientSubscription.update({
-      where: { id: subscription.id },
-      data: {
-        asaasCustomerId: customer.id,
-        asaasSubscriptionId: asaasSub.id,
-      },
-      include: { plan: { select: { name: true } } },
-    });
-
+  if (!result.ok) {
     return NextResponse.json(
-      {
-        subscription: updated,
-        asaasSubscriptionId: asaasSub.id,
-        message:
-          "Assinatura Asaas criada. Fica ativa após o pagamento (webhook).",
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error("POST client-subscriptions asaas", error);
-    const updated = await prisma.clientSubscription.update({
-      where: { id: subscription.id },
-      data: {
-        status: "ACTIVE",
-        notes: [subscription.notes, "Falha Asaas — cadastro local ativo"]
-          .filter(Boolean)
-          .join(" · ")
-          .slice(0, 240),
-      },
-      include: { plan: { select: { name: true } } },
-    });
-    const message =
-      error instanceof AsaasApiError
-        ? `Cadastrado localmente; Asaas falhou: ${error.message}`
-        : "Cadastrado localmente; falha ao cobrar no Asaas.";
-    return NextResponse.json(
-      { subscription: updated, message, asaasError: true },
-      { status: 201 },
+      { message: result.message },
+      { status: result.status },
     );
   }
+
+  return NextResponse.json(
+    {
+      subscription: result.subscription,
+      invoiceUrl: result.invoiceUrl,
+      pix: result.pix,
+      asaasSubscriptionId: result.asaasSubscriptionId,
+      chargedOnline: result.chargedOnline,
+      message: result.message,
+    },
+    { status: 201 },
+  );
 }

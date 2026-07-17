@@ -16,7 +16,12 @@ export default async function AdminClubePage() {
 
   const org = await prisma.organization.findUnique({
     where: { id: access.organizationId },
-    select: { planStatus: true, planTier: true, trialEndsAt: true },
+    select: {
+      slug: true,
+      planStatus: true,
+      planTier: true,
+      trialEndsAt: true,
+    },
   });
   if (!org || !hasProFeatures(org)) {
     redirect("/admin/plano");
@@ -33,9 +38,9 @@ export default async function AdminClubePage() {
       <SectionTitle
         eyebrow="Clube"
         title="Assinaturas da casa"
-        description="Planos simples, vínculo por telefone, cobrança Asaas do salão e cancelamento imediato."
+        description="Crie planos, compartilhe o link público e receba o PIX na sua Asaas. O crédito entra no agendamento pelo telefone."
       />
-      <ClubAdminPanel services={services} />
+      <ClubAdminPanel services={services} orgSlug={org.slug} />
     </div>
   );
 }

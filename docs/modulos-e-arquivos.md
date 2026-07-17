@@ -135,7 +135,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
 | `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, outbound, cron de lembretes |
-| `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` | Gateway Asaas, billing SaaS, PIX/clube, gates de plano |
+| `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão + QR), gates de plano |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |
 | `notify-barber-booking.ts` | Envio de e-mail via Resend ao barbeiro atribuído (`RESEND_*`) |
 | `work-week.ts` | Expediente semanal do barbeiro (`workWeekJson`), interseção com horário da loja |
