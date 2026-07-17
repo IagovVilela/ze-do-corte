@@ -15,7 +15,6 @@ export type BarbernegonNavActive = "home" | "barbearias" | "favoritos";
 const homeHref = publicSurfaceUrl("marketing", "/");
 const explorarHref = publicSurfaceUrl("marketplace", "/explorar");
 const favoritosHref = publicSurfaceUrl("marketplace", "/explorar/favoritos");
-const cadastroHref = publicSurfaceUrl("marketing", "/cadastro");
 const loginHref = publicSurfaceUrl("marketing", "/admin/login");
 const paraSalaoHref = `${publicSurfaceUrl("marketing", "/")}#operations`;
 
@@ -29,7 +28,7 @@ function LabelCaps({
   return (
     <span
       className={cn(
-        "text-[12px] leading-none font-bold tracking-[0.1em] uppercase",
+        "text-[11px] leading-none font-bold tracking-[0.1em] uppercase sm:text-[12px]",
         className,
       )}
     >
@@ -71,11 +70,16 @@ export function BarbernegonNav() {
 
   useEffect(() => {
     if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [menuOpen]);
 
   const linkClass = (isActive: boolean) =>
@@ -84,17 +88,38 @@ export function BarbernegonNav() {
       isActive ? "text-[#adc6ff]" : "text-[#c2c6d6] hover:text-[#adc6ff]",
     );
 
+  const underline = (show: boolean) =>
+    show ? (
+      <motion.span
+        layoutId="brand-nav-underline"
+        className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#adc6ff]"
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { type: "spring", stiffness: 380, damping: 30 }
+        }
+      />
+    ) : null;
+
+  const mobileLinks = [
+    [homeHref, "Home", active === "home"],
+    [explorarHref, "Barbearias", active === "barbearias"],
+    [favoritosHref, "Favoritos", active === "favoritos"],
+    [paraSalaoHref, "Para o salão", false],
+  ] as const;
+
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 left-0 z-50 border-b border-[#2F3336]/80 bg-[#10131a]/80 backdrop-blur-md transition-[padding,background-color] duration-300",
-        scrolled ? "py-2" : "py-3.5",
+        "fixed top-0 right-0 left-0 z-50 border-b border-[#2F3336]/80 bg-[#10131a]/85 backdrop-blur-md transition-[padding,background-color] duration-300",
+        "pt-[max(0.5rem,env(safe-area-inset-top))]",
+        scrolled ? "pb-1.5" : "pb-2.5",
       )}
     >
-      <nav className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between px-4 md:h-14 md:px-6">
+      <nav className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 md:h-14 md:px-6">
         <Link
           href={homeHref}
-          className="font-brand-headline text-xl font-bold tracking-tight text-[#e1e2ec] transition-opacity hover:opacity-90 md:text-2xl"
+          className="font-brand-headline min-w-0 truncate text-lg font-bold tracking-tight text-[#e1e2ec] transition-opacity hover:opacity-90 sm:text-xl md:text-2xl"
         >
           Barbernegon
         </Link>
@@ -102,34 +127,14 @@ export function BarbernegonNav() {
         <div className="hidden items-center gap-8 md:flex">
           <Link href={homeHref} className={linkClass(active === "home")}>
             <LabelCaps>Home</LabelCaps>
-            {active === "home" ? (
-              <motion.span
-                layoutId="brand-nav-underline"
-                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#adc6ff]"
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 380, damping: 30 }
-                }
-              />
-            ) : null}
+            {underline(active === "home")}
           </Link>
           <Link
             href={explorarHref}
             className={linkClass(active === "barbearias")}
           >
             <LabelCaps>Barbearias</LabelCaps>
-            {active === "barbearias" ? (
-              <motion.span
-                layoutId="brand-nav-underline"
-                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#adc6ff]"
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { type: "spring", stiffness: 380, damping: 30 }
-                }
-              />
-            ) : null}
+            {underline(active === "barbearias")}
           </Link>
           {showFavoritesCount ? (
             <div className={linkClass(false)}>
@@ -141,17 +146,7 @@ export function BarbernegonNav() {
               className={linkClass(active === "favoritos")}
             >
               <LabelCaps>Favoritos</LabelCaps>
-              {active === "favoritos" ? (
-                <motion.span
-                  layoutId="brand-nav-underline"
-                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#adc6ff]"
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { type: "spring", stiffness: 380, damping: 30 }
-                  }
-                />
-              ) : null}
+              {underline(active === "favoritos")}
             </Link>
           )}
           <Link href={paraSalaoHref} className={linkClass(false)}>
@@ -159,16 +154,16 @@ export function BarbernegonNav() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href={loginHref}
-            className="rounded bg-[#3B82F6] px-5 py-2 text-sm font-bold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.97] sm:px-6"
+            className="hidden rounded bg-[#3B82F6] px-6 py-2 text-sm font-bold text-white transition-all duration-150 hover:brightness-110 active:scale-[0.97] md:inline-flex"
           >
             Entrar
           </Link>
           <button
             type="button"
-            className="rounded-lg p-2 text-[#e1e2ec] transition-colors hover:bg-white/5 md:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-lg text-[#e1e2ec] transition-colors hover:bg-white/5 md:hidden"
             aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -185,30 +180,36 @@ export function BarbernegonNav() {
             ? { height: "auto", opacity: 1 }
             : { height: 0, opacity: 0 }
         }
-        transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
-        className="overflow-hidden border-t border-[#2F3336] bg-[#10131a]/98 backdrop-blur-md md:hidden"
+        transition={{
+          duration: reduceMotion ? 0 : 0.28,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className={cn(
+          "overflow-hidden border-t border-[#2F3336] bg-[#10131a]/98 backdrop-blur-md md:hidden",
+          !menuOpen && "pointer-events-none",
+        )}
       >
-        <div className="flex flex-col gap-1 px-4 py-3">
-          {(
-            [
-              [homeHref, "Home", active === "home"],
-              [explorarHref, "Barbearias", active === "barbearias"],
-              [favoritosHref, "Favoritos", active === "favoritos"],
-              [paraSalaoHref, "Para o salão", false],
-            ] as const
-          ).map(([href, label, isActive]) => (
+        <div className="flex max-h-[min(70svh,28rem)] flex-col gap-1 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {mobileLinks.map(([href, label, isActive]) => (
             <Link
               key={label}
               href={href}
               onClick={() => setMenuOpen(false)}
               className={cn(
-                "rounded-lg px-3 py-3 text-sm font-semibold transition-colors",
+                "rounded-lg px-3 py-3.5 text-[15px] font-semibold transition-colors active:bg-white/10",
                 isActive ? "bg-white/5 text-[#adc6ff]" : "text-[#c2c6d6]",
               )}
             >
               {label}
             </Link>
           ))}
+          <Link
+            href={loginHref}
+            onClick={() => setMenuOpen(false)}
+            className="mt-2 rounded-lg bg-[#3B82F6] px-3 py-3.5 text-center text-[15px] font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
+          >
+            Entrar
+          </Link>
         </div>
       </motion.div>
     </header>

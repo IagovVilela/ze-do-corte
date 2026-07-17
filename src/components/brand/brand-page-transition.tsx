@@ -10,7 +10,7 @@ type Props = {
 
 /**
  * Transição de entrada entre páginas públicas (Home ↔ Explorar ↔ Favoritos).
- * A nav/footer ficam fora deste wrapper e permanecem estáveis.
+ * No mobile: só fade (sem blur) para evitar jank.
  */
 export function BrandPageTransition({ children }: Props) {
   const pathname = usePathname();
@@ -22,11 +22,11 @@ export function BrandPageTransition({ children }: Props) {
       initial={
         reduceMotion
           ? false
-          : { opacity: 0, y: 16, filter: "blur(6px)" }
+          : { opacity: 0, y: 10 }
       }
-      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: reduceMotion ? 0 : 0.42,
+        duration: reduceMotion ? 0 : 0.32,
         ease: [0.16, 1, 0.3, 1],
       }}
       className="min-h-[calc(100svh-5rem)]"
