@@ -11,15 +11,22 @@ import {
   useState,
   useTransition,
 } from "react";
-import { LocateFixed, LoaderCircle, MapPin, Search } from "lucide-react";
+import {
+  Info,
+  LocateFixed,
+  LoaderCircle,
+  MapPin,
+  Search,
+} from "lucide-react";
 
-import { ExploreFavoritesLink } from "@/components/marketplace/explore-favorites-link";
+import { ExploreChrome } from "@/components/marketplace/explore-chrome";
+import { ExploreHeroCarousel } from "@/components/marketplace/explore-hero-carousel";
 import { MarketplaceShopCard } from "@/components/marketplace/shop-card";
 import {
   MARKETPLACE_CATEGORY_CHIPS,
   type MarketplaceShop,
 } from "@/lib/marketplace-shared";
-import { marketplaceHomePath, publicSurfaceUrl } from "@/lib/public-hosts";
+import { marketplaceHomePath } from "@/lib/public-hosts";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -46,6 +53,7 @@ export function ExploreMarketplaceClient({
   const [, startTransition] = useTransition();
   const searchSeq = useRef(0);
   const skipFirstEffect = useRef(true);
+  const resultsRef = useRef<HTMLElement>(null);
 
   const runSearch = useEffectEvent(
     async (next: { q: string; city: string; category: string }) => {
@@ -127,6 +135,13 @@ export function ExploreMarketplaceClient({
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     void runSearch({ q, city, category });
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function clearFilters() {
+    setQ("");
+    setCity("");
+    setCategory("");
   }
 
   const titleParts: string[] = [];
@@ -138,167 +153,162 @@ export function ExploreMarketplaceClient({
       : `Barbearias na Barbernegon (${shops.length})`;
 
   return (
-    <div className="min-h-svh bg-[#0f1419] text-zinc-100">
-      <header className="border-b border-white/10 bg-[#0f1419]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link
-            href={marketplaceHomePath()}
-            className="text-lg font-semibold tracking-tight text-white"
-          >
-            Barbernegon
-          </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <ExploreFavoritesLink />
-            <Link
-              href={publicSurfaceUrl("marketing", "/cadastro")}
-              className="text-zinc-400 transition hover:text-brand-200"
-            >
-              Para o salão
-            </Link>
-            <Link
-              href={publicSurfaceUrl("marketing", "/admin/login")}
-              className="rounded-full border border-white/15 px-3 py-1.5 text-zinc-200 hover:border-brand-500/40"
-            >
-              Entrar
-            </Link>
+    <ExploreChrome>
+      <main className="min-h-screen">
+        <section className="relative flex min-h-[600px] h-[80vh] items-center justify-center overflow-hidden">
+          <ExploreHeroCarousel />
+          <div className="explore-hero-overlay absolute inset-0 z-10" />
+
+          <div className="relative z-20 mx-auto w-full max-w-[1280px] px-4 text-center sm:px-6">
+            <div className="mx-auto max-w-4xl">
+              <span className="mb-4 block text-xs font-bold uppercase tracking-[0.2em] text-[#adc6ff]">
+                Marketplace
+              </span>
+              <h1 className="mb-4 font-explore-headline text-4xl font-bold leading-[1.1] tracking-[-0.02em] text-[#e1e2ec] sm:text-5xl">
+                Encontre sua barbearia
+              </h1>
+              <p className="mx-auto mb-8 max-w-2xl text-base text-[#e1e2ec]/90 sm:text-lg">
+                Digite a cidade mesmo incompleta. Os resultados atualizam enquanto
+                você digita. Use{" "}
+                <strong className="font-semibold text-[#e1e2ec]">
+                  Perto de mim
+                </strong>{" "}
+                com permissão de localização.
+              </p>
+
+              <form
+                onSubmit={onSubmit}
+                className="explore-search-container flex flex-col items-stretch gap-2 rounded-xl border border-white/10 bg-[#25282B]/80 p-2 shadow-2xl backdrop-blur-xl transition-all md:flex-row md:p-3"
+              >
+                <label className="flex flex-grow items-center gap-3 px-4">
+                  <Search className="size-5 shrink-0 text-[#9CA3AF]" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Pesquise serviços ou empresas"
+                    className="w-full bg-transparent py-3 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF]"
+                    aria-label="Serviço ou barbearia"
+                  />
+                </label>
+                <div className="my-2 hidden w-px bg-[#2F3336] md:block" />
+                <label className="flex flex-grow items-center gap-3 px-4">
+                  <MapPin className="size-5 shrink-0 text-[#9CA3AF]" />
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Cidade (ex.: sao jose)"
+                    className="w-full bg-transparent py-3 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF]"
+                    aria-label="Cidade"
+                    autoComplete="address-level2"
+                  />
+                </label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => void useMyLocation()}
+                    disabled={locating}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#2F3336] bg-white/5 px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#e1e2ec] transition hover:bg-[#1d2027] disabled:opacity-60"
+                  >
+                    {locating ? (
+                      <LoaderCircle className="size-[18px] animate-spin" />
+                    ) : (
+                      <LocateFixed className="size-[18px]" />
+                    )}
+                    {locating ? "Detectando…" : "Perto de mim"}
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-[#adc6ff] px-10 py-3 text-xs font-bold uppercase tracking-[0.1em] text-[#00285d] shadow-lg shadow-[#adc6ff]/20 transition hover:brightness-110 active:scale-[0.97]"
+                  >
+                    Buscar
+                  </button>
+                </div>
+              </form>
+
+              {locMessage ? (
+                <p className="mt-3 text-sm text-[#9CA3AF]">{locMessage}</p>
+              ) : null}
+
+              <div className="mt-8 flex flex-wrap justify-center gap-2">
+                {MARKETPLACE_CATEGORY_CHIPS.map((chip) => {
+                  const active =
+                    (chip.id === "" && !category) || chip.id === category;
+                  return (
+                    <button
+                      key={chip.id || "all"}
+                      type="button"
+                      onClick={() => setCategory(chip.id)}
+                      className={cn(
+                        "rounded-full border px-6 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-all",
+                        active
+                          ? "border-[#adc6ff] bg-[#adc6ff] font-bold text-[#00285d] shadow-lg shadow-[#adc6ff]/20"
+                          : "border-white/10 bg-[#25282B]/50 text-[#c2c6d6] backdrop-blur-md hover:border-[#adc6ff] hover:text-[#adc6ff]",
+                      )}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300">
-            Marketplace
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            Encontre sua barbearia
-          </h1>
-          <p className="max-w-2xl text-sm text-zinc-400 sm:text-base">
-            Digite a cidade mesmo incompleta (ex.:{" "}
-            <span className="text-zinc-300">sao jose</span> → São José dos Campos).
-            Os resultados atualizam enquanto você digita. Use{" "}
-            <strong className="font-medium text-zinc-300">Perto de mim</strong>{" "}
-            com permissão de localização.
-          </p>
-        </div>
+          <div className="absolute bottom-8 left-1/2 z-20 w-full max-w-2xl -translate-x-1/2 px-4">
+            <div className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-black/40 px-6 py-3 text-sm text-[#9CA3AF] backdrop-blur-md">
+              <Info className="size-[18px] shrink-0" />
+              <p>
+                Dica: digite parte da cidade (ex.{" "}
+                <span className="font-bold text-[#e1e2ec]">sao</span>) — a lista
+                atualiza sozinha.
+              </p>
+            </div>
+          </div>
+        </section>
 
-        <div className="space-y-4">
-          <form
-            onSubmit={onSubmit}
-            className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-[#161b22]/90 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur md:flex-row md:items-center"
-          >
-            <label className="flex flex-1 items-center gap-2 px-3 py-2">
-              <Search className="size-4 shrink-0 text-zinc-500" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Pesquise serviços ou empresas"
-                className="w-full bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
-                aria-label="Serviço ou barbearia"
-              />
-            </label>
-            <div className="hidden h-8 w-px bg-white/10 md:block" />
-            <div className="flex flex-1 items-center gap-1 px-2 py-1 md:px-3">
-              <MapPin className="size-4 shrink-0 text-zinc-500" />
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Cidade (ex.: sao jose)"
-                className="min-w-0 flex-1 bg-transparent py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
-                aria-label="Cidade"
-                autoComplete="address-level2"
-              />
+        <section
+          ref={resultsRef}
+          id="resultados"
+          className="mx-auto max-w-[1280px] px-4 pb-16 pt-16 sm:px-6"
+        >
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="font-explore-headline text-2xl font-semibold tracking-tight text-[#e1e2ec] sm:text-[32px] sm:leading-[1.2]">
+                {heading}
+              </h2>
+              {loading ? (
+                <LoaderCircle
+                  className="size-5 animate-spin text-[#adc6ff]"
+                  aria-label="Atualizando resultados"
+                />
+              ) : null}
+            </div>
+            {q || city || category ? (
               <button
                 type="button"
-                onClick={() => void useMyLocation()}
-                disabled={locating}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-brand-500/40 hover:bg-brand-500/10 disabled:opacity-60"
-                title="Usar minha localização"
-                aria-label="Usar minha localização"
+                onClick={clearFilters}
+                className="shrink-0 text-xs font-bold uppercase tracking-[0.1em] text-[#adc6ff] hover:underline"
               >
-                {locating ? (
-                  <LoaderCircle className="size-3.5 animate-spin" />
-                ) : (
-                  <LocateFixed className="size-3.5 text-brand-300" />
-                )}
-                <span className="hidden sm:inline">
-                  {locating ? "Detectando…" : "Perto de mim"}
-                </span>
+                Ver todas
               </button>
-            </div>
-            <button
-              type="submit"
-              className="rounded-xl bg-brand-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-brand-400 md:self-stretch"
-            >
-              Buscar
-            </button>
-          </form>
-
-          {locMessage ? (
-            <p className="text-xs text-zinc-400">{locMessage}</p>
-          ) : null}
-
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {MARKETPLACE_CATEGORY_CHIPS.map((chip) => {
-              const active =
-                (chip.id === "" && !category) || chip.id === category;
-              return (
-                <button
-                  key={chip.id || "all"}
-                  type="button"
-                  onClick={() => setCategory(chip.id)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition",
-                    active
-                      ? "border-brand-500/50 bg-brand-500 text-zinc-950"
-                      : "border-white/10 bg-white/[0.03] text-zinc-300 hover:border-brand-500/30 hover:bg-brand-500/10",
-                  )}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {!city.trim() ? (
-          <p className="rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm text-brand-100/90">
-            Dica: digite parte da cidade (ex. <strong>sao</strong> ou{" "}
-            <strong>jose dos</strong>) — a lista atualiza sozinha.
-          </p>
-        ) : null}
-
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-medium text-zinc-200">{heading}</h2>
-            {loading ? (
-              <LoaderCircle
-                className="size-4 animate-spin text-brand-300"
-                aria-label="Atualizando resultados"
-              />
             ) : null}
           </div>
 
           {shops.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-6 py-14 text-center">
-              <p className="text-zinc-300">Nenhuma barbearia encontrada.</p>
-              <p className="mt-2 text-sm text-zinc-500">
+            <div className="rounded-xl border border-dashed border-[#2F3336] bg-[#25282B]/40 px-6 py-14 text-center">
+              <p className="text-[#e1e2ec]">Nenhuma barbearia encontrada.</p>
+              <p className="mt-2 text-sm text-[#9CA3AF]">
                 Tente outro termo, outra cidade ou limpe os filtros.
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  setQ("");
-                  setCity("");
-                  setCategory("");
-                }}
-                className="mt-4 inline-block text-sm font-medium text-brand-300 hover:text-brand-200"
+                onClick={clearFilters}
+                className="mt-4 inline-block text-sm font-medium text-[#adc6ff] hover:underline"
               >
                 Limpar busca
               </button>
             </div>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
               {shops.map((shop) => (
                 <MarketplaceShopCard key={shop.id} shop={shop} />
               ))}
@@ -306,6 +316,6 @@ export function ExploreMarketplaceClient({
           )}
         </section>
       </main>
-    </div>
+    </ExploreChrome>
   );
 }

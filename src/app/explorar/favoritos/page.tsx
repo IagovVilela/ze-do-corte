@@ -1,8 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 
+import { ExploreChrome } from "@/components/marketplace/explore-chrome";
 import { FavoritesShopsList } from "@/components/marketplace/favorites-shops-list";
-import { marketplaceHomePath } from "@/lib/public-hosts";
 
 export const metadata: Metadata = {
   title: "Favoritos | Barbernegon",
@@ -11,35 +10,21 @@ export const metadata: Metadata = {
 
 export default function ExplorarFavoritosPage() {
   return (
-    <div className="min-h-svh bg-[#0f1419] text-zinc-100">
-      <header className="border-b border-white/10 bg-[#0f1419]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link
-            href={marketplaceHomePath()}
-            className="text-lg font-semibold tracking-tight text-white"
-          >
-            Barbernegon
-          </Link>
-          <Link
-            href={marketplaceHomePath()}
-            className="text-sm text-zinc-400 hover:text-brand-200"
-          >
-            Voltar à busca
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
+    <ExploreChrome favoritesActive>
+      <main className="mx-auto w-full max-w-[1280px] space-y-6 px-4 py-10 sm:px-6 sm:py-14">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
+          <span className="mb-3 block text-xs font-bold uppercase tracking-[0.2em] text-[#adc6ff]">
+            Marketplace
+          </span>
+          <h1 className="font-explore-headline text-3xl font-bold tracking-tight text-[#e1e2ec] sm:text-4xl">
             Favoritos
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-2 max-w-xl text-sm text-[#9CA3AF] sm:text-base">
             Salvos neste aparelho — não sincronizam com outra conta.
           </p>
         </div>
         <FavoritesShopsList />
       </main>
-    </div>
+    </ExploreChrome>
   );
 }

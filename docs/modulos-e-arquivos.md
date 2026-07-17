@@ -145,7 +145,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Componente | Pasta |
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
-| Marketplace | `marketplace/explore-search.tsx`, `marketplace/shop-card.tsx`, `marketplace/favorites-shops-list.tsx` |
+| Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx` (desktop 3 colunas; mobile dock + folhas; barra flutuante Canva-lite; cores via `color-wheel-field.tsx`) |
 | Editor de identidade | `brand-editor-form.tsx` |

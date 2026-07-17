@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-17
+
+- **Explorar — redesign Onyx & Azure**: `/explorar` replica o layout Stitch imersivo (hero full-bleed com carrossel Ken Burns, busca centralizada, chips e cards tonais); tipografia Montserrat nos títulos; header sticky + footer compartilhados com `/explorar/favoritos`. Busca fuzzy, geolocalização, favoritos, mapa e avaliações permanecem.
+
 ## 2026-07-16
 
 - **Assinatura SaaS PIX ou cartão**: em `/admin/plano` o dono escolhe **PIX** (paga a fatura todo mês) ou **cartão** (cadastra na fatura Asaas; cobrança mensal automática). `POST /api/platform/billing` e `undo-cancel` aceitam `billingType`.
