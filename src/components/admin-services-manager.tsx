@@ -66,11 +66,11 @@ type Props = {
 };
 
 const categoryBadgeClass: Record<ServiceCategoryUi, string> = {
-  CORTE: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
-  BARBA: "bg-sky-500/15 text-sky-200 ring-sky-500/30",
-  COMBO: "bg-violet-500/15 text-violet-200 ring-violet-500/30",
-  TRATAMENTO: "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30",
-  OUTRO: "bg-zinc-500/20 text-zinc-300 ring-white/10",
+  CORTE: "bg-sky-500/15 text-[var(--bn-primary)] ring-sky-500/30",
+  BARBA: "bg-sky-500/15 text-[var(--bn-primary)] ring-sky-500/30",
+  COMBO: "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-[var(--bn-primary)]/30",
+  TRATAMENTO: "bg-emerald-500/15 text-[var(--bn-status-ok)] ring-emerald-500/30",
+  OUTRO: "bg-[var(--bn-surface-container)] text-[var(--bn-on-variant)] ring-[var(--bn-border)]",
 };
 
 function defaultUnitIdFromList(units: AdminUnitOption[]) {
@@ -330,23 +330,23 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
   }
 
   const input =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
-  const selectClass = `${input} appearance-none bg-zinc-950/50`;
+    "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
+  const selectClass = `${input} appearance-none bg-[var(--bn-surface-lowest)]`;
 
   return (
     <div className="space-y-8">
       {message ? (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-[var(--bn-status-ok)]">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-[var(--bn-status-danger)]">
           {error}
         </p>
       ) : null}
       {activeUnits.length === 0 ? (
-        <p className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-100">
+        <p className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-[var(--bn-status-info)]">
           Não há unidades ativas. Ative ou crie uma unidade em Unidades antes de adicionar serviços.
         </p>
       ) : null}
@@ -355,10 +355,10 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
         onSubmit={(e) => void createService(e)}
         className="glass-card space-y-4 rounded-2xl p-6"
       >
-        <h3 className="text-lg font-semibold text-white">Novo serviço</h3>
+        <h3 className="text-lg font-semibold text-[var(--bn-on)]">Novo serviço</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="text-zinc-400">Unidade</span>
+            <span className="text-[var(--bn-muted)]">Unidade</span>
             <select
               className={selectClass}
               required
@@ -379,7 +379,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
             </select>
           </label>
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="text-zinc-400">Nome</span>
+            <span className="text-[var(--bn-muted)]">Nome</span>
             <input
               className={input}
               value={newForm.name}
@@ -390,7 +390,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
             />
           </label>
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="text-zinc-400">Descrição</span>
+            <span className="text-[var(--bn-muted)]">Descrição</span>
             <textarea
               className={`${input} min-h-[88px] resize-y`}
               value={newForm.description}
@@ -402,7 +402,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-zinc-400">Tipo</span>
+            <span className="text-[var(--bn-muted)]">Tipo</span>
             <select
               className={selectClass}
               value={newForm.category}
@@ -421,7 +421,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
             </select>
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-zinc-400">Duração (min)</span>
+            <span className="text-[var(--bn-muted)]">Duração (min)</span>
             <input
               inputMode="numeric"
               className={input}
@@ -435,7 +435,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-zinc-400">Preço (R$)</span>
+            <span className="text-[var(--bn-muted)]">Preço (R$)</span>
             <input
               inputMode="decimal"
               className={input}
@@ -449,7 +449,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
               placeholder="0,00"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-zinc-300 sm:col-span-2">
+          <label className="flex items-center gap-2 text-sm text-[var(--bn-on-variant)] sm:col-span-2">
             <input
               type="checkbox"
               checked={newForm.isActive}
@@ -461,15 +461,15 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           </label>
 
           {initialUnits.length > 1 && (
-            <div className="sm:col-span-2 border-t border-white/10 pt-4 mt-2">
-              <h4 className="text-sm font-medium text-zinc-300 mb-3">Preços Específicos por Unidade (Opcional)</h4>
+            <div className="sm:col-span-2 border-t border-[var(--bn-border)] pt-4 mt-2">
+              <h4 className="text-sm font-medium text-[var(--bn-on-variant)] mb-3">Preços Específicos por Unidade (Opcional)</h4>
               <div className="space-y-4">
                 {initialUnits.map(unit => {
                   const ov = newForm.unitOverrides[unit.id] || { isActive: true, price: null, durationMinutes: null };
                   return (
-                    <div key={unit.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center rounded-xl bg-zinc-900/30 p-3 border border-white/5">
-                      <span className="text-sm text-zinc-200 truncate">{unit.name}</span>
-                      <label className="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <div key={unit.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center rounded-xl bg-[var(--bn-surface-low)] p-3 border border-[var(--bn-border)]">
+                      <span className="text-sm text-[var(--bn-on-variant)] truncate">{unit.name}</span>
+                      <label className="flex items-center gap-1.5 text-xs text-[var(--bn-muted)]">
                         Ativo:
                         <input
                           type="checkbox"
@@ -483,7 +483,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                       <input
                         inputMode="decimal"
                         placeholder={formatBrMoneyFromNumber(newForm.price) || "0,00"}
-                        className="w-28 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                        className="w-28 rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-2 py-1.5 text-xs text-[var(--bn-on)] placeholder:text-[var(--bn-muted)]"
                         value={
                           ov.price === null
                             ? ""
@@ -508,7 +508,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                       <input
                         inputMode="numeric"
                         placeholder={`${newForm.durationMinutes}m`}
-                        className="w-20 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                        className="w-20 rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-2 py-1.5 text-xs text-[var(--bn-on)] placeholder:text-[var(--bn-muted)]"
                         value={
                           ov.durationMinutes === null
                             ? ""
@@ -548,7 +548,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
 
       <div className="flex flex-col gap-6">
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-[var(--bn-muted)]">
             Filtrar por unidade
           </p>
           <div className="flex flex-wrap gap-2">
@@ -558,8 +558,8 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
                 filterUnit === "ALL"
-                  ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
-                  : "text-zinc-400 ring-white/10 hover:bg-white/5",
+                  ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-brand-500/50"
+                  : "text-[var(--bn-muted)] ring-[var(--bn-border)] hover:bg-[var(--bn-hover)]",
               )}
             >
               Todas ({services.length})
@@ -574,8 +574,8 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
                     filterUnit === u.id
-                      ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
-                      : "text-zinc-400 ring-white/10 hover:bg-white/5",
+                      ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-brand-500/50"
+                      : "text-[var(--bn-muted)] ring-[var(--bn-border)] hover:bg-[var(--bn-hover)]",
                   )}
                 >
                   {u.name} ({count})
@@ -586,7 +586,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-[var(--bn-muted)]">
             Filtrar por tipo
           </p>
           <div className="flex flex-wrap gap-2">
@@ -596,8 +596,8 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
                 filterCategory === "ALL"
-                  ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
-                  : "text-zinc-400 ring-white/10 hover:bg-white/5",
+                  ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-brand-500/50"
+                  : "text-[var(--bn-muted)] ring-[var(--bn-border)] hover:bg-[var(--bn-hover)]",
               )}
             >
               Todos ({services.length})
@@ -612,8 +612,8 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
                     filterCategory === c
-                      ? "bg-brand-500/25 text-brand-100 ring-brand-500/50"
-                      : "text-zinc-400 ring-white/10 hover:bg-white/5",
+                      ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-brand-500/50"
+                      : "text-[var(--bn-muted)] ring-[var(--bn-border)] hover:bg-[var(--bn-hover)]",
                   )}
                 >
                   {SERVICE_CATEGORY_LABELS[c]} ({count})
@@ -623,7 +623,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           </div>
         </div>
         <label className="block w-full max-w-sm space-y-1 text-sm sm:w-auto">
-          <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <span className="text-xs font-medium uppercase tracking-wider text-[var(--bn-muted)]">
             Buscar
           </span>
           <input
@@ -637,8 +637,8 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
         </div>
       </div>
 
-      <p className="text-sm text-zinc-500">
-        A mostrar <strong className="text-zinc-300">{filtered.length}</strong> de{" "}
+      <p className="text-sm text-[var(--bn-muted)]">
+        A mostrar <strong className="text-[var(--bn-on-variant)]">{filtered.length}</strong> de{" "}
         {services.length} serviços.
       </p>
 
@@ -649,7 +649,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           return (
             <li
               key={s.id}
-              className="glass-card flex flex-col rounded-2xl border border-white/5 p-5"
+              className="glass-card flex flex-col rounded-2xl border border-[var(--bn-border)] p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
@@ -661,36 +661,36 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                   >
                     {SERVICE_CATEGORY_LABELS[cat]}
                   </span>
-                  <p className="mt-1 text-xs text-zinc-500">{s.unitName}</p>
-                  <h4 className="mt-1 text-base font-semibold text-white">{s.name}</h4>
+                  <p className="mt-1 text-xs text-[var(--bn-muted)]">{s.unitName}</p>
+                  <h4 className="mt-1 text-base font-semibold text-[var(--bn-on)]">{s.name}</h4>
                 </div>
                 <span
                   className={cn(
                     "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
                     s.isActive
-                      ? "bg-emerald-500/15 text-emerald-300"
-                      : "bg-zinc-600/30 text-zinc-400",
+                      ? "bg-emerald-500/15 text-[var(--bn-status-ok)]"
+                      : "bg-[var(--bn-surface-container)] text-[var(--bn-muted)]",
                   )}
                 >
                   {s.isActive ? "Ativo" : "Inativo"}
                 </span>
               </div>
-              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-400">
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--bn-muted)]">
                 {s.description}
               </p>
-              <div className="mt-4 flex flex-wrap gap-3 text-sm text-zinc-300">
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-[var(--bn-on-variant)]">
                 <span>{s.durationMinutes} min</span>
-                <span className="text-zinc-600">·</span>
-                <span className="font-medium text-brand-200">{formatMoney(s.price)}</span>
+                <span className="text-[var(--bn-muted)]">·</span>
+                <span className="font-medium text-[var(--bn-primary)]">{formatMoney(s.price)}</span>
               </div>
 
               {!isEditing ? (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--bn-border)] pt-4">
                   <button
                     type="button"
                     disabled={pending}
                     onClick={() => void patchService(s.id, { isActive: !s.isActive })}
-                    className="rounded-full border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5"
+                    className="rounded-full border border-[var(--bn-border)] px-3 py-1.5 text-xs hover:bg-[var(--bn-hover)]"
                   >
                     {s.isActive ? "Desativar" : "Ativar"}
                   </button>
@@ -698,7 +698,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     type="button"
                     disabled={pending}
                     onClick={() => openEdit(s)}
-                    className="rounded-full border border-brand-500/40 px-3 py-1.5 text-xs text-brand-200 hover:bg-brand-500/10"
+                    className="rounded-full border border-brand-500/40 px-3 py-1.5 text-xs text-[var(--bn-primary)] hover:bg-brand-500/10"
                   >
                     Editar
                   </button>
@@ -706,15 +706,15 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     type="button"
                     disabled={pending}
                     onClick={() => void removeService(s.id, s.name)}
-                    className="rounded-full border border-rose-500/35 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/10"
+                    className="rounded-full border border-rose-500/35 px-3 py-1.5 text-xs text-rose-700 hover:bg-rose-500/10"
                   >
                     Excluir
                   </button>
                 </div>
               ) : draft ? (
-                <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+                <div className="mt-4 space-y-3 border-t border-[var(--bn-border)] pt-4">
                   <label className="block space-y-1 text-xs">
-                    <span className="text-zinc-500">Unidade</span>
+                    <span className="text-[var(--bn-muted)]">Unidade</span>
                     <select
                       className={selectClass}
                       value={draft.unitId}
@@ -736,7 +736,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     </select>
                   </label>
                   <label className="block space-y-1 text-xs">
-                    <span className="text-zinc-500">Nome</span>
+                    <span className="text-[var(--bn-muted)]">Nome</span>
                     <input
                       className={input}
                       value={draft.name}
@@ -746,7 +746,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     />
                   </label>
                   <label className="block space-y-1 text-xs">
-                    <span className="text-zinc-500">Descrição</span>
+                    <span className="text-[var(--bn-muted)]">Descrição</span>
                     <textarea
                       className={`${input} min-h-[80px] resize-y`}
                       value={draft.description}
@@ -757,7 +757,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                   </label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="space-y-1 text-xs">
-                      <span className="text-zinc-500">Tipo</span>
+                      <span className="text-[var(--bn-muted)]">Tipo</span>
                       <select
                         className={selectClass}
                         value={draft.category}
@@ -777,7 +777,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                       </select>
                     </label>
                     <label className="space-y-1 text-xs">
-                      <span className="text-zinc-500">Duração (min)</span>
+                      <span className="text-[var(--bn-muted)]">Duração (min)</span>
                       <input
                         inputMode="numeric"
                         className={input}
@@ -796,7 +796,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                       />
                     </label>
                     <label className="space-y-1 text-xs">
-                      <span className="text-zinc-500">Preço (R$)</span>
+                      <span className="text-[var(--bn-muted)]">Preço (R$)</span>
                       <input
                         inputMode="decimal"
                         className={input}
@@ -814,7 +814,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                         placeholder="0,00"
                       />
                     </label>
-                    <label className="flex items-center gap-2 text-xs text-zinc-400 sm:col-span-2">
+                    <label className="flex items-center gap-2 text-xs text-[var(--bn-muted)] sm:col-span-2">
                       <input
                         type="checkbox"
                         checked={draft.isActive}
@@ -828,15 +828,15 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                     </label>
 
                     {initialUnits.length > 1 && (
-                      <div className="sm:col-span-2 border-t border-white/10 pt-3 mt-1">
-                        <h5 className="text-xs font-medium text-zinc-400 mb-2">Preços por Unidade</h5>
+                      <div className="sm:col-span-2 border-t border-[var(--bn-border)] pt-3 mt-1">
+                        <h5 className="text-xs font-medium text-[var(--bn-muted)] mb-2">Preços por Unidade</h5>
                         <div className="space-y-2">
                           {initialUnits.map(unit => {
                             const ov = draft.unitOverrides[unit.id] || { isActive: true, price: null, durationMinutes: null };
                             return (
-                              <div key={unit.id} className="flex flex-wrap gap-2 items-center rounded-lg bg-zinc-900/50 px-3 py-2 border border-white/5">
-                                <span className="text-xs text-zinc-300 flex-1 min-w-[80px] truncate">{unit.name}</span>
-                                <label className="flex items-center gap-1 text-[10px] text-zinc-500">
+                              <div key={unit.id} className="flex flex-wrap gap-2 items-center rounded-lg bg-[var(--bn-surface-low)] px-3 py-2 border border-[var(--bn-border)]">
+                                <span className="text-xs text-[var(--bn-on-variant)] flex-1 min-w-[80px] truncate">{unit.name}</span>
+                                <label className="flex items-center gap-1 text-[10px] text-[var(--bn-muted)]">
                                   <input
                                     type="checkbox"
                                     checked={ov.isActive}
@@ -851,7 +851,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                                   placeholder={
                                     formatBrMoneyFromNumber(draft.price) || "0,00"
                                   }
-                                  className="w-24 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+                                  className="w-24 rounded border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-1.5 py-1 text-xs text-[var(--bn-on-variant)] placeholder:text-[var(--bn-muted)]"
                                   value={
                                     ov.price === null
                                       ? ""
@@ -882,7 +882,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                                 <input
                                   inputMode="numeric"
                                   placeholder={`${draft.durationMinutes}m`}
-                                  className="w-16 rounded border border-white/10 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
+                                  className="w-16 rounded border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-1.5 py-1 text-xs text-[var(--bn-on-variant)] placeholder:text-[var(--bn-muted)]"
                                   value={
                                     ov.durationMinutes === null
                                       ? ""
@@ -930,7 +930,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
                       type="button"
                       disabled={pending}
                       onClick={closeEdit}
-                      className="rounded-full border border-white/15 px-4 py-2 text-xs text-zinc-300"
+                      className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-xs text-[var(--bn-on-variant)]"
                     >
                       Cancelar
                     </button>
@@ -943,7 +943,7 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
       </ul>
 
       {filtered.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-6 text-center text-sm text-zinc-500">
+        <p className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] px-4 py-6 text-center text-sm text-[var(--bn-muted)]">
           Nenhum serviço corresponde ao filtro ou à pesquisa.
         </p>
       ) : null}

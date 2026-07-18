@@ -78,7 +78,7 @@ export function CanvasLayersPanel({
                     "rounded-lg border px-2 py-1.5 transition",
                     active
                       ? "border-[var(--bn-primary)]/40 bg-[var(--bn-primary-container)]/15"
-                      : "border-transparent hover:border-[var(--bn-border)] hover:bg-white/5",
+                      : "border-transparent hover:border-[var(--bn-border)] hover:bg-[var(--bn-hover)]",
                     el.hidden && "opacity-50",
                   )}
                 >

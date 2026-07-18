@@ -43,7 +43,7 @@ export function AdminPagination({
   const next = page < totalPages ? page + 1 : null;
 
   return (
-    <div className="flex flex-col gap-3 border-t border-white/10 px-5 py-4 text-sm text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-[var(--bn-border)] px-5 py-4 text-sm text-[var(--bn-muted)] sm:flex-row sm:items-center sm:justify-between">
       <span>
         Página {page} de {totalPages} · {total} agendamento
         {total === 1 ? "" : "s"}
@@ -52,7 +52,7 @@ export function AdminPagination({
         {prev !== null ? (
           <Link
             href={adminListHref(prev, chartRange, listFilters, telemetryScope)}
-            className="rounded-full border border-white/15 px-4 py-2 font-medium text-zinc-200 transition hover:bg-white/10"
+            className="rounded-full border border-[var(--bn-border)] px-4 py-2 font-medium text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)]"
           >
             Anterior
           </Link>
@@ -64,7 +64,7 @@ export function AdminPagination({
         {next !== null ? (
           <Link
             href={adminListHref(next, chartRange, listFilters, telemetryScope)}
-            className="rounded-full border border-white/15 px-4 py-2 font-medium text-zinc-200 transition hover:bg-white/10"
+            className="rounded-full border border-[var(--bn-border)] px-4 py-2 font-medium text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)]"
           >
             Próxima
           </Link>

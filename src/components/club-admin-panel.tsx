@@ -191,10 +191,10 @@ export function ClubAdminPanel({
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+    "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Carregando clube…</p>;
+    return <p className="text-sm text-[var(--bn-muted)]">Carregando clube…</p>;
   }
 
   return (
@@ -203,8 +203,8 @@ export function ClubAdminPanel({
         <p
           className={
             error
-              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"
-              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200"
+              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-[var(--bn-status-danger)]"
+              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-[var(--bn-status-ok)]"
           }
         >
           {error || message}
@@ -212,19 +212,19 @@ export function ClubAdminPanel({
       )}
 
       <div className="rounded-2xl border border-brand-500/30 bg-brand-500/10 px-4 py-4 text-sm">
-        <p className="font-semibold text-brand-100">Link para o cliente assinar</p>
-        <p className="mt-1 text-xs text-brand-200/80">
+        <p className="font-semibold text-[var(--bn-primary)]">Link para o cliente assinar</p>
+        <p className="mt-1 text-xs text-[var(--bn-primary)]">
           Compartilhe no WhatsApp ou no Instagram. O cliente escolhe o plano, paga o
           PIX e agenda com o mesmo telefone.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <code className="max-w-full truncate rounded-lg border border-white/10 bg-zinc-950/50 px-3 py-2 text-xs text-zinc-300">
+          <code className="max-w-full truncate rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-xs text-[var(--bn-on-variant)]">
             /{orgSlug}/clube
           </code>
           <button
             type="button"
             onClick={() => void copyPublicLink()}
-            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-zinc-200 hover:bg-white/5"
+            className="rounded-full border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
           >
             Copiar link
           </button>
@@ -232,7 +232,7 @@ export function ClubAdminPanel({
             href={`/${orgSlug}/clube`}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-brand-200 hover:bg-white/5"
+            className="rounded-full border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-primary)] hover:bg-[var(--bn-hover)]"
           >
             Abrir página
           </a>
@@ -240,8 +240,8 @@ export function ClubAdminPanel({
       </div>
 
       <section className="grid gap-8 lg:grid-cols-2">
-        <form onSubmit={createPlan} className="space-y-3 rounded-2xl border border-white/10 p-5">
-          <h3 className="font-semibold text-white">Novo plano</h3>
+        <form onSubmit={createPlan} className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
+          <h3 className="font-semibold text-[var(--bn-on)]">Novo plano</h3>
           <input
             required
             placeholder="Nome do plano"
@@ -275,14 +275,14 @@ export function ClubAdminPanel({
           </div>
           {services.length > 0 ? (
             <fieldset className="space-y-1">
-              <legend className="text-xs text-zinc-500">Serviços inclusos</legend>
+              <legend className="text-xs text-[var(--bn-muted)]">Serviços inclusos</legend>
               <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
                 {services.map((s) => {
                   const checked = planServices.includes(s.id);
                   return (
                     <label
                       key={s.id}
-                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1 text-xs text-zinc-300"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--bn-border)] px-2.5 py-1 text-xs text-[var(--bn-on-variant)]"
                     >
                       <input
                         type="checkbox"
@@ -308,9 +308,9 @@ export function ClubAdminPanel({
           </button>
         </form>
 
-        <form onSubmit={createSub} className="space-y-3 rounded-2xl border border-white/10 p-5">
-          <h3 className="font-semibold text-white">Vincular cliente (balcão)</h3>
-          <p className="text-xs text-zinc-500">
+        <form onSubmit={createSub} className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
+          <h3 className="font-semibold text-[var(--bn-on)]">Vincular cliente (balcão)</h3>
+          <p className="text-xs text-[var(--bn-muted)]">
             Gera PIX na sua Asaas. Com Asaas desligado, o cliente entra ativo sem cobrança
             online. Prefira o link público quando o cliente for assinar sozinho.
           </p>
@@ -364,14 +364,14 @@ export function ClubAdminPanel({
               href={lastInvoiceUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex text-sm text-brand-200 underline"
+              className="inline-flex text-sm text-[var(--bn-primary)] underline"
             >
               Abrir fatura Asaas
             </a>
           ) : null}
           {lastPix?.encodedImage ? (
-            <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
-              <p className="text-xs text-zinc-400">Mostre o QR para o cliente pagar</p>
+            <div className="space-y-2 rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-3">
+              <p className="text-xs text-[var(--bn-muted)]">Mostre o QR para o cliente pagar</p>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`data:image/png;base64,${lastPix.encodedImage}`}
@@ -381,7 +381,7 @@ export function ClubAdminPanel({
               {lastPix.payload ? (
                 <button
                   type="button"
-                  className="w-full truncate rounded-lg border border-white/10 px-2 py-2 text-left text-[10px] text-zinc-500"
+                  className="w-full truncate rounded-lg border border-[var(--bn-border)] px-2 py-2 text-left text-[10px] text-[var(--bn-muted)]"
                   onClick={() =>
                     void navigator.clipboard.writeText(lastPix.payload!)
                   }
@@ -395,21 +395,21 @@ export function ClubAdminPanel({
       </section>
 
       <section>
-        <h3 className="mb-3 font-semibold text-white">Planos</h3>
+        <h3 className="mb-3 font-semibold text-[var(--bn-on)]">Planos</h3>
         <ul className="space-y-2">
           {plans.map((p) => (
             <li
               key={p.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--bn-border)] px-4 py-3 text-sm"
             >
               <div>
-                <p className="font-medium text-zinc-100">
+                <p className="font-medium text-[var(--bn-on)]">
                   {p.name}{" "}
                   {!p.isActive ? (
-                    <span className="text-xs text-zinc-500">(inativo)</span>
+                    <span className="text-xs text-[var(--bn-muted)]">(inativo)</span>
                   ) : null}
                 </p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-[var(--bn-muted)]">
                   {formatMoney(Number(p.price))} / {p.cycleDays} dias
                   {p.visitsIncluded != null ? ` · ${p.visitsIncluded} visitas` : " · ilimitado"}
                   {p._count ? ` · ${p._count.subscriptions} assinante(s)` : ""}
@@ -418,16 +418,16 @@ export function ClubAdminPanel({
             </li>
           ))}
           {plans.length === 0 ? (
-            <li className="text-sm text-zinc-500">Nenhum plano ainda.</li>
+            <li className="text-sm text-[var(--bn-muted)]">Nenhum plano ainda.</li>
           ) : null}
         </ul>
       </section>
 
       <section>
-        <h3 className="mb-3 font-semibold text-white">Assinantes</h3>
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <h3 className="mb-3 font-semibold text-[var(--bn-on)]">Assinantes</h3>
+        <div className="overflow-x-auto rounded-2xl border border-[var(--bn-border)]">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-white/10 text-xs uppercase tracking-wider text-zinc-500">
+            <thead className="border-b border-[var(--bn-border)] text-xs uppercase tracking-wider text-[var(--bn-muted)]">
               <tr>
                 <th className="px-4 py-3">Cliente</th>
                 <th className="px-4 py-3">Plano</th>
@@ -438,16 +438,16 @@ export function ClubAdminPanel({
             </thead>
             <tbody>
               {subs.map((s) => (
-                <tr key={s.id} className="border-b border-white/5 text-zinc-300">
+                <tr key={s.id} className="border-b border-[var(--bn-border)] text-[var(--bn-on-variant)]">
                   <td className="px-4 py-3">
                     <div>{s.clientName}</div>
-                    <div className="text-xs text-zinc-500">{s.clientPhone}</div>
+                    <div className="text-xs text-[var(--bn-muted)]">{s.clientPhone}</div>
                   </td>
                   <td className="px-4 py-3">{s.plan.name}</td>
                   <td className="px-4 py-3">
                     {s.status}
                     {s.cancelReason ? (
-                      <div className="text-xs text-zinc-500">{s.cancelReason}</div>
+                      <div className="text-xs text-[var(--bn-muted)]">{s.cancelReason}</div>
                     ) : null}
                   </td>
                   <td className="px-4 py-3">
@@ -459,19 +459,19 @@ export function ClubAdminPanel({
                       <button
                         type="button"
                         onClick={() => void cancelSub(s.id)}
-                        className="rounded-full border border-rose-500/40 px-3 py-1 text-xs text-rose-200 hover:bg-rose-500/10"
+                        className="rounded-full border border-rose-500/40 px-3 py-1 text-xs text-[var(--bn-status-danger)] hover:bg-rose-500/10"
                       >
                         Cancelar
                       </button>
                     ) : (
-                      <span className="text-xs text-zinc-500">—</span>
+                      <span className="text-xs text-[var(--bn-muted)]">—</span>
                     )}
                   </td>
                 </tr>
               ))}
               {subs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-[var(--bn-muted)]">
                     Nenhum assinante ainda.
                   </td>
                 </tr>

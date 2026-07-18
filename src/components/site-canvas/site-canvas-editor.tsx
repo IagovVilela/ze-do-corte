@@ -523,10 +523,10 @@ export function SiteCanvasEditor({
   ]);
 
   const historyBtn =
-    "inline-flex size-8 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-35";
+    "inline-flex size-8 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)] disabled:cursor-not-allowed disabled:opacity-35";
 
   const secondaryBtn =
-    "rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:bg-white/5 disabled:opacity-50";
+    "rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)] disabled:opacity-50";
 
   const primaryBtn =
     "rounded-lg bg-[var(--bn-primary-container)] px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50";
@@ -535,10 +535,10 @@ export function SiteCanvasEditor({
     "flex min-w-[4.25rem] flex-1 flex-col items-center gap-0.5 rounded-xl px-1.5 py-1.5 text-[10px] font-semibold transition";
   const dockBtnActive = "bg-[var(--bn-primary-container)]/20 text-[var(--bn-primary)]";
   const dockBtnIdle =
-    "text-[var(--bn-muted)] hover:bg-white/5 hover:text-[var(--bn-on)]";
+    "text-[var(--bn-muted)] hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)]";
 
   const sheetListBtn =
-    "w-full rounded-xl px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5";
+    "w-full rounded-xl px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)]";
 
   const libraryBlock = (
     <>
@@ -673,7 +673,7 @@ export function SiteCanvasEditor({
                 "rounded-md px-2.5 py-1 text-xs font-semibold transition sm:px-3",
                 artboard === id
                   ? "bg-[var(--bn-primary-container)] text-white"
-                  : "text-[var(--bn-muted)] hover:bg-white/5 hover:text-[var(--bn-on)]",
+                  : "text-[var(--bn-muted)] hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)]",
               )}
             >
               {id === "desktop" ? "Desktop" : "Celular"}
@@ -740,12 +740,12 @@ export function SiteCanvasEditor({
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {toast ? (
-            <span className="hidden max-w-[16rem] truncate rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 sm:inline">
+            <span className="hidden max-w-[16rem] truncate rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 sm:inline">
               {toast}
             </span>
           ) : null}
           {error ? (
-            <span className="max-w-[10rem] truncate text-xs text-rose-300 sm:max-w-none">
+            <span className="max-w-[10rem] truncate text-xs text-rose-700 sm:max-w-none">
               {error}
             </span>
           ) : null}
@@ -753,8 +753,8 @@ export function SiteCanvasEditor({
             className={cn(
               "hidden items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:inline-flex",
               dirty
-                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+                ? "border-amber-500/30 bg-amber-500/10 text-[var(--bn-status-warn)]"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700",
             )}
           >
             {dirty ? "Não salvo" : "No ar"}
@@ -849,7 +849,7 @@ export function SiteCanvasEditor({
             </button>
             <button
               type="button"
-              className={cn(dockBtn, "text-rose-300 hover:bg-rose-500/15")}
+              className={cn(dockBtn, "text-rose-700 hover:bg-rose-500/15")}
               onClick={deleteSelected}
             >
               <TrashIcon />
@@ -1031,8 +1031,8 @@ export function SiteCanvasEditor({
           {stageEmpty ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
               <div
-                className="pointer-events-auto flex max-w-xs flex-col items-center gap-3 rounded-2xl border border-[#2F3336] px-6 py-8 text-center shadow-2xl"
-                style={{ backgroundColor: "#25282B" }}
+                className="pointer-events-auto flex max-w-xs flex-col items-center gap-3 rounded-2xl border border-[var(--bn-border)] px-6 py-8 text-center shadow-2xl"
+                style={{ backgroundColor: "var(--bn-surface-elevated)" }}
               >
                 <p className="text-sm text-[var(--bn-on-variant)]">
                   Esta tela ainda não tem elementos.
@@ -1058,16 +1058,16 @@ export function SiteCanvasEditor({
         <div className="absolute inset-0 z-30 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-[var(--bn-scrim)]"
             aria-label="Fechar painel"
             onClick={() => setMobileSheet(null)}
           />
           <div
             className={cn(
-              "absolute inset-x-0 bottom-0 flex max-h-[min(78svh,640px)] flex-col overflow-hidden rounded-t-2xl border border-[#2F3336] shadow-2xl",
+              "absolute inset-x-0 bottom-0 flex max-h-[min(78svh,640px)] flex-col overflow-hidden rounded-t-2xl border border-[var(--bn-border)] shadow-2xl",
               "pb-[max(0.25rem,env(safe-area-inset-bottom))]",
             )}
-            style={{ backgroundColor: "#25282B" }}
+            style={{ backgroundColor: "var(--bn-surface-elevated)" }}
             role="dialog"
             aria-modal="true"
             aria-label={
@@ -1101,7 +1101,7 @@ export function SiteCanvasEditor({
               <button
                 type="button"
                 onClick={() => setMobileSheet(null)}
-                className="rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-muted)] hover:bg-white/5"
+                className="rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-muted)] hover:bg-[var(--bn-hover)]"
               >
                 Fechar
               </button>
@@ -1223,7 +1223,7 @@ export function SiteCanvasEditor({
                       <button
                         key={align}
                         type="button"
-                        className="rounded-lg border border-[var(--bn-border)] px-2 py-2.5 text-[11px] text-[var(--bn-on-variant)] hover:bg-white/5"
+                        className="rounded-lg border border-[var(--bn-border)] px-2 py-2.5 text-[11px] text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
                         onClick={() => {
                           alignSelected(align);
                           setMobileSheet(null);
@@ -1235,7 +1235,7 @@ export function SiteCanvasEditor({
                   </div>
                   <button
                     type="button"
-                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-rose-300 hover:bg-rose-500/10"
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm text-rose-700 hover:bg-rose-500/10"
                     onClick={() => {
                       deleteSelected();
                       setMobileSheet(null);
@@ -1248,11 +1248,11 @@ export function SiteCanvasEditor({
               {mobileSheet === "tools" ? (
                 <div className="space-y-2 p-4">
                   {toast ? (
-                    <p className="text-xs text-emerald-300">{toast}</p>
+                    <p className="text-xs text-emerald-700">{toast}</p>
                   ) : null}
                   <button
                     type="button"
-                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
                     onClick={() => {
                       setMobileSheet(null);
                       setConfirm({ type: "generate-mobile" });
@@ -1265,7 +1265,7 @@ export function SiteCanvasEditor({
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
                     onClick={() => {
                       setMobileSheet(null);
                       setPhonePreviewOpen(true);
@@ -1286,14 +1286,14 @@ export function SiteCanvasEditor({
                     }}
                   >
                     Modelos de página
-                    <span className="mt-0.5 block text-[11px] font-normal text-white/70">
+                    <span className="mt-0.5 block text-[11px] font-normal text-[var(--bn-on)]/70">
                       Substitui desktop e celular
                     </span>
                   </button>
                   <button
                     type="button"
                     disabled={saving}
-                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5 disabled:opacity-50"
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)] disabled:opacity-50"
                     onClick={snapAllOnArtboard}
                   >
                     Alinhar tudo à grade
@@ -1301,7 +1301,7 @@ export function SiteCanvasEditor({
                   <Link
                     href={`/${org.slug}`}
                     target="_blank"
-                    className="block w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-white/5"
+                    className="block w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
                     onClick={() => setMobileSheet(null)}
                   >
                     Ver site público

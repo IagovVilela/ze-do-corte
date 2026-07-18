@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 
+import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { DashboardStatusSlice } from "@/lib/types";
 
 type Props = {
@@ -17,16 +18,18 @@ type Props = {
 };
 
 export function DashboardStatusPie({ data, periodLabel }: Props) {
+  const chart = useAdminChartColors();
   const total = data.reduce((s, d) => s + d.value, 0);
   const hasData = total > 0;
 
   return (
-    <div className="glass-card rounded-2xl border border-violet-500/10 p-5">
-      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-violet-200/90">
+    <div className="glass-card rounded-2xl border border-[var(--bn-border)] p-5">
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-[var(--bn-primary)]">
         Status dos agendamentos
       </h3>
-      <p className="mt-1 text-sm text-zinc-400">
-        Distribuição no período: <span className="text-zinc-300">{periodLabel}</span>
+      <p className="mt-1 text-sm text-[var(--bn-muted)]">
+        Distribuição no período:{" "}
+        <span className="text-[var(--bn-on-variant)]">{periodLabel}</span>
       </p>
       <div className="relative mt-4 h-72">
         {hasData ? (
@@ -41,7 +44,7 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
                 innerRadius={58}
                 outerRadius={92}
                 paddingAngle={2.5}
-                stroke="rgba(0,0,0,0.35)"
+                stroke={chart.tooltipBg}
                 strokeWidth={1}
               >
                 {data.map((entry) => (
@@ -52,7 +55,7 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
                 x="50%"
                 y="44%"
                 textAnchor="middle"
-                className="fill-zinc-50"
+                fill={chart.tooltipColor}
                 style={{ fontSize: 26, fontWeight: 600 }}
               >
                 {total}
@@ -61,7 +64,7 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
                 x="50%"
                 y="54%"
                 textAnchor="middle"
-                fill="#71717a"
+                fill={chart.tick}
                 style={{ fontSize: 11 }}
               >
                 agendamentos
@@ -69,8 +72,9 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
               <Tooltip
                 contentStyle={{
                   borderRadius: "0.75rem",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  background: "#11131a",
+                  border: chart.tooltipBorder,
+                  background: chart.tooltipBg,
+                  color: chart.tooltipColor,
                 }}
                 formatter={(value, name) => {
                   const n = Number(value ?? 0);
@@ -83,16 +87,17 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
               <Legend
                 verticalAlign="bottom"
                 formatter={(value) => (
-                  <span className="text-sm text-zinc-300">{value}</span>
+                  <span className="text-sm text-[var(--bn-on-variant)]">{value}</span>
                 )}
               />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
+          <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-[var(--bn-border)] bg-[var(--bn-hover)] text-sm text-[var(--bn-muted)]">
             Nenhum agendamento com início neste período. Se só houver reservas futuras, abra{" "}
-            <strong className="text-zinc-400">Mês</strong> ou <strong className="text-zinc-400">3 meses</strong>{" "}
-            — a lista abaixo mostra todos os registos.
+            <strong className="text-[var(--bn-muted)]">Mês</strong> ou{" "}
+            <strong className="text-[var(--bn-muted)]">3 meses</strong> — a lista abaixo mostra
+            todos os registos.
           </div>
         )}
       </div>

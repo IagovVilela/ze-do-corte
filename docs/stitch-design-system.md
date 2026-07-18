@@ -59,9 +59,11 @@ typography:
 
 **Barbernegon** is a premium SaaS for independent barbershops. Promise: **“Sua barbearia. Sua cara.”**
 
-Visual: **Dark Cinematic Minimalism** + **Electric Blue** on **Onyx** canvas `#10131a`. Soft primary accent `#adc6ff`, CTA fill `#3B82F6`. No purple. No light mode.
+Visual: **Dark Cinematic Minimalism** + **Electric Blue** on **Onyx** canvas `#10131a`. Soft primary accent `#adc6ff`, CTA fill `#3B82F6`. No purple. Marketing/auth permanecem dark-only.
 
-**Canonical tokens:** `src/lib/brand-tokens.ts` (`BN`) and CSS class `.brand-onyx` (`--bn-*` in `globals.css`).
+**Admin panel** (`/admin/(panel)`): chrome BN com **modo claro opcional** — `BN` / `BN_LIGHT` em `src/lib/brand-tokens.ts`, overrides em `.brand-onyx[data-theme="light"]`, preferência `localStorage` (`bn-admin-theme`) + cookie anti-flash. Default: escuro. Toggle na sidebar e no topo mobile.
+
+**Canonical tokens:** `src/lib/brand-tokens.ts` (`BN`, `BN_LIGHT`) and CSS class `.brand-onyx` (`--bn-*` in `globals.css`).
 
 Product surfaces:
 
@@ -80,12 +82,13 @@ Language: **pt-BR**.
 
 ## Admin chrome (P1)
 
-- Layout: `src/app/admin/(panel)/layout.tsx` — `.brand-onyx` + Montserrat
-- Nav: `admin-panel-nav.tsx` — grupos Operação / Marca & presença / Financeiro / Conta; ativo com primary BN
+- Layout: `src/app/admin/(panel)/layout.tsx` — `.brand-onyx` + Montserrat + `AdminThemeProvider` (`data-theme`)
+- Tema: `src/lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx` — dark (default) / light; **casa do tema** em `/admin/configuracao` (Aparência)
+- Nav: `admin-panel-nav.tsx` — grupos Operação / Marca & presença / Financeiro / Conta; ativo com primary BN; Configuração visível a todos
 - Page headers: `admin-page-header.tsx` (sentence case, LabelCaps eyebrow)
-- Onboarding: `onboarding-checklist.tsx` (UI BN; lógica `computeOnboardingChecklist` inalterada)
+- Onboarding: `onboarding-checklist.tsx` (UI BN; ocultável via `onboardingJson.hideChecklist` em Configuração)
 - KPI envelopes: superfície `border --bn-border` + `bg --bn-surface-elevated` (sem `.glass-card` na visão geral)
-- **Canvas studio** (`/admin/site`): chrome BN + onboarding por modelos + camadas + preview celular; conteúdo desenhado = tema do tenant (`canvasThemeStyle` / `brand-*`)
+- **Canvas studio** (`/admin/site`): chrome BN (segue tema do painel); conteúdo desenhado = tema do tenant (`canvasThemeStyle` / `brand-*`)
 
 ## Screen inventory
 
@@ -101,6 +104,6 @@ Language: **pt-BR**.
 
 ## Do / Don't
 
-**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos **e chrome do admin/canvas**; Montserrat for marketing/admin titles; keep tenant `brand-*` for elementos do site no canvas.
+**Do** — use `--bn-*` / `.brand-onyx` on marketing, auth, planos **e chrome do admin/canvas**; Montserrat for marketing/admin titles; keep tenant `brand-*` for elementos do site no canvas. No painel, preferir tokens `--bn-*` (incl. `--bn-hover`, `--bn-scrim`) em vez de `zinc-*` / `text-white` hardcoded para o modo claro funcionar.
 
-**Don't** — `#0f1419` / `#8eb6ff` on new marketing/admin chrome; Bebas on plan prices or admin page headers; SiteFooter tenant chrome inside `/admin` panel; jargão de design (arteboard/overlay/z-index) na UI do dono.
+**Don't** — `#0f1419` / `#8eb6ff` on new marketing/admin chrome; Bebas on plan prices or admin page headers; SiteFooter tenant chrome inside `/admin` panel; jargão de design (arteboard/overlay/z-index) na UI do dono; aplicar modo claro em landing/login/marketplace.

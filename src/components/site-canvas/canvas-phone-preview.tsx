@@ -65,14 +65,11 @@ export function CanvasPhonePreview({
     <div className="fixed inset-0 z-[88] flex items-end justify-center sm:items-center sm:p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/85"
+        className="absolute inset-0 bg-[var(--bn-scrim)]"
         aria-label="Fechar preview"
         onClick={onClose}
       />
-      <div
-        className="relative z-[1] flex max-h-[min(94svh,860px)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-[#2F3336] shadow-2xl max-sm:rounded-b-none"
-        style={{ backgroundColor: "#25282B" }}
-      >
+      <div className="relative z-[1] flex max-h-[min(94svh,860px)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] shadow-2xl max-sm:rounded-b-none">
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--bn-border)] px-4 py-3">
           <div>
             <p className="text-[11px] font-bold tracking-[0.1em] text-[var(--bn-primary)] uppercase">
@@ -82,22 +79,21 @@ export function CanvasPhonePreview({
               Como fica no celular
             </h2>
             <p className="mt-1 text-xs text-[var(--bn-muted)]">
-              Mostra a tela Celular do canvas (mesmo rascunho, sem precisar publicar).
+              Mostra a tela Celular do canvas (mesmo rascunho, sem precisar
+              publicar).
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-muted)] hover:bg-white/5"
+            className="rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-muted)] hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)]"
           >
             Fechar
           </button>
         </div>
 
-        <div
-          className="flex min-h-0 flex-1 justify-center overflow-y-auto px-4 py-6"
-          style={{ backgroundColor: "#0b0e15" }}
-        >
+        {/* Área do aparelho: neutra; o site dentro segue o tema do tenant */}
+        <div className="flex min-h-0 flex-1 justify-center overflow-y-auto bg-[var(--bn-surface-low)] px-4 py-6">
           <div
             className="relative overflow-hidden rounded-[1.75rem] border-[6px] border-[#1a1d24] bg-black shadow-xl"
             style={{ width: PHONE_W + 12, height: phoneH + 12 }}
@@ -132,7 +128,7 @@ export function CanvasPhonePreview({
           <Link
             href={`/${org.slug}`}
             target="_blank"
-            className="rounded-lg border border-[var(--bn-border)] px-3 py-2 text-xs font-medium text-[var(--bn-on-variant)] hover:bg-white/5"
+            className="rounded-lg border border-[var(--bn-border)] px-3 py-2 text-xs font-medium text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
           >
             Ver site publicado
           </Link>

@@ -177,22 +177,22 @@ export function BrandEditorForm() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20";
+    "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-4 py-2.5 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20";
 
   const colorValue = normalizeHex(form.primaryColor);
 
   if (loading) {
-    return <p className="text-sm text-zinc-400">Carregando marca…</p>;
+    return <p className="text-sm text-[var(--bn-muted)]">Carregando marca…</p>;
   }
 
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-[var(--bn-muted)]">
           Layout da página:{" "}
           <Link
             href="/admin/site"
-            className="text-brand-200 underline-offset-2 hover:underline"
+            className="text-[var(--bn-primary)] underline-offset-2 hover:underline"
           >
             abrir canvas
           </Link>
@@ -200,7 +200,7 @@ export function BrandEditorForm() {
           Público:{" "}
           <Link
             href={`/${form.slug}`}
-            className="text-brand-200 underline-offset-2 hover:underline"
+            className="text-[var(--bn-primary)] underline-offset-2 hover:underline"
             target="_blank"
           >
             /{form.slug}
@@ -219,15 +219,15 @@ export function BrandEditorForm() {
         <p
           className={
             error
-              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"
-              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200"
+              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-[var(--bn-status-danger)]"
+              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-[var(--bn-status-ok)]"
           }
         >
           {error || message}
         </p>
       )}
 
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
+      <section className="space-y-4 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 p-5">
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-3 text-sm">
           <input
             type="checkbox"
@@ -235,17 +235,17 @@ export function BrandEditorForm() {
             onChange={(e) =>
               setForm((f) => ({ ...f, marketplaceListed: e.target.checked }))
             }
-            className="mt-1 size-4 rounded border-white/20"
+            className="mt-1 size-4 rounded border-[var(--bn-border)]"
           />
           <span>
-            <span className="block font-medium text-zinc-100">
+            <span className="block font-medium text-[var(--bn-on)]">
               Aparecer na busca Barbernegon
             </span>
-            <span className="mt-0.5 block text-[12px] text-zinc-500">
+            <span className="mt-0.5 block text-[12px] text-[var(--bn-muted)]">
               Clientes encontram seu salão em{" "}
               <Link
                 href={publicSurfaceUrl("marketplace", "/explorar")}
-                className="text-brand-200 hover:underline"
+                className="text-[var(--bn-primary)] hover:underline"
               >
                 {publicSurfaceUrl("marketplace", "/explorar")}
               </Link>{" "}
@@ -266,7 +266,7 @@ export function BrandEditorForm() {
           ] as const
         ).map(([key, label]) => (
           <label key={key} className="block space-y-1.5 text-sm">
-            <span className="text-zinc-300">{label}</span>
+            <span className="text-[var(--bn-on-variant)]">{label}</span>
             <input
               value={form[key]}
               type={key === "phoneLabel" ? "tel" : "text"}
@@ -288,7 +288,7 @@ export function BrandEditorForm() {
         ))}
 
         <div className="space-y-1.5 text-sm">
-          <span className="text-zinc-300">Cor principal</span>
+          <span className="text-[var(--bn-on-variant)]">Cor principal</span>
           <div className="flex items-center gap-3">
             <ColorWheelField
               aria-label="Escolher cor principal"
@@ -296,7 +296,7 @@ export function BrandEditorForm() {
               onChange={(hex) =>
                 setForm((f) => ({ ...f, primaryColor: hex }))
               }
-              className="h-11 w-14 rounded-lg border border-white/10 bg-transparent p-1"
+              className="h-11 w-14 rounded-lg border border-[var(--bn-border)] bg-transparent p-1"
             />
             <input
               value={form.primaryColor}
@@ -314,12 +314,12 @@ export function BrandEditorForm() {
               spellCheck={false}
             />
             <span
-              className="h-11 flex-1 rounded-xl border border-white/10"
+              className="h-11 flex-1 rounded-xl border border-[var(--bn-border)]"
               style={{ backgroundColor: colorValue }}
               aria-hidden
             />
           </div>
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-[11px] text-[var(--bn-muted)]">
             Toque no quadrado e arraste a bolinha até a cor desejada.
           </p>
         </div>
@@ -355,7 +355,7 @@ export function BrandEditorForm() {
         </div>
 
         <label className="block space-y-1.5 text-sm">
-          <span className="text-zinc-300">Texto sobre a casa</span>
+          <span className="text-[var(--bn-on-variant)]">Texto sobre a casa</span>
           <textarea
             value={form.aboutText}
             onChange={(e) =>
@@ -396,17 +396,17 @@ function AssetUploadField({
   onUrlChange: (url: string) => void;
 }) {
   const inputClass =
-    "mt-1 w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+    "mt-1 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
   const showVideo = allowVideo && url && isVideoUrl(url);
 
   return (
     <div className="space-y-2 text-sm">
-      <span className="text-zinc-300">{title}</span>
+      <span className="text-[var(--bn-on-variant)]">{title}</span>
       {url ? (
         showVideo ? (
           <video
             src={url}
-            className="max-h-36 w-full rounded-xl border border-white/10 object-cover"
+            className="max-h-36 w-full rounded-xl border border-[var(--bn-border)] object-cover"
             muted
             playsInline
             preload="metadata"
@@ -416,11 +416,11 @@ function AssetUploadField({
           <img
             src={url}
             alt=""
-            className="max-h-36 w-full rounded-xl border border-white/10 object-contain bg-zinc-900/60"
+            className="max-h-36 w-full rounded-xl border border-[var(--bn-border)] object-contain bg-[var(--bn-surface-low)]/60"
           />
         )
       ) : (
-        <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-white/15 text-[11px] text-zinc-500">
+        <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-[var(--bn-border)] text-[11px] text-[var(--bn-muted)]">
           Nenhum arquivo
         </div>
       )}
@@ -457,16 +457,16 @@ function AssetUploadField({
           type="button"
           disabled={disabled}
           onClick={onClear}
-          className="w-full rounded-xl border border-white/15 px-3 py-1.5 text-[11px] text-zinc-400 hover:border-white/30 hover:text-zinc-200 disabled:opacity-50"
+          className="w-full rounded-xl border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-muted)] hover:border-[var(--bn-border)] hover:text-[var(--bn-on-variant)] disabled:opacity-50"
         >
           Remover
         </button>
       ) : null}
 
-      <p className="text-[10px] leading-relaxed text-zinc-500">{hint}</p>
+      <p className="text-[10px] leading-relaxed text-[var(--bn-muted)]">{hint}</p>
 
-      <details className="rounded-xl border border-white/10 bg-zinc-900/40 px-2 py-1.5">
-        <summary className="cursor-pointer text-[11px] text-zinc-500 hover:text-zinc-300">
+      <details className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] px-2 py-1.5">
+        <summary className="cursor-pointer text-[11px] text-[var(--bn-muted)] hover:text-[var(--bn-on-variant)]">
           Ou usar link externo
         </summary>
         <input

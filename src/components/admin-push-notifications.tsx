@@ -141,9 +141,9 @@ export function AdminPushNotifications() {
 
   if (supported === false) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-        <h2 className="text-sm font-semibold text-zinc-200">Notificações no navegador</h2>
-        <p className="mt-2 text-xs text-zinc-500">
+      <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-6">
+        <h2 className="text-sm font-semibold text-[var(--bn-on-variant)]">Notificações no navegador</h2>
+        <p className="mt-2 text-xs text-[var(--bn-muted)]">
           Este navegador não suporta notificações push. Use um browser recente ou ative apenas o e-mail
           (Resend).
         </p>
@@ -153,21 +153,21 @@ export function AdminPushNotifications() {
 
   if (!config) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-        <p className="text-xs text-zinc-500">A carregar…</p>
+      <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-6">
+        <p className="text-xs text-[var(--bn-muted)]">A carregar…</p>
       </div>
     );
   }
 
   if (!config.enabled) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-        <h2 className="text-sm font-semibold text-zinc-200">Notificações no navegador</h2>
-        <p className="mt-2 text-xs text-zinc-500">
+      <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-6">
+        <h2 className="text-sm font-semibold text-[var(--bn-on-variant)]">Notificações no navegador</h2>
+        <p className="mt-2 text-xs text-[var(--bn-muted)]">
           O servidor ainda não tem VAPID configurado (
-          <code className="text-zinc-400">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code>,{" "}
-          <code className="text-zinc-400">VAPID_PRIVATE_KEY</code>
-          , opcionalmente <code className="text-zinc-400">VAPID_SUBJECT</code>). Enquanto isso, avisos de
+          <code className="text-[var(--bn-muted)]">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code>,{" "}
+          <code className="text-[var(--bn-muted)]">VAPID_PRIVATE_KEY</code>
+          , opcionalmente <code className="text-[var(--bn-muted)]">VAPID_SUBJECT</code>). Enquanto isso, avisos de
           novo agendamento seguem só por e-mail (Resend), se configurado.
         </p>
       </div>
@@ -175,10 +175,10 @@ export function AdminPushNotifications() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 className="text-sm font-semibold text-zinc-200">Notificações no navegador</h2>
-      <p className="mt-2 text-xs text-zinc-500">
-        Com push ativo neste dispositivo, <strong className="text-zinc-400">não enviamos e-mail</strong>{" "}
+    <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-6">
+      <h2 className="text-sm font-semibold text-[var(--bn-on-variant)]">Notificações no navegador</h2>
+      <p className="mt-2 text-xs text-[var(--bn-muted)]">
+        Com push ativo neste dispositivo, <strong className="text-[var(--bn-muted)]">não enviamos e-mail</strong>{" "}
         para avisar de agendamentos atribuídos a si — só a notificação do browser. Sem push, mantém-se o
         e-mail (Resend), como antes.
       </p>
@@ -189,7 +189,7 @@ export function AdminPushNotifications() {
             type="button"
             disabled={busy}
             onClick={() => void unsubscribe()}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-200 transition hover:border-rose-500/40 hover:text-rose-200 disabled:opacity-50"
+            className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] transition hover:border-rose-500/40 hover:text-[var(--bn-status-danger)] disabled:opacity-50"
           >
             {busy ? "A processar…" : "Desativar neste dispositivo"}
           </button>
@@ -198,7 +198,7 @@ export function AdminPushNotifications() {
             type="button"
             disabled={busy}
             onClick={() => void subscribe()}
-            className="rounded-full bg-brand-500/20 px-4 py-2 text-sm font-medium text-brand-100 ring-1 ring-brand-500/40 transition hover:bg-brand-500/30 disabled:opacity-50"
+            className="rounded-full bg-[var(--bn-primary-container)]/15 px-4 py-2 text-sm font-medium text-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/40 transition hover:bg-brand-500/30 disabled:opacity-50"
           >
             {busy ? "A ativar…" : "Ativar notificações neste dispositivo"}
           </button>
@@ -206,12 +206,12 @@ export function AdminPushNotifications() {
       </div>
 
       {error ? (
-        <p className="mt-4 text-sm text-rose-300" role="alert">
+        <p className="mt-4 text-sm text-rose-700" role="alert">
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="mt-4 text-sm text-emerald-300/90" role="status">
+        <p className="mt-4 text-sm text-emerald-700/90" role="status">
           {message}
         </p>
       ) : null}

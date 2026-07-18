@@ -91,13 +91,13 @@ export function PlatformUpgradeButton() {
   return (
     <div className="space-y-4">
       <fieldset className="space-y-2">
-        <legend className="text-sm text-zinc-400">Forma de pagamento</legend>
+        <legend className="text-sm text-[var(--bn-muted)]">Forma de pagamento</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           <label
             className={
               billingType === "PIX"
                 ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
-                : "cursor-pointer rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-3 hover:bg-white/5"
+                : "cursor-pointer rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-3 py-3 hover:bg-[var(--bn-hover)]"
             }
           >
             <input
@@ -110,10 +110,10 @@ export function PlatformUpgradeButton() {
                 storeBillingType("PIX");
               }}
             />
-            <span className="block text-sm font-semibold text-zinc-100">
+            <span className="block text-sm font-semibold text-[var(--bn-on)]">
               PIX
             </span>
-            <span className="mt-0.5 block text-xs text-zinc-500">
+            <span className="mt-0.5 block text-xs text-[var(--bn-muted)]">
               Você paga a fatura todo mês (como hoje)
             </span>
           </label>
@@ -121,7 +121,7 @@ export function PlatformUpgradeButton() {
             className={
               billingType === "CREDIT_CARD"
                 ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
-                : "cursor-pointer rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-3 hover:bg-white/5"
+                : "cursor-pointer rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-3 py-3 hover:bg-[var(--bn-hover)]"
             }
           >
             <input
@@ -134,10 +134,10 @@ export function PlatformUpgradeButton() {
                 storeBillingType("CREDIT_CARD");
               }}
             />
-            <span className="block text-sm font-semibold text-zinc-100">
+            <span className="block text-sm font-semibold text-[var(--bn-on)]">
               Cartão de crédito
             </span>
-            <span className="mt-0.5 block text-xs text-zinc-500">
+            <span className="mt-0.5 block text-xs text-[var(--bn-muted)]">
               Cobrança automática todo mês após cadastrar o cartão
             </span>
           </label>
@@ -145,14 +145,14 @@ export function PlatformUpgradeButton() {
       </fieldset>
 
       <label className="block space-y-1.5 text-sm">
-        <span className="text-zinc-400">CPF/CNPJ do responsável (Asaas)</span>
+        <span className="text-[var(--bn-muted)]">CPF/CNPJ do responsável (Asaas)</span>
         <input
           value={cpfCnpj}
           onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
           placeholder="000.000.000-00"
           inputMode="numeric"
           autoComplete="off"
-          className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
+          className="w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-4 py-2.5 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60"
         />
       </label>
 
@@ -166,7 +166,7 @@ export function PlatformUpgradeButton() {
             className={
               plan.id === "pro"
                 ? "rounded-full bg-gradient-to-r from-brand-400 to-brand-600 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
-                : "rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 transition hover:bg-white/5 disabled:opacity-60"
+                : "rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)] disabled:opacity-60"
             }
           >
             {loading
@@ -176,14 +176,14 @@ export function PlatformUpgradeButton() {
         ))}
       </div>
 
-      {message ? <p className="text-xs text-zinc-400">{message}</p> : null}
+      {message ? <p className="text-xs text-[var(--bn-muted)]">{message}</p> : null}
 
       {invoiceUrl ? (
         <a
           href={invoiceUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-2 text-sm font-semibold text-brand-100 hover:bg-brand-500/20"
+          className="inline-flex rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-2 text-sm font-semibold text-[var(--bn-primary)] hover:bg-[var(--bn-primary-container)]/15"
         >
           {billingType === "CREDIT_CARD"
             ? "Abrir fatura Asaas e cadastrar cartão"
@@ -192,8 +192,8 @@ export function PlatformUpgradeButton() {
       ) : null}
 
       {billingType === "PIX" && pix?.encodedImage ? (
-        <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-4">
-          <p className="text-sm text-zinc-300">PIX para ativar o plano</p>
+        <div className="space-y-2 rounded-xl border border-[var(--bn-border)] bg-black/30 p-4">
+          <p className="text-sm text-[var(--bn-on-variant)]">PIX para ativar o plano</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`data:image/png;base64,${pix.encodedImage}`}
@@ -217,7 +217,7 @@ function CopyPixPayload({ payload }: { payload: string }) {
   return (
     <button
       type="button"
-      className="w-full truncate rounded-lg border border-white/10 px-3 py-2 text-left text-xs text-zinc-400 hover:bg-white/5"
+      className="w-full truncate rounded-lg border border-[var(--bn-border)] px-3 py-2 text-left text-xs text-[var(--bn-muted)] hover:bg-[var(--bn-hover)]"
       onClick={async () => {
         await navigator.clipboard.writeText(payload);
         setCopied(true);

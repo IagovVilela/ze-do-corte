@@ -389,7 +389,7 @@ export function CanvasStage({
         <button
           type="button"
           onClick={fitZoom}
-          className="rounded-md border border-[var(--bn-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bn-on-variant)] hover:bg-white/5"
+          className="rounded-md border border-[var(--bn-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
         >
           Ajustar
         </button>
@@ -419,7 +419,7 @@ export function CanvasStage({
         >
           <div
             ref={stageRef}
-            className="relative shadow-2xl shadow-black/60 ring-1 ring-white/10"
+            className="relative shadow-2xl shadow-black/60 ring-1 ring-[var(--bn-border)]"
             style={{
               ...canvasThemeStyle(canvas.theme, org.primaryColor),
               width: board.width,
@@ -495,7 +495,7 @@ export function CanvasStage({
                 >
                   {selected ? (
                     <div
-                      className="pointer-events-auto absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/20 bg-[var(--bn-surface-lowest)]/95 p-1 shadow-xl backdrop-blur-sm"
+                      className="pointer-events-auto absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/95 p-1 shadow-xl backdrop-blur-sm"
                       style={{ top: -46 }}
                       onPointerDown={(e) => {
                         e.stopPropagation();
@@ -655,8 +655,8 @@ function ToolbarBtn({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-full text-[var(--bn-on)] transition hover:bg-white/10",
-        danger && "text-rose-300 hover:bg-rose-500/20",
+        "inline-flex size-8 items-center justify-center rounded-full text-[var(--bn-on)] transition hover:bg-[var(--bn-hover)]",
+        danger && "text-rose-700 hover:bg-rose-500/20",
         active && "bg-[var(--bn-primary-container)]/25 text-[var(--bn-primary)]",
         className,
       )}
@@ -685,13 +685,13 @@ export function PageTemplatePicker({
     <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/85"
+        className="absolute inset-0 bg-[var(--bn-scrim)]"
         aria-label="Fechar"
         onClick={onClose}
       />
       <div
-        className="relative z-[1] max-h-[min(92svh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-[#2F3336] shadow-2xl max-sm:max-h-[92svh] max-sm:rounded-t-2xl max-sm:rounded-b-none"
-        style={{ backgroundColor: "#25282B" }}
+        className="relative z-[1] max-h-[min(92svh,720px)] w-full max-w-3xl overflow-hidden rounded-2xl border border-[var(--bn-border)] shadow-2xl max-sm:max-h-[92svh] max-sm:rounded-t-2xl max-sm:rounded-b-none"
+        style={{ backgroundColor: "var(--bn-surface-elevated)" }}
       >
         <div className="flex items-start justify-between gap-3 border-b border-[var(--bn-border)] px-4 py-3 sm:px-5 sm:py-4">
           <div>
@@ -709,7 +709,7 @@ export function PageTemplatePicker({
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-on-variant)] hover:bg-white/5"
+            className="shrink-0 rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
           >
             Fechar
           </button>
@@ -721,7 +721,7 @@ export function PageTemplatePicker({
               type="button"
               disabled={busy}
               onClick={() => onPick(tpl.id)}
-              className="group rounded-xl border border-[var(--bn-border)] bg-white/[0.03] p-3 text-left transition hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10 disabled:opacity-50"
+              className="group rounded-xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-3 text-left transition hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10 disabled:opacity-50"
             >
               <div
                 className="mb-3 h-16 overflow-hidden rounded-lg border border-[var(--bn-border)]"
@@ -730,7 +730,7 @@ export function PageTemplatePicker({
                 }}
               >
                 <div className="flex h-full items-end p-2">
-                  <span className="rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-[var(--bn-on)]/80">
+                  <span className="rounded bg-[var(--bn-scrim)] px-1.5 py-0.5 text-[10px] text-[var(--bn-on)]/80">
                     {tpl.vibe}
                   </span>
                 </div>
@@ -805,7 +805,7 @@ export function ElementLibrary({
               "flex-1 rounded-md px-1.5 py-1 text-[10px] font-semibold",
               tab === id
                 ? "bg-[var(--bn-primary-container)] text-white"
-                : "text-[var(--bn-on-variant)] hover:bg-white/5",
+                : "text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]",
             )}
           >
             {label}
@@ -826,7 +826,7 @@ export function ElementLibrary({
                     key={item.type}
                     type="button"
                     title={item.hint}
-                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10"
+                    className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-primary-container)]/10"
                     onClick={() =>
                       onAdd(
                         createLibraryElement(item.type, artboard, boardW, atY),
@@ -919,7 +919,7 @@ export function ElementLibrary({
                     key={preset.id}
                     type="button"
                     title={preset.hint}
-                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         "panel",
@@ -952,7 +952,7 @@ export function ElementLibrary({
                     key={preset.id}
                     type="button"
                     title={preset.hint}
-                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2 text-left hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         "button",
@@ -992,7 +992,7 @@ export function ElementLibrary({
                   <button
                     key={`${type}-${presetId}`}
                     type="button"
-                    className="rounded-lg border border-[var(--bn-border)] bg-white/[0.03] px-3 py-2 text-left text-sm text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40"
+                    className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2 text-left text-sm text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40"
                     onClick={() => {
                       const el = createStyledLibraryElement(
                         type,
@@ -1114,7 +1114,7 @@ export function ThemePanel({
                     "overflow-hidden rounded-lg border text-left transition",
                     active
                       ? "border-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/50"
-                      : "border-[var(--bn-border)] hover:border-white/25",
+                      : "border-[var(--bn-border)] hover:border-[var(--bn-border)]",
                   )}
                 >
                   <div
@@ -1213,7 +1213,7 @@ export function ThemePanel({
                 "rounded-lg border px-2.5 py-1.5 text-left",
                 activeTypo === preset.id
                   ? "border-[var(--bn-primary)]/60 bg-[var(--bn-primary-container)]/15"
-                  : "border-[var(--bn-border)] bg-white/[0.03] hover:border-white/25",
+                  : "border-[var(--bn-border)] bg-[var(--bn-hover)] hover:border-[var(--bn-border)]",
               )}
             >
               <span className="block text-xs text-[var(--bn-on)]">{preset.label}</span>
@@ -1371,7 +1371,7 @@ export function ElementInspector({
             type="button"
             disabled={uploading}
             onClick={() => setProp("mediaUrl", "")}
-            className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)] disabled:opacity-50"
+            className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-[var(--bn-border)] hover:text-[var(--bn-on)] disabled:opacity-50"
           >
             Remover mídia
           </button>
@@ -1380,7 +1380,7 @@ export function ElementInspector({
         <p className="text-[10px] leading-relaxed text-[var(--bn-muted)]">{hint}</p>
 
         {uploadError ? (
-          <p className="text-[11px] text-rose-300">{uploadError}</p>
+          <p className="text-[11px] text-rose-700">{uploadError}</p>
         ) : null}
 
         <details className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)]/40 px-2 py-1.5">
@@ -1435,7 +1435,7 @@ export function ElementInspector({
             Prévia no quadro
           </p>
           <div
-            className="relative w-full overflow-hidden rounded-lg border border-[var(--bn-border)] bg-black/40 shadow-inner"
+            className="relative w-full overflow-hidden rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-low)] shadow-inner"
             style={{ aspectRatio: frameAspect, maxHeight: "42vh" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1527,7 +1527,7 @@ export function ElementInspector({
             setProp("mediaPosX", 50);
             setProp("mediaPosY", 50);
           }}
-          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)]"
+          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-[var(--bn-border)] hover:text-[var(--bn-on)]"
         >
           Redefinir enquadramento
         </button>
@@ -1565,7 +1565,7 @@ export function ElementInspector({
                   "rounded-full border px-2 py-0.5 text-[10px]",
                   p.variant === preset.id
                     ? "border-[var(--bn-primary)] bg-[var(--bn-primary-container)]/20 text-[var(--bn-primary)]"
-                    : "border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)]",
+                    : "border-[var(--bn-border)] text-[var(--bn-on-variant)] hover:border-[var(--bn-border)] hover:text-[var(--bn-on)]",
                 )}
               >
                 {preset.label}
@@ -1871,14 +1871,14 @@ export function ElementInspector({
       <div className="mt-1 flex flex-col gap-1.5">
         <button
           type="button"
-          className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
+          className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
           onClick={onDuplicate}
         >
           Duplicar
         </button>
         <button
           type="button"
-          className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-xs text-rose-200 hover:bg-rose-500/10"
+          className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-xs text-[var(--bn-status-danger)] hover:bg-rose-500/10"
           onClick={onDelete}
         >
           Excluir
@@ -1966,7 +1966,7 @@ export function ElementInspector({
                   type="button"
                   title={align}
                   onClick={() => applyAlign(align)}
-                  className="rounded-md border border-[var(--bn-border)] px-1 py-1 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:bg-white/5"
+                  className="rounded-md border border-[var(--bn-border)] px-1 py-1 text-[11px] text-[var(--bn-on-variant)] hover:border-[var(--bn-border)] hover:bg-[var(--bn-hover)]"
                 >
                   {label}
                 </button>
@@ -1988,7 +1988,7 @@ export function ElementInspector({
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
+              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1999,7 +1999,7 @@ export function ElementInspector({
             </button>
             <button
               type="button"
-              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-white/5"
+              className="rounded-lg border border-[var(--bn-border)] px-2 py-1.5 text-xs text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

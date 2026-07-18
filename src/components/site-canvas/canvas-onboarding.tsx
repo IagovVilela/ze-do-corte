@@ -35,13 +35,13 @@ export function CanvasOnboarding({
 
   return (
     <div className="fixed inset-0 z-[85] flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-black/85" aria-hidden />
+      <div className="absolute inset-0 bg-[var(--bn-scrim)]" aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="canvas-onboard-title"
-        className="relative z-[1] flex max-h-[min(94svh,780px)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#2F3336] shadow-2xl max-sm:rounded-b-none"
-        style={{ backgroundColor: "#25282B" }}
+        className="relative z-[1] flex max-h-[min(94svh,780px)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[var(--bn-border)] shadow-2xl max-sm:rounded-b-none"
+        style={{ backgroundColor: "var(--bn-surface-elevated)" }}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--bn-border)] px-4 py-4 sm:px-5">
           <div>
@@ -70,7 +70,7 @@ export function CanvasOnboarding({
             type="button"
             disabled={busy}
             onClick={onSkip}
-            className="shrink-0 rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-muted)] transition hover:bg-white/5 hover:text-[var(--bn-on)]"
+            className="shrink-0 rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-xs text-[var(--bn-muted)] transition hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)]"
           >
             Pular
           </button>

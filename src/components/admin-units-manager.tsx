@@ -190,17 +190,17 @@ export function AdminUnitsManager({
   }
 
   const input =
-    "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+    "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
   return (
     <div className="space-y-8">
       {message ? (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-[var(--bn-status-ok)]">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-[var(--bn-status-danger)]">
           {error}
         </p>
       ) : null}
@@ -209,10 +209,10 @@ export function AdminUnitsManager({
         onSubmit={createUnit}
         className="glass-card space-y-4 rounded-2xl p-6"
       >
-        <h3 className="text-lg font-semibold text-white">Nova unidade</h3>
+        <h3 className="text-lg font-semibold text-[var(--bn-on)]">Nova unidade</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="text-zinc-400">Nome</span>
+            <span className="text-[var(--bn-muted)]">Nome</span>
             <input
               className={input}
               value={name}
@@ -222,7 +222,7 @@ export function AdminUnitsManager({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-zinc-400">Cidade</span>
+            <span className="text-[var(--bn-muted)]">Cidade</span>
             <input
               className={input}
               value={city}
@@ -230,7 +230,7 @@ export function AdminUnitsManager({
             />
           </label>
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="text-zinc-400">Endereço (linha)</span>
+            <span className="text-[var(--bn-muted)]">Endereço (linha)</span>
             <input
               className={input}
               value={addressLine}
@@ -250,7 +250,7 @@ export function AdminUnitsManager({
 
       <div className="glass-card overflow-hidden rounded-2xl">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-zinc-500">
+          <thead className="border-b border-[var(--bn-border)] bg-[var(--bn-hover)] text-xs uppercase tracking-wider text-[var(--bn-muted)]">
             <tr>
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3">Slug</th>
@@ -260,27 +260,27 @@ export function AdminUnitsManager({
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-zinc-200">
+          <tbody className="divide-y divide-white/5 text-[var(--bn-on-variant)]">
             {units.map((u) => (
               <Fragment key={u.id}>
                 <tr>
                   <td className="px-4 py-3 font-medium">{u.name}</td>
-                  <td className="px-4 py-3 text-zinc-400">{u.slug}</td>
-                  <td className="px-4 py-3 text-zinc-400">{u.city ?? "—"}</td>
-                  <td className="max-w-[140px] truncate px-4 py-3 text-zinc-400" title={u.phone ?? undefined}>
+                  <td className="px-4 py-3 text-[var(--bn-muted)]">{u.slug}</td>
+                  <td className="px-4 py-3 text-[var(--bn-muted)]">{u.city ?? "—"}</td>
+                  <td className="max-w-[140px] truncate px-4 py-3 text-[var(--bn-muted)]" title={u.phone ?? undefined}>
                     {u.phone ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
                         "rounded-full px-2 py-0.5 text-xs font-medium",
-                        u.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-zinc-500/20 text-zinc-400",
+                        u.isActive ? "bg-emerald-500/15 text-[var(--bn-status-ok)]" : "bg-[var(--bn-surface-container)] text-[var(--bn-muted)]",
                       )}
                     >
                       {u.isActive ? "Ativa" : "Inativa"}
                     </span>
                     {u.isDefault ? (
-                      <span className="ml-2 rounded-full bg-brand-500/20 px-2 py-0.5 text-xs text-brand-200">
+                      <span className="ml-2 rounded-full bg-[var(--bn-primary-container)]/15 px-2 py-0.5 text-xs text-[var(--bn-primary)]">
                         Padrão (site)
                       </span>
                     ) : null}
@@ -291,7 +291,7 @@ export function AdminUnitsManager({
                         <button
                           type="button"
                           disabled={pending}
-                          className="rounded-full border border-sky-500/35 px-3 py-1 text-xs text-sky-200 hover:bg-sky-500/10"
+                          className="rounded-full border border-sky-500/35 px-3 py-1 text-xs text-[var(--bn-primary)] hover:bg-sky-500/10"
                           onClick={() => (editingId === u.id ? closeEdit() : openEdit(u))}
                         >
                           {editingId === u.id ? "Fechar" : "Editar dados"}
@@ -300,7 +300,7 @@ export function AdminUnitsManager({
                       <button
                         type="button"
                         disabled={pending}
-                        className="rounded-full border border-white/15 px-3 py-1 text-xs hover:bg-white/5"
+                        className="rounded-full border border-[var(--bn-border)] px-3 py-1 text-xs hover:bg-[var(--bn-hover)]"
                         onClick={() => void patchUnit(u.id, { isActive: !u.isActive })}
                       >
                         {u.isActive ? "Desativar" : "Ativar"}
@@ -309,7 +309,7 @@ export function AdminUnitsManager({
                         <button
                           type="button"
                           disabled={pending}
-                          className="rounded-full border border-brand-500/40 px-3 py-1 text-xs text-brand-200 hover:bg-brand-500/10"
+                          className="rounded-full border border-brand-500/40 px-3 py-1 text-xs text-[var(--bn-primary)] hover:bg-brand-500/10"
                           onClick={() => void patchUnit(u.id, { isDefault: true })}
                         >
                           Tornar padrão
@@ -319,7 +319,7 @@ export function AdminUnitsManager({
                         <button
                           type="button"
                           disabled={pending}
-                          className="rounded-full border border-rose-500/40 px-3 py-1 text-xs text-rose-300 hover:bg-rose-500/10"
+                          className="rounded-full border border-rose-500/40 px-3 py-1 text-xs text-rose-700 hover:bg-rose-500/10"
                           onClick={() => void removeUnit(u.id)}
                         >
                           Excluir
@@ -329,15 +329,15 @@ export function AdminUnitsManager({
                   </td>
                 </tr>
                 {editingId === u.id && canEditUnitDetails ? (
-                  <tr className="bg-white/[0.03]">
+                  <tr className="bg-[var(--bn-hover)]">
                     <td colSpan={6} className="px-4 py-5">
-                      <p className="mb-4 text-xs text-zinc-500">
-                        Só o <strong className="text-zinc-400">proprietário</strong> altera estes campos.
+                      <p className="mb-4 text-xs text-[var(--bn-muted)]">
+                        Só o <strong className="text-[var(--bn-muted)]">proprietário</strong> altera estes campos.
                         Slug: identificador estável na URL (evite mudar depois de divulgar links).
                       </p>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <label className="space-y-1 text-sm">
-                          <span className="text-zinc-400">Nome</span>
+                          <span className="text-[var(--bn-muted)]">Nome</span>
                           <input
                             className={input}
                             value={draft.name}
@@ -345,7 +345,7 @@ export function AdminUnitsManager({
                           />
                         </label>
                         <label className="space-y-1 text-sm">
-                          <span className="text-zinc-400">Slug (URL)</span>
+                          <span className="text-[var(--bn-muted)]">Slug (URL)</span>
                           <input
                             className={input}
                             value={draft.slug}
@@ -354,7 +354,7 @@ export function AdminUnitsManager({
                           />
                         </label>
                         <label className="space-y-1 text-sm sm:col-span-2">
-                          <span className="text-zinc-400">Endereço (linha)</span>
+                          <span className="text-[var(--bn-muted)]">Endereço (linha)</span>
                           <input
                             className={input}
                             value={draft.addressLine}
@@ -363,7 +363,7 @@ export function AdminUnitsManager({
                           />
                         </label>
                         <label className="space-y-1 text-sm">
-                          <span className="text-zinc-400">Cidade</span>
+                          <span className="text-[var(--bn-muted)]">Cidade</span>
                           <input
                             className={input}
                             value={draft.city}
@@ -371,7 +371,7 @@ export function AdminUnitsManager({
                           />
                         </label>
                         <label className="space-y-1 text-sm">
-                          <span className="text-zinc-400">Telefone</span>
+                          <span className="text-[var(--bn-muted)]">Telefone</span>
                           <input
                             type="tel"
                             inputMode="numeric"
@@ -400,7 +400,7 @@ export function AdminUnitsManager({
                         <button
                           type="button"
                           disabled={pending}
-                          className="rounded-full border border-white/15 px-5 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                          className="rounded-full border border-[var(--bn-border)] px-5 py-2 text-sm text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
                           onClick={closeEdit}
                         >
                           Cancelar
