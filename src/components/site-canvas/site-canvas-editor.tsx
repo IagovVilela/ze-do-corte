@@ -582,7 +582,7 @@ export function SiteCanvasEditor({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]",
+        "relative flex min-w-0 flex-col overflow-hidden border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]",
         "h-[calc(100svh-5.5rem)] min-h-[520px] rounded-2xl",
         "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-14 max-lg:z-20 max-lg:h-auto max-lg:min-h-0 max-lg:rounded-none max-lg:border-x-0 max-lg:border-b-0",
       )}
@@ -953,7 +953,7 @@ export function SiteCanvasEditor({
         )}
       </nav>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 min-w-0 flex-1">
         <div className="hidden w-56 shrink-0 flex-col border-r border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] lg:flex">
           <div className="flex shrink-0 border-b border-[var(--bn-border)]">
             <button
@@ -997,7 +997,12 @@ export function SiteCanvasEditor({
           )}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 flex-col">
+        {/*
+          min-w-0 + overflow-hidden: igual à main, onde o CanvasStage era
+          filho direto do flex. Sem isso o zoom estoura a coluna e o pai
+          corta a arte (sem barra de rolagem horizontal).
+        */}
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <CanvasStage
             canvas={canvas}
             onChange={(next: SiteCanvasConfig) => setCanvas(next)}

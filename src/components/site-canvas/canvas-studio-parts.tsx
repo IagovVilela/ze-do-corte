@@ -369,7 +369,7 @@ export function CanvasStage({
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bn-surface-container)]">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--bn-surface-container)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-[var(--bn-border)] px-3 py-2 text-xs text-[var(--bn-on-variant)]">
         <span className="shrink-0">Zoom</span>
         <input
