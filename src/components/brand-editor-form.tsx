@@ -327,7 +327,7 @@ export function BrandEditorForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <AssetUploadField
             title="Logo"
-            hint="JPEG, PNG ou WebP até 6 MB."
+            hint="JPEG, PNG ou WebP até 20 MB."
             url={form.logoUrl}
             busy={uploading === "logo"}
             disabled={uploading !== null}
@@ -339,7 +339,7 @@ export function BrandEditorForm() {
           />
           <AssetUploadField
             title="Mídia padrão"
-            hint="Imagem (JPEG/PNG/WebP) ou vídeo (MP4/WebM)."
+            hint="Imagem até 20 MB (JPEG/PNG/WebP) ou vídeo até 40 MB (MP4/WebM)."
             url={form.heroMediaUrl}
             busy={uploading === "hero"}
             disabled={uploading !== null}

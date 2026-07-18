@@ -13,7 +13,8 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const IMAGE_MAX_BYTES = 6 * 1024 * 1024;
+/** Fotos de celular costumam passar de 6 MB; alinhado ao proxyClientMaxBodySize. */
+const IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 40 * 1024 * 1024;
 
 export async function POST(request: Request) {
@@ -33,11 +34,29 @@ export async function POST(request: Request) {
     );
   }
 
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  const hardCap = VIDEO_MAX_BYTES + 1024 * 1024; // margem multipart
+  if (contentLength > hardCap) {
+    return NextResponse.json(
+      {
+        message:
+          "Arquivo grande demais. Imagem até 20 MB; vídeo até 40 MB.",
+      },
+      { status: 413 },
+    );
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return NextResponse.json({ message: "Formulário inválido." }, { status: 400 });
+    return NextResponse.json(
+      {
+        message:
+          "Não foi possível ler o arquivo. Tente de novo com imagem até 20 MB (JPEG/PNG/WebP) ou vídeo até 40 MB (MP4/WebM).",
+      },
+      { status: 400 },
+    );
   }
 
   const kindRaw = String(form.get("kind") ?? "logo");
@@ -72,18 +91,31 @@ export async function POST(request: Request) {
       {
         message: CANVAS_VIDEO_MIME.has(mime)
           ? "Vídeo até 40 MB."
-          : "Imagem até 6 MB.",
+          : "Imagem até 20 MB.",
       },
       { status: 400 },
     );
   }
 
-  const uploaded = await uploadBrandAssetBuffer(
-    buf,
-    mime,
-    auth.access.organizationId,
-    kind,
-  );
+  let uploaded: Awaited<ReturnType<typeof uploadBrandAssetBuffer>>;
+  try {
+    uploaded = await uploadBrandAssetBuffer(
+      buf,
+      mime,
+      auth.access.organizationId,
+      kind,
+    );
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "Falha no upload.";
+    return NextResponse.json(
+      {
+        message: detail.includes("File size too large")
+          ? "Arquivo acima do limite da Cloudinary. Tente uma versão menor."
+          : "Não foi possível enviar a mídia. Tente outro arquivo.",
+      },
+      { status: 502 },
+    );
+  }
 
   // Mídia do canvas: só devolve a URL (não sobrescreve logo/hero da org).
   if (kind === "canvas") {

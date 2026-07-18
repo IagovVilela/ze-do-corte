@@ -6,6 +6,17 @@ const nextConfig: NextConfig = {
    * (erro "Can't resolve 'fs'" via instrumentation → prisma).
    */
   turbopack: {},
+  /**
+   * Upload de mídia do canvas/marca passa pelo `src/proxy.ts`. O default do Next
+   * corta o body em 10 MB e o FormData quebra com "Formulário inválido."
+   * Vídeo até 40 MB + overhead multipart → margem em 45 MB.
+   */
+  experimental: {
+    proxyClientMaxBodySize: "45mb",
+    serverActions: {
+      bodySizeLimit: "45mb",
+    },
+  },
   serverExternalPackages: [
     "@prisma/client",
     "@prisma/adapter-pg",

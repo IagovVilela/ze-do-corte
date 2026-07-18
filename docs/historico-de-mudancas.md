@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-17
 
+- **Upload de mídia — limite maior**: imagens do canvas/marca passam de 6 MB para **20 MB**; o proxy Next (`proxyClientMaxBodySize`) sobe para 45 MB (antes cortava em 10 MB e gerava “Formulário inválido” em fotos de celular ~16 MB). Upload Cloudinary por stream (sem base64). Vídeo continua até 40 MB.
 - **Canvas — prévia de enquadramento no mobile**: no sheet de edição, Zoom/posição da foto ganham **Prévia no quadro** sticky (mesma proporção e crop do elemento), porque o painel cobre o canvas no celular; sliders mais altos para toque; miniatura estática removida para não duplicar.
 - **WhatsApp — env de teste na Railway**: gravados `WHATSAPP_TOKEN_ENCRYPTION_KEY`, `META_WEBHOOK_VERIFY_TOKEN`, `META_GRAPH_VERSION=v21.0`. Checklist de teste (Meta + webhook + `/admin/whatsapp`) em [`docs/whatsapp-meta.md`](./whatsapp-meta.md). Falta o dono colar `META_APP_ID` / `META_APP_SECRET` quando criar o App Meta.
 - **Canvas — escalonar foto no quadro**: em Imagem/Mídia (e fundo do Hero), o inspector ganha **Zoom** (100–300%) + posição horizontal/vertical para enquadrar a foto sem cortar errado; props `mediaZoom`, `mediaPosX`, `mediaPosY`.

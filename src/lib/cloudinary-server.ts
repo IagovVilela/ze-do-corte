@@ -57,12 +57,13 @@ export async function uploadBrandAssetBuffer(
   ensureConfigured();
   const isVideo = mimeType.startsWith("video/");
   const resourceType = isVideo ? ("video" as const) : ("image" as const);
-  const dataUri = `data:${mimeType};base64,${buffer.toString("base64")}`;
+  const folder = `${BRAND_FOLDER}/${organizationId}`;
+  const publicId = `${kind}_${Date.now()}`;
 
   if (isVideo) {
-    const result = await cloudinary.uploader.upload(dataUri, {
-      folder: `${BRAND_FOLDER}/${organizationId}`,
-      public_id: `${kind}_${Date.now()}`,
+    const result = await uploadBufferToCloudinary(buffer, {
+      folder,
+      public_id: publicId,
       overwrite: false,
       resource_type: resourceType,
     });
@@ -84,14 +85,42 @@ export async function uploadBrandAssetBuffer(
             { width: 2400, height: 2400, crop: "limit" },
             { quality: "auto", fetch_format: "auto" },
           ];
-  const result = await cloudinary.uploader.upload(dataUri, {
-    folder: `${BRAND_FOLDER}/${organizationId}`,
-    public_id: `${kind}_${Date.now()}`,
+
+  const result = await uploadBufferToCloudinary(buffer, {
+    folder,
+    public_id: publicId,
     overwrite: false,
     transformation,
     resource_type: "image",
   });
   return { secureUrl: result.secure_url, publicId: result.public_id };
+}
+
+type CloudinaryUploadResult = {
+  secure_url: string;
+  public_id: string;
+};
+
+function uploadBufferToCloudinary(
+  buffer: Buffer,
+  options: Record<string, unknown>,
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error || !result?.secure_url || !result.public_id) {
+          reject(error ?? new Error("Falha no upload Cloudinary."));
+          return;
+        }
+        resolve({
+          secure_url: result.secure_url,
+          public_id: result.public_id,
+        });
+      },
+    );
+    stream.end(buffer);
+  });
 }
 
 export async function destroyCloudinaryImage(publicId: string | null | undefined): Promise<void> {
