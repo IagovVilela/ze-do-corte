@@ -106,6 +106,12 @@ const elementPropsSchema = z
     align: z.enum(["left", "center", "right"]).optional(),
     href: z.string().max(300).optional(),
     mediaUrl: z.string().max(800).optional(),
+    /** Zoom da foto dentro do quadro (1 = 100%, até 3 = 300%). */
+    mediaZoom: z.number().min(1).max(3).optional(),
+    /** Posição horizontal do enquadramento (0–100). */
+    mediaPosX: z.number().min(0).max(100).optional(),
+    /** Posição vertical do enquadramento (0–100). */
+    mediaPosY: z.number().min(0).max(100).optional(),
     opacity: z.number().min(0).max(1).optional(),
     showPitch: z.boolean().optional(),
     schedule: z

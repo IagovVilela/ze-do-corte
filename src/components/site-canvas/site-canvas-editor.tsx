@@ -581,10 +581,14 @@ export function SiteCanvasEditor({
 
   return (
     <div
+      data-canvas-studio
       className={cn(
         "relative flex min-w-0 flex-col overflow-hidden border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]",
         "h-[calc(100svh-5.5rem)] min-h-[520px] rounded-2xl",
-        "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-14 max-lg:z-20 max-lg:h-auto max-lg:min-h-0 max-lg:rounded-none max-lg:border-x-0 max-lg:border-b-0",
+        // Mobile fullscreen: top = header do painel + safe-area (iPhone).
+        // Sem isso o studio invade o topo e, no Safari, pinta por cima do menu.
+        "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:h-auto max-lg:min-h-0 max-lg:rounded-none max-lg:border-x-0 max-lg:border-b-0",
+        "max-lg:top-[var(--admin-mobile-top,3.5rem)]",
       )}
     >
       <PageTemplatePicker

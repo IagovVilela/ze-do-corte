@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import type { StaffAccess } from "@/lib/staff-access";
@@ -148,6 +148,7 @@ export function AdminPanelNav({
   const router = useRouter();
   const name = sessionDisplayName(access);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const topBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -160,11 +161,35 @@ export function AdminPanelNav({
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    // iOS: o canvas do site é `position:fixed` e às vezes pinta por cima do drawer.
+    document.documentElement.dataset.adminNavOpen = "1";
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      delete document.documentElement.dataset.adminNavOpen;
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const syncTop = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height);
+      document.documentElement.style.setProperty(
+        "--admin-mobile-top",
+        `${h}px`,
+      );
+    };
+    syncTop();
+    const ro = new ResizeObserver(syncTop);
+    ro.observe(el);
+    window.addEventListener("orientationchange", syncTop);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", syncTop);
+      document.documentElement.style.removeProperty("--admin-mobile-top");
+    };
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -291,7 +316,17 @@ export function AdminPanelNav({
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--bn-border)] bg-[var(--bn-bg)]/90 px-4 py-3 backdrop-blur pt-[max(0.75rem,env(safe-area-inset-top))] lg:hidden">
+      {/*
+        Altura real do topo mobile (safe-area do iPhone inclusa).
+        O canvas fullscreen usa --admin-mobile-top para não invadir este header.
+      */}
+      <div
+        ref={topBarRef}
+        className="sticky top-0 z-40 flex items-center gap-3 border-b border-[var(--bn-border)] bg-[var(--bn-bg)] px-4 py-3 lg:hidden"
+        style={{
+          paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
+        }}
+      >
         <button
           type="button"
           className="inline-flex size-11 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on)] transition hover:bg-white/5"
@@ -308,7 +343,7 @@ export function AdminPanelNav({
       {mobileOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-[90] bg-black/70 lg:hidden"
           aria-label="Fechar menu"
           onClick={() => setMobileOpen(false)}
         />
@@ -316,7 +351,8 @@ export function AdminPanelNav({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-[100] flex w-60 flex-col border-r border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] transition-transform duration-200 lg:translate-x-0",
+          "pt-[env(safe-area-inset-top,0px)]",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

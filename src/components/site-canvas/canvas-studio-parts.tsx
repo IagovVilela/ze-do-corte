@@ -1323,28 +1323,21 @@ export function ElementInspector({
     return (
       <div className="space-y-2">
         <p className="text-xs font-medium text-[var(--bn-on-variant)]">{title}</p>
-        {url ? (
-          isVideo ? (
-            <video
-              src={url}
-              className="max-h-28 w-full rounded-lg border border-[var(--bn-border)] object-cover"
-              muted
-              playsInline
-              preload="metadata"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={url}
-              alt=""
-              className="max-h-28 w-full rounded-lg border border-[var(--bn-border)] object-cover"
-            />
-          )
-        ) : (
+        {url && !isVideo ? renderMediaCropControls() : null}
+        {url && isVideo ? (
+          <video
+            src={url}
+            className="max-h-28 w-full rounded-lg border border-[var(--bn-border)] object-cover"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : null}
+        {!url ? (
           <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-[var(--bn-border)] text-[11px] text-[var(--bn-muted)]">
             Nenhum arquivo
           </div>
-        )}
+        ) : null}
 
         <input
           ref={fileInputRef}
@@ -1397,13 +1390,147 @@ export function ElementInspector({
           <label className="mt-2 block text-xs text-[var(--bn-on-variant)]">
             URL
             <input
-              className={input}
+              className={cn(input, "mt-1")}
               value={url}
-              onChange={(e) => setProp("mediaUrl", e.target.value)}
               placeholder="https://…"
+              onChange={(e) => setProp("mediaUrl", e.target.value)}
             />
           </label>
         </details>
+
+        {url && isVideo ? (
+          <p className="text-[10px] text-[var(--bn-muted)]">
+            Zoom e posição valem para fotos. Em vídeo, o quadro usa cobertura
+            automática.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderMediaCropControls() {
+    const url = p.mediaUrl ?? "";
+    const zoom = typeof p.mediaZoom === "number" ? p.mediaZoom : 1;
+    const posX = typeof p.mediaPosX === "number" ? p.mediaPosX : 50;
+    const posY = typeof p.mediaPosY === "number" ? p.mediaPosY : 50;
+    const frameAspect =
+      element.frame.w > 0 && element.frame.h > 0
+        ? `${element.frame.w} / ${element.frame.h}`
+        : "16 / 10";
+    const mediaStyle = {
+      objectFit: "cover" as const,
+      objectPosition: `${posX}% ${posY}%`,
+      transform: zoom > 1 ? `scale(${zoom})` : undefined,
+      transformOrigin: `${posX}% ${posY}%`,
+    };
+
+    return (
+      <div className="space-y-3 rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-container)]/50 p-3">
+        {/*
+          Prévia sticky: no mobile o sheet cobre o canvas; o usuário precisa
+          ver o enquadramento aqui enquanto mexe nos sliders.
+        */}
+        <div className="sticky top-0 z-[1] -mx-1 space-y-1.5 bg-[var(--bn-surface-container)] px-1 pb-2 pt-0.5 lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:pb-0">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bn-muted)]">
+            Prévia no quadro
+          </p>
+          <div
+            className="relative w-full overflow-hidden rounded-lg border border-[var(--bn-border)] bg-black/40 shadow-inner"
+            style={{ aspectRatio: frameAspect, maxHeight: "42vh" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt=""
+              className="absolute inset-0 h-full w-full"
+              style={mediaStyle}
+              draggable={false}
+            />
+          </div>
+          <p className="text-[10px] leading-relaxed text-[var(--bn-muted)] lg:hidden">
+            Ajuste zoom e posição abaixo — a prévia atualiza na hora (o canvas
+            fica atrás deste painel no celular).
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-[var(--bn-on)]">
+            Enquadramento da foto
+          </p>
+          <p className="mt-0.5 hidden text-[10px] leading-relaxed text-[var(--bn-muted)] lg:block">
+            Aumente o zoom e arraste os eixos para mostrar a parte certa da
+            imagem no quadro.
+          </p>
+        </div>
+
+        <label className="block text-[11px] text-[var(--bn-on-variant)]">
+          <span className="flex items-center justify-between gap-2">
+            Zoom
+            <span className="tabular-nums text-[var(--bn-muted)]">
+              {Math.round(zoom * 100)}%
+            </span>
+          </span>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.05}
+            value={zoom}
+            className="mt-1.5 h-8 w-full accent-[var(--bn-primary-container)]"
+            aria-label="Zoom da foto"
+            onChange={(e) => setProp("mediaZoom", Number(e.target.value))}
+          />
+        </label>
+
+        <label className="block text-[11px] text-[var(--bn-on-variant)]">
+          <span className="flex items-center justify-between gap-2">
+            Posição horizontal
+            <span className="tabular-nums text-[var(--bn-muted)]">
+              {Math.round(posX)}%
+            </span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={posX}
+            className="mt-1.5 h-8 w-full accent-[var(--bn-primary-container)]"
+            aria-label="Posição horizontal da foto"
+            onChange={(e) => setProp("mediaPosX", Number(e.target.value))}
+          />
+        </label>
+
+        <label className="block text-[11px] text-[var(--bn-on-variant)]">
+          <span className="flex items-center justify-between gap-2">
+            Posição vertical
+            <span className="tabular-nums text-[var(--bn-muted)]">
+              {Math.round(posY)}%
+            </span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={posY}
+            className="mt-1.5 h-8 w-full accent-[var(--bn-primary-container)]"
+            aria-label="Posição vertical da foto"
+            onChange={(e) => setProp("mediaPosY", Number(e.target.value))}
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={() => {
+            setProp("mediaZoom", 1);
+            setProp("mediaPosX", 50);
+            setProp("mediaPosY", 50);
+          }}
+          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-1.5 text-[11px] text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)]"
+        >
+          Redefinir enquadramento
+        </button>
       </div>
     );
   }

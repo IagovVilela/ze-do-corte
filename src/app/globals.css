@@ -226,6 +226,16 @@ input[type="checkbox"]:indeterminate {
   color: var(--bn-on);
 }
 
+/* Painel admin mobile: topo (header + notch) e drawer acima do canvas fixed */
+:root {
+  --admin-mobile-top: 3.5rem;
+}
+
+html[data-admin-nav-open="1"] [data-canvas-studio] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Marketplace /explorar — Onyx & Azure (Stitch) */
 .explore-onyx {
   background-color: #10131a;

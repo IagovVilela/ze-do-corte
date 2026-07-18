@@ -24,13 +24,31 @@ function CanvasMediaFill({
   url,
   className,
   absolute,
+  zoom = 1,
+  posX = 50,
+  posY = 50,
 }: {
   url: string;
   className?: string;
   absolute?: boolean;
+  /** 1–3: escala da mídia dentro do quadro. */
+  zoom?: number;
+  /** 0–100: ponto de interesse horizontal. */
+  posX?: number;
+  /** 0–100: ponto de interesse vertical. */
+  posY?: number;
 }) {
+  const z = Math.min(3, Math.max(1, zoom));
+  const x = Math.min(100, Math.max(0, posX));
+  const y = Math.min(100, Math.max(0, posY));
+  const mediaStyle = {
+    objectFit: "cover" as const,
+    objectPosition: `${x}% ${y}%`,
+    transform: z > 1 ? `scale(${z})` : undefined,
+    transformOrigin: `${x}% ${y}%`,
+  };
   const cls = cn(
-    absolute ? "absolute inset-0 h-full w-full object-cover" : "h-full w-full object-cover",
+    absolute ? "absolute inset-0 h-full w-full" : "h-full w-full",
     className,
   );
   if (isCanvasVideoUrl(url)) {
@@ -38,6 +56,7 @@ function CanvasMediaFill({
       <video
         src={url}
         className={cls}
+        style={mediaStyle}
         autoPlay
         muted
         loop
@@ -47,8 +66,9 @@ function CanvasMediaFill({
     );
   }
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={url} alt="" className={cls} />;
+  return <img src={url} alt="" className={cls} style={mediaStyle} />;
 }
+
 
 type UnitInfo = {
   id: string;
@@ -207,7 +227,12 @@ export function CanvasElementView({
           }}
         >
           {p.mediaUrl ? (
-            <CanvasMediaFill url={p.mediaUrl} />
+            <CanvasMediaFill
+              url={p.mediaUrl}
+              zoom={p.mediaZoom}
+              posX={p.mediaPosX}
+              posY={p.mediaPosY}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs opacity-50">
               Imagem / vídeo
@@ -381,7 +406,13 @@ export function CanvasElementView({
           }}
         >
           {p.mediaUrl ? (
-            <CanvasMediaFill url={p.mediaUrl} absolute />
+            <CanvasMediaFill
+              url={p.mediaUrl}
+              absolute
+              zoom={p.mediaZoom}
+              posX={p.mediaPosX}
+              posY={p.mediaPosY}
+            />
           ) : null}
           <div
             className="absolute inset-0"
