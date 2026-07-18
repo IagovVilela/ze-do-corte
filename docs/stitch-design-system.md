@@ -83,10 +83,10 @@ Language: **pt-BR**.
 ## Admin chrome (P1)
 
 - Layout: `src/app/admin/(panel)/layout.tsx` — `.brand-onyx` + Montserrat + `AdminThemeProvider` (`data-theme`)
-- Tema: `src/lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx` — dark (default) / light
-- Nav: `admin-panel-nav.tsx` — grupos Operação / Marca & presença / Financeiro / Conta; ativo com primary BN; toggle de tema
+- Tema: `src/lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx` — dark (default) / light; **casa do tema** em `/admin/configuracao` (Aparência)
+- Nav: `admin-panel-nav.tsx` — grupos Operação / Marca & presença / Financeiro / Conta; ativo com primary BN; Configuração visível a todos
 - Page headers: `admin-page-header.tsx` (sentence case, LabelCaps eyebrow)
-- Onboarding: `onboarding-checklist.tsx` (UI BN; lógica `computeOnboardingChecklist` inalterada)
+- Onboarding: `onboarding-checklist.tsx` (UI BN; ocultável via `onboardingJson.hideChecklist` em Configuração)
 - KPI envelopes: superfície `border --bn-border` + `bg --bn-surface-elevated` (sem `.glass-card` na visão geral)
 - **Canvas studio** (`/admin/site`): chrome BN (segue tema do painel); conteúdo desenhado = tema do tenant (`canvasThemeStyle` / `brand-*`)
 

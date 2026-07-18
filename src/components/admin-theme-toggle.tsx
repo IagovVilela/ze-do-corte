@@ -11,6 +11,10 @@ type Props = {
   compact?: boolean;
 };
 
+/**
+ * Seletor de tema do painel — usado em Configurações.
+ * Mantido exportado para reuso; a nav não exibe mais o atalho.
+ */
 export function AdminThemeToggle({ className, compact }: Props) {
   const { theme, toggleTheme } = useAdminTheme();
   const isLight = theme === "light";

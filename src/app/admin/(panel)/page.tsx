@@ -74,7 +74,21 @@ export default async function AdminPage({
           })
         : Promise.resolve([] as { id: string; name: string }[]),
       access.role === "OWNER" || access.permissions.manageBranding
-        ? computeOnboardingChecklist(access)
+        ? prisma.organization
+            .findUnique({
+              where: { id: access.organizationId },
+              select: { onboardingJson: true },
+            })
+            .then((org) => {
+              const flags =
+                org?.onboardingJson &&
+                typeof org.onboardingJson === "object" &&
+                !Array.isArray(org.onboardingJson)
+                  ? (org.onboardingJson as Record<string, unknown>)
+                  : {};
+              if (flags.hideChecklist === true) return [];
+              return computeOnboardingChecklist(access);
+            })
         : Promise.resolve([]),
     ]);
 

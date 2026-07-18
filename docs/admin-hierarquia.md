@@ -21,7 +21,9 @@ Funcionários (**STAFF**) **precisam** de **`unitId`** obrigatório. Sem unidade
 | **Equipe** — criar/editar/remover | Todos os papéis (incl. outro proprietário) | Só **funcionários** | Não |
 | **Equipe** — expediente (`workWeekJson`) de cada **STAFF** | Sim | Sim (só funcionários que pode alterar) | Não |
 | **Serviços** — editar preços/descrição/duração | Sim | Sim | Não |
-| **Configuração** (textos `BarbershopSetting`) | Sim | Não | Não |
+| **Configuração** (`/admin/configuracao` — aparência) | Sim | Sim | Sim |
+| **Configuração** — funções (marketplace, WhatsApp bot, Asaas, checklist) | Sim | Não | Não |
+| **Configuração** — textos `BarbershopSetting` | Sim | Não | Não |
 | **Meu perfil** (`/admin/perfil` — nome, telefone, foto, senha) | Sim | Sim | Sim |
 | **Meu expediente** (`/admin/expediente` — `workWeekJson`) | Não | Não | Sim |
 

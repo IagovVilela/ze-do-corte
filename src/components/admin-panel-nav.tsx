@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
-import { AdminThemeToggle } from "@/components/admin-theme-toggle";
 import type { StaffAccess } from "@/lib/staff-access";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +130,7 @@ function buildGroups(
         {
           href: "/admin/configuracao",
           label: "Configuração",
-          show: access.permissions.manageSettings,
+          show: true,
         },
       ],
     },
@@ -273,7 +272,6 @@ export function AdminPanelNav({
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-[var(--bn-border)] p-4">
-        <AdminThemeToggle />
         <Link
           href="/admin/perfil"
           className="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-[var(--bn-hover)]"
@@ -340,7 +338,6 @@ export function AdminPanelNav({
         <span className="font-brand-headline flex-1 text-sm font-bold text-[var(--bn-on)]">
           Painel
         </span>
-        <AdminThemeToggle compact />
       </div>
 
       {mobileOpen ? (

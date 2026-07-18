@@ -28,7 +28,7 @@ export function AdminSettingsManager({ presets: initial }: Props) {
       });
       const payload = (await res.json()) as { message?: string };
       if (!res.ok) throw new Error(payload.message ?? "Erro ao guardar.");
-      setMessage("Configuração guardada.");
+      setMessage("Textos salvos.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro.");
     } finally {
@@ -40,7 +40,7 @@ export function AdminSettingsManager({ presets: initial }: Props) {
     "mt-1 w-full min-h-[100px] rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
   return (
-    <form onSubmit={save} className="glass-card space-y-6 rounded-2xl p-6">
+    <form onSubmit={save} className="space-y-6">
       {message ? (
         <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-[var(--bn-status-ok)]">
           {message}
@@ -72,9 +72,9 @@ export function AdminSettingsManager({ presets: initial }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-brand-500 px-6 py-2.5 text-sm font-semibold text-zinc-950 disabled:opacity-50"
+        className="rounded-full bg-[var(--bn-primary-container)] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
       >
-        Guardar tudo
+        Guardar textos
       </button>
     </form>
   );

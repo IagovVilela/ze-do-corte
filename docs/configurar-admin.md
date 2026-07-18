@@ -91,7 +91,7 @@ Reservas feitas pelo **site** ficam com **Profissional** em branco até um **pro
 | Unidades | `/admin/unidades` | Unidade padrão = onde o site público agenda |
 | Equipe | `/admin/equipe` | Membros, papéis e senhas iniciais; por funcionário, bio e visibilidade na home |
 | Serviços | `/admin/servicos` | Preços e durações |
-| Configuração | `/admin/configuracao` | Textos institucionais (só **proprietário**) |
+| Configuração | `/admin/configuracao` | Aparência (todos); funções e textos (só **proprietário**) |
 
 Use **Sair** na barra do painel para encerrar a sessão (`POST /api/auth/logout`).
 

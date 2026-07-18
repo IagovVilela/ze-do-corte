@@ -52,7 +52,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
 | `/admin/expediente` | `src/app/admin/(panel)/expediente/page.tsx` | Expediente semanal do **STAFF** (`admin-work-schedule-form.tsx`) |
 | `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
-| `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Textos `BarbershopSetting` (só proprietário) |
+| `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Preferências: aparência (todos), toggles de funções (OWNER/branding), textos `BarbershopSetting` (OWNER) |
 | `/admin/login` | `src/app/admin/login/page.tsx` | Login premium do painel (`admin-login-form.tsx` + `auth/`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
 | Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
@@ -147,7 +147,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
 | Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
 | Tokens corporativos BN | `lib/brand-tokens.ts` (`BN` / `BN_LIGHT`) + classe `.brand-onyx` em `globals.css` (marketing/auth/planos/**chrome admin**; light via `data-theme`) |
-| Tema do painel | `lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx` |
+| Tema do painel | `lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx`, `admin-config-appearance.tsx` |
 | Nav pública (landing + explorar + planos) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
 | Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx` — assets em `public/images/landing/` |
 | Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |
@@ -162,7 +162,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
 | Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |
