@@ -1409,13 +1409,14 @@ export function ElementInspector({
   }
 
   function renderMediaCropControls() {
+    const el = element!;
     const url = p.mediaUrl ?? "";
     const zoom = typeof p.mediaZoom === "number" ? p.mediaZoom : 1;
     const posX = typeof p.mediaPosX === "number" ? p.mediaPosX : 50;
     const posY = typeof p.mediaPosY === "number" ? p.mediaPosY : 50;
     const frameAspect =
-      element.frame.w > 0 && element.frame.h > 0
-        ? `${element.frame.w} / ${element.frame.h}`
+      el.frame.w > 0 && el.frame.h > 0
+        ? `${el.frame.w} / ${el.frame.h}`
         : "16 / 10";
     const mediaStyle = {
       objectFit: "cover" as const,
