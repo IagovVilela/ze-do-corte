@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { DashboardPoint } from "@/lib/types";
 
 type Props = {
@@ -40,9 +41,9 @@ function VolumeTooltip({
   const value = Number(payload[0]?.value ?? 0);
   const day = payload[0]?.payload?.dateLabel ?? label;
   return (
-    <div className="rounded-xl border border-white/20 bg-[#11131a] px-3 py-2 text-sm shadow-lg">
-      <p className="font-medium text-zinc-100">{day}</p>
-      <p className="mt-1 text-zinc-300">
+    <div className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-chart-tooltip-bg)] px-3 py-2 text-sm shadow-lg">
+      <p className="font-medium text-[var(--bn-on)]">{day}</p>
+      <p className="mt-1 text-[var(--bn-on-variant)]">
         {value === 1 ? `1 ${unitSingular}` : `${value} ${unitPlural}`}
       </p>
     </div>
@@ -58,11 +59,13 @@ export function DashboardVolumeArea({
   stroke = "#3b82f6",
   gradientId = "volArea",
 }: Props) {
+  const chart = useAdminChartColors();
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <h3 className="text-lg font-medium tracking-tight text-white">{title}</h3>
-      <p className="mt-1 text-sm text-zinc-400">
-        <span className="text-zinc-300">{subtitle}</span>
+    <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-5">
+      <h3 className="text-lg font-medium tracking-tight text-[var(--bn-on)]">{title}</h3>
+      <p className="mt-1 text-sm text-[var(--bn-muted)]">
+        <span className="text-[var(--bn-on-variant)]">{subtitle}</span>
       </p>
       <div className="mt-5 h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -73,15 +76,15 @@ export function DashboardVolumeArea({
                 <stop offset="100%" stopColor={stroke} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
             <XAxis
               dataKey="dateLabel"
-              tick={{ fill: "#a1a1aa", fontSize: 11 }}
+              tick={{ fill: chart.tick, fontSize: 11 }}
               interval="preserveStartEnd"
             />
             <YAxis
               allowDecimals={false}
-              tick={{ fill: "#a1a1aa", fontSize: 11 }}
+              tick={{ fill: chart.tick, fontSize: 11 }}
               width={36}
             />
             <Tooltip

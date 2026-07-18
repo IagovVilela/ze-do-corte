@@ -37,25 +37,25 @@ export function AdminSettingsManager({ presets: initial }: Props) {
   }
 
   const ta =
-    "mt-1 w-full min-h-[100px] rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+    "mt-1 w-full min-h-[100px] rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
   return (
     <form onSubmit={save} className="glass-card space-y-6 rounded-2xl p-6">
       {message ? (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-[var(--bn-status-ok)]">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-[var(--bn-status-danger)]">
           {error}
         </p>
       ) : null}
 
       {presets.map((p, i) => (
         <label key={p.key} className="block text-sm">
-          <span className="font-medium text-zinc-200">{p.label}</span>
-          <p className="text-xs text-zinc-500">{p.hint}</p>
+          <span className="font-medium text-[var(--bn-on-variant)]">{p.label}</span>
+          <p className="text-xs text-[var(--bn-muted)]">{p.hint}</p>
           <textarea
             className={ta}
             value={p.value}

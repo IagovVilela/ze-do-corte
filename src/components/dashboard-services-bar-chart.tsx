@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { DashboardServiceBar } from "@/lib/types";
 
 const BAR_COLORS = [
@@ -32,15 +33,17 @@ type Props = {
 };
 
 export function DashboardServicesBarChart({ data, periodLabel }: Props) {
+  const chart = useAdminChartColors();
   const chartHeight = Math.max(220, Math.min(420, data.length * 42 + 72));
 
   return (
     <div className="glass-card rounded-2xl border border-fuchsia-500/10 p-5">
-      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-fuchsia-200/90">
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-[var(--bn-primary)]">
         Ranking de serviços
       </h3>
-      <p className="mt-1 text-sm text-zinc-400">
-        Quantidade no período: <span className="text-zinc-300">{periodLabel}</span>
+      <p className="mt-1 text-sm text-[var(--bn-muted)]">
+        Quantidade no período:{" "}
+        <span className="text-[var(--bn-on-variant)]">{periodLabel}</span>
       </p>
       <div className="mt-5" style={{ height: data.length ? chartHeight : 200 }}>
         {data.length > 0 ? (
@@ -52,33 +55,30 @@ export function DashboardServicesBarChart({ data, periodLabel }: Props) {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.08)"
+                stroke={chart.grid}
                 horizontal={false}
               />
               <XAxis
                 type="number"
                 allowDecimals={false}
-                tick={{ fill: "#a1a1aa", fontSize: 11 }}
+                tick={{ fill: chart.tick, fontSize: 11 }}
               />
               <YAxis
                 type="category"
                 dataKey="name"
                 width={140}
-                tick={{ fill: "#d4d4d8", fontSize: 11 }}
+                tick={{ fill: chart.tick, fontSize: 11 }}
                 tickLine={false}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                axisLine={{ stroke: chart.grid }}
               />
               <Tooltip
                 contentStyle={{
                   borderRadius: "0.75rem",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  background: "#11131a",
+                  border: chart.tooltipBorder,
+                  background: chart.tooltipBg,
+                  color: chart.tooltipColor,
                 }}
-                labelStyle={{ color: "#f4f4f5" }}
-                formatter={(value) => [
-                  `${value ?? 0} agend.`,
-                  "Total",
-                ]}
+                formatter={(value) => [`${value ?? 0} agend.`, "Total"]}
               />
               <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={24}>
                 {data.map((_, i) => (
@@ -88,7 +88,7 @@ export function DashboardServicesBarChart({ data, periodLabel }: Props) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
+          <div className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-[var(--bn-border)] bg-[var(--bn-hover)] text-sm text-[var(--bn-muted)]">
             Sem agendamentos por serviço neste período (por data de início). Experimente outro
             intervalo nas abas acima.
           </div>

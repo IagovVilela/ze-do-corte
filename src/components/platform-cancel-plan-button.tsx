@@ -80,34 +80,34 @@ export function PlatformCancelPlanButton({ planStatus, planCancelAt }: Props) {
 
   if (planStatus === "CANCELLED") {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-[var(--bn-muted)]">
         Plano cancelado. Para voltar, assine um plano abaixo.
       </p>
     );
   }
 
   return (
-    <div className="space-y-3 border-t border-white/10 pt-5">
-      <p className="text-sm font-medium text-zinc-200">Cancelar plano</p>
+    <div className="space-y-3 border-t border-[var(--bn-border)] pt-5">
+      <p className="text-sm font-medium text-[var(--bn-on-variant)]">Cancelar plano</p>
       {cancelScheduled ? (
         <>
-          <p className="text-sm text-amber-200/90">
+          <p className="text-sm text-[var(--bn-status-warn)]/90">
             Cancelamento agendado. Acesso até{" "}
-            <span className="font-medium text-amber-100">{cancelAtLabel}</span>
+            <span className="font-medium text-[var(--bn-status-warn)]">{cancelAtLabel}</span>
             . Depois o status fica Cancelado e a barbearia sai do marketplace.
           </p>
           <button
             type="button"
             disabled={loading}
             onClick={() => void undoCancel()}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-200 transition hover:bg-white/5 disabled:opacity-60"
+            className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)] disabled:opacity-60"
           >
             {loading ? "Aguarde…" : "Desfazer cancelamento"}
           </button>
         </>
       ) : canCancel ? (
         <>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[var(--bn-muted)]">
             {planStatus === "ACTIVE"
               ? "No plano ativo, paramos as cobranças e você usa até o fim do período pago."
               : "Trial ou pagamento pendente: o status muda para Cancelado na hora."}
@@ -116,7 +116,7 @@ export function PlatformCancelPlanButton({ planStatus, planCancelAt }: Props) {
             type="button"
             disabled={loading}
             onClick={() => void cancelPlan()}
-            className="rounded-full border border-rose-500/40 px-4 py-2 text-sm text-rose-200 transition hover:bg-rose-500/10 disabled:opacity-60"
+            className="rounded-full border border-rose-500/40 px-4 py-2 text-sm text-[var(--bn-status-danger)] transition hover:bg-rose-500/10 disabled:opacity-60"
           >
             {loading
               ? "Cancelando…"
@@ -126,7 +126,7 @@ export function PlatformCancelPlanButton({ planStatus, planCancelAt }: Props) {
           </button>
         </>
       ) : null}
-      {message ? <p className="text-xs text-zinc-400">{message}</p> : null}
+      {message ? <p className="text-xs text-[var(--bn-muted)]">{message}</p> : null}
     </div>
   );
 }

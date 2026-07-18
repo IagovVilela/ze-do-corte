@@ -40,12 +40,12 @@ export function DashboardPeriodTabs({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--bn-muted)]">
           Período dos gráficos
         </p>
       </div>
       <div
-        className="flex flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-zinc-950/50 p-1"
+        className="flex flex-wrap gap-1.5 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] p-1"
         role="tablist"
         aria-label="Período do dashboard"
       >
@@ -61,8 +61,8 @@ export function DashboardPeriodTabs({
               className={cn(
                 "rounded-xl px-3.5 py-2 text-sm font-medium transition",
                 active
-                  ? "bg-brand-500/25 text-brand-100 ring-1 ring-brand-500/40"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200",
+                  ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/40"
+                  : "text-[var(--bn-muted)] hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on-variant)]",
               )}
             >
               {label}

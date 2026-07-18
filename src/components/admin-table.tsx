@@ -37,9 +37,9 @@ type Props = {
 };
 
 const statusStyles: Record<AppointmentRow["status"], string> = {
-  CONFIRMED: "bg-emerald-500/15 text-emerald-300",
-  COMPLETED: "bg-blue-500/15 text-blue-300",
-  CANCELLED: "bg-rose-500/15 text-rose-300",
+  CONFIRMED: "bg-emerald-500/15 text-[var(--bn-status-ok)]",
+  COMPLETED: "bg-blue-500/15 text-[var(--bn-status-info)]",
+  CANCELLED: "bg-rose-500/15 text-[var(--bn-status-danger)]",
 };
 
 const statusLabel: Record<AppointmentRow["status"], string> = {
@@ -49,7 +49,7 @@ const statusLabel: Record<AppointmentRow["status"], string> = {
 };
 
 const selectClass =
-  "max-w-[200px] rounded-lg border border-white/15 bg-zinc-950/80 px-2 py-1.5 text-xs text-zinc-100 outline-none focus:border-brand-500/50 disabled:opacity-50";
+  "max-w-[200px] rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-2 py-1.5 text-xs text-[var(--bn-on)] outline-none focus:border-brand-500/50 disabled:opacity-50";
 
 const PAYMENT_METHODS = [
   { value: "", label: "Método" },
@@ -93,7 +93,7 @@ function MarkPaidControls({
             paymentMethod: method.trim() || null,
           })
         }
-        className="rounded-lg bg-emerald-600/80 px-2 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+        className="rounded-lg bg-emerald-600/80 px-2 py-1.5 text-xs font-medium text-[var(--bn-on)] hover:bg-emerald-600"
       >
         Marcar como pago
       </button>
@@ -110,7 +110,7 @@ function ClientManageLinkControls({
   const token = item.clientManageToken?.trim();
   if (!token) {
     return (
-      <span className="text-[11px] text-zinc-500" title="Reservas antigas ou sem link">
+      <span className="text-[11px] text-[var(--bn-muted)]" title="Reservas antigas ou sem link">
         Sem link
       </span>
     );
@@ -151,7 +151,7 @@ function ClientManageLinkControls({
       <button
         type="button"
         onClick={() => void copyLink()}
-        className="rounded-lg border border-white/15 px-2 py-1 text-[11px] text-zinc-300 hover:border-brand-500/40 hover:text-brand-200"
+        className="rounded-lg border border-[var(--bn-border)] px-2 py-1 text-[11px] text-[var(--bn-on-variant)] hover:border-brand-500/40 hover:text-[var(--bn-primary)]"
         title="Copiar link /minha-reserva para reenviar ao cliente"
       >
         {copied ? "Copiado!" : "Copiar link"}
@@ -160,7 +160,7 @@ function ClientManageLinkControls({
         <button
           type="button"
           onClick={openWhatsApp}
-          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-700 hover:bg-emerald-500/10"
           title="Abrir WhatsApp com o link da reserva"
         >
           WhatsApp
@@ -190,7 +190,7 @@ function RescheduleControls({
         type="button"
         disabled={saving}
         onClick={() => setOpen(true)}
-        className="rounded-lg border border-brand-500/30 px-2 py-1 text-[11px] text-brand-200 hover:bg-brand-500/10"
+        className="rounded-lg border border-brand-500/30 px-2 py-1 text-[11px] text-[var(--bn-primary)] hover:bg-brand-500/10"
       >
         Remarcar
       </button>
@@ -198,7 +198,7 @@ function RescheduleControls({
   }
 
   return (
-    <div className="flex max-w-[200px] flex-col gap-1.5 rounded-lg border border-white/10 bg-zinc-950/60 p-2">
+    <div className="flex max-w-[200px] flex-col gap-1.5 rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/60 p-2">
       <input
         type="date"
         className={selectClass}
@@ -231,7 +231,7 @@ function RescheduleControls({
           type="button"
           disabled={saving}
           onClick={() => setOpen(false)}
-          className="rounded-lg border border-white/15 px-2 py-1 text-[11px] text-zinc-400"
+          className="rounded-lg border border-[var(--bn-border)] px-2 py-1 text-[11px] text-[var(--bn-muted)]"
         >
           X
         </button>
@@ -302,21 +302,21 @@ export function AdminTable({
       transition={{ duration: 0.5, delay: 0.2 }}
       className="glass-card overflow-hidden rounded-3xl"
     >
-      <div className="border-b border-white/10 px-5 py-4">
-        <h3 className="font-display text-lg font-normal uppercase tracking-wide text-white">
+      <div className="border-b border-[var(--bn-border)] px-5 py-4">
+        <h3 className="font-display text-lg font-normal uppercase tracking-wide text-[var(--bn-on)]">
           {title}
         </h3>
         {subtitle ? (
-          <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--bn-muted)]">{subtitle}</p>
         ) : null}
         {error ? (
-          <p className="mt-2 text-sm text-rose-300">{error}</p>
+          <p className="mt-2 text-sm text-rose-700">{error}</p>
         ) : null}
       </div>
       {filtersSlot}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1040px]">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-[0.22em] text-zinc-400">
+          <thead className="bg-[var(--bn-hover)] text-left text-xs uppercase tracking-[0.22em] text-[var(--bn-muted)]">
             <tr>
               <th className="px-5 py-4">Cliente</th>
               <th className="px-5 py-4">Serviço</th>
@@ -333,13 +333,13 @@ export function AdminTable({
               ) : null}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-sm text-zinc-200">
+          <tbody className="divide-y divide-white/5 text-sm text-[var(--bn-on-variant)]">
             {appointments.map((item) => (
-              <tr key={item.id} className="transition-colors hover:bg-white/5">
+              <tr key={item.id} className="transition-colors hover:bg-[var(--bn-hover)]">
                 <td className="px-5 py-4 font-medium">{item.clientName}</td>
                 <td className="px-5 py-4">{item.serviceName}</td>
                 {showUnitColumn ? (
-                  <td className="px-5 py-4 text-zinc-400">
+                  <td className="px-5 py-4 text-[var(--bn-muted)]">
                     {item.unitName ?? "—"}
                   </td>
                 ) : null}
@@ -363,7 +363,7 @@ export function AdminTable({
                         ))}
                       </select>
                     ) : (
-                      <span className="text-zinc-400">
+                      <span className="text-[var(--bn-muted)]">
                         {item.assignedStaffLabel ?? "—"}
                       </span>
                     )}
@@ -377,7 +377,7 @@ export function AdminTable({
                 <td className="px-5 py-4">
                   {format(new Date(item.startsAt), "HH:mm")}
                 </td>
-                <td className="px-5 py-4 text-zinc-300">{item.clientPhone}</td>
+                <td className="px-5 py-4 text-[var(--bn-on-variant)]">{item.clientPhone}</td>
                 <td className="px-5 py-4">
                   <div className="flex flex-col gap-2">
                     <span
@@ -401,7 +401,7 @@ export function AdminTable({
                               status: "COMPLETED",
                             })
                           }
-                          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+                          className="rounded-lg border border-emerald-500/30 px-2 py-1 text-[11px] text-emerald-700 hover:bg-emerald-500/10"
                         >
                           Concluir
                         </button>
@@ -419,7 +419,7 @@ export function AdminTable({
                               });
                             }
                           }}
-                          className="rounded-lg border border-rose-500/30 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-500/10"
+                          className="rounded-lg border border-rose-500/30 px-2 py-1 text-[11px] text-rose-700 hover:bg-rose-500/10"
                         >
                           Cancelar
                         </button>
@@ -430,12 +430,12 @@ export function AdminTable({
                 {canManagePayment ? (
                   <td className="px-5 py-4 align-top">
                     {item.status === "CANCELLED" ? (
-                      <span className="text-zinc-500">—</span>
+                      <span className="text-[var(--bn-muted)]">—</span>
                     ) : canRecordPaymentForRow(item.status) ? (
                       <div className="flex max-w-[220px] flex-col gap-2">
                         {item.paidAt ? (
                           <>
-                            <span className="text-xs text-emerald-300/90">
+                            <span className="text-xs text-emerald-700/90">
                               Pago{" "}
                               {format(new Date(item.paidAt), "dd/MM HH:mm", {
                                 locale: ptBR,
@@ -472,7 +472,7 @@ export function AdminTable({
                               onClick={() =>
                                 void patchAppointment(item.id, { paidAt: null })
                               }
-                              className="rounded-lg border border-white/15 px-2 py-1 text-left text-xs text-zinc-400 hover:border-rose-500/30 hover:text-rose-300"
+                              className="rounded-lg border border-[var(--bn-border)] px-2 py-1 text-left text-xs text-[var(--bn-muted)] hover:border-rose-500/30 hover:text-rose-700"
                             >
                               Limpar pagamento
                             </button>
@@ -486,7 +486,7 @@ export function AdminTable({
                         )}
                       </div>
                     ) : (
-                      <span className="text-zinc-500">—</span>
+                      <span className="text-[var(--bn-muted)]">—</span>
                     )}
                   </td>
                 ) : null}

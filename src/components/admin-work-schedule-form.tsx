@@ -121,20 +121,20 @@ export function AdminWorkScheduleForm({
   }
 
   const selectClass =
-    "mt-1 w-full rounded-xl border border-white/15 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30";
+    "mt-1 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30";
   const selectClassCompact =
-    "mt-0.5 w-full min-w-[4.5rem] max-w-[6.5rem] rounded-lg border border-white/15 bg-zinc-950/90 px-1.5 py-1 text-xs tabular-nums text-zinc-100 outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30";
+    "mt-0.5 w-full min-w-[4.5rem] max-w-[6.5rem] rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/90 px-1.5 py-1 text-xs tabular-nums text-[var(--bn-on)] outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30";
 
   return (
     <div
       className={cn(
-        "glass-card border border-white/10 shadow-lg shadow-black/20",
+        "glass-card border border-[var(--bn-border)] shadow-lg shadow-black/20",
         isCompact
           ? "w-full max-w-full rounded-2xl p-4"
           : "max-w-2xl rounded-3xl p-6",
       )}
     >
-      <p className={cn("text-zinc-400", isCompact ? "text-xs leading-relaxed" : "text-sm")}>
+      <p className={cn("text-[var(--bn-muted)]", isCompact ? "text-xs leading-relaxed" : "text-sm")}>
         {isManaged
           ? usesCustom
             ? `Os clientes só veem horários dentro do expediente de ${managedStaffLabel ?? "este profissional"} quando o escolhem no agendamento.`
@@ -148,7 +148,7 @@ export function AdminWorkScheduleForm({
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[320px] border-collapse text-left text-xs">
             <thead>
-              <tr className="border-b border-white/10 text-[11px] uppercase tracking-wide text-zinc-500">
+              <tr className="border-b border-[var(--bn-border)] text-[11px] uppercase tracking-wide text-[var(--bn-muted)]">
                 <th className="py-2 pr-2 font-medium">Dia</th>
                 <th className="w-10 px-1 text-center font-medium" title="Folga">
                   Folga
@@ -157,16 +157,16 @@ export function AdminWorkScheduleForm({
                 <th className="px-1 font-medium">Fim</th>
               </tr>
             </thead>
-            <tbody className="text-zinc-200">
+            <tbody className="text-[var(--bn-on-variant)]">
               {WORK_WEEK_DAY_KEYS.map((key) => {
                 const day = week[key];
                 const label = WORK_WEEK_LABELS_PT[key];
 
                 if (key === "0") {
                   return (
-                    <tr key={key} className="border-b border-white/[0.06]">
+                    <tr key={key} className="border-b border-[var(--bn-border)]">
                       <td className="py-2 pr-2 font-medium">{label}</td>
-                      <td colSpan={3} className="py-2 text-zinc-500">
+                      <td colSpan={3} className="py-2 text-[var(--bn-muted)]">
                         Fechado (barbearia)
                       </td>
                     </tr>
@@ -180,7 +180,7 @@ export function AdminWorkScheduleForm({
                   : [];
 
                 return (
-                  <tr key={key} className="border-b border-white/[0.06]">
+                  <tr key={key} className="border-b border-[var(--bn-border)]">
                     <td className="py-1.5 pr-2 align-middle font-medium">{label}</td>
                     <td className="px-1 text-center align-middle">
                       <input
@@ -224,13 +224,13 @@ export function AdminWorkScheduleForm({
                           }}
                         >
                           {starts.map((t) => (
-                            <option key={t} value={t} className="bg-zinc-900">
+                            <option key={t} value={t} className="bg-[var(--bn-surface-low)]">
                               {t}
                             </option>
                           ))}
                         </select>
                       ) : (
-                        <span className="text-zinc-600">—</span>
+                        <span className="text-[var(--bn-muted)]">—</span>
                       )}
                     </td>
                     <td className="px-1 align-middle">
@@ -247,13 +247,13 @@ export function AdminWorkScheduleForm({
                           }
                         >
                           {endOptions.map((t) => (
-                            <option key={t} value={t} className="bg-zinc-900">
+                            <option key={t} value={t} className="bg-[var(--bn-surface-low)]">
                               {t}
                             </option>
                           ))}
                         </select>
                       ) : (
-                        <span className="text-zinc-600">—</span>
+                        <span className="text-[var(--bn-muted)]">—</span>
                       )}
                     </td>
                   </tr>
@@ -261,7 +261,7 @@ export function AdminWorkScheduleForm({
               })}
             </tbody>
           </table>
-          <p className="mt-2 text-[11px] text-zinc-600">
+          <p className="mt-2 text-[11px] text-[var(--bn-muted)]">
             Fim = último instante em que um atendimento pode terminar.
           </p>
         </div>
@@ -275,11 +275,11 @@ export function AdminWorkScheduleForm({
               return (
                 <div
                   key={key}
-                  className="rounded-2xl border border-white/[0.06] bg-zinc-950/40 px-4 py-3"
+                  className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-zinc-200">{label}</span>
-                    <span className="text-xs text-zinc-500">Fechado (barbearia)</span>
+                    <span className="text-sm font-medium text-[var(--bn-on-variant)]">{label}</span>
+                    <span className="text-xs text-[var(--bn-muted)]">Fechado (barbearia)</span>
                   </div>
                 </div>
               );
@@ -293,11 +293,11 @@ export function AdminWorkScheduleForm({
             return (
               <div
                 key={key}
-                className="rounded-2xl border border-white/[0.06] bg-zinc-950/40 px-4 py-3"
+                className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-4 py-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-zinc-200">{label}</span>
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-400">
+                  <span className="text-sm font-medium text-[var(--bn-on-variant)]">{label}</span>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs text-[var(--bn-muted)]">
                     <input
                       type="checkbox"
                       checked={!open}
@@ -323,7 +323,7 @@ export function AdminWorkScheduleForm({
 
                 {open ? (
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <label className="block text-xs text-zinc-500">
+                    <label className="block text-xs text-[var(--bn-muted)]">
                       Início
                       <select
                         className={cn(selectClass, "tabular-nums")}
@@ -343,13 +343,13 @@ export function AdminWorkScheduleForm({
                         }}
                       >
                         {starts.map((t) => (
-                          <option key={t} value={t} className="bg-zinc-900">
+                          <option key={t} value={t} className="bg-[var(--bn-surface-low)]">
                             {t}
                           </option>
                         ))}
                       </select>
                     </label>
-                    <label className="block text-xs text-zinc-500">
+                    <label className="block text-xs text-[var(--bn-muted)]">
                       Fim (último horário em que um atendimento pode terminar)
                       <select
                         className={cn(selectClass, "tabular-nums")}
@@ -363,7 +363,7 @@ export function AdminWorkScheduleForm({
                         }
                       >
                         {endOptions.map((t) => (
-                          <option key={t} value={t} className="bg-zinc-900">
+                          <option key={t} value={t} className="bg-[var(--bn-surface-low)]">
                             {t}
                           </option>
                         ))}
@@ -378,12 +378,12 @@ export function AdminWorkScheduleForm({
       )}
 
       {error ? (
-        <p className="mt-4 text-sm text-rose-300" role="alert">
+        <p className="mt-4 text-sm text-rose-700" role="alert">
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="mt-4 text-sm text-emerald-300" role="status">
+        <p className="mt-4 text-sm text-emerald-700" role="status">
           {message}
         </p>
       ) : null}
@@ -410,7 +410,7 @@ export function AdminWorkScheduleForm({
           disabled={saving || !usesCustom}
           onClick={() => void removeCustomization()}
           className={cn(
-            "rounded-full border border-white/15 text-zinc-300 transition hover:bg-white/5 disabled:opacity-40",
+            "rounded-full border border-[var(--bn-border)] text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)] disabled:opacity-40",
             isCompact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm",
           )}
         >
@@ -421,7 +421,7 @@ export function AdminWorkScheduleForm({
           disabled={saving}
           onClick={applyDefaultsToForm}
           className={cn(
-            "rounded-full border border-white/10 text-zinc-400 transition hover:bg-white/5",
+            "rounded-full border border-[var(--bn-border)] text-[var(--bn-muted)] transition hover:bg-[var(--bn-hover)]",
             isCompact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm",
           )}
         >

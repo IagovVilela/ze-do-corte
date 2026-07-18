@@ -55,7 +55,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Textos `BarbershopSetting` (só proprietário) |
 | `/admin/login` | `src/app/admin/login/page.tsx` | Login premium do painel (`admin-login-form.tsx` + `auth/`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
-| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` |
+| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
 
 ## API Routes
 
@@ -146,7 +146,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
 | Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
-| Tokens corporativos BN | `lib/brand-tokens.ts` + classe `.brand-onyx` em `globals.css` (marketing/auth/planos/**chrome admin**) |
+| Tokens corporativos BN | `lib/brand-tokens.ts` (`BN` / `BN_LIGHT`) + classe `.brand-onyx` em `globals.css` (marketing/auth/planos/**chrome admin**; light via `data-theme`) |
+| Tema do painel | `lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx` |
 | Nav pública (landing + explorar + planos) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
 | Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx` — assets em `public/images/landing/` |
 | Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |

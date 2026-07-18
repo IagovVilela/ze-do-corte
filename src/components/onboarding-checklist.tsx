@@ -112,7 +112,7 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
   const progress = Math.round((doneCount / items.length) * 100);
 
   return (
-    <section className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5 shadow-[0_0_40px_-24px_rgba(59,130,246,0.35)]">
+    <section className="bn-card rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold tracking-[0.1em] text-[var(--bn-primary)] uppercase sm:text-[12px]">
@@ -152,8 +152,8 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
               className={cn(
                 "flex min-h-11 items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm transition",
                 item.done
-                  ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-100"
-                  : "border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 text-[var(--bn-on)] hover:border-[var(--bn-primary)]/35 hover:bg-[var(--bn-primary-container)]/10",
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--bn-status-ok)]"
+                  : "border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] text-[var(--bn-on)] hover:border-[var(--bn-primary)]/35 hover:bg-[var(--bn-primary-container)]/10",
               )}
             >
               <span className="flex items-center gap-2.5">
@@ -162,7 +162,7 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
                   className={cn(
                     "flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
                     item.done
-                      ? "bg-emerald-500/20 text-emerald-200"
+                      ? "bg-emerald-500/20 text-[var(--bn-status-ok)]"
                       : "bg-[var(--bn-surface-container)] text-[var(--bn-muted)]",
                   )}
                 >

@@ -28,7 +28,7 @@ type LogRow = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-white/10 bg-zinc-950/50 px-4 py-2.5 text-sm text-zinc-100 outline-none focus:border-brand-500/60";
+  "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-4 py-2.5 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
 export function WhatsAppAdminPanel() {
   const [loading, setLoading] = useState(true);
@@ -155,7 +155,7 @@ export function WhatsAppAdminPanel() {
   }
 
   if (loading) {
-    return <p className="text-sm text-zinc-400">Carregando WhatsApp…</p>;
+    return <p className="text-sm text-[var(--bn-muted)]">Carregando WhatsApp…</p>;
   }
 
   const botReady =
@@ -169,23 +169,23 @@ export function WhatsAppAdminPanel() {
         <p
           className={
             error
-              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200"
-              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200"
+              ? "rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-[var(--bn-status-danger)]"
+              : "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-[var(--bn-status-ok)]"
           }
         >
           {error || message}
         </p>
       )}
 
-      <section className="rounded-2xl border border-brand-500/25 bg-brand-500/5 p-5 text-sm leading-relaxed text-zinc-300">
-        <h2 className="font-display text-lg text-white">O que você precisa saber</h2>
+      <section className="rounded-2xl border border-brand-500/25 bg-brand-500/5 p-5 text-sm leading-relaxed text-[var(--bn-on-variant)]">
+        <h2 className="font-display text-lg text-[var(--bn-on)]">O que você precisa saber</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5">
           <li>
-            <strong className="font-medium text-zinc-100">Número da barbearia</strong> —
+            <strong className="font-medium text-[var(--bn-on)]">Número da barbearia</strong> —
             é o que você já usa no dia a dia. Serve para o botão “WhatsApp” do site.
           </li>
           <li>
-            <strong className="font-medium text-zinc-100">Assistente que agenda sozinho</strong>{" "}
+            <strong className="font-medium text-[var(--bn-on)]">Assistente que agenda sozinho</strong>{" "}
             — precisa de WhatsApp Business oficial (Meta). Se você ainda não tem
             isso, use só o número; o suporte Barbernegon pode ajudar a ligar o
             assistente depois.
@@ -196,8 +196,8 @@ export function WhatsAppAdminPanel() {
       <div
         className={
           botReady
-            ? "rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
-            : "rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-zinc-400"
+            ? "rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--bn-status-ok)]"
+            : "rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] px-4 py-3 text-sm text-[var(--bn-muted)]"
         }
       >
         {botReady
@@ -207,13 +207,13 @@ export function WhatsAppAdminPanel() {
             : "Cadastre o número da barbearia para aparecer no site."}
       </div>
 
-      <form onSubmit={onSave} className="space-y-5 rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
+      <form onSubmit={onSave} className="space-y-5 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 p-5">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--bn-muted)]">
             Passo 1 — o essencial
           </p>
           <label className="mt-2 block space-y-1.5 text-sm">
-            <span className="text-zinc-200">Número de WhatsApp da barbearia</span>
+            <span className="text-[var(--bn-on-variant)]">Número de WhatsApp da barbearia</span>
             <input
               className={inputClass}
               type="tel"
@@ -225,17 +225,17 @@ export function WhatsAppAdminPanel() {
               placeholder="(11) 99999-0000"
               autoComplete="tel"
             />
-            <span className="block text-xs text-zinc-500">
+            <span className="block text-xs text-[var(--bn-muted)]">
               Com DDD. A máscara formata enquanto você digita.
             </span>
           </label>
         </div>
 
-        <div className="border-t border-white/10 pt-5">
+        <div className="border-t border-[var(--bn-border)] pt-5">
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="text-left text-sm text-brand-300 hover:underline"
+            className="text-left text-sm text-[var(--bn-primary)] hover:underline"
           >
             {showAdvanced
               ? "Ocultar opções do assistente"
@@ -244,19 +244,19 @@ export function WhatsAppAdminPanel() {
 
           {showAdvanced ? (
             <div className="mt-4 space-y-4">
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-[var(--bn-muted)]">
                 Esses códigos vêm do painel WhatsApp Business (Meta). Na dúvida,
                 peça ao suporte Barbernegon — não invente esses valores.
               </p>
 
               {!platform?.webhookConfigured || !platform?.encryptionConfigured ? (
-                <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-[var(--bn-status-warn)]">
                   A plataforma ainda está preparando o assistente. Fale com o
                   suporte antes de preencher os códigos.
                 </p>
               ) : null}
 
-              <label className="flex items-center gap-2 text-sm text-zinc-200">
+              <label className="flex items-center gap-2 text-sm text-[var(--bn-on-variant)]">
                 <input
                   type="checkbox"
                   checked={botEnabled}
@@ -266,7 +266,7 @@ export function WhatsAppAdminPanel() {
               </label>
 
               <label className="block space-y-1.5 text-sm">
-                <span className="text-zinc-300">Código do número (Phone number ID)</span>
+                <span className="text-[var(--bn-on-variant)]">Código do número (Phone number ID)</span>
                 <input
                   className={inputClass}
                   value={phoneNumberId}
@@ -275,7 +275,7 @@ export function WhatsAppAdminPanel() {
                 />
               </label>
               <label className="block space-y-1.5 text-sm">
-                <span className="text-zinc-300">Senha de acesso (Access token)</span>
+                <span className="text-[var(--bn-on-variant)]">Senha de acesso (Access token)</span>
                 <input
                   type="password"
                   className={inputClass}
@@ -290,7 +290,7 @@ export function WhatsAppAdminPanel() {
                 />
               </label>
               <label className="block space-y-1.5 text-sm">
-                <span className="text-zinc-400">ID da conta Business (opcional)</span>
+                <span className="text-[var(--bn-muted)]">ID da conta Business (opcional)</span>
                 <input
                   className={inputClass}
                   value={wabaId}
@@ -313,29 +313,29 @@ export function WhatsAppAdminPanel() {
             type="button"
             disabled={saving || !connection?.hasAccessToken}
             onClick={() => void onDisconnect()}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 disabled:opacity-40"
+            className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)] disabled:opacity-40"
           >
             Desligar assistente
           </button>
         </div>
       </form>
 
-      <section className="rounded-2xl border border-white/10 bg-zinc-950/40 p-5">
-        <h2 className="font-display text-lg text-white">Mensagens recentes</h2>
+      <section className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 p-5">
+        <h2 className="font-display text-lg text-[var(--bn-on)]">Mensagens recentes</h2>
         {logs.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">Nenhum envio ainda.</p>
+          <p className="mt-2 text-sm text-[var(--bn-muted)]">Nenhum envio ainda.</p>
         ) : (
-          <ul className="mt-3 space-y-2 text-xs text-zinc-400">
+          <ul className="mt-3 space-y-2 text-xs text-[var(--bn-muted)]">
             {logs.map((l) => (
               <li
                 key={l.id}
-                className="rounded-lg border border-white/5 bg-black/20 px-3 py-2"
+                className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2"
               >
-                <span className="text-zinc-200">{l.kind}</span> · {l.status} ·{" "}
+                <span className="text-[var(--bn-on-variant)]">{l.kind}</span> · {l.status} ·{" "}
                 {l.waUserPhone} ·{" "}
                 {new Date(l.createdAt).toLocaleString("pt-BR")}
                 {l.errorMessage ? (
-                  <span className="mt-1 block text-rose-300">{l.errorMessage}</span>
+                  <span className="mt-1 block text-rose-700">{l.errorMessage}</span>
                 ) : null}
               </li>
             ))}

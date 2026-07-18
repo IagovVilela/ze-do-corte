@@ -33,7 +33,7 @@ export function CanvasConfirmModal({
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/85"
+        className="absolute inset-0 bg-[var(--bn-scrim)]"
         aria-label="Fechar"
         disabled={busy}
         onClick={onCancel}
@@ -42,8 +42,7 @@ export function CanvasConfirmModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="canvas-confirm-title"
-        className="relative z-[1] w-full max-w-md rounded-xl border border-[#2F3336] p-5 shadow-2xl max-sm:rounded-b-none"
-        style={{ backgroundColor: "#25282B" }}
+        className="relative z-[1] w-full max-w-md rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5 shadow-2xl max-sm:rounded-b-none"
       >
         <h2
           id="canvas-confirm-title"
@@ -61,7 +60,7 @@ export function CanvasConfirmModal({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="rounded-lg border border-[var(--bn-border)] px-4 py-2.5 text-sm font-medium text-[var(--bn-on-variant)] transition hover:bg-white/5 disabled:opacity-50"
+            className="rounded-lg border border-[var(--bn-border)] px-4 py-2.5 text-sm font-medium text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)] disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -72,7 +71,7 @@ export function CanvasConfirmModal({
             className={cn(
               "rounded-lg px-4 py-2.5 text-sm font-bold transition disabled:opacity-50",
               tone === "danger"
-                ? "bg-rose-500/90 text-white hover:bg-rose-500"
+                ? "bg-rose-600 text-white hover:bg-rose-500"
                 : "bg-[var(--bn-primary-container)] text-white hover:brightness-110",
             )}
           >

@@ -208,7 +208,7 @@ input[type="checkbox"]:indeterminate {
   }
 }
 
-/* Barbernegon corporativo — Onyx + Electric Blue (marketing / auth / planos) */
+/* Barbernegon corporativo — Onyx + Electric Blue (marketing / auth / planos / admin) */
 .brand-onyx {
   --bn-bg: #10131a;
   --bn-surface-elevated: #25282b;
@@ -222,8 +222,74 @@ input[type="checkbox"]:indeterminate {
   --bn-primary: #adc6ff;
   --bn-primary-container: #3b82f6;
   --bn-outline: #8c909f;
+  --bn-hover: rgba(255, 255, 255, 0.05);
+  --bn-scrim: rgba(0, 0, 0, 0.7);
+  --bn-chart-tick: #a1a1aa;
+  --bn-chart-grid: rgba(255, 255, 255, 0.08);
+  --bn-chart-tooltip-bg: #11131a;
+  --bn-status-ok: #6ee7b7;
+  --bn-status-info: #93c5fd;
+  --bn-status-warn: #fcd34d;
+  --bn-status-danger: #fda4af;
   background-color: var(--bn-bg);
   color: var(--bn-on);
+  color-scheme: dark;
+}
+
+/* Painel admin — modo claro (só chrome autenticado com data-theme) */
+.brand-onyx[data-theme="light"] {
+  --bn-bg: #f4f6fa;
+  --bn-surface-elevated: #ffffff;
+  --bn-surface-container: #eef1f6;
+  --bn-surface-lowest: #ffffff;
+  --bn-surface-low: #e8ecf3;
+  --bn-on: #10131a;
+  --bn-on-variant: #3f4555;
+  --bn-muted: #667085;
+  --bn-border: #d5dbe7;
+  --bn-primary: #2563eb;
+  --bn-primary-container: #3b82f6;
+  --bn-outline: #8c909f;
+  --bn-hover: rgba(16, 19, 26, 0.05);
+  --bn-scrim: rgba(16, 19, 26, 0.45);
+  --bn-chart-tick: #667085;
+  --bn-chart-grid: rgba(16, 19, 26, 0.08);
+  --bn-chart-tooltip-bg: #ffffff;
+  --bn-status-ok: #047857;
+  --bn-status-info: #1d4ed8;
+  --bn-status-warn: #b45309;
+  --bn-status-danger: #b91c1c;
+  color-scheme: light;
+}
+
+.brand-onyx[data-theme="light"] .glass-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(238, 241, 246, 0.88)
+  );
+  border-color: var(--bn-border);
+  box-shadow: 0 1px 2px rgba(16, 19, 26, 0.04), 0 8px 24px rgba(16, 19, 26, 0.06);
+}
+
+/* Cards elevados no modo claro (KPI / checklist) */
+.brand-onyx[data-theme="light"] .bn-card {
+  box-shadow: 0 1px 2px rgba(16, 19, 26, 0.04), 0 6px 16px rgba(16, 19, 26, 0.05);
+}
+
+.brand-onyx[data-theme="light"] input[type="checkbox"] {
+  border-color: rgba(16, 19, 26, 0.22);
+  background: #ffffff;
+}
+
+.brand-onyx[data-theme="light"] input[type="checkbox"]:hover:not(:disabled) {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.brand-onyx[data-theme="light"] input[type="checkbox"]:checked {
+  border-color: rgba(37, 99, 235, 0.8);
+  background-color: var(--bn-primary-container);
 }
 
 /* Painel admin mobile: topo (header + notch) e drawer acima do canvas fixed */

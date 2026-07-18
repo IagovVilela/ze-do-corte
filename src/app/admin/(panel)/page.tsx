@@ -113,7 +113,7 @@ export default async function AdminPage({
       : undefined;
 
   const kpiSurface =
-    "rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5";
+    "bn-card rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-5";
 
   return (
     <main className="flex-1">
@@ -183,7 +183,7 @@ export default async function AdminPage({
                   <p className="text-sm text-[var(--bn-muted)]">
                     Recebido (período gráficos)
                   </p>
-                  <p className="mt-2 text-xl font-semibold text-emerald-300">
+                  <p className="mt-2 text-xl font-semibold text-emerald-700">
                     R$ {metrics.receivedInPeriod.toFixed(2)}
                   </p>
                   <p className="mt-1 text-xs text-[var(--bn-muted)]">{periodLabel}</p>

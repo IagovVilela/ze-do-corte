@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { DashboardRevenuePoint } from "@/lib/types";
 
 type Props = {
@@ -18,31 +19,33 @@ type Props = {
 };
 
 export function DashboardRevenueLine({ data, periodLabel }: Props) {
+  const chart = useAdminChartColors();
   const maxAmt = Math.max(...data.map((d) => d.amount), 1);
   const hasAny = data.some((d) => d.amount > 0);
 
   return (
-    <div className="glass-card rounded-2xl border border-sky-500/15 p-5 shadow-[0_0_40px_-20px_rgba(59, 130, 246,0.35)]">
-      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-sky-200/90">
+    <div className="glass-card rounded-2xl border border-sky-500/15 p-5 shadow-[0_0_40px_-20px_rgba(59,130,246,0.35)]">
+      <h3 className="font-display text-xl font-normal uppercase tracking-wide text-[var(--bn-primary)]">
         Recebimentos
       </h3>
-      <p className="mt-1 text-sm text-zinc-400">
-        Soma por <span className="text-zinc-300">data do pagamento</span> registrada (após
-        &quot;Marcar como pago&quot;) — inclui reservas <span className="text-zinc-300">confirmadas</span>{" "}
-        ou <span className="text-zinc-300">concluídas</span> · {periodLabel}
+      <p className="mt-1 text-sm text-[var(--bn-muted)]">
+        Soma por <span className="text-[var(--bn-on-variant)]">data do pagamento</span> registrada
+        (após &quot;Marcar como pago&quot;) — inclui reservas{" "}
+        <span className="text-[var(--bn-on-variant)]">confirmadas</span> ou{" "}
+        <span className="text-[var(--bn-on-variant)]">concluídas</span> · {periodLabel}
       </p>
       <div className="mt-5 h-56">
         {hasAny ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
               <XAxis
                 dataKey="dateLabel"
-                tick={{ fill: "#a1a1aa", fontSize: 10 }}
+                tick={{ fill: chart.tick, fontSize: 10 }}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fill: "#a1a1aa", fontSize: 10 }}
+                tick={{ fill: chart.tick, fontSize: 10 }}
                 width={44}
                 domain={[0, Math.ceil(maxAmt * 1.1)]}
                 tickFormatter={(v) => `R$${v}`}
@@ -50,8 +53,9 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
               <Tooltip
                 contentStyle={{
                   borderRadius: "0.75rem",
-                  border: "1px solid rgba(59, 130, 246,0.28)",
-                  background: "#11131a",
+                  border: chart.tooltipBorder,
+                  background: chart.tooltipBg,
+                  color: chart.tooltipColor,
                 }}
                 formatter={(value) => [
                   `R$ ${Number(value ?? 0).toFixed(2)}`,
@@ -69,10 +73,10 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
+          <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-[var(--bn-border)] bg-[var(--bn-hover)] text-sm text-[var(--bn-muted)]">
             Sem pagamentos registados neste intervalo (use &quot;Marcar como pago&quot; na lista).
-            Só entram registos cuja <span className="text-zinc-400">data do pagamento</span> cai no
-            período das abas.
+            Só entram registos cuja <span className="text-[var(--bn-muted)]">data do pagamento</span>{" "}
+            cai no período das abas.
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { AdminThemeToggle } from "@/components/admin-theme-toggle";
 import type { StaffAccess } from "@/lib/staff-access";
 import { cn } from "@/lib/utils";
 
@@ -212,7 +213,7 @@ export function AdminPanelNav({
         </Link>
         <button
           type="button"
-          className="inline-flex size-10 items-center justify-center rounded-lg text-[var(--bn-muted)] transition hover:bg-white/5 hover:text-[var(--bn-on)] lg:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-lg text-[var(--bn-muted)] transition hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)] lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-label="Fechar menu"
         >
@@ -244,7 +245,7 @@ export function AdminPanelNav({
                           "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
                           active
                             ? "bg-[var(--bn-primary-container)]/15 text-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/25"
-                            : "text-[var(--bn-on-variant)] hover:bg-white/5 hover:text-[var(--bn-on)]",
+                            : "text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)]",
                         )}
                       >
                         <span className="flex items-center gap-2">
@@ -272,9 +273,10 @@ export function AdminPanelNav({
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-[var(--bn-border)] p-4">
+        <AdminThemeToggle />
         <Link
           href="/admin/perfil"
-          className="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-white/5"
+          className="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-[var(--bn-hover)]"
           title="Meu perfil"
         >
           <span className="relative block size-9 shrink-0 overflow-hidden rounded-full bg-[var(--bn-surface-container)] ring-1 ring-[var(--bn-border)]">
@@ -306,7 +308,7 @@ export function AdminPanelNav({
         <button
           type="button"
           onClick={() => void logout()}
-          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-2.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-200"
+          className="w-full rounded-lg border border-[var(--bn-border)] px-3 py-2.5 text-xs font-medium text-[var(--bn-on-variant)] transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-[var(--bn-status-danger)]"
         >
           Sair
         </button>
@@ -329,21 +331,22 @@ export function AdminPanelNav({
       >
         <button
           type="button"
-          className="inline-flex size-11 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on)] transition hover:bg-white/5"
+          className="inline-flex size-11 items-center justify-center rounded-lg border border-[var(--bn-border)] text-[var(--bn-on)] transition hover:bg-[var(--bn-hover)]"
           onClick={() => setMobileOpen(true)}
           aria-label="Abrir menu"
         >
           <Menu className="size-5" />
         </button>
-        <span className="font-brand-headline text-sm font-bold text-[var(--bn-on)]">
+        <span className="font-brand-headline flex-1 text-sm font-bold text-[var(--bn-on)]">
           Painel
         </span>
+        <AdminThemeToggle compact />
       </div>
 
       {mobileOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-[90] bg-black/70 lg:hidden"
+          className="fixed inset-0 z-[90] bg-[var(--bn-scrim)] lg:hidden"
           aria-label="Fechar menu"
           onClick={() => setMobileOpen(false)}
         />

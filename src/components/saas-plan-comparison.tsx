@@ -19,8 +19,9 @@ type Props = {
 };
 
 /**
- * Comparação Starter/Pro — tokens BN (Onyx).
- * Usado em `/planos` (marketing) e `/admin/plano`.
+ * Comparação Starter/Pro — herda tokens `--bn-*` do pai
+ * (`.brand-onyx` no marketing ou no painel com `data-theme`).
+ * Não recria `.brand-onyx` (quebrava o modo claro do admin).
  */
 export function SaasPlanComparison({
   currentPlanId = null,
@@ -30,10 +31,12 @@ export function SaasPlanComparison({
   className,
 }: Props) {
   return (
-    <div className={cn("brand-onyx space-y-6", className)}>
-      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-        <p className="font-semibold text-emerald-50">{SAAS_TRIAL_COPY.title}</p>
-        <p className="mt-1 text-emerald-100/80">{SAAS_TRIAL_COPY.body}</p>
+    <div className={cn("space-y-6", className)}>
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--bn-status-ok)]">
+        <p className="font-semibold text-[var(--bn-status-ok)]">
+          {SAAS_TRIAL_COPY.title}
+        </p>
+        <p className="mt-1 opacity-90">{SAAS_TRIAL_COPY.body}</p>
       </div>
 
       <ul className="grid items-stretch gap-4 md:grid-cols-2 md:gap-5">
@@ -50,9 +53,9 @@ export function SaasPlanComparison({
             <li
               key={plan.id}
               className={cn(
-                "relative flex h-full flex-col rounded-xl border bg-[var(--bn-surface-elevated)] p-5 sm:p-6",
+                "relative flex h-full flex-col rounded-xl border bg-[var(--bn-surface-elevated)] p-5 sm:p-6 bn-card",
                 isPro
-                  ? "border-[var(--bn-primary-container)]/55 shadow-[0_0_48px_-18px_rgba(59,130,246,0.55)]"
+                  ? "border-[var(--bn-primary-container)]/55 shadow-[0_0_48px_-18px_rgba(59,130,246,0.35)]"
                   : "border-[var(--bn-border)]",
                 isCurrent && "ring-2 ring-[var(--bn-primary)]/50",
               )}
@@ -62,7 +65,7 @@ export function SaasPlanComparison({
                   {plan.name}
                 </h3>
                 {plan.badge ? (
-                  <span className="rounded-md bg-[var(--bn-primary)] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#002e6a] uppercase">
+                  <span className="rounded-md bg-[var(--bn-primary-container)] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
                     {plan.badge}
                   </span>
                 ) : null}
@@ -72,7 +75,7 @@ export function SaasPlanComparison({
                   </span>
                 ) : null}
                 {trialActive && isPro ? (
-                  <span className="rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-100 uppercase">
+                  <span className="rounded-md border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-[var(--bn-status-ok)] uppercase">
                     Liberado no trial
                   </span>
                 ) : null}
@@ -129,10 +132,10 @@ export function SaasPlanComparison({
                   <Link
                     href={ctaHref}
                     className={cn(
-                      "inline-flex w-full min-h-11 items-center justify-center rounded-lg px-5 py-2.5 text-center text-sm font-bold transition active:scale-[0.98]",
+                      "inline-flex min-h-11 w-full items-center justify-center rounded-lg px-5 py-2.5 text-center text-sm font-bold transition active:scale-[0.98]",
                       isPro
-                        ? "bg-[var(--bn-primary-container)] text-white shadow-[0_0_24px_-8px_rgba(59,130,246,0.55)] hover:brightness-110"
-                        : "border border-[var(--bn-border)] bg-transparent text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40 hover:bg-white/[0.04]",
+                        ? "bg-[var(--bn-primary-container)] text-white shadow-[0_0_24px_-8px_rgba(59,130,246,0.4)] hover:brightness-110"
+                        : "border border-[var(--bn-border)] bg-transparent text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-hover)]",
                     )}
                   >
                     {isPro ? "Começar com Pro (trial)" : "Começar grátis"}

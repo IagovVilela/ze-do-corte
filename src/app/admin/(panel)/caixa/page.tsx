@@ -100,8 +100,8 @@ export default async function AdminCaixaPage({
             href={`/admin/caixa?range=${key}`}
             className={
               range === key || (key === "day" && range !== "week" && range !== "month")
-                ? "rounded-full bg-brand-500/20 px-4 py-1.5 text-sm font-medium text-brand-100 ring-1 ring-brand-500/40"
-                : "rounded-full border border-white/10 px-4 py-1.5 text-sm text-zinc-400 hover:bg-white/5"
+                ? "rounded-full bg-[var(--bn-primary-container)]/15 px-4 py-1.5 text-sm font-medium text-[var(--bn-primary)] ring-1 ring-[var(--bn-primary)]/40"
+                : "rounded-full border border-[var(--bn-border)] px-4 py-1.5 text-sm text-[var(--bn-muted)] hover:bg-[var(--bn-hover)]"
             }
           >
             {label}
@@ -110,17 +110,17 @@ export default async function AdminCaixaPage({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Total recebido</p>
-          <p className="mt-2 font-display text-3xl text-white">{formatMoney(grandTotal)}</p>
+        <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-5">
+          <p className="text-xs uppercase tracking-wider text-[var(--bn-muted)]">Total recebido</p>
+          <p className="mt-2 font-display text-3xl text-[var(--bn-on)]">{formatMoney(grandTotal)}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Pagamentos</p>
-          <p className="mt-2 font-display text-3xl text-white">{paid.length}</p>
+        <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-5">
+          <p className="text-xs uppercase tracking-wider text-[var(--bn-muted)]">Pagamentos</p>
+          <p className="mt-2 font-display text-3xl text-[var(--bn-on)]">{paid.length}</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Ticket médio</p>
-          <p className="mt-2 font-display text-3xl text-white">
+        <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-5">
+          <p className="text-xs uppercase tracking-wider text-[var(--bn-muted)]">Ticket médio</p>
+          <p className="mt-2 font-display text-3xl text-[var(--bn-on)]">
             {formatMoney(paid.length ? grandTotal / paid.length : 0)}
           </p>
         </div>
@@ -128,50 +128,50 @@ export default async function AdminCaixaPage({
 
       <div className="grid gap-6 md:grid-cols-2">
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-zinc-200">Por método</h3>
+          <h3 className="mb-3 text-sm font-semibold text-[var(--bn-on-variant)]">Por método</h3>
           <ul className="space-y-2">
             {[...byMethod.entries()].map(([method, data]) => (
               <li
                 key={method}
-                className="flex items-center justify-between rounded-xl border border-white/10 px-4 py-3 text-sm"
+                className="flex items-center justify-between rounded-xl border border-[var(--bn-border)] px-4 py-3 text-sm"
               >
-                <span className="text-zinc-300">{method}</span>
-                <span className="text-zinc-100">
+                <span className="text-[var(--bn-on-variant)]">{method}</span>
+                <span className="text-[var(--bn-on)]">
                   {data.count} · {formatMoney(data.total)}
                 </span>
               </li>
             ))}
             {byMethod.size === 0 ? (
-              <li className="text-sm text-zinc-500">Nenhum pagamento no período.</li>
+              <li className="text-sm text-[var(--bn-muted)]">Nenhum pagamento no período.</li>
             ) : null}
           </ul>
         </section>
         <section>
-          <h3 className="mb-3 text-sm font-semibold text-zinc-200">Por profissional</h3>
+          <h3 className="mb-3 text-sm font-semibold text-[var(--bn-on-variant)]">Por profissional</h3>
           <ul className="space-y-2">
             {[...byStaff.entries()].map(([label, data]) => (
               <li
                 key={label}
-                className="flex items-center justify-between rounded-xl border border-white/10 px-4 py-3 text-sm"
+                className="flex items-center justify-between rounded-xl border border-[var(--bn-border)] px-4 py-3 text-sm"
               >
-                <span className="text-zinc-300">{label}</span>
-                <span className="text-zinc-100">
+                <span className="text-[var(--bn-on-variant)]">{label}</span>
+                <span className="text-[var(--bn-on)]">
                   {data.count} · {formatMoney(data.total)}
                 </span>
               </li>
             ))}
             {byStaff.size === 0 ? (
-              <li className="text-sm text-zinc-500">Nenhum pagamento no período.</li>
+              <li className="text-sm text-[var(--bn-muted)]">Nenhum pagamento no período.</li>
             ) : null}
           </ul>
         </section>
       </div>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-zinc-200">Lançamentos</h3>
-        <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <h3 className="mb-3 text-sm font-semibold text-[var(--bn-on-variant)]">Lançamentos</h3>
+        <div className="overflow-x-auto rounded-2xl border border-[var(--bn-border)]">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-zinc-500">
+            <thead className="border-b border-[var(--bn-border)] bg-[var(--bn-hover)] text-xs uppercase tracking-wider text-[var(--bn-muted)]">
               <tr>
                 <th className="px-4 py-3">Quando</th>
                 <th className="px-4 py-3">Cliente</th>
@@ -187,7 +187,7 @@ export default async function AdminCaixaPage({
                     ? Number(row.amountPaid)
                     : Number(row.service.price);
                 return (
-                  <tr key={row.id} className="border-b border-white/5 text-zinc-300">
+                  <tr key={row.id} className="border-b border-[var(--bn-border)] text-[var(--bn-on-variant)]">
                     <td className="px-4 py-3 whitespace-nowrap">
                       {row.paidAt
                         ? format(row.paidAt, "dd/MM HH:mm", { locale: ptBR })
@@ -202,7 +202,7 @@ export default async function AdminCaixaPage({
               })}
               {paid.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-[var(--bn-muted)]">
                     Sem recebimentos neste período.
                   </td>
                 </tr>

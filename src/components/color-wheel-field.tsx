@@ -327,22 +327,22 @@ export function ColorWheelField({
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
-              className="relative z-[1] w-full max-w-sm rounded-t-2xl border border-white/10 bg-zinc-950 p-4 shadow-2xl sm:rounded-2xl"
+              className="relative z-[1] w-full max-w-sm rounded-t-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] p-4 shadow-2xl sm:rounded-2xl"
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <p
                     id={titleId}
-                    className="text-sm font-semibold text-zinc-100"
+                    className="text-sm font-semibold text-[var(--bn-on)]"
                   >
                     Escolher cor
                   </p>
-                  <p className="mt-0.5 text-[11px] text-zinc-500">
+                  <p className="mt-0.5 text-[11px] text-[var(--bn-muted)]">
                     Arraste a bolinha até a cor que quiser.
                   </p>
                 </div>
                 <span
-                  className="size-10 shrink-0 rounded-lg border border-white/15 ring-1 ring-white/10"
+                  className="size-10 shrink-0 rounded-lg border border-[var(--bn-border)] ring-1 ring-[var(--bn-border)]"
                   style={{ backgroundColor: draft }}
                   aria-hidden
                 />
@@ -351,7 +351,7 @@ export function ColorWheelField({
               <ColorWheel value={draft} onChange={onWheelChange} />
 
               <div className="mt-4 flex items-center gap-2">
-                <label className="flex min-w-0 flex-1 items-center gap-2 text-xs text-zinc-400">
+                <label className="flex min-w-0 flex-1 items-center gap-2 text-xs text-[var(--bn-muted)]">
                   <span className="shrink-0">Hex</span>
                   <input
                     value={hexText}
@@ -362,7 +362,7 @@ export function ColorWheelField({
                       setDraft(next);
                       onChange(next);
                     }}
-                    className="w-full rounded-lg border border-white/10 bg-zinc-900 px-2 py-1.5 font-mono text-sm uppercase text-zinc-100 outline-none focus:border-brand-500/50"
+                    className="w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface-low)] px-2 py-1.5 font-mono text-sm uppercase text-[var(--bn-on)] outline-none focus:border-brand-500/50"
                     spellCheck={false}
                     inputMode="text"
                     aria-label="Código hexadecimal da cor"
@@ -374,7 +374,7 @@ export function ColorWheelField({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                  className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
                 >
                   Fechar
                 </button>
@@ -400,7 +400,7 @@ export function ColorWheelField({
         aria-label={ariaLabel}
         title={ariaLabel}
         className={cn(
-          "h-8 w-14 shrink-0 cursor-pointer rounded-lg border border-white/10 p-0.5 transition hover:border-white/25",
+          "h-8 w-14 shrink-0 cursor-pointer rounded-lg border border-[var(--bn-border)] p-0.5 transition hover:border-[var(--bn-border)]",
           className,
           swatchClassName,
         )}

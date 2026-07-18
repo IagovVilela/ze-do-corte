@@ -72,27 +72,27 @@ export default async function AdminPlanoPage() {
 
       {needsBillingAttention(org) ? <BillingAttentionBanner /> : null}
 
-      <div className="max-w-3xl space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <p className="text-sm text-zinc-400">
-          Organização: <span className="text-zinc-100">{org.name}</span>
+      <div className="max-w-3xl space-y-4 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-6">
+        <p className="text-sm text-[var(--bn-muted)]">
+          Organização: <span className="text-[var(--bn-on)]">{org.name}</span>
           {" · "}
-          <Link href={`/${org.slug}`} className="text-brand-200 hover:underline">
+          <Link href={`/${org.slug}`} className="text-[var(--bn-primary)] hover:underline">
             /{org.slug}
           </Link>
         </p>
-        <p className="font-display text-3xl text-white">
+        <p className="font-display text-3xl text-[var(--bn-on)]">
           {planStatusLabel(org.planStatus)}
           {cancelScheduled ? (
-            <span className="ml-2 text-base font-sans font-normal text-amber-200/90">
+            <span className="ml-2 text-base font-sans font-normal text-[var(--bn-status-warn)]/90">
               · cancela em {org.planCancelAt!.toLocaleDateString("pt-BR")}
             </span>
           ) : null}
         </p>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-[var(--bn-muted)]">
           Plano: {planTierLabel(org.planTier)}
         </p>
         {org.planStatus === "TRIAL" && trialActive && trialLeft != null ? (
-          <p className="text-sm text-emerald-200/90">
+          <p className="text-sm text-[var(--bn-status-ok)]/90">
             Trial: {trialLeft} dia(s) restantes
             {org.trialEndsAt
               ? ` · até ${org.trialEndsAt.toLocaleDateString("pt-BR")}`
@@ -104,8 +104,8 @@ export default async function AdminPlanoPage() {
         <div
           className={
             proUnlocked
-              ? "rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
-              : "rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+              ? "rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--bn-status-ok)]"
+              : "rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-[var(--bn-status-warn)]"
           }
         >
           {proUnlocked ? (
@@ -124,7 +124,7 @@ export default async function AdminPlanoPage() {
       </div>
 
       <div className="max-w-4xl space-y-4">
-        <h2 className="text-lg font-semibold text-white">Compare e escolha</h2>
+        <h2 className="text-lg font-semibold text-[var(--bn-on)]">Compare e escolha</h2>
         <SaasPlanComparison
           currentPlanId={currentPlanId}
           trialActive={trialActive}
@@ -132,9 +132,9 @@ export default async function AdminPlanoPage() {
         />
       </div>
 
-      <div className="max-w-xl space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <p className="text-sm font-medium text-zinc-200">Assinar agora</p>
-        <p className="text-xs text-zinc-500">
+      <div className="max-w-xl space-y-4 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-6">
+        <p className="text-sm font-medium text-[var(--bn-on-variant)]">Assinar agora</p>
+        <p className="text-xs text-[var(--bn-muted)]">
           Escolha PIX (paga a fatura todo mês) ou cartão (cadastre uma vez na
           fatura Asaas; cobrança mensal automática). Após o pagamento o status
           muda para Ativo e as funções do plano passam a valer.

@@ -9,7 +9,7 @@ import {
 } from "@/lib/admin-list-url";
 
 const inputClass =
-  "w-full min-w-0 rounded-xl border border-white/15 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/50";
+  "w-full min-w-0 rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/50";
 
 type Props = {
   chartRange: DashboardRange;
@@ -42,7 +42,7 @@ export function AdminAppointmentFiltersForm({
     <form
       method="get"
       action="/admin"
-      className="flex flex-col gap-3 border-b border-white/10 px-5 py-4"
+      className="flex flex-col gap-3 border-b border-[var(--bn-border)] px-5 py-4"
     >
       {chartRange !== "month" ? (
         <input type="hidden" name="chartRange" value={chartRange} />
@@ -51,7 +51,7 @@ export function AdminAppointmentFiltersForm({
         <input type="hidden" name="telemetryScope" value="chart" />
       ) : null}
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-xs text-zinc-500">
+        <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-xs text-[var(--bn-muted)]">
           Status
           <select
             name="status"
@@ -65,7 +65,7 @@ export function AdminAppointmentFiltersForm({
           </select>
         </label>
         {showStaffFilter ? (
-          <label className="flex min-w-[160px] flex-1 flex-col gap-1 text-xs text-zinc-500">
+          <label className="flex min-w-[160px] flex-1 flex-col gap-1 text-xs text-[var(--bn-muted)]">
             Profissional
             <select
               name="staff"
@@ -83,7 +83,7 @@ export function AdminAppointmentFiltersForm({
           </label>
         ) : null}
         {showUnitFilter ? (
-          <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-xs text-zinc-500">
+          <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-xs text-[var(--bn-muted)]">
             Unidade
             <select
               name="unit"
@@ -99,7 +99,7 @@ export function AdminAppointmentFiltersForm({
             </select>
           </label>
         ) : null}
-        <label className="flex min-w-[180px] flex-[2] flex-col gap-1 text-xs text-zinc-500">
+        <label className="flex min-w-[180px] flex-[2] flex-col gap-1 text-xs text-[var(--bn-muted)]">
           Buscar (nome, telefone ou e-mail)
           <input
             type="search"
@@ -121,7 +121,7 @@ export function AdminAppointmentFiltersForm({
           {active ? (
             <Link
               href={clearHref}
-              className="rounded-full border border-white/15 px-4 py-2 text-sm text-zinc-300 transition hover:bg-white/5"
+              className="rounded-full border border-[var(--bn-border)] px-4 py-2 text-sm text-[var(--bn-on-variant)] transition hover:bg-[var(--bn-hover)]"
             >
               Limpar
             </Link>
