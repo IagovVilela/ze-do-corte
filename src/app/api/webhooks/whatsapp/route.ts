@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { handleWhatsAppInbound } from "@/lib/whatsapp-bot-fsm";
 import {
-  isMetaWhatsAppPlatformConfigured,
+  isMetaAppSecretConfigured,
   verifyMetaWebhookSignature,
 } from "@/lib/whatsapp-meta-client";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +47,8 @@ type WaChangeValue = {
 export async function POST(request: Request) {
   const rawBody = await request.text();
 
-  if (isMetaWhatsAppPlatformConfigured()) {
+  // Com App Secret: exige assinatura. Sem secret (teste inicial): aceita POST.
+  if (isMetaAppSecretConfigured()) {
     const sig = request.headers.get("x-hub-signature-256");
     if (!verifyMetaWebhookSignature(rawBody, sig)) {
       return NextResponse.json({ message: "Invalid signature" }, { status: 401 });

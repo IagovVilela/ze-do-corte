@@ -9,10 +9,14 @@ export function metaGraphBase(): string {
 }
 
 export function isMetaWhatsAppPlatformConfigured(): boolean {
-  return Boolean(
-    process.env.META_WEBHOOK_VERIFY_TOKEN?.trim() &&
-      process.env.META_APP_SECRET?.trim(),
-  );
+  // Verify token basta para challenge GET + liberar o painel.
+  // META_APP_SECRET é opcional: quando existir, o POST valida assinatura.
+  return Boolean(process.env.META_WEBHOOK_VERIFY_TOKEN?.trim());
+}
+
+/** Se true, o webhook POST deve exigir X-Hub-Signature-256. */
+export function isMetaAppSecretConfigured(): boolean {
+  return Boolean(process.env.META_APP_SECRET?.trim());
 }
 
 export function verifyMetaWebhookSignature(

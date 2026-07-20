@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
-import { cancelClubSubscription } from "@/lib/club-subscription-actions";
+import { postponeClubSubscription } from "@/lib/club-subscription-actions";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
@@ -10,14 +10,11 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-const cancelSchema = z.object({
-  reason: z.string().trim().max(240).optional().nullable(),
+const postponeSchema = z.object({
+  days: z.number().int().min(1).max(90),
 });
 
-/**
- * Cancelamento imediato + notifica o cliente.
- * POST /api/admin/client-subscriptions/[id]/cancel
- */
+/** POST /api/admin/client-subscriptions/[id]/postpone — body: { days: 1..90 } */
 export async function POST(request: Request, context: RouteContext) {
   const auth = await requireStaffApiAuth();
   if (!auth.ok) return auth.response;
@@ -37,19 +34,25 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  let body: unknown = {};
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
-    body = {};
+    return NextResponse.json({ message: "JSON inválido." }, { status: 400 });
   }
-  const parsed = cancelSchema.safeParse(body);
-  const reason = parsed.success ? parsed.data.reason : null;
 
-  const result = await cancelClubSubscription({
+  const parsed = postponeSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Informe days entre 1 e 90." },
+      { status: 400 },
+    );
+  }
+
+  const result = await postponeClubSubscription({
     organizationId: auth.access.organizationId,
     subscriptionId: id,
-    reason,
+    days: parsed.data.days,
   });
 
   if (!result.ok) {

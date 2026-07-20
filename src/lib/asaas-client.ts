@@ -253,6 +253,25 @@ export async function asaasCancelSubscription(
   });
 }
 
+/** Atualiza assinatura no Asaas (próximo vencimento e/ou status ACTIVE/INACTIVE). */
+export async function asaasUpdateSubscription(
+  apiKey: string,
+  subscriptionId: string,
+  body: {
+    nextDueDate?: string;
+    status?: "ACTIVE" | "INACTIVE";
+  },
+): Promise<AsaasSubscription> {
+  return asaasFetch<AsaasSubscription>(
+    apiKey,
+    `/subscriptions/${subscriptionId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
 export async function asaasListSubscriptionPayments(
   apiKey: string,
   subscriptionId: string,

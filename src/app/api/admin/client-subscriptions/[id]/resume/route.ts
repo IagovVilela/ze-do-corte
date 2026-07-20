@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
-import { cancelClubSubscription } from "@/lib/club-subscription-actions";
+import { resumeClubSubscription } from "@/lib/club-subscription-actions";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
@@ -10,15 +9,8 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-const cancelSchema = z.object({
-  reason: z.string().trim().max(240).optional().nullable(),
-});
-
-/**
- * Cancelamento imediato + notifica o cliente.
- * POST /api/admin/client-subscriptions/[id]/cancel
- */
-export async function POST(request: Request, context: RouteContext) {
+/** POST /api/admin/client-subscriptions/[id]/resume */
+export async function POST(_request: Request, context: RouteContext) {
   const auth = await requireStaffApiAuth();
   if (!auth.ok) return auth.response;
   if (!auth.access.permissions.manageSubscriptions) {
@@ -37,19 +29,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  let body: unknown = {};
-  try {
-    body = await request.json();
-  } catch {
-    body = {};
-  }
-  const parsed = cancelSchema.safeParse(body);
-  const reason = parsed.success ? parsed.data.reason : null;
-
-  const result = await cancelClubSubscription({
+  const result = await resumeClubSubscription({
     organizationId: auth.access.organizationId,
     subscriptionId: id,
-    reason,
   });
 
   if (!result.ok) {

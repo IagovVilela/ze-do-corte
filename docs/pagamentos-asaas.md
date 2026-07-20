@@ -61,10 +61,12 @@ Após reservar no site: “Pagar agora com PIX” → `POST /api/appointments/[i
 
 1. Plano Pro/trial + Asaas do salão ligado em `/admin/pagamentos`.
 2. Criar planos em `/admin/clube`.
-3. **Cliente assina sozinho** em `/{slug}/clube` (escolhe plano, CPF, paga PIX) — API `GET/POST /api/public/club/[slug]`.
-4. **Balcão**: vincular em `/admin/clube` com CPF gera QR/fatura; sem CPF cadastra ativo offline.
+3. **Cliente assina sozinho** em `/{slug}/clube` (escolhe plano, CPF, **PIX ou cartão**) — API `GET/POST /api/public/club/[slug]` com `billingType`.
+4. **Balcão**: vincular em `/admin/clube` com CPF gera QR (PIX) ou link da fatura (cartão); sem CPF cadastra ativo offline.
 5. Webhook `PAYMENT_RECEIVED`/`CONFIRMED` → clube **ACTIVE**, novo `currentPeriodEnd` e **`visitsUsed = 0`** (reset do ciclo).
-6. Ao agendar com o mesmo telefone + serviço incluso, aplica crédito do clube. Cancelamento no painel também cancela no Asaas.
+6. Ao agendar com o mesmo telefone + serviço incluso, aplica crédito do clube (só status **ACTIVE**).
+7. **Gestão no painel** (`/admin/clube`): Pausar (status `PAUSED` + Asaas `INACTIVE`), Reativar, Postergar 1–90 dias (`currentPeriodEnd` + Asaas `nextDueDate`), Cancelar (já cancelava no Asaas).
+8. **Notificação ao cliente**: WhatsApp se bot ativo; e-mail se Resend + `clientEmail`. Dispara nas ações manuais e nos webhooks `PAYMENT_OVERDUE` / cancelamento Asaas.
 
 ## Migração
 

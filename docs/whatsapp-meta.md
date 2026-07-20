@@ -11,9 +11,9 @@ Integração oficial multi-tenant: cada barbearia conecta o próprio número Bus
 | `WHATSAPP_TOKEN_ENCRYPTION_KEY` | Obrigatória para salvar token no admin |
 | `META_WEBHOOK_VERIFY_TOKEN` | Obrigatória para o challenge do webhook |
 | `META_GRAPH_VERSION` | `v21.0` |
-| `META_APP_ID` / `META_APP_SECRET` | Coloque quando tiver o App Meta (valida assinatura POST) |
+| `META_APP_ID` / `META_APP_SECRET` | Coloque quando tiver o App Meta (Secret valida assinatura POST; **não** bloqueia mais o painel) |
 
-Sem `META_APP_SECRET` o GET do webhook ainda funciona; o POST aceita eventos sem validar assinatura (útil no teste inicial). Com secret configurado, a assinatura passa a ser exigida.
+Sem `META_APP_SECRET` o GET do webhook ainda funciona e o painel libera o assistente; o POST aceita eventos sem validar assinatura (útil no teste inicial). Com secret configurado, a assinatura passa a ser exigida.
 
 ### 2. App Meta
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   AsaasApiError,
+  type AsaasBillingType,
   asaasCreateCustomer,
   asaasCreateSubscription,
   asaasFindCustomerByExternalRef,
@@ -23,6 +24,8 @@ export type ClubPixPayload = {
   expirationDate?: string | null;
 };
 
+export type ClubBillingType = Extract<AsaasBillingType, "PIX" | "CREDIT_CARD">;
+
 export type ClubSubscribeInput = {
   organizationId: string;
   planId: string;
@@ -33,6 +36,8 @@ export type ClubSubscribeInput = {
   notes?: string | null;
   /** Se false, cadastra ACTIVE sem Asaas. Default: cobra se Asaas ligado. */
   chargeOnline?: boolean;
+  /** PIX (QR) ou cartão (link da fatura Asaas). Default PIX. */
+  billingType?: ClubBillingType;
 };
 
 export type ClubSubscribeResult =
@@ -49,6 +54,7 @@ export type ClubSubscribeResult =
       invoiceUrl: string | null;
       pix: ClubPixPayload | null;
       asaasSubscriptionId: string | null;
+      billingType: ClubBillingType | null;
       message: string;
       chargedOnline: boolean;
     }
@@ -112,12 +118,14 @@ export async function orgClubPublicAvailable(organizationId: string): Promise<{
 }
 
 /**
- * Cria assinatura do clube (local + Asaas PIX quando possível).
- * Devolve QR/fatura para o cliente pagar.
+ * Cria assinatura do clube (local + Asaas PIX ou cartão quando possível).
+ * Devolve QR (PIX) e/ou link da fatura (cartão / PIX).
  */
 export async function createClubSubscription(
   input: ClubSubscribeInput,
 ): Promise<ClubSubscribeResult> {
+  const billingType: ClubBillingType =
+    input.billingType === "CREDIT_CARD" ? "CREDIT_CARD" : "PIX";
   const org = await loadOrgBilling(input.organizationId);
   if (!org) {
     return { ok: false, message: "Organização não encontrada.", status: 404 };
@@ -204,6 +212,7 @@ export async function createClubSubscription(
       invoiceUrl: null,
       pix: null,
       asaasSubscriptionId: null,
+      billingType: null,
       chargedOnline: false,
       message: "Assinante cadastrado (sem cobrança online).",
     };
@@ -213,7 +222,10 @@ export async function createClubSubscription(
   if (!document || (document.length !== 11 && document.length !== 14)) {
     return {
       ok: false,
-      message: "CPF ou CNPJ é obrigatório para gerar o PIX do clube.",
+      message:
+        billingType === "CREDIT_CARD"
+          ? "CPF ou CNPJ é obrigatório para adesão no cartão."
+          : "CPF ou CNPJ é obrigatório para gerar o PIX do clube.",
       status: 400,
     };
   }
@@ -254,7 +266,7 @@ export async function createClubSubscription(
 
     const asaasSub = await asaasCreateSubscription(apiKey, {
       customer: customer.id,
-      billingType: "PIX",
+      billingType,
       value: Number(plan.price),
       nextDueDate: todayIsoDate(),
       cycle: cycleFromDays(plan.cycleDays),
@@ -275,7 +287,7 @@ export async function createClubSubscription(
     const first = payments[0];
     let pix: ClubPixPayload | null = null;
     const invoiceUrl = first?.invoiceUrl ?? null;
-    if (first?.id) {
+    if (billingType === "PIX" && first?.id) {
       try {
         pix = await asaasGetPixQrCode(apiKey, first.id);
       } catch {
@@ -283,15 +295,20 @@ export async function createClubSubscription(
       }
     }
 
+    const message =
+      billingType === "CREDIT_CARD"
+        ? "Adesão criada. Abra a fatura Asaas e cadastre o cartão uma vez — as próximas cobranças são automáticas. O clube ativa após o pagamento."
+        : "PIX gerado. Após o pagamento o clube ativa sozinho e o crédito vale no agendamento.";
+
     return {
       ok: true,
       subscription: updated,
       invoiceUrl,
       pix,
       asaasSubscriptionId: asaasSub.id,
+      billingType,
       chargedOnline: true,
-      message:
-        "PIX gerado. Após o pagamento o clube ativa sozinho e o crédito vale no agendamento.",
+      message,
     };
   } catch (error) {
     console.error("createClubSubscription asaas", error);

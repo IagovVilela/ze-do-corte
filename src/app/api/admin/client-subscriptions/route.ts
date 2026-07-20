@@ -16,6 +16,7 @@ const createSchema = z.object({
   clientCpfCnpj: z.string().trim().min(11).max(18).optional().or(z.literal("")),
   notes: z.string().trim().max(240).optional().nullable(),
   chargeOnline: z.boolean().optional(),
+  billingType: z.enum(["PIX", "CREDIT_CARD"]).optional().default("PIX"),
 });
 
 async function assertProClubAccess(organizationId: string) {
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
     clientCpfCnpj: parsed.data.clientCpfCnpj || null,
     notes: parsed.data.notes ?? null,
     chargeOnline: parsed.data.chargeOnline,
+    billingType: parsed.data.billingType,
   });
 
   if (!result.ok) {
@@ -111,6 +113,7 @@ export async function POST(request: Request) {
       invoiceUrl: result.invoiceUrl,
       pix: result.pix,
       asaasSubscriptionId: result.asaasSubscriptionId,
+      billingType: result.billingType,
       chargedOnline: result.chargedOnline,
       message: result.message,
     },

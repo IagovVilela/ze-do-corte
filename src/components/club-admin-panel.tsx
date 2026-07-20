@@ -65,8 +65,13 @@ export function ClubAdminPanel({
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientCpf, setClientCpf] = useState("");
+  const [billingType, setBillingType] = useState<"PIX" | "CREDIT_CARD">("PIX");
   const [lastPix, setLastPix] = useState<PixPayload | null>(null);
   const [lastInvoiceUrl, setLastInvoiceUrl] = useState<string | null>(null);
+  const [lastBillingType, setLastBillingType] = useState<
+    "PIX" | "CREDIT_CARD" | null
+  >(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   async function reload() {
     const [pRes, sRes] = await Promise.all([
@@ -131,6 +136,7 @@ export function ClubAdminPanel({
     setMessage("");
     setLastPix(null);
     setLastInvoiceUrl(null);
+    setLastBillingType(null);
     const cpfDigits = clientCpf.replace(/\D/g, "");
     const res = await fetch("/api/admin/client-subscriptions", {
       method: "POST",
@@ -140,14 +146,15 @@ export function ClubAdminPanel({
         clientName,
         clientPhone,
         clientCpfCnpj: cpfDigits || undefined,
-        // Sem CPF → cadastro local ativo (balcão); com CPF → PIX Asaas se ligado
         chargeOnline: cpfDigits.length >= 11 ? true : false,
+        billingType: cpfDigits.length >= 11 ? billingType : undefined,
       }),
     });
     const data = (await res.json()) as {
       message?: string;
       pix?: PixPayload | null;
       invoiceUrl?: string | null;
+      billingType?: "PIX" | "CREDIT_CARD" | null;
     };
     if (!res.ok) {
       setError(data.message ?? "Falha ao vincular cliente.");
@@ -158,30 +165,63 @@ export function ClubAdminPanel({
     setClientCpf("");
     setLastPix(data.pix ?? null);
     setLastInvoiceUrl(data.invoiceUrl ?? null);
+    setLastBillingType(data.billingType ?? billingType);
     setMessage(data.message ?? "Cliente adicionado ao clube.");
     await reload();
   }
 
-  async function cancelSub(id: string) {
-    const reason = window.prompt(
-      "Motivo do cancelamento (opcional). O acesso encerra imediatamente.",
-      "Cancelado a pedido do cliente",
-    );
-    if (reason === null) return;
+  async function actOnSub(
+    id: string,
+    action: "pause" | "resume" | "postpone" | "cancel",
+  ) {
     setError("");
     setMessage("");
-    const res = await fetch(`/api/admin/client-subscriptions/${id}/cancel`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason }),
-    });
-    const data = (await res.json()) as { message?: string };
-    if (!res.ok) {
-      setError(data.message ?? "Falha ao cancelar.");
-      return;
+    setBusyId(id);
+    try {
+      let body: Record<string, unknown> | undefined;
+      if (action === "cancel") {
+        const reason = window.prompt(
+          "Motivo do cancelamento (opcional). O acesso encerra imediatamente e o cliente é avisado.",
+          "Cancelado a pedido do cliente",
+        );
+        if (reason === null) return;
+        body = { reason };
+      } else if (action === "pause") {
+        const reason = window.prompt(
+          "Motivo da pausa (opcional). O cliente fica sem benefício do clube até reativar.",
+          "Pausado pelo salão",
+        );
+        if (reason === null) return;
+        body = { reason };
+      } else if (action === "postpone") {
+        const raw = window.prompt(
+          "Postergar por quantos dias? (1 a 90). Atualiza o prazo e a cobrança na Asaas, se houver.",
+          "7",
+        );
+        if (raw === null) return;
+        const days = Number(raw.trim());
+        if (!Number.isFinite(days) || days < 1 || days > 90) {
+          setError("Informe um número de dias entre 1 e 90.");
+          return;
+        }
+        body = { days };
+      }
+
+      const res = await fetch(`/api/admin/client-subscriptions/${id}/${action}`, {
+        method: "POST",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = (await res.json()) as { message?: string };
+      if (!res.ok) {
+        setError(data.message ?? "Falha na ação.");
+        return;
+      }
+      setMessage(data.message ?? "Atualizado.");
+      await reload();
+    } finally {
+      setBusyId(null);
     }
-    setMessage(data.message ?? "Assinatura cancelada.");
-    await reload();
   }
 
   async function copyPublicLink() {
@@ -242,40 +282,80 @@ export function ClubAdminPanel({
       <section className="grid gap-8 lg:grid-cols-2">
         <form onSubmit={createPlan} className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
           <h3 className="font-semibold text-[var(--bn-on)]">Novo plano</h3>
-          <input
-            required
-            placeholder="Nome do plano"
-            value={planName}
-            onChange={(e) => setPlanName(e.target.value)}
-            className={inputClass}
-          />
-          <div className="grid min-w-0 grid-cols-3 gap-2">
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-[var(--bn-muted)]">
+              Nome do plano
+            </span>
             <input
               required
-              inputMode="decimal"
-              placeholder="Preço (R$)"
-              value={planPrice}
-              onChange={(e) => setPlanPrice(formatBrMoneyInput(e.target.value))}
-              className={`${inputClass} min-w-0`}
+              placeholder="Ex.: Corte e barba mensal"
+              value={planName}
+              onChange={(e) => setPlanName(e.target.value)}
+              className={inputClass}
             />
-            <input
-              inputMode="numeric"
-              placeholder="Ciclo (dias)"
-              value={planCycle}
-              onChange={(e) => setPlanCycle(formatIntegerDigits(e.target.value, 4))}
-              className={`${inputClass} min-w-0`}
-            />
-            <input
-              inputMode="numeric"
-              placeholder="Visitas (opc.)"
-              value={planVisits}
-              onChange={(e) => setPlanVisits(formatIntegerDigits(e.target.value, 4))}
-              className={`${inputClass} min-w-0`}
-            />
+          </label>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Preço (R$)
+              </span>
+              <input
+                required
+                inputMode="decimal"
+                placeholder="99,00"
+                value={planPrice}
+                onChange={(e) => setPlanPrice(formatBrMoneyInput(e.target.value))}
+                className={`${inputClass} min-w-0`}
+              />
+            </label>
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Ciclo (dias)
+              </span>
+              <input
+                inputMode="numeric"
+                placeholder="30"
+                value={planCycle}
+                onChange={(e) =>
+                  setPlanCycle(formatIntegerDigits(e.target.value, 4))
+                }
+                className={`${inputClass} min-w-0`}
+                aria-describedby="plan-cycle-hint"
+              />
+              <span id="plan-cycle-hint" className="block text-[10px] text-[var(--bn-muted)]">
+                A cada quantos dias cobra de novo
+              </span>
+            </label>
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Visitas no ciclo
+              </span>
+              <input
+                inputMode="numeric"
+                placeholder="Opcional"
+                value={planVisits}
+                onChange={(e) =>
+                  setPlanVisits(formatIntegerDigits(e.target.value, 4))
+                }
+                className={`${inputClass} min-w-0`}
+                aria-describedby="plan-visits-hint"
+              />
+              <span
+                id="plan-visits-hint"
+                className="block text-[10px] text-[var(--bn-muted)]"
+              >
+                Vazio = ilimitado
+              </span>
+            </label>
           </div>
           {services.length > 0 ? (
             <fieldset className="space-y-1">
-              <legend className="text-xs text-[var(--bn-muted)]">Serviços inclusos</legend>
+              <legend className="text-xs font-medium text-[var(--bn-muted)]">
+                Serviços inclusos
+              </legend>
+              <p className="text-[10px] text-[var(--bn-muted)]">
+                Marque os serviços em que o crédito do clube vale no agendamento.
+              </p>
               <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto">
                 {services.map((s) => {
                   const checked = planServices.includes(s.id);
@@ -311,8 +391,9 @@ export function ClubAdminPanel({
         <form onSubmit={createSub} className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
           <h3 className="font-semibold text-[var(--bn-on)]">Vincular cliente (balcão)</h3>
           <p className="text-xs text-[var(--bn-muted)]">
-            Gera PIX na sua Asaas. Com Asaas desligado, o cliente entra ativo sem cobrança
-            online. Prefira o link público quando o cliente for assinar sozinho.
+            Com CPF, gera cobrança na Asaas (PIX ou cartão). Sem CPF, o cliente
+            entra ativo sem cobrança online. Prefira o link público quando o
+            cliente for assinar sozinho.
           </p>
           <select
             required
@@ -347,16 +428,69 @@ export function ClubAdminPanel({
           />
           <input
             inputMode="numeric"
-            placeholder="CPF/CNPJ (obrigatório com PIX online)"
+            placeholder="CPF/CNPJ (obrigatório com cobrança online)"
             value={clientCpf}
             onChange={(e) => setClientCpf(formatCpfCnpj(e.target.value))}
             className={inputClass}
           />
+
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-[var(--bn-muted)]">
+              Forma de pagamento (com CPF)
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label
+                className={
+                  billingType === "PIX"
+                    ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
+                    : "cursor-pointer rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-3 py-3 hover:bg-[var(--bn-hover)]"
+                }
+              >
+                <input
+                  type="radio"
+                  name="club-billing"
+                  className="sr-only"
+                  checked={billingType === "PIX"}
+                  onChange={() => setBillingType("PIX")}
+                />
+                <span className="block text-sm font-semibold text-[var(--bn-on)]">
+                  PIX
+                </span>
+                <span className="mt-0.5 block text-xs text-[var(--bn-muted)]">
+                  QR na hora; fatura mensal para pagar
+                </span>
+              </label>
+              <label
+                className={
+                  billingType === "CREDIT_CARD"
+                    ? "cursor-pointer rounded-xl border border-brand-500/50 bg-brand-500/10 px-3 py-3"
+                    : "cursor-pointer rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-3 py-3 hover:bg-[var(--bn-hover)]"
+                }
+              >
+                <input
+                  type="radio"
+                  name="club-billing"
+                  className="sr-only"
+                  checked={billingType === "CREDIT_CARD"}
+                  onChange={() => setBillingType("CREDIT_CARD")}
+                />
+                <span className="block text-sm font-semibold text-[var(--bn-on)]">
+                  Cartão de crédito
+                </span>
+                <span className="mt-0.5 block text-xs text-[var(--bn-muted)]">
+                  Link Asaas; cobrança automática depois
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
           <button
             type="submit"
             className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-zinc-950"
           >
-            Gerar adesão / PIX
+            {billingType === "CREDIT_CARD"
+              ? "Gerar adesão / cartão"
+              : "Gerar adesão / PIX"}
           </button>
 
           {lastInvoiceUrl ? (
@@ -366,7 +500,9 @@ export function ClubAdminPanel({
               rel="noreferrer"
               className="inline-flex text-sm text-[var(--bn-primary)] underline"
             >
-              Abrir fatura Asaas
+              {lastBillingType === "CREDIT_CARD"
+                ? "Abrir fatura Asaas (cadastrar cartão)"
+                : "Abrir fatura Asaas"}
             </a>
           ) : null}
           {lastPix?.encodedImage ? (
@@ -425,6 +561,11 @@ export function ClubAdminPanel({
 
       <section>
         <h3 className="mb-3 font-semibold text-[var(--bn-on)]">Assinantes</h3>
+        <p className="mb-3 text-xs text-[var(--bn-muted)]">
+          Em atraso o benefício já fica bloqueado. Você pode pausar, postergar,
+          reativar ou cancelar — o cliente é avisado no WhatsApp (se o bot
+          estiver ativo) e por e-mail (se cadastrado).
+        </p>
         <div className="overflow-x-auto rounded-2xl border border-[var(--bn-border)]">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--bn-border)] text-xs uppercase tracking-wider text-[var(--bn-muted)]">
@@ -432,46 +573,111 @@ export function ClubAdminPanel({
                 <th className="px-4 py-3">Cliente</th>
                 <th className="px-4 py-3">Plano</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Validade</th>
                 <th className="px-4 py-3">Usos</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
-              {subs.map((s) => (
-                <tr key={s.id} className="border-b border-[var(--bn-border)] text-[var(--bn-on-variant)]">
-                  <td className="px-4 py-3">
-                    <div>{s.clientName}</div>
-                    <div className="text-xs text-[var(--bn-muted)]">{s.clientPhone}</div>
-                  </td>
-                  <td className="px-4 py-3">{s.plan.name}</td>
-                  <td className="px-4 py-3">
-                    {s.status}
-                    {s.cancelReason ? (
-                      <div className="text-xs text-[var(--bn-muted)]">{s.cancelReason}</div>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    {s.visitsUsed}
-                    {s.plan.visitsIncluded != null ? ` / ${s.plan.visitsIncluded}` : ""}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {s.status === "ACTIVE" || s.status === "PAST_DUE" ? (
-                      <button
-                        type="button"
-                        onClick={() => void cancelSub(s.id)}
-                        className="rounded-full border border-rose-500/40 px-3 py-1 text-xs text-[var(--bn-status-danger)] hover:bg-rose-500/10"
+              {subs.map((s) => {
+                const label = statusLabel(s.status);
+                const busy = busyId === s.id;
+                const canManage =
+                  s.status === "ACTIVE" ||
+                  s.status === "PAST_DUE" ||
+                  s.status === "PAUSED";
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-b border-[var(--bn-border)] text-[var(--bn-on-variant)]"
+                  >
+                    <td className="px-4 py-3">
+                      <div>{s.clientName}</div>
+                      <div className="text-xs text-[var(--bn-muted)]">
+                        {s.clientPhone}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">{s.plan.name}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={
+                          s.status === "PAST_DUE" || s.status === "CANCELLED"
+                            ? "text-[var(--bn-status-danger)]"
+                            : s.status === "PAUSED"
+                              ? "text-amber-400"
+                              : undefined
+                        }
                       >
-                        Cancelar
-                      </button>
-                    ) : (
-                      <span className="text-xs text-[var(--bn-muted)]">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                        {label}
+                      </span>
+                      {s.cancelReason ? (
+                        <div className="text-xs text-[var(--bn-muted)]">
+                          {s.cancelReason}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-xs tabular-nums">
+                      {formatPeriodEnd(s.currentPeriodEnd)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.visitsUsed}
+                      {s.plan.visitsIncluded != null
+                        ? ` / ${s.plan.visitsIncluded}`
+                        : ""}
+                    </td>
+                    <td className="px-4 py-3">
+                      {canManage ? (
+                        <div className="flex flex-wrap justify-end gap-1.5">
+                          {s.status === "PAUSED" || s.status === "PAST_DUE" ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void actOnSub(s.id, "resume")}
+                              className="rounded-full border border-emerald-500/40 px-2.5 py-1 text-xs text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
+                            >
+                              Reativar
+                            </button>
+                          ) : null}
+                          {s.status === "ACTIVE" || s.status === "PAST_DUE" ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void actOnSub(s.id, "pause")}
+                              className="rounded-full border border-amber-500/40 px-2.5 py-1 text-xs text-amber-200 hover:bg-amber-500/10 disabled:opacity-50"
+                            >
+                              Pausar
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void actOnSub(s.id, "postpone")}
+                            className="rounded-full border border-[var(--bn-border)] px-2.5 py-1 text-xs text-[var(--bn-on-variant)] hover:border-white/30 hover:text-[var(--bn-on)] disabled:opacity-50"
+                          >
+                            Postergar
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void actOnSub(s.id, "cancel")}
+                            className="rounded-full border border-rose-500/40 px-2.5 py-1 text-xs text-[var(--bn-status-danger)] hover:bg-rose-500/10 disabled:opacity-50"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-[var(--bn-muted)]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {subs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-[var(--bn-muted)]">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-8 text-center text-[var(--bn-muted)]"
+                  >
                     Nenhum assinante ainda.
                   </td>
                 </tr>
@@ -482,4 +688,25 @@ export function ClubAdminPanel({
       </section>
     </div>
   );
+}
+
+function statusLabel(status: string): string {
+  switch (status) {
+    case "ACTIVE":
+      return "Ativa";
+    case "PAST_DUE":
+      return "Em atraso";
+    case "PAUSED":
+      return "Pausada";
+    case "CANCELLED":
+      return "Cancelada";
+    default:
+      return status;
+  }
+}
+
+function formatPeriodEnd(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR");
 }

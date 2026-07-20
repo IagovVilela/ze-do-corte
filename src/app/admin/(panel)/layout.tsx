@@ -9,7 +9,6 @@ import { BillingAttentionBanner } from "@/components/billing-attention-banner";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import {
   ADMIN_THEME_COOKIE,
-  ADMIN_THEME_STORAGE_KEY,
   parseAdminTheme,
   type AdminTheme,
 } from "@/lib/admin-theme";
@@ -65,11 +64,7 @@ export default async function AdminPanelLayout({
         data-theme={initialTheme}
         className={`brand-onyx min-h-svh bg-[var(--bn-bg)] text-[var(--bn-on)] ${brandHeadline.variable}`}
       >
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem(${JSON.stringify(ADMIN_THEME_STORAGE_KEY)});if(t==="light"||t==="dark"){var r=document.querySelector("[data-admin-theme-root]");if(r)r.setAttribute("data-theme",t);}}catch(e){}})();`,
-          }}
-        />
+        {/* Tema via cookie SSR; sem <script> (React 19 não executa no client boundary). */}
         <AdminPanelNav access={access} proUnlocked={proUnlocked} />
         <div className="flex min-h-svh flex-col lg:pl-60">
           {org && needsBillingAttention(org) && access.role === "OWNER" ? (

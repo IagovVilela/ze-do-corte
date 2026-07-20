@@ -6,6 +6,12 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-20
+
+- **WhatsApp — gate do assistente**: `isMetaWhatsAppPlatformConfigured` passa a exigir só `META_WEBHOOK_VERIFY_TOKEN` (alinhado à docs). Sem `META_APP_SECRET` o painel deixa de mostrar “plataforma preparando”; o POST do webhook só valida assinatura quando o secret existir. Ainda faltam App Meta + Phone number ID/token no salão para o bot falar.
+- **Clube — adesão no cartão**: no balcão (`/admin/clube`) e na página pública `/{slug}/clube` dá para escolher **PIX** ou **cartão de crédito** (mesmo fluxo do plano SaaS: fatura Asaas para cadastrar o cartão; recorrência automática). Campo `billingType` em `createClubSubscription` / APIs admin e pública.
+- **Clube — gestão de assinatura do cliente**: em `/admin/clube` o salão vê status legível (Ativa / Em atraso / Pausada / Cancelada) e pode **Pausar**, **Reativar**, **Postergar** (1–90 dias, atualiza Asaas `nextDueDate`) ou **Cancelar**. Cliente é notificado por WhatsApp (bot ativo) e e-mail (Resend + e-mail cadastrado). Webhook Asaas de atraso/cancelamento também avisa. Libs: `club-subscription-actions.ts`, `club-notify-client.ts`; rotas `…/pause`, `…/resume`, `…/postpone`.
+
 ## 2026-07-17
 
 - **Upload de mídia — limite maior**: imagens do canvas/marca passam de 6 MB para **20 MB**; o proxy Next (`proxyClientMaxBodySize`) sobe para 45 MB (antes cortava em 10 MB e gerava “Formulário inválido” em fotos de celular ~16 MB). Upload Cloudinary por stream (sem base64). Vídeo continua até 40 MB.

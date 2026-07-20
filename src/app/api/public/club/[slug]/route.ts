@@ -25,11 +25,12 @@ const joinSchema = z.object({
     .refine((v) => v.length === 11 || v.length === 14, {
       message: "Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).",
     }),
+  billingType: z.enum(["PIX", "CREDIT_CARD"]).optional().default("PIX"),
 });
 
 /**
  * GET /api/public/club/[slug] — planos públicos do clube.
- * POST /api/public/club/[slug] — adesão + PIX.
+ * POST /api/public/club/[slug] — adesão + PIX ou cartão.
  */
 export async function GET(_request: Request, context: RouteContext) {
   const { slug } = await context.params;
@@ -104,6 +105,7 @@ export async function POST(request: Request, context: RouteContext) {
     clientEmail: parsed.data.clientEmail || null,
     clientCpfCnpj: parsed.data.clientCpfCnpj,
     chargeOnline: true,
+    billingType: parsed.data.billingType,
   });
 
   if (!result.ok) {
@@ -119,6 +121,7 @@ export async function POST(request: Request, context: RouteContext) {
       message: result.message,
       subscriptionId: result.subscription.id,
       status: result.subscription.status,
+      billingType: result.billingType,
       invoiceUrl: result.invoiceUrl,
       pix: result.pix,
       bookHref: `/${org.slug}/agendar`,

@@ -2,8 +2,9 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import { prisma } from "@/lib/prisma";
 import { parseExternalRef, type SaasPlanId, saasPlanById } from "@/lib/asaas-plans";
+import { notifyClubClient } from "@/lib/club-notify-client";
+import { prisma } from "@/lib/prisma";
 
 type AsaasWebhookBody = {
   id?: string | null;
@@ -144,13 +145,35 @@ async function markClubPaid(subscriptionId: string, asaasSubId?: string | null) 
 }
 
 async function markClubPastDue(subscriptionId: string) {
+  const existing = await prisma.clientSubscription.findUnique({
+    where: { id: subscriptionId },
+    include: { plan: { select: { name: true } } },
+  });
+  if (!existing || existing.status === "CANCELLED") return;
+  if (existing.status === "PAST_DUE") return;
+
   await prisma.clientSubscription.update({
     where: { id: subscriptionId },
     data: { status: "PAST_DUE" },
   });
+
+  void notifyClubClient({
+    organizationId: existing.organizationId,
+    clientName: existing.clientName,
+    clientPhone: existing.clientPhone,
+    clientEmail: existing.clientEmail,
+    planName: existing.plan.name,
+    event: "past_due",
+  });
 }
 
 async function markClubCancelled(subscriptionId: string) {
+  const existing = await prisma.clientSubscription.findUnique({
+    where: { id: subscriptionId },
+    include: { plan: { select: { name: true } } },
+  });
+  if (!existing || existing.status === "CANCELLED") return;
+
   await prisma.clientSubscription.update({
     where: { id: subscriptionId },
     data: {
@@ -158,6 +181,16 @@ async function markClubCancelled(subscriptionId: string) {
       cancelledAt: new Date(),
       cancelReason: "Cancelado via Asaas",
     },
+  });
+
+  void notifyClubClient({
+    organizationId: existing.organizationId,
+    clientName: existing.clientName,
+    clientPhone: existing.clientPhone,
+    clientEmail: existing.clientEmail,
+    planName: existing.plan.name,
+    event: "cancelled",
+    reason: "Cancelado via Asaas",
   });
 }
 
