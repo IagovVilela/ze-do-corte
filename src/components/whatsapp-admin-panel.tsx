@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-import { formatBrPhoneNational } from "@/lib/br-input-masks";
+import { formatWhatsAppDisplayInput } from "@/lib/phone-to-whatsapp-link";
 
 type PlatformInfo = {
   webhookConfigured: boolean;
@@ -64,7 +64,9 @@ export function WhatsAppAdminPanel() {
       setPhoneNumberId(data.connection?.whatsappPhoneNumberId ?? "");
       setWabaId(data.connection?.whatsappWabaId ?? "");
       setDisplayPhone(
-        formatBrPhoneNational(data.connection?.whatsappDisplayPhone ?? ""),
+        formatWhatsAppDisplayInput(
+          data.connection?.whatsappDisplayPhone ?? "",
+        ),
       );
       setBotEnabled(data.connection?.whatsappBotEnabled ?? false);
       if (
@@ -220,13 +222,14 @@ export function WhatsAppAdminPanel() {
               inputMode="tel"
               value={displayPhone}
               onChange={(e) =>
-                setDisplayPhone(formatBrPhoneNational(e.target.value))
+                setDisplayPhone(formatWhatsAppDisplayInput(e.target.value))
               }
-              placeholder="(11) 99999-0000"
+              placeholder="(11) 99999-0000 ou +15551540355"
               autoComplete="tel"
             />
             <span className="block text-xs text-[var(--bn-muted)]">
-              Com DDD. A máscara formata enquanto você digita.
+              Brasil: digite com DDD. Número de teste da Meta: comece com +
+              (ex. +15551540355).
             </span>
           </label>
         </div>

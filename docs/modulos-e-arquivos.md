@@ -85,6 +85,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
 | Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
+| Clientes que já agendaram | `src/app/api/admin/booking-clients/route.ts` — `GET` (únicos por telefone; usado no clube balcão) |
 | Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Starter/Pro; `.../cancel` e `.../undo-cancel` — cancelar / desfazer |
 | Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
 | PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |

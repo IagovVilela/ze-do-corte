@@ -42,6 +42,32 @@ type PixPayload = {
   payload?: string | null;
 };
 
+type BookingClient = {
+  name: string;
+  phone: string;
+  email: string | null;
+};
+
+async function readJson<T extends Record<string, unknown>>(
+  res: Response,
+): Promise<T & { message?: string }> {
+  const text = await res.text();
+  if (!text.trim()) {
+    return { message: res.ok ? undefined : "Resposta vazia do servidor." } as T & {
+      message?: string;
+    };
+  }
+  try {
+    return JSON.parse(text) as T & { message?: string };
+  } catch {
+    return {
+      message: res.ok
+        ? "Resposta inválida do servidor."
+        : `Erro ${res.status}: resposta inválida.`,
+    } as T & { message?: string };
+  }
+}
+
 export function ClubAdminPanel({
   services,
   orgSlug,
@@ -51,6 +77,7 @@ export function ClubAdminPanel({
 }) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subs, setSubs] = useState<Subscription[]>([]);
+  const [bookingClients, setBookingClients] = useState<BookingClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -62,6 +89,7 @@ export function ClubAdminPanel({
   const [planServices, setPlanServices] = useState<string[]>([]);
 
   const [subPlanId, setSubPlanId] = useState("");
+  const [pickedClientKey, setPickedClientKey] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientCpf, setClientCpf] = useState("");
@@ -74,19 +102,45 @@ export function ClubAdminPanel({
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function reload() {
-    const [pRes, sRes] = await Promise.all([
+    const [pRes, sRes, cRes] = await Promise.all([
       fetch("/api/admin/subscription-plans"),
       fetch("/api/admin/client-subscriptions"),
+      fetch("/api/admin/booking-clients"),
     ]);
-    const pData = (await pRes.json()) as { plans?: Plan[]; message?: string };
-    const sData = (await sRes.json()) as { subscriptions?: Subscription[]; message?: string };
+    const pData = (await readJson<{ plans?: Plan[]; message?: string }>(pRes));
+    const sData = (await readJson<{
+      subscriptions?: Subscription[];
+      message?: string;
+    }>(sRes));
+    const cData = (await readJson<{
+      clients?: BookingClient[];
+      message?: string;
+    }>(cRes));
     if (!pRes.ok) throw new Error(pData.message ?? "Falha ao carregar planos.");
-    if (!sRes.ok) throw new Error(sData.message ?? "Falha ao carregar assinantes.");
+    if (!sRes.ok) {
+      throw new Error(sData.message ?? "Falha ao carregar assinantes.");
+    }
     setPlans(pData.plans ?? []);
     setSubs(sData.subscriptions ?? []);
-    if (!subPlanId && (pData.plans?.length ?? 0) > 0) {
-      setSubPlanId(pData.plans!.find((p) => p.isActive)?.id ?? pData.plans![0]!.id);
+    if (cRes.ok) {
+      setBookingClients(cData.clients ?? []);
     }
+    if (!subPlanId && (pData.plans?.length ?? 0) > 0) {
+      setSubPlanId(
+        pData.plans!.find((p) => p.isActive)?.id ?? pData.plans![0]!.id,
+      );
+    }
+  }
+
+  function pickBookingClient(key: string) {
+    setPickedClientKey(key);
+    if (!key) return;
+    const client = bookingClients.find(
+      (c) => `${c.phone}|${c.name}` === key,
+    );
+    if (!client) return;
+    setClientName(client.name);
+    setClientPhone(formatBrPhoneNational(client.phone));
   }
 
   useEffect(() => {
@@ -163,6 +217,7 @@ export function ClubAdminPanel({
     setClientName("");
     setClientPhone("");
     setClientCpf("");
+    setPickedClientKey("");
     setLastPix(data.pix ?? null);
     setLastInvoiceUrl(data.invoiceUrl ?? null);
     setLastBillingType(data.billingType ?? billingType);
@@ -410,22 +465,62 @@ export function ClubAdminPanel({
                 </option>
               ))}
           </select>
-          <input
-            required
-            placeholder="Nome do cliente"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            className={inputClass}
-          />
-          <input
-            required
-            type="tel"
-            inputMode="tel"
-            placeholder="(11) 99999-0000"
-            value={clientPhone}
-            onChange={(e) => setClientPhone(formatBrPhoneNational(e.target.value))}
-            className={inputClass}
-          />
+
+          {bookingClients.length > 0 ? (
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Cliente que já agendou
+              </span>
+              <select
+                value={pickedClientKey}
+                onChange={(e) => pickBookingClient(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Novo cliente (digitar abaixo)</option>
+                {bookingClients.map((c) => {
+                  const key = `${c.phone}|${c.name}`;
+                  return (
+                    <option key={key} value={key}>
+                      {c.name} · {c.phone}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          ) : null}
+
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-[var(--bn-muted)]">
+              Nome do cliente
+            </span>
+            <input
+              required
+              placeholder="Nome do cliente"
+              value={clientName}
+              onChange={(e) => {
+                setPickedClientKey("");
+                setClientName(e.target.value);
+              }}
+              className={inputClass}
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-[var(--bn-muted)]">
+              Telefone
+            </span>
+            <input
+              required
+              type="tel"
+              inputMode="tel"
+              placeholder="(11) 99999-0000"
+              value={clientPhone}
+              onChange={(e) => {
+                setPickedClientKey("");
+                setClientPhone(formatBrPhoneNational(e.target.value));
+              }}
+              className={inputClass}
+            />
+          </label>
           <input
             inputMode="numeric"
             placeholder="CPF/CNPJ (obrigatório com cobrança online)"
