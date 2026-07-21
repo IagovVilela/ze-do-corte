@@ -55,7 +55,7 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 | `/plataforma/marketplace` | Moderação de listagens e reviews |
 | `/plataforma/consumidores` | Agendamentos / clientes finais (cross-tenant) |
 | `/cadastro` | Onboarding do dono (cria org + OWNER + unidade + canvas classic) |
-| `/planos` | Planos da plataforma (Free + Pro; trial 60 dias) |
+| `/planos` | Planos da plataforma (Free + Pro; trial 1 mês / 3 meses no lançamento) |
 | `/[slug]` | Site institucional (canvas) |
 | `/[slug]/agendar` | Agendamento scoped |
 | `/admin/marca` | Identidade (logo, slug, redes) |

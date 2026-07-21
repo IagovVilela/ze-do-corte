@@ -11,8 +11,9 @@ export function BillingAttentionBanner({ freeUpsell = false }: Props) {
       <div className="rounded-2xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-[var(--bn-status-info)]">
         <p className="font-medium">Você está no Free</p>
         <p className="mt-1 text-[var(--bn-status-info)]/80">
-          Site, agenda e Explorar continuam liberados. O Pro desbloqueia Caixa, Clube
-          e várias unidades —{" "}
+          Site, agenda e Explorar continuam liberados (até 2 barbeiros e 1
+          loja). O Pro desbloqueia Caixa, Clube, barbeiros ilimitados e várias
+          unidades —{" "}
           <Link href="/admin/plano" className="underline hover:text-[var(--bn-on)]">
             ver planos
           </Link>
@@ -30,7 +31,7 @@ export function BillingAttentionBanner({ freeUpsell = false }: Props) {
         <Link href="/admin/plano" className="underline hover:text-[var(--bn-on)]">
           assine ou regularize em Plano
         </Link>
-        . Enquanto isso você continua no Free (site e agenda).
+        . Enquanto isso você continua no Free (site, agenda, até 2 barbeiros).
       </p>
     </div>
   );

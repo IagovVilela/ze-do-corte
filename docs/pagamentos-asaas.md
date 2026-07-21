@@ -14,6 +14,7 @@ Dois fluxos financeiros **separados** (sem split/marketplace):
 | `ASAAS_ENV` | `sandbox` (default) ou `production` |
 | `ASAAS_API_URL` | Override opcional da base `/api/v3` |
 | `ASAAS_TOKEN_ENCRYPTION_KEY` | Criptografa API keys dos salões |
+| `SAAS_LAUNCH_OFFER_UNTIL` | ISO date: enquanto futura, cadastro ganha **90 dias** de trial; senão **30** |
 
 Webhook único:
 
@@ -33,12 +34,13 @@ Idempotência: tabela `PaymentEvent` (`asaasEventId` unique).
 
 ## SaaS (`/admin/plano`) — freemium
 
-- Cadastro: **60 dias** de trial Pro (`planStatus=TRIAL`, `planTier=TRIAL_FULL`) — Caixa + Clube + multi-unidade.
-- Fim do trial sem pagamento → **`ACTIVE` + `FREE`** (site, agenda, Explorar; sem Caixa/Clube; **1 unidade**). Não obriga assinar.
+- Cadastro: trial Pro padrão **30 dias** (`planStatus=TRIAL`); se `SAAS_LAUNCH_OFFER_UNTIL` for futuro → **90 dias** (oferta de lançamento). Caixa + Clube + seats/unidades ilimitados no trial.
+- Fim do trial sem pagamento → **`ACTIVE` + `FREE`** (site, agenda, Explorar; sem Caixa/Clube; **até 2 barbeiros STAFF**; **1 unidade**). Não obriga assinar.
 - OWNER assina só **Pro (R$ 129)** via `POST /api/platform/billing` com `planId: "pro"` e `billingType`:
   - **`PIX`** (padrão) — fatura/QR mensal.
   - **`CREDIT_CARD`** — cartão na fatura Asaas; recorrência automática.
-- **Free**: site, agenda, painel, canvas, WhatsApp, PIX do salão, marketplace, 1 unidade. **Pro** (ou trial): Free + Caixa + Clube + várias unidades. Textos em `SAAS_FREE_PLAN` / `SAAS_PLANS`.
+- **Free**: site, agenda, painel, canvas, WhatsApp, PIX do salão, marketplace, até 2 barbeiros, 1 unidade. **Pro** (ou trial): Free + Caixa + Clube + barbeiros ilimitados + várias unidades. Sem venda avulsa de seats — 3º barbeiro exige Pro. Textos em `SAAS_FREE_PLAN` / `SAAS_PLANS`.
+- Gate de equipe: `FREE_STAFF_SEAT_LIMIT` / `freeTierAllowsAnotherStaffSeat` em POST/PATCH `/api/admin/staff`.
 - Webhook `PAYMENT_RECEIVED` / `PAYMENT_CONFIRMED` → `planStatus=ACTIVE` + `planTier=PRO`.
 - `PAST_DUE`: banner + Caixa/Clube bloqueados; após settle sem assinatura → Free.
 - **Cancelar Pro** (só OWNER):

@@ -88,7 +88,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
 | Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
 | Clientes que já agendaram | `src/app/api/admin/booking-clients/route.ts` — `GET` (únicos por telefone; usado no clube balcão) |
-| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Pro (Free sem cobrança); `.../cancel` e `.../undo-cancel` — cancelar / desfazer (volta ao Free) |
+| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Pro (Free sem cobrança); `.../cancel` e `.../undo-cancel` — cancelar / desfazer (volta ao Free); Free: máx. 2 STAFF + 1 unidade (`org-entitlements`) |
 | Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
 | PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |
 | Cadastro SaaS | `src/app/api/cadastro/route.ts` — cria org com `siteJson` classic |

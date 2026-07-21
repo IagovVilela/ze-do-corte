@@ -162,6 +162,22 @@ export function freeTierAllowsAnotherActiveUnit(
   return activeUnitCount < 1;
 }
 
+/** Máx. de barbeiros (`STAFF`) no Free — OWNER/ADMIN não contam. */
+export const FREE_STAFF_SEAT_LIMIT = 2;
+
+/**
+ * Free (ou Starter legado) pode ter no máximo {@link FREE_STAFF_SEAT_LIMIT} STAFF.
+ * `currentStaffSeatCount` = quantidade atual de STAFF na org (antes de criar/promover).
+ */
+export function freeTierAllowsAnotherStaffSeat(
+  org: OrgBillingSlice,
+  currentStaffSeatCount: number,
+  now = new Date(),
+): boolean {
+  if (hasProFeatures(org, now)) return true;
+  return currentStaffSeatCount < FREE_STAFF_SEAT_LIMIT;
+}
+
 export function planStatusLabel(status: OrganizationPlanStatus): string {
   switch (status) {
     case "TRIAL":

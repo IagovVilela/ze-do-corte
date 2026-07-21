@@ -5,7 +5,7 @@ import { SaasPlanComparison } from "@/components/saas-plan-comparison";
 export const metadata = {
   title: "Planos | Barbernegon",
   description:
-    "Free forever + Pro: site, agenda, caixa e clube. 60 dias grátis com tudo do Pro.",
+    "Free forever + Pro: site, agenda, caixa e clube. 1 mês grátis com tudo do Pro (3 meses na oferta de lançamento).",
 };
 
 export default function PlanosPage() {

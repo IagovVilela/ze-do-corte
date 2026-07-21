@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  isSaasLaunchOfferActive,
   SAAS_FREE_PLAN,
   SAAS_PLANS,
   SAAS_TRIAL_COPY,
@@ -26,6 +27,17 @@ export function SaasPlanComparison({
   ctaHref = "/cadastro",
   className,
 }: Props) {
+  const launchOffer = isSaasLaunchOfferActive();
+  const trialTitle = launchOffer
+    ? SAAS_TRIAL_COPY.launchTitle
+    : SAAS_TRIAL_COPY.title;
+  const trialBody = launchOffer
+    ? SAAS_TRIAL_COPY.launchBody
+    : SAAS_TRIAL_COPY.body;
+  const proCtaLabel = launchOffer
+    ? "Começar (3 meses Pro)"
+    : "Começar (1 mês Pro)";
+
   const cards = [
     {
       id: "free" as const,
@@ -54,10 +66,8 @@ export function SaasPlanComparison({
   return (
     <div className={cn("space-y-6", className)}>
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--bn-status-ok)]">
-        <p className="font-semibold text-[var(--bn-status-ok)]">
-          {SAAS_TRIAL_COPY.title}
-        </p>
-        <p className="mt-1 opacity-90">{SAAS_TRIAL_COPY.body}</p>
+        <p className="font-semibold text-[var(--bn-status-ok)]">{trialTitle}</p>
+        <p className="mt-1 opacity-90">{trialBody}</p>
       </div>
 
       <ul className="grid items-stretch gap-4 md:grid-cols-2 md:gap-5">
@@ -168,7 +178,7 @@ export function SaasPlanComparison({
                         : "border border-[var(--bn-border)] bg-transparent text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-hover)]",
                     )}
                   >
-                    {isPro ? "Começar (60 dias Pro)" : "Começar grátis"}
+                    {isPro ? proCtaLabel : "Começar grátis"}
                   </Link>
                 ) : null}
               </div>

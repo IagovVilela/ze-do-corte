@@ -99,8 +99,8 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
     category: "billing",
     summary: "Mensalidade da plataforma (separada do dinheiro dos seus clientes).",
     body: [
-      "Free (grátis para sempre): site, agenda, painel, PIX, WhatsApp, marketplace, 1 unidade. Pro (R$ 129): tudo isso + Caixa + Clube + várias unidades.",
-      "Cadastro inclui 60 dias de Pro grátis. Depois você fica no Free — assinar Pro é opcional. Em /admin/plano o dono gerencia o plano (PIX ou cartão).",
+      "Free (grátis para sempre): site, agenda, painel, PIX, WhatsApp, marketplace, até 2 barbeiros e 1 unidade. Pro (R$ 129): tudo isso + Caixa + Clube + barbeiros ilimitados + várias unidades.",
+      "Cadastro inclui 1 mês de Pro grátis (3 meses na oferta de lançamento). Depois você fica no Free — assinar Pro é opcional. Em /admin/plano o dono gerencia o plano (PIX ou cartão).",
       "Essa cobrança é da Barbernegon. O PIX/clube dos seus clientes continua na sua conta Asaas.",
     ],
   },

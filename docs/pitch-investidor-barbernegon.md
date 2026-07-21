@@ -35,11 +35,11 @@ Uma plataforma **multi-tenant**: cada barbearia tem sua “casa” digital.
 
 | Plano | Preço | Foco |
 |-------|-------|------|
-| Trial | **60 dias** | Tudo do Pro (criar hábito) |
-| **Free** | R$ 0 para sempre | Site, agenda, painel, PIX, WhatsApp, Explorar, **1 unidade** |
-| **Pro** | R$ 129/mês | Free + **Caixa** + **Clube** + multi-unidade |
+| Trial | **1 mês** (padrão) / **3 meses** (lançamento) | Tudo do Pro |
+| **Free** | R$ 0 para sempre | Site, agenda, painel, PIX, WhatsApp, Explorar, **até 2 barbeiros**, **1 unidade** |
+| **Pro** | R$ 129/mês | Free + **Caixa** + **Clube** + barbeiros ilimitados + multi-unidade |
 
-Depois do trial o salão **continua no Free** (não é obrigado a pagar). Quem depende de Caixa/Clube assina o Pro.
+Depois do trial o salão **continua no Free** (não é obrigado a pagar). Quem precisa de mais de 2 barbeiros, Caixa/Clube ou 2ª loja assina o Pro — sem venda avulsa de seats.
 
 Cobrança do Pro: PIX ou cartão, na conta Asaas da **plataforma**.  
 Receita do salão com clientes (agenda PIX / clube): conta Asaas **do próprio salão**.
@@ -71,7 +71,7 @@ Produto em **produção**, com:
 
 Não precisa ser cheque na primeira reunião. Pedimos:
 
-1. Feedback sincero sobre freemium (Free + Pro R$ 129) e trial de 60 dias  
+1. Feedback sincero sobre freemium (Free + Pro R$ 129; Free com até 2 barbeiros; trial 1 mês / 3 meses no lançamento)  
 2. Introduções a **2–3 donos de barbearia** para piloto  
 3. Se fizer sentido: aporte seed para **go-to-market** (aquisição orgânica + suporte) e acelerar os primeiros 50–100 salões na base  
 
@@ -84,7 +84,7 @@ Pergunta de fechamento: *“O que faria sentido para validar Barbernegon com 10�
 1. **Problema** (1 min) — WhatsApp + marketplace dilui marca.  
 2. **Solução** (1 min) — Site da marca + agenda + operação + clube + WhatsApp, num SaaS.  
 3. **Demo** (2 min) — landing → site de um salão → agendar → `/admin/site` → clube/pagamentos.  
-4. **Negócio** (1 min) — Free forever + Pro R$ 129; trial 60 dias; dinheiro do cliente fica no salão.  
+4. **Negócio** (1 min) — Free forever (até 2 barbeiros) + Pro R$ 129; trial 1 mês (3 no lançamento); dinheiro do cliente fica no salão.  
 5. **Pedido** — intros + piloto; ou seed para GTM orgânico (freemium).
 
 ### Links da demo
@@ -104,7 +104,7 @@ Pergunta de fechamento: *“O que faria sentido para validar Barbernegon com 10�
 | Pergunta | Resposta |
 |----------|----------|
 | Vs Booksy? | Eles são marketplace; nós somos site + operação da marca do salão. |
-| Como ganha dinheiro? | Freemium: Free útil + Pro R$ 129 (Caixa/Clube). Não pegamos % do PIX/clube do salão. |
+| Como ganha dinheiro? | Freemium: Free útil (até 2 barbeiros) + Pro R$ 129 (Caixa/Clube/seats ilimitados). Não pegamos % do PIX/clube do salão. |
 | Tração? | Produto em produção; freemium para encher a base e converter % em Pro. |
 | Por que agora? | Salões querem profissionalizar sem perder a marca; WhatsApp sozinho não escala agenda nem caixa. |
 

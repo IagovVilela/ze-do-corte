@@ -4,6 +4,10 @@ import { AdminStaffManager } from "@/components/admin-staff-manager";
 import { AnimatedSection } from "@/components/animated-section";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
+import {
+  freeTierAllowsAnotherStaffSeat,
+  settleOrgBillingState,
+} from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 import { staffMemberScopeWhere, unitScopeWhere } from "@/lib/staff-access";
 import { defaultWorkWeekFromShop, parseWorkWeekFromDb } from "@/lib/work-week";
@@ -16,7 +20,7 @@ export default async function AdminEquipePage() {
     redirect("/admin");
   }
 
-  const [staff, units] = await Promise.all([
+  const [staff, units, org] = await Promise.all([
     prisma.staffMember.findMany({
       where: staffMemberScopeWhere(access),
       include: { unit: true },
@@ -26,8 +30,23 @@ export default async function AdminEquipePage() {
       where: { isActive: true, ...unitScopeWhere(access) },
       orderBy: { name: "asc" },
     }),
+    settleOrgBillingState(access.organizationId).then(() =>
+      prisma.organization.findUnique({
+        where: { id: access.organizationId },
+        select: {
+          planStatus: true,
+          planTier: true,
+          trialEndsAt: true,
+          planCancelAt: true,
+        },
+      }),
+    ),
   ]);
 
+  const staffSeatCount = staff.filter((s) => s.role === "STAFF").length;
+  const staffSeatLimitReached = org
+    ? !freeTierAllowsAnotherStaffSeat(org, staffSeatCount)
+    : false;
   const defaults = defaultWorkWeekFromShop();
   const staffRows = staff.map((s) => {
     const base = {
@@ -62,6 +81,7 @@ export default async function AdminEquipePage() {
               initialStaff={staffRows}
               units={unitOptions}
               canAssignAdmins={access.permissions.manageStaff === "full"}
+              staffSeatLimitReached={staffSeatLimitReached}
             />
           </div>
         </AnimatedSection>

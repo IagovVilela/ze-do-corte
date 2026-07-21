@@ -27,19 +27,21 @@ export const SAAS_FREE_PLAN = {
     "WhatsApp no site (+ assistente, se ligar)",
     "Receber PIX dos clientes (sua conta Asaas)",
     "Aparecer no Explorar (marketplace)",
+    "Até 2 barbeiros",
     "1 unidade / loja",
   ],
   notIncluded: [
     "Caixa e relatório de quanto entrou",
     "Clube de assinaturas dos clientes",
+    "Mais de 2 barbeiros",
     "Várias unidades",
   ],
   ctaHint: "Comece grátis e opere de verdade.",
 };
 
 /**
- * Único plano cobrável. Pro = Caixa + Clube + multi-unidade.
- * Trial ativo = acesso Pro completo por 60 dias.
+ * Único plano cobrável. Pro = Caixa + Clube + seats e unidades ilimitados.
+ * Trial ativo = acesso Pro completo.
  */
 export const SAAS_PLANS: SaasPlanDef[] = [
   {
@@ -47,25 +49,49 @@ export const SAAS_PLANS: SaasPlanDef[] = [
     name: "Pro",
     priceMonthly: 129,
     tier: "PRO",
-    blurb: "Tudo do Free + dinheiro e fidelização sob controle.",
+    blurb: "Tudo do Free + barbeiros ilimitados, multi-loja e fidelização.",
     badge: "Mais valor",
     features: [
       "Tudo que está no Free",
+      "Barbeiros ilimitados",
       "Várias unidades / lojas",
       "Caixa: quanto entrou, período e visão clara",
       "Clube: planos mensais com visitas e cancelamento fácil",
       "Cobrança do clube na sua conta Asaas (quando ligada)",
     ],
-    ctaHint: "Para quem quer recorrência e controle financeiro.",
+    ctaHint: "Para quem quer equipe maior, recorrência e controle financeiro.",
   },
 ];
 
-/** Texto padrão do trial (Premium grátis no início). */
-export const SAAS_TRIAL_DAYS = 60;
+/** Trial padrão (Premium/Pro grátis no cadastro). */
+export const SAAS_TRIAL_DAYS = 30;
+
+/** Oferta de lançamento: 3 meses Premium enquanto a janela estiver aberta. */
+export const SAAS_LAUNCH_TRIAL_DAYS = 90;
+
+/**
+ * Dias de trial para novos cadastros.
+ * Se `SAAS_LAUNCH_OFFER_UNTIL` (ISO date) for futuro, usa 90 dias; senão 30.
+ */
+export function resolveSaasTrialDays(now = new Date()): number {
+  const raw = process.env.SAAS_LAUNCH_OFFER_UNTIL?.trim();
+  if (!raw) return SAAS_TRIAL_DAYS;
+  const until = new Date(raw);
+  if (Number.isNaN(until.getTime())) return SAAS_TRIAL_DAYS;
+  if (now.getTime() < until.getTime()) return SAAS_LAUNCH_TRIAL_DAYS;
+  return SAAS_TRIAL_DAYS;
+}
+
+export function isSaasLaunchOfferActive(now = new Date()): boolean {
+  return resolveSaasTrialDays(now) === SAAS_LAUNCH_TRIAL_DAYS;
+}
 
 export const SAAS_TRIAL_COPY = {
-  title: "60 dias com tudo do Pro — grátis",
-  body: "No trial você usa Caixa, Clube e multi-unidade. Depois continua no Free para sempre; assine o Pro só se quiser manter esses extras.",
+  title: "1 mês com tudo do Pro — grátis",
+  body: "No trial você usa Caixa, Clube, barbeiros ilimitados e multi-unidade. Depois continua no Free (até 2 barbeiros e 1 loja); assine o Pro só se quiser manter os extras.",
+  launchTitle: "3 meses com tudo do Pro — oferta de lançamento",
+  launchBody:
+    "Cadastros na oferta de lançamento ganham 3 meses de Pro. Depois seguem no Free; upgrade é opcional.",
 };
 
 export function saasPlanById(id: string): SaasPlanDef | null {

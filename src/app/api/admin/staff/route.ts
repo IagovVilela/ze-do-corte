@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import {
+  freeTierAllowsAnotherStaffSeat,
+  settleOrgBillingState,
+} from "@/lib/org-entitlements";
 import { hashPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
@@ -116,9 +120,36 @@ export async function POST(request: Request) {
     }
   }
 
+  const organizationId = auth.access.organizationId;
+
+  if (role === "STAFF") {
+    await settleOrgBillingState(organizationId);
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        planStatus: true,
+        planTier: true,
+        trialEndsAt: true,
+        planCancelAt: true,
+      },
+    });
+    const staffSeatCount = await prisma.staffMember.count({
+      where: { organizationId, role: "STAFF" },
+    });
+    if (org && !freeTierAllowsAnotherStaffSeat(org, staffSeatCount)) {
+      return NextResponse.json(
+        {
+          message:
+            "No Free você tem até 2 barbeiros. Faça upgrade para o Pro em /admin/plano para adicionar mais.",
+          code: "FREE_STAFF_SEAT_LIMIT",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   const email = parsed.data.email.toLowerCase();
   const passwordHash = await hashPassword(parsed.data.initialPassword);
-  const organizationId = auth.access.organizationId;
 
   try {
     const member = await prisma.staffMember.create({

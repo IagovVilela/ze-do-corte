@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Fragment, useState } from "react";
@@ -31,6 +32,8 @@ type Props = {
   initialStaff: StaffRow[];
   units: { id: string; name: string }[];
   canAssignAdmins: boolean;
+  /** Free sem Pro: já atingiu o teto de 2 barbeiros STAFF */
+  staffSeatLimitReached?: boolean;
 };
 
 const rolePt: Record<StaffRow["role"], string> = {
@@ -43,6 +46,7 @@ export function AdminStaffManager({
   initialStaff,
   units,
   canAssignAdmins,
+  staffSeatLimitReached = false,
 }: Props) {
   const router = useRouter();
   const [staff, setStaff] = useState(initialStaff);
@@ -202,6 +206,16 @@ export function AdminStaffManager({
       {error ? (
         <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-[var(--bn-status-danger)]">
           {error}
+        </p>
+      ) : null}
+      {staffSeatLimitReached ? (
+        <p className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-[var(--bn-status-info)]">
+          No Free você tem até 2 barbeiros. Para adicionar mais, faça upgrade
+          para o Pro em{" "}
+          <Link href="/admin/plano" className="underline hover:text-[var(--bn-on)]">
+            /admin/plano
+          </Link>
+          .
         </p>
       ) : null}
 
