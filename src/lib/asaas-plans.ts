@@ -1,71 +1,71 @@
-export type SaasPlanId = "starter" | "pro";
+export type SaasPlanId = "pro";
 
 export type SaasPlanDef = {
   id: SaasPlanId;
   name: string;
   priceMonthly: number;
-  tier: "STARTER" | "PRO";
-  /** Frase curta sob o nome */
+  tier: "PRO";
   blurb: string;
-  /** Selo opcional no card (ex.: Mais completo) */
   badge: string | null;
-  /** O que o plano inclui (linguagem leiga) */
   features: string[];
-  /** O que não inclui (só Starter costuma listar) */
   notIncluded?: string[];
-  /** CTA sugerido */
   ctaHint: string;
 };
 
+/** Plano Free forever — só marketing (não cria assinatura Asaas). */
+export const SAAS_FREE_PLAN = {
+  id: "free" as const,
+  name: "Free",
+  priceMonthly: 0,
+  blurb: "Site, agenda e presença online — para sempre.",
+  badge: "Para sempre",
+  features: [
+    "Site com a marca da sua barbearia",
+    "Clientes agendam pelo celular",
+    "Painel: agenda, equipe e serviços",
+    "Editor visual do site",
+    "WhatsApp no site (+ assistente, se ligar)",
+    "Receber PIX dos clientes (sua conta Asaas)",
+    "Aparecer no Explorar (marketplace)",
+    "1 unidade / loja",
+  ],
+  notIncluded: [
+    "Caixa e relatório de quanto entrou",
+    "Clube de assinaturas dos clientes",
+    "Várias unidades",
+  ],
+  ctaHint: "Comece grátis e opere de verdade.",
+};
+
 /**
- * Fonte única de verdade para marketing e /admin/plano.
- * Espelha o que o código realmente libera: Pro = Caixa + Clube
- * (trial ativo = acesso Pro completo por 14 dias).
+ * Único plano cobrável. Pro = Caixa + Clube + multi-unidade.
+ * Trial ativo = acesso Pro completo por 60 dias.
  */
 export const SAAS_PLANS: SaasPlanDef[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    priceMonthly: 79,
-    tier: "STARTER",
-    blurb: "Sua barbearia online: site, agenda e painel.",
-    badge: null,
-    features: [
-      "Site com a marca da sua barbearia",
-      "Clientes agendam sozinhos pelo celular",
-      "Painel: agenda, equipe, serviços e unidades",
-      "Editor visual do site (arrastar e soltar)",
-      "WhatsApp no site (+ assistente, se ligar)",
-      "Receber PIX dos clientes (sua conta Asaas)",
-      "Aparecer no Explorar (marketplace)",
-    ],
-    notIncluded: [
-      "Caixa e relatório de quanto entrou",
-      "Clube de assinaturas dos clientes",
-    ],
-    ctaHint: "Ideal para começar a operar online.",
-  },
   {
     id: "pro",
     name: "Pro",
     priceMonthly: 129,
     tier: "PRO",
-    blurb: "Tudo do Starter + dinheiro e fidelização sob controle.",
-    badge: "Mais completo",
+    blurb: "Tudo do Free + dinheiro e fidelização sob controle.",
+    badge: "Mais valor",
     features: [
-      "Tudo que está no Starter",
+      "Tudo que está no Free",
+      "Várias unidades / lojas",
       "Caixa: quanto entrou, período e visão clara",
       "Clube: planos mensais com visitas e cancelamento fácil",
       "Cobrança do clube na sua conta Asaas (quando ligada)",
     ],
-    ctaHint: "Para quem quer crescer com recorrência e controle financeiro.",
+    ctaHint: "Para quem quer recorrência e controle financeiro.",
   },
 ];
 
-/** Texto padrão do trial (não é um plano cobrável). */
+/** Texto padrão do trial (Premium grátis no início). */
+export const SAAS_TRIAL_DAYS = 60;
+
 export const SAAS_TRIAL_COPY = {
-  title: "14 dias grátis com tudo do Pro",
-  body: "No trial você testa Caixa, Clube e o restante do produto. Depois escolha Starter ou Pro — o status vira Ativo após o pagamento.",
+  title: "60 dias com tudo do Pro — grátis",
+  body: "No trial você usa Caixa, Clube e multi-unidade. Depois continua no Free para sempre; assine o Pro só se quiser manter esses extras.",
 };
 
 export function saasPlanById(id: string): SaasPlanDef | null {
@@ -73,10 +73,9 @@ export function saasPlanById(id: string): SaasPlanDef | null {
 }
 
 export function saasPlanByTier(
-  tier: "STARTER" | "PRO" | "TRIAL_FULL" | string,
+  tier: "STARTER" | "PRO" | "TRIAL_FULL" | "FREE" | string,
 ): SaasPlanDef | null {
   if (tier === "PRO") return saasPlanById("pro");
-  if (tier === "STARTER") return saasPlanById("starter");
   return null;
 }
 
@@ -100,10 +99,13 @@ export function parseExternalRef(ref: string | null | undefined): {
   if (!ref) return null;
   const saas = /^saas_org:([^:]+):(starter|pro)$/i.exec(ref);
   if (saas) {
+    const raw = saas[2]!.toLowerCase();
+    // Starter legado no Asaas → trata como Pro (único plano cobrável)
+    const planId: SaasPlanId = raw === "pro" ? "pro" : "pro";
     return {
       kind: "saas",
       id: saas[1]!,
-      planId: saas[2]!.toLowerCase() as SaasPlanId,
+      planId,
     };
   }
   const appt = /^appt:(.+)$/i.exec(ref);

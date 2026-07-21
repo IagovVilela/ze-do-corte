@@ -95,12 +95,12 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
   },
   {
     slug: "plano-saas",
-    title: "Plano Starter e Pro da Barbernegon",
+    title: "Planos Free e Pro da Barbernegon",
     category: "billing",
     summary: "Mensalidade da plataforma (separada do dinheiro dos seus clientes).",
     body: [
-      "Starter (~R$ 79): site, agenda, painel, PIX, WhatsApp, marketplace. Pro (~R$ 129): tudo isso + Caixa + Clube.",
-      "Em /admin/plano o dono assina ou gerencia o plano (PIX ou cartão). Trial de 14 dias libera o nível Pro.",
+      "Free (grátis para sempre): site, agenda, painel, PIX, WhatsApp, marketplace, 1 unidade. Pro (R$ 129): tudo isso + Caixa + Clube + várias unidades.",
+      "Cadastro inclui 60 dias de Pro grátis. Depois você fica no Free — assinar Pro é opcional. Em /admin/plano o dono gerencia o plano (PIX ou cartão).",
       "Essa cobrança é da Barbernegon. O PIX/clube dos seus clientes continua na sua conta Asaas.",
     ],
   },

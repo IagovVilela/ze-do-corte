@@ -5,7 +5,7 @@ import { SaasPlanComparison } from "@/components/saas-plan-comparison";
 export const metadata = {
   title: "Planos | Barbernegon",
   description:
-    "Starter e Pro: site, agenda, caixa e clube para a sua barbearia. 14 dias grátis com tudo do Pro.",
+    "Free forever + Pro: site, agenda, caixa e clube. 60 dias grátis com tudo do Pro.",
 };
 
 export default function PlanosPage() {

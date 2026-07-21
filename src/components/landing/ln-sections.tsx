@@ -136,7 +136,7 @@ export function HeroSignal() {
           >
             <MagneticCta href="/cadastro">Criar minha barbearia</MagneticCta>
             <MagneticCta href="/ze-do-corte" tone="ghost">
-              Ver demo ao vivo
+              Ver demo Barbergon
             </MagneticCta>
           </motion.div>
           <motion.p
@@ -282,7 +282,7 @@ export function StickyProductStory() {
       title: "Site com a sua cara",
       body: "Logo, cores, slogans e hero em /sua-marca. White-label de verdade.",
       href: "/ze-do-corte",
-      cta: "Abrir demo",
+      cta: "Abrir demo Barbergon",
       accent: "from-[#2af5c0]/20 to-transparent",
     },
     {
@@ -489,7 +489,7 @@ export function LandingFooter() {
             Painel
           </Link>
           <Link href="/ze-do-corte" className="transition hover:text-white">
-            Demo
+            Demo Barbergon
           </Link>
         </div>
       </div>

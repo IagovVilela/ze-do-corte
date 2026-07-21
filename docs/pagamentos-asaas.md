@@ -2,7 +2,7 @@
 
 Dois fluxos financeiros **separados** (sem split/marketplace):
 
-1. **SaaS Barbernegon** — conta Asaas da **plataforma** cobra Starter/Pro do dono.
+1. **SaaS Barbernegon** — conta Asaas da **plataforma** cobra o **Pro** do dono (Free não gera cobrança).
 2. **Salão** — cada org cola a **própria** API key Asaas; PIX de agendamento e assinaturas do clube caem na conta do salão.
 
 ## Variáveis de ambiente (plataforma)
@@ -25,27 +25,26 @@ No painel Asaas (plataforma **e** cada salão): Integrações → Webhooks → U
 
 | Prefixo | Destino |
 |---------|---------|
-| `saas_org:{orgId}:{starter\|pro}` | `Organization.planStatus` / `planTier` |
+| `saas_org:{orgId}:{pro}` | `Organization.planStatus` / `planTier` (legado `starter` no ref ainda é aceito) |
 | `appt:{appointmentId}` | `Appointment.paidAt` + `paymentStatus` |
 | `club_sub:{subscriptionId}` | `ClientSubscription.status` |
 
 Idempotência: tabela `PaymentEvent` (`asaasEventId` unique).
 
-## SaaS (`/admin/plano`)
+## SaaS (`/admin/plano`) — freemium
 
-- Trial 14 dias (`planTier=TRIAL_FULL`) libera caixa + clube.
-- OWNER assina Starter (R$ 79) ou Pro (R$ 129) via `POST /api/platform/billing` com `billingType`:
-  - **`PIX`** (padrão) — Asaas gera fatura/QR todo mês; o dono paga cada cobrança manualmente.
-  - **`CREDIT_CARD`** — abre a fatura Asaas para cadastrar o cartão uma vez; meses seguintes com débito automático.
-- **O que desbloqueia de verdade**: Starter = site, agenda, painel, canvas, WhatsApp, PIX do salão, marketplace. **Pro** (ou trial ativo) = tudo isso + **Caixa** (`/admin/caixa`) + **Clube** (`/admin/clube` e APIs). Textos em `SAAS_PLANS` / `SaasPlanComparison`.
-- Webhook `PAYMENT_RECEIVED` / `PAYMENT_CONFIRMED` → `planStatus=ACTIVE` + tier.
-- `PAST_DUE` / trial expirado: banner + **Caixa** e **Clube** bloqueados (só Pro ativo mantém após trial).
-- Starter ativo: site + agenda + admin; sem caixa/clube.
-- **Cancelar plano** (só OWNER):
-  - `POST /api/platform/billing/cancel` — trial/`PAST_DUE` → `CANCELLED` na hora; `ACTIVE` cancela no Asaas, grava `planCancelAt` (fim do período) e mantém Ativo até essa data.
-  - Enquanto agendado: botão **Desfazer cancelamento** → `POST /api/platform/billing/undo-cancel` (recria assinatura com o mesmo `billingType` lembrado na sessão, default PIX).
-  - Depois de `planCancelAt`, ao abrir `/admin/plano` (ou GET billing) o status vira `CANCELLED` e sai do marketplace (`TRIAL`/`ACTIVE` only).
-  - Ops em `/plataforma` também pode forçar `CANCELLED` no editor da barbearia.
+- Cadastro: **60 dias** de trial Pro (`planStatus=TRIAL`, `planTier=TRIAL_FULL`) — Caixa + Clube + multi-unidade.
+- Fim do trial sem pagamento → **`ACTIVE` + `FREE`** (site, agenda, Explorar; sem Caixa/Clube; **1 unidade**). Não obriga assinar.
+- OWNER assina só **Pro (R$ 129)** via `POST /api/platform/billing` com `planId: "pro"` e `billingType`:
+  - **`PIX`** (padrão) — fatura/QR mensal.
+  - **`CREDIT_CARD`** — cartão na fatura Asaas; recorrência automática.
+- **Free**: site, agenda, painel, canvas, WhatsApp, PIX do salão, marketplace, 1 unidade. **Pro** (ou trial): Free + Caixa + Clube + várias unidades. Textos em `SAAS_FREE_PLAN` / `SAAS_PLANS`.
+- Webhook `PAYMENT_RECEIVED` / `PAYMENT_CONFIRMED` → `planStatus=ACTIVE` + `planTier=PRO`.
+- `PAST_DUE`: banner + Caixa/Clube bloqueados; após settle sem assinatura → Free.
+- **Cancelar Pro** (só OWNER):
+  - `POST /api/platform/billing/cancel` — trial/`PAST_DUE` → **Free** na hora; `ACTIVE` Pro agenda `planCancelAt` e no fim cai no **Free** (não “conta morta”).
+  - Desfazer: `POST /api/platform/billing/undo-cancel`.
+  - Marketplace lista `TRIAL` e `ACTIVE` (Free incluso).
 
 ## Salão (`/admin/pagamentos`)
 

@@ -126,7 +126,7 @@ export default async function PlataformaHomePage({ searchParams }: Props) {
         <PlatformMixPie
           data={charts.planTierMix}
           title="Mix de tiers"
-          subtitle="Trial / Starter / Pro"
+          subtitle="Trial / Free / Pro"
           centerLabel="barbearias"
           emptyLabel="Nenhuma barbearia cadastrada."
         />

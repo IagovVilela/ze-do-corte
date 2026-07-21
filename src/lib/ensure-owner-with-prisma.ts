@@ -1,6 +1,12 @@
 import { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client";
 
+import {
+  DEMO_ORG_BRANDING,
+  DEMO_ORG_ID,
+  DEMO_ORG_SLUG,
+  demoSiteJson,
+} from "../prisma/demo-vitrine";
 import { hashPassword } from "./password";
 import { MIN_PASSWORD_LENGTH } from "./password-policy";
 
@@ -23,16 +29,15 @@ export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void>
   }
 
   const org = await prisma.organization.upsert({
-    where: { slug: "ze-do-corte" },
+    where: { slug: DEMO_ORG_SLUG },
     create: {
-      id: "org_ze_do_corte_default",
-      name: "Zé do Corte",
-      slug: "ze-do-corte",
+      id: DEMO_ORG_ID,
+      slug: DEMO_ORG_SLUG,
       planStatus: "ACTIVE",
-      slogan: "Estilo e confiança",
-      sloganSecondary: "Experiências únicas para homens únicos",
-      primaryColor: "#3b82f6",
       timezone: "America/Sao_Paulo",
+      marketplaceListed: true,
+      ...DEMO_ORG_BRANDING,
+      siteJson: demoSiteJson(),
     },
     update: {},
   });

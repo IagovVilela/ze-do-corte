@@ -8,6 +8,9 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-21
 
+- **Freemium (feedback investidor)**: Free forever + Pro R$ 129; trial **60 dias** Pro; depois Free sem obrigar assinatura. Starter sai dos fluxos novos. Cancelamento Pro → Free. Limite 1 unidade no Free. CTA “Crie o site… grátis” no rodapé dos sites. Migrações `20260721200000_freemium_free_tier` + `…_free_data`.
+- **Vitrine demo — redesign**: `/ze-do-corte` (Barbergon) deixa o hero vazio/cards genéricos; split com foto real, galeria com crop, preview do builder e CTA para cadastro. Reaplicar: `npm run demo:vitrine`.
+- **Vitrine demo Barbergon**: org `ze-do-corte` passa a chamar-se Barbergon com template canvas **`vitrine`** (hero, mesh, painéis, serviços, equipe, contato). Seed + `npm run demo:vitrine` / `railway run npm run demo:vitrine`. Cadastros novos seguem no modelo `classic`. Landing aponta “Demo Barbergon”.
 - **Suporte — contato rápido**: WhatsApp `(12) 99637-3335` e e-mail `iagovventura@gmail.com` como padrão (sobrescrevíveis por `SUPPORT_*`).
 - **Ops — identidade e alerta de chamado**: sidebar mostra “Suporte Barbernegon”; toast/badge (e opcional notificação do navegador) ao detectar chamado aberto; e-mail para `SUPPORT_EMAIL` via Resend ao criar ticket.
 - **Ops — gráficos sem AdminThemeProvider**: `useAdminChartColors` usa tema opcional (fallback escuro) para não quebrar `/plataforma` ao renderizar `DashboardVolumeArea`.

@@ -90,7 +90,8 @@ export function PlatformOrgEditor({ organizationId, initial }: Props) {
             onChange={(e) => setPlanTier(e.target.value)}
           >
             <option value="TRIAL_FULL">Trial full</option>
-            <option value="STARTER">Starter</option>
+            <option value="STARTER">Starter (legado)</option>
+            <option value="FREE">Free</option>
             <option value="PRO">Pro</option>
           </select>
         </label>

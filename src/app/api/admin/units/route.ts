@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import {
+  freeTierAllowsAnotherActiveUnit,
+  settleOrgBillingState,
+} from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { unitScopeWhere } from "@/lib/staff-access";
@@ -67,6 +71,36 @@ export async function POST(request: Request) {
       { message: "Já existe uma unidade com este identificador (slug)." },
       { status: 409 },
     );
+  }
+
+  const willBeActive = parsed.data.isActive !== false;
+  if (willBeActive) {
+    await settleOrgBillingState(organizationId);
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        planStatus: true,
+        planTier: true,
+        trialEndsAt: true,
+        planCancelAt: true,
+      },
+    });
+    const activeCount = await prisma.barbershopUnit.count({
+      where: { organizationId, isActive: true },
+    });
+    if (
+      org &&
+      !freeTierAllowsAnotherActiveUnit(org, activeCount)
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "No plano Free você pode ter 1 unidade ativa. Assine o Pro em /admin/plano para abrir mais lojas.",
+          code: "FREE_UNIT_LIMIT",
+        },
+        { status: 403 },
+      );
+    }
   }
 
   const isDefault = parsed.data.isDefault === true;

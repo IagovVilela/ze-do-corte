@@ -140,11 +140,12 @@ export async function POST(request: Request) {
     });
   }
 
-  // TRIAL ou PAST_DUE → cancelamento imediato
+  // TRIAL ou PAST_DUE → Free forever (não apaga a conta)
   const updated = await prisma.organization.update({
     where: { id: org.id },
     data: {
-      planStatus: "CANCELLED",
+      planStatus: "ACTIVE",
+      planTier: "FREE",
       planCancelAt: null,
       asaasSubscriptionId: null,
     },
@@ -163,7 +164,7 @@ export async function POST(request: Request) {
     cancelReason: reason,
     message:
       org.planStatus === "TRIAL"
-        ? "Trial encerrado. Status: Cancelado."
-        : "Plano cancelado. Status: Cancelado.",
+        ? "Trial encerrado. Você continua no Free com site e agenda."
+        : "Assinatura encerrada. Você continua no Free com site e agenda.",
   });
 }

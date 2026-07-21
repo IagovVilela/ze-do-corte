@@ -95,6 +95,7 @@ const PLAN_STATUS_COLORS: Record<OrganizationPlanStatus, string> = {
 const PLAN_TIER_COLORS: Record<string, string> = {
   TRIAL_FULL: "#93c5fd",
   STARTER: "#60a5fa",
+  FREE: "#34d399",
   PRO: "#3b82f6",
 };
 

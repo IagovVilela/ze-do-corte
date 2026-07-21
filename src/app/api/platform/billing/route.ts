@@ -22,14 +22,14 @@ import {
   needsBillingAttention,
   planStatusLabel,
   planTierLabel,
-  settleScheduledPlanCancellation,
+  settleOrgBillingState,
 } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 const postSchema = z.object({
-  planId: z.enum(["starter", "pro"]),
+  planId: z.enum(["pro"]),
   billingType: z.enum(["PIX", "CREDIT_CARD"]).default("PIX"),
   cpfCnpj: z
     .string()
@@ -44,7 +44,7 @@ export async function GET() {
   const auth = await requireStaffApiAuth();
   if (!auth.ok) return auth.response;
 
-  await settleScheduledPlanCancellation(auth.access.organizationId);
+  await settleOrgBillingState(auth.access.organizationId);
 
   const org = await prisma.organization.findUnique({
     where: { id: auth.access.organizationId },

@@ -87,7 +87,8 @@ async function markSaasCancelled(orgId: string) {
   await prisma.organization.update({
     where: { id: orgId },
     data: {
-      planStatus: "CANCELLED",
+      planStatus: "ACTIVE",
+      planTier: "FREE",
       planCancelAt: null,
       asaasSubscriptionId: null,
     },
@@ -245,8 +246,7 @@ export async function processAsaasWebhook(
       select: { id: true, planTier: true },
     });
     if (org) {
-      const planId: SaasPlanId =
-        org.planTier === "STARTER" ? "starter" : "pro";
+      const planId: SaasPlanId = "pro";
       parsed = { kind: "saas", id: org.id, planId };
     } else {
       const club = await prisma.clientSubscription.findFirst({

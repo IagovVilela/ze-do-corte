@@ -9,12 +9,13 @@ import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import type { SaasPlanId } from "@/lib/asaas-plans";
 import {
   hasProFeatures,
+  isFreePlanUpsell,
   isPlanCancelScheduled,
   isTrialActive,
   needsBillingAttention,
   planStatusLabel,
   planTierLabel,
-  settleScheduledPlanCancellation,
+  settleOrgBillingState,
 } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -26,7 +27,7 @@ export default async function AdminPlanoPage() {
   if (!access) return null;
   if (access.role !== "OWNER") redirect("/admin");
 
-  await settleScheduledPlanCancellation(access.organizationId);
+  await settleOrgBillingState(access.organizationId);
 
   const org = await prisma.organization.findUnique({
     where: { id: access.organizationId },
@@ -54,23 +55,26 @@ export default async function AdminPlanoPage() {
   const cancelScheduled = isPlanCancelScheduled(org);
   const trialActive = isTrialActive(org);
   const proUnlocked = hasProFeatures(org);
-  const currentPlanId: SaasPlanId | null =
-    org.planStatus === "ACTIVE" &&
-    (org.planTier === "STARTER" || org.planTier === "PRO")
-      ? org.planTier === "PRO"
-        ? "pro"
-        : "starter"
-      : null;
+  const freeUpsell = isFreePlanUpsell(org);
+  const currentPlanId: SaasPlanId | "free" | null =
+    org.planStatus === "ACTIVE" && org.planTier === "PRO"
+      ? "pro"
+      : org.planStatus === "ACTIVE" &&
+          (org.planTier === "FREE" || org.planTier === "STARTER")
+        ? "free"
+        : null;
 
   return (
     <div className="space-y-8 py-6">
       <AdminPageHeader
         eyebrow="Plataforma"
         title="Seu plano Barbernegon"
-        description="Assinatura da plataforma (site + painel). Separada do PIX e do clube dos seus clientes."
+        description="Free para sempre com site e agenda. Pro libera Caixa, Clube e multi-unidade."
       />
 
-      {needsBillingAttention(org) ? <BillingAttentionBanner /> : null}
+      {needsBillingAttention(org) ? (
+        <BillingAttentionBanner freeUpsell={freeUpsell} />
+      ) : null}
 
       <div className="max-w-3xl space-y-4 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-6">
         <p className="text-sm text-[var(--bn-muted)]">
@@ -84,7 +88,7 @@ export default async function AdminPlanoPage() {
           {planStatusLabel(org.planStatus)}
           {cancelScheduled ? (
             <span className="ml-2 text-base font-sans font-normal text-[var(--bn-status-warn)]/90">
-              · cancela em {org.planCancelAt!.toLocaleDateString("pt-BR")}
+              · Pro até {org.planCancelAt!.toLocaleDateString("pt-BR")}
             </span>
           ) : null}
         </p>
@@ -93,11 +97,11 @@ export default async function AdminPlanoPage() {
         </p>
         {org.planStatus === "TRIAL" && trialActive && trialLeft != null ? (
           <p className="text-sm text-[var(--bn-status-ok)]/90">
-            Trial: {trialLeft} dia(s) restantes
+            Trial Pro: {trialLeft} dia(s) restantes
             {org.trialEndsAt
               ? ` · até ${org.trialEndsAt.toLocaleDateString("pt-BR")}`
               : ""}{" "}
-            — Caixa e Clube liberados.
+            — Caixa e Clube liberados. Depois você continua no Free.
           </p>
         ) : null}
 
@@ -111,13 +115,13 @@ export default async function AdminPlanoPage() {
           {proUnlocked ? (
             <p>
               <span className="font-semibold">Caixa e Clube liberados</span> —
-              você pode usar relatório financeiro e assinaturas dos clientes.
+              relatório financeiro e assinaturas dos clientes disponíveis.
             </p>
           ) : (
             <p>
-              <span className="font-semibold">Caixa e Clube bloqueados</span> —
-              no Starter (ou sem assinatura ativa) esses menus redirecionam para
-              esta página. Assine o <strong>Pro</strong> para liberar.
+              <span className="font-semibold">Caixa e Clube no Pro</span> — no
+              Free esses menus pedem upgrade. Site, agenda e Explorar continuam
+              liberados. Assine o <strong>Pro</strong> para desbloquear.
             </p>
           )}
         </div>
@@ -133,11 +137,10 @@ export default async function AdminPlanoPage() {
       </div>
 
       <div className="max-w-xl space-y-4 rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-hover)] p-6">
-        <p className="text-sm font-medium text-[var(--bn-on-variant)]">Assinar agora</p>
+        <p className="text-sm font-medium text-[var(--bn-on-variant)]">Assinar Pro</p>
         <p className="text-xs text-[var(--bn-muted)]">
-          Escolha PIX (paga a fatura todo mês) ou cartão (cadastre uma vez na
-          fatura Asaas; cobrança mensal automática). Após o pagamento o status
-          muda para Ativo e as funções do plano passam a valer.
+          PIX (fatura mensal) ou cartão (recorrência Asaas). Após o pagamento o
+          status vira Ativo Pro.
         </p>
         {!cancelScheduled ? <PlatformUpgradeButton /> : null}
 

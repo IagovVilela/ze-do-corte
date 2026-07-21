@@ -1,7 +1,6 @@
 import "server-only";
 
 import type {
-  Organization,
   OrganizationPlanStatus,
   OrganizationPlanTier,
 } from "@prisma/client";
@@ -9,11 +8,18 @@ import type {
 import { prisma } from "@/lib/prisma";
 
 export type OrgBillingSlice = Pick<
-  Organization,
+  import("@prisma/client").Organization,
   "planStatus" | "planTier" | "trialEndsAt"
 > & {
   planCancelAt?: Date | null;
 };
+
+const billingSelect = {
+  planStatus: true,
+  planTier: true,
+  trialEndsAt: true,
+  planCancelAt: true,
+} as const;
 
 /** Trial ainda válido (ou org sem data de fim = trata como trial aberto). */
 export function isTrialActive(org: OrgBillingSlice, now = new Date()): boolean {
@@ -32,9 +38,12 @@ export function isPlanCancelScheduled(
   return org.planCancelAt.getTime() > now.getTime();
 }
 
+export function isFreeTier(org: Pick<OrgBillingSlice, "planTier">): boolean {
+  return org.planTier === "FREE" || org.planTier === "STARTER";
+}
+
 /**
- * Se `planCancelAt` já passou e o status ainda é ACTIVE, grava CANCELLED.
- * Chamar em páginas/APIs de billing para materializar o fim do período.
+ * Se `planCancelAt` já passou e o status ainda é ACTIVE, cai no Free forever.
  */
 export async function settleScheduledPlanCancellation(
   organizationId: string,
@@ -42,12 +51,7 @@ export async function settleScheduledPlanCancellation(
 ): Promise<OrgBillingSlice | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: {
-      planStatus: true,
-      planTier: true,
-      trialEndsAt: true,
-      planCancelAt: true,
-    },
+    select: billingSelect,
   });
   if (!org) return null;
 
@@ -59,53 +63,109 @@ export async function settleScheduledPlanCancellation(
     return prisma.organization.update({
       where: { id: organizationId },
       data: {
-        planStatus: "CANCELLED",
+        planStatus: "ACTIVE",
+        planTier: "FREE",
         planCancelAt: null,
         asaasSubscriptionId: null,
       },
-      select: {
-        planStatus: true,
-        planTier: true,
-        trialEndsAt: true,
-        planCancelAt: true,
-      },
+      select: billingSelect,
     });
   }
 
   return org;
 }
 
-/** Pode usar o produto (agenda/admin básico). */
+/**
+ * Trial expirado sem assinatura Pro → Free forever (ACTIVE + FREE).
+ */
+export async function settleExpiredTrialToFree(
+  organizationId: string,
+  now = new Date(),
+): Promise<OrgBillingSlice | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: billingSelect,
+  });
+  if (!org) return null;
+
+  if (org.planStatus === "TRIAL" && !isTrialActive(org, now)) {
+    return prisma.organization.update({
+      where: { id: organizationId },
+      data: {
+        planStatus: "ACTIVE",
+        planTier: "FREE",
+        planCancelAt: null,
+      },
+      select: billingSelect,
+    });
+  }
+
+  return org;
+}
+
+/** Roda settles de billing (trial → Free e cancelamento agendado → Free). */
+export async function settleOrgBillingState(
+  organizationId: string,
+  now = new Date(),
+): Promise<OrgBillingSlice | null> {
+  await settleExpiredTrialToFree(organizationId, now);
+  return settleScheduledPlanCancellation(organizationId, now);
+}
+
+/** Pode usar o produto (agenda/admin básico). Free forever incluso. */
 export function hasPlatformAccess(org: OrgBillingSlice, now = new Date()): boolean {
   if (org.planStatus === "ACTIVE") return true;
   if (isTrialActive(org, now)) return true;
-  // PAST_DUE: acesso soft (leitura); CANCELLED/trial expirado: acesso soft também na 1ª entrega
   if (org.planStatus === "PAST_DUE") return true;
+  if (org.planStatus === "CANCELLED") return true;
   return false;
 }
 
-/** Features Pro (caixa + clube) — trial full liberado. */
+/** Features Pro (caixa + clube) — trial ativo ou Pro pago. */
 export function hasProFeatures(org: OrgBillingSlice, now = new Date()): boolean {
   if (isTrialActive(org, now)) return true;
   if (org.planStatus === "ACTIVE" && org.planTier === "PRO") return true;
   return false;
 }
 
-/** Após trial sem ACTIVE: aviso + bloqueio de features Pro. */
+/**
+ * Aviso de upsell / atenção:
+ * — Free ACTIVE → upsell suave para Pro
+ * — PAST_DUE / CANCELLED / trial expirado (antes do settle) → regularizar ou upsell
+ */
 export function needsBillingAttention(
   org: OrgBillingSlice,
   now = new Date(),
 ): boolean {
   if (isPlanCancelScheduled(org, now)) return false;
-  if (org.planStatus === "ACTIVE") return false;
+  if (org.planStatus === "ACTIVE" && org.planTier === "PRO") return false;
   if (isTrialActive(org, now)) return false;
   return true;
+}
+
+/** Free ACTIVE (já settled) — banner de upsell, não “conta bloqueada”. */
+export function isFreePlanUpsell(
+  org: OrgBillingSlice,
+  now = new Date(),
+): boolean {
+  if (isTrialActive(org, now)) return false;
+  return org.planStatus === "ACTIVE" && isFreeTier(org);
+}
+
+/** Free (ou Starter legado) pode ter no máximo 1 unidade ativa. */
+export function freeTierAllowsAnotherActiveUnit(
+  org: OrgBillingSlice,
+  activeUnitCount: number,
+  now = new Date(),
+): boolean {
+  if (hasProFeatures(org, now)) return true;
+  return activeUnitCount < 1;
 }
 
 export function planStatusLabel(status: OrganizationPlanStatus): string {
   switch (status) {
     case "TRIAL":
-      return "Trial";
+      return "Trial Pro";
     case "ACTIVE":
       return "Ativo";
     case "PAST_DUE":
@@ -122,9 +182,11 @@ export function planStatusLabel(status: OrganizationPlanStatus): string {
 export function planTierLabel(tier: OrganizationPlanTier): string {
   switch (tier) {
     case "TRIAL_FULL":
-      return "Trial (acesso completo)";
+      return "Trial (Pro completo)";
     case "STARTER":
-      return "Starter";
+      return "Free (legado Starter)";
+    case "FREE":
+      return "Free";
     case "PRO":
       return "Pro";
     default: {

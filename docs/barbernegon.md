@@ -55,7 +55,7 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 | `/plataforma/marketplace` | Moderação de listagens e reviews |
 | `/plataforma/consumidores` | Agendamentos / clientes finais (cross-tenant) |
 | `/cadastro` | Onboarding do dono (cria org + OWNER + unidade + canvas classic) |
-| `/planos` | Planos da plataforma (Starter/Pro) |
+| `/planos` | Planos da plataforma (Free + Pro; trial 60 dias) |
 | `/[slug]` | Site institucional (canvas) |
 | `/[slug]/agendar` | Agendamento scoped |
 | `/admin/marca` | Identidade (logo, slug, redes) |
@@ -67,7 +67,7 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 
 ## Migração
 
-- Tenant seed: `ze-do-corte` (`org_ze_do_corte_default`)
+- Tenant demo: slug `ze-do-corte` (`org_ze_do_corte_default`), nome **Barbergon**, `siteJson` template **`vitrine`** (aplicar/atualizar com `npm run demo:vitrine`)
 - Migrations: `20260713210000_barbernegon_organization`, `20260713213000_organization_plan_enums`, `20260713220000_organization_site_json`, `20260714200000_whatsapp_cloud_api`, `20260714210000_asaas_payments`
 - Legacy `/agendar` redireciona para `/ze-do-corte/agendar`
 - `BARBER_*` / `logo.jpeg` / vídeo do piloto: **somente** seed/legado — nunca fallback silencioso de tenant

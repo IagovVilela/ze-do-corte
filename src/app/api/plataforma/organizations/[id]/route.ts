@@ -12,7 +12,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 const patchSchema = z.object({
   planStatus: z.enum(["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED"]).optional(),
-  planTier: z.enum(["TRIAL_FULL", "STARTER", "PRO"]).optional(),
+  planTier: z.enum(["TRIAL_FULL", "STARTER", "FREE", "PRO"]).optional(),
   trialEndsAt: z.union([z.iso.datetime(), z.null()]).optional(),
   marketplaceListed: z.boolean().optional(),
 });

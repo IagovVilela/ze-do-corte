@@ -92,7 +92,7 @@ export function StitchHero() {
               href="/ze-do-corte"
               className="inline-flex min-h-12 w-full items-center justify-center rounded border border-[var(--ln-border)] bg-transparent px-6 py-3.5 text-center text-base font-semibold text-white transition-all hover:bg-[var(--ln-surface-container)] active:scale-[0.98] sm:w-auto sm:px-10 sm:text-lg md:text-xl"
             >
-              Ver demonstração
+              Ver demonstração Barbergon
             </Link>
           </div>
         </Reveal>
@@ -193,7 +193,7 @@ export function StitchSiteSection() {
             href="/ze-do-corte"
             className="mt-6 inline-flex min-h-11 items-center text-[var(--ln-primary)] transition hover:text-white sm:mt-8"
           >
-            <LabelCaps>Ver demo ao vivo →</LabelCaps>
+            <LabelCaps>Ver demo Barbergon →</LabelCaps>
           </Link>
         </Reveal>
 

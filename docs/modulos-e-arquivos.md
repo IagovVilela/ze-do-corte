@@ -27,7 +27,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Rota | Arquivo | Notas |
 |------|---------|--------|
 | `/` | `src/app/(public)/page.tsx` | Landing **Barbernegon** premium (shell em `(public)/layout.tsx`) |
-| `/planos` | `src/app/(public)/planos/page.tsx` | Planos Starter/Pro (nav pública + `SaasPlanComparison` tokens BN) |
+| `/planos` | `src/app/(public)/planos/page.tsx` | Planos Free + Pro (nav pública + `SaasPlanComparison` tokens BN) |
 | `/explorar` | `src/app/(public)/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
 | `/explorar/favoritos` | `src/app/(public)/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
@@ -88,7 +88,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
 | Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
 | Clientes que já agendaram | `src/app/api/admin/booking-clients/route.ts` — `GET` (únicos por telefone; usado no clube balcão) |
-| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Starter/Pro; `.../cancel` e `.../undo-cancel` — cancelar / desfazer |
+| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Pro (Free sem cobrança); `.../cancel` e `.../undo-cancel` — cancelar / desfazer (volta ao Free) |
 | Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
 | PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |
 | Cadastro SaaS | `src/app/api/cadastro/route.ts` — cria org com `siteJson` classic |
@@ -115,7 +115,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `public-hosts.ts` | Split marketing vs marketplace (`NEXT_PUBLIC_*_HOST`); URLs por superfície |
 | `platform-auth.ts` | Gate Ops (`PLATFORM_ADMIN_EMAILS` / seed); redirect para `/plataforma/login` |
 | `platform-ops.ts` | Queries cross-tenant (overview, orgs, marketplace, consumidores) |
-| `canvas-page-templates.ts` | Modelos de página completa (14 layouts distintos) |
+| `canvas-page-templates.ts` | Modelos de página completa (15 layouts; inclui **`vitrine`** da demo Barbergon) |
 | `canvas-presets.ts` | Estilos prontos, seções pré-montadas, tipografia |
 | `canvas-theme-style.ts` | Tokens CSS do tema do canvas (cliente + servidor) |
 | `org-branding.ts` | Resolve canvas + `organizationBrandStyle` (server) |

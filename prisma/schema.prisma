@@ -44,6 +44,8 @@ enum ClientSubscriptionStatus {
 enum OrganizationPlanTier {
   TRIAL_FULL
   STARTER
+  /// Free forever (após trial sem Pro, ou migração do Starter).
+  FREE
   PRO
 }
 

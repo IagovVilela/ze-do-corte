@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  SAAS_FREE_PLAN,
   SAAS_PLANS,
   SAAS_TRIAL_COPY,
   type SaasPlanId,
@@ -8,20 +9,15 @@ import {
 import { cn, formatMoney } from "@/lib/utils";
 
 type Props = {
-  /** Destaque o plano atual do salão */
-  currentPlanId?: SaasPlanId | null;
-  /** Trial ativo = acesso Pro liberado */
+  currentPlanId?: SaasPlanId | "free" | null;
   trialActive?: boolean;
-  /** Links de CTA (marketing usa cadastro; admin omite se false) */
   showCta?: boolean;
   ctaHref?: string;
   className?: string;
 };
 
 /**
- * Comparação Starter/Pro — herda tokens `--bn-*` do pai
- * (`.brand-onyx` no marketing ou no painel com `data-theme`).
- * Não recria `.brand-onyx` (quebrava o modo claro do admin).
+ * Comparação Free / Pro — herda tokens `--bn-*` do pai.
  */
 export function SaasPlanComparison({
   currentPlanId = null,
@@ -30,6 +26,31 @@ export function SaasPlanComparison({
   ctaHref = "/cadastro",
   className,
 }: Props) {
+  const cards = [
+    {
+      id: "free" as const,
+      name: SAAS_FREE_PLAN.name,
+      priceMonthly: SAAS_FREE_PLAN.priceMonthly,
+      blurb: SAAS_FREE_PLAN.blurb,
+      badge: SAAS_FREE_PLAN.badge,
+      features: SAAS_FREE_PLAN.features,
+      notIncluded: SAAS_FREE_PLAN.notIncluded,
+      ctaHint: SAAS_FREE_PLAN.ctaHint,
+      isPro: false,
+    },
+    ...SAAS_PLANS.map((plan) => ({
+      id: plan.id,
+      name: plan.name,
+      priceMonthly: plan.priceMonthly,
+      blurb: plan.blurb,
+      badge: plan.badge,
+      features: plan.features,
+      notIncluded: plan.notIncluded,
+      ctaHint: plan.ctaHint,
+      isPro: true,
+    })),
+  ];
+
   return (
     <div className={cn("space-y-6", className)}>
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--bn-status-ok)]">
@@ -40,12 +61,12 @@ export function SaasPlanComparison({
       </div>
 
       <ul className="grid items-stretch gap-4 md:grid-cols-2 md:gap-5">
-        {SAAS_PLANS.map((plan) => {
+        {cards.map((plan) => {
           const isCurrent =
             !trialActive &&
             currentPlanId != null &&
             currentPlanId === plan.id;
-          const isPro = plan.id === "pro";
+          const isPro = plan.isPro;
           const hasExcluded =
             Boolean(plan.notIncluded) && plan.notIncluded!.length > 0;
 
@@ -86,10 +107,19 @@ export function SaasPlanComparison({
               </p>
 
               <p className="font-brand-headline mt-4 text-3xl font-bold tracking-tight text-[var(--bn-primary)]">
-                {formatMoney(plan.priceMonthly)}
-                <span className="text-base font-sans font-medium text-[var(--bn-muted)]">
-                  /mês
-                </span>
+                {plan.priceMonthly === 0
+                  ? "Grátis"
+                  : formatMoney(plan.priceMonthly)}
+                {plan.priceMonthly > 0 ? (
+                  <span className="text-base font-sans font-medium text-[var(--bn-muted)]">
+                    /mês
+                  </span>
+                ) : (
+                  <span className="text-base font-sans font-medium text-[var(--bn-muted)]">
+                    {" "}
+                    para sempre
+                  </span>
+                )}
               </p>
               <p className="mt-1 min-h-[2rem] text-xs leading-snug text-[var(--bn-muted)]">
                 {plan.ctaHint}
@@ -138,7 +168,7 @@ export function SaasPlanComparison({
                         : "border border-[var(--bn-border)] bg-transparent text-[var(--bn-on)] hover:border-[var(--bn-primary)]/40 hover:bg-[var(--bn-hover)]",
                     )}
                   >
-                    {isPro ? "Começar com Pro (trial)" : "Começar grátis"}
+                    {isPro ? "Começar (60 dias Pro)" : "Começar grátis"}
                   </Link>
                 ) : null}
               </div>

@@ -81,7 +81,7 @@ Uma vez só — o dono do salão **não** precisa ver isso:
 | `NEXT_PUBLIC_APP_URL` ou `APP_URL` | URL pública (ex.: `https://barbernegon-production.up.railway.app`) — usada ao criar o webhook Asaas automático |
 | `ASAAS_TOKEN_ENCRYPTION_KEY` | Guardar o código do salão com segurança |
 | `ASAAS_WEBHOOK_TOKEN` | Token dos avisos Asaas |
-| `ASAAS_API_KEY` | Conta Asaas **da Barbernegon** (plano Starter/Pro) |
+| `ASAAS_API_KEY` | Conta Asaas **da Barbernegon** (plano Pro; Free não gera cobrança) |
 | `WHATSAPP_TOKEN_ENCRYPTION_KEY` + `META_*` | Assistente WhatsApp na plataforma |
 
 Detalhes técnicos: [pagamentos-asaas.md](./pagamentos-asaas.md) · [whatsapp-meta.md](./whatsapp-meta.md).

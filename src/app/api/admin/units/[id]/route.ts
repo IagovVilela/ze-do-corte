@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import { normalizeBrProfilePhone } from "@/lib/br-phone-format";
+import {
+  freeTierAllowsAnotherActiveUnit,
+  settleOrgBillingState,
+} from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { unitScopeWhere } from "@/lib/staff-access";
@@ -68,6 +72,34 @@ export async function PATCH(request: Request, context: RouteContext) {
   });
   if (!current) {
     return NextResponse.json({ message: "Unidade não encontrada." }, { status: 404 });
+  }
+
+  const activating =
+    parsed.data.isActive === true && current.isActive === false;
+  if (activating) {
+    await settleOrgBillingState(organizationId);
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        planStatus: true,
+        planTier: true,
+        trialEndsAt: true,
+        planCancelAt: true,
+      },
+    });
+    const activeCount = await prisma.barbershopUnit.count({
+      where: { organizationId, isActive: true, NOT: { id } },
+    });
+    if (org && !freeTierAllowsAnotherActiveUnit(org, activeCount)) {
+      return NextResponse.json(
+        {
+          message:
+            "No plano Free você pode ter 1 unidade ativa. Assine o Pro em /admin/plano para abrir mais lojas.",
+          code: "FREE_UNIT_LIMIT",
+        },
+        { status: 403 },
+      );
+    }
   }
 
   const nextSlug = parsed.data.slug ? slugify(parsed.data.slug) : undefined;

@@ -7,7 +7,7 @@ import { listPlatformOrganizations } from "@/lib/platform-ops";
 export const dynamic = "force-dynamic";
 
 const STATUSES = new Set(["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED"]);
-const TIERS = new Set(["TRIAL_FULL", "STARTER", "PRO"]);
+const TIERS = new Set(["TRIAL_FULL", "STARTER", "FREE", "PRO"]);
 
 export async function GET(request: Request) {
   const auth = await requirePlatformApiAuth();

@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { createDbSession } from "@/lib/session-cookie";
 import { isReservedSlug, slugifyOrgName } from "@/lib/organization";
 import { getCanvasTemplate } from "@/lib/site-canvas";
+import { SAAS_TRIAL_DAYS } from "@/lib/asaas-plans";
 import { staffEmailSchema } from "@/lib/staff-email";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
 
   const passwordHash = await hashPassword(parsed.data.password);
   const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+  trialEndsAt.setDate(trialEndsAt.getDate() + SAAS_TRIAL_DAYS);
 
   const onboardingJson = {
     logo: false,

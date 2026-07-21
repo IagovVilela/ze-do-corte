@@ -34,7 +34,7 @@ export default async function PlataformaBarbeariasPage({
   ).includes(planStatusRaw as OrganizationPlanStatus)
     ? (planStatusRaw as OrganizationPlanStatus)
     : undefined;
-  const planTier = (["TRIAL_FULL", "STARTER", "PRO"] as const).includes(
+  const planTier = (["TRIAL_FULL", "STARTER", "FREE", "PRO"] as const).includes(
     planTierRaw as OrganizationPlanTier,
   )
     ? (planTierRaw as OrganizationPlanTier)
@@ -90,7 +90,8 @@ export default async function PlataformaBarbeariasPage({
           >
             <option value="">Todos</option>
             <option value="TRIAL_FULL">Trial full</option>
-            <option value="STARTER">Starter</option>
+            <option value="STARTER">Starter (legado)</option>
+            <option value="FREE">Free</option>
             <option value="PRO">Pro</option>
           </select>
         </label>

@@ -24,6 +24,7 @@ export const CANVAS_PAGE_TEMPLATE_IDS = [
   "boutique",
   "bauhaus",
   "rua",
+  "vitrine",
 ] as const;
 
 export type CanvasPageTemplateId = (typeof CANVAS_PAGE_TEMPLATE_IDS)[number];
@@ -152,6 +153,14 @@ export const PAGE_TEMPLATE_META: PageTemplateMeta[] = [
     vibe: "Bairro / local",
     swatch: "#84cc16",
     layoutHint: "Contato|CTA split · serviços depois",
+  },
+  {
+    id: "vitrine",
+    label: "Vitrine",
+    tagline: "Showcase com foto full, split editorial e prova do editor visual.",
+    vibe: "Demo / identidade",
+    swatch: "#3b82f6",
+    layoutHint: "Foto 60% · copy · galeria · builder · serviços",
   },
 ];
 
@@ -2500,6 +2509,441 @@ function ruaTemplate(name: string): SiteCanvasConfig {
   return board(theme, 1780, 1280, [...desk, ...mob]);
 }
 
+/**
+ * Vitrine demonstrativa Barbergon — surpreende com identidade visual:
+ * foto real, split tipográfico, galeria, preview do editor, seções vivas.
+ * Editável em /admin/site (mesmo canvas do cliente).
+ */
+function vitrineTemplate(name: string): SiteCanvasConfig {
+  const HERO_IMG = "/images/landing/hero-barbershop.png";
+  const BUILDER_IMG = "/images/landing/builder-preview.png";
+
+  const theme: CanvasTheme = {
+    primary: "#3b82f6",
+    secondary: "#94a3b8",
+    background: "#07080c",
+    surface: "#111318",
+    text: "#f1f5f9",
+    bgArt: "noise",
+    bgArtColor: "#1e293b",
+    bgArtStrength: 18,
+    fontDisplay:
+      "var(--font-display), var(--font-geist-sans), system-ui, sans-serif",
+    fontBody: "var(--font-geist-sans), system-ui, sans-serif",
+    radius: "md",
+    motion: "full",
+  };
+
+  const desk = free("desktop", "vitrine", [
+    { type: "navbar", frame: { x: 0, y: 0, w: 1440, h: 64 }, zIndex: 60 },
+    /* Split cinematográfico: foto dominante + coluna de marca */
+    {
+      type: "media",
+      frame: { x: 0, y: 64, w: 860, h: 640 },
+      props: {
+        mediaUrl: HERO_IMG,
+        mediaZoom: 1.15,
+        mediaPosX: 42,
+        mediaPosY: 35,
+        borderRadius: 0,
+        backgroundColor: "#0f172a",
+      },
+      zIndex: 2,
+    },
+    {
+      type: "rect",
+      frame: { x: 860, y: 64, w: 580, h: 640 },
+      props: { backgroundColor: "#0c1018", borderRadius: 0 },
+      zIndex: 1,
+    },
+    {
+      type: "badge",
+      frame: { x: 900, y: 120, w: 200, h: 32 },
+      props: {
+        text: "DEMO · EDITOR VISUAL",
+        backgroundColor: "#3b82f6",
+        color: "#020617",
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 700,
+      },
+      zIndex: 10,
+    },
+    {
+      type: "text",
+      frame: { x: 900, y: 180, w: 480, h: 140 },
+      props: {
+        text: name.toUpperCase(),
+        variant: "display",
+        fontSize: 64,
+        fontWeight: 700,
+        color: "#f8fafc",
+        align: "left",
+      },
+      zIndex: 10,
+    },
+    {
+      type: "text",
+      frame: { x: 900, y: 340, w: 460, h: 100 },
+      props: {
+        text: "Sua barbearia com cara própria — cores, tipografia, fotos e agenda no mesmo canvas que você edita em minutos.",
+        variant: "body",
+        fontSize: 17,
+        fontWeight: 400,
+        color: "#94a3b8",
+        align: "left",
+      },
+      zIndex: 10,
+    },
+    {
+      type: "button",
+      frame: { x: 900, y: 470, w: 220, h: 52 },
+      props: {
+        text: "Agendar horário",
+        href: "book",
+        backgroundColor: "#3b82f6",
+        color: "#020617",
+        borderRadius: 999,
+        fontWeight: 700,
+        fontSize: 15,
+      },
+      zIndex: 10,
+    },
+    {
+      type: "button",
+      frame: { x: 1140, y: 470, w: 200, h: 52 },
+      props: {
+        text: "Ver serviços ↓",
+        href: "#",
+        backgroundColor: "transparent",
+        color: "#e2e8f0",
+        borderColor: "#334155",
+        borderWidth: 1,
+        borderRadius: 999,
+        fontWeight: 600,
+        fontSize: 14,
+      },
+      zIndex: 10,
+    },
+    {
+      type: "text",
+      frame: { x: 900, y: 560, w: 460, h: 72 },
+      props: {
+        text: "Arraste, troque a foto, mude a tipografia — o cliente vê a marca, não um template genérico.",
+        variant: "caption",
+        fontSize: 13,
+        color: "#64748b",
+      },
+      zIndex: 10,
+    },
+    /* Faixa de impacto tipográfico */
+    {
+      type: "rect",
+      frame: { x: 0, y: 704, w: 1440, h: 120 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
+      zIndex: 1,
+    },
+    {
+      type: "text",
+      frame: { x: 64, y: 728, w: 1100, h: 72 },
+      props: {
+        text: "IDENTIDADE QUE PARECE DE MARCA — NÃO DE PLANILHA.",
+        variant: "title",
+        fontSize: 28,
+        fontWeight: 700,
+        color: "#020617",
+      },
+      zIndex: 5,
+    },
+    /* Galeria: prova de mídia + enquadramento */
+    {
+      type: "text",
+      frame: { x: 64, y: 860, w: 600, h: 40 },
+      props: {
+        text: "Atmosfera na primeira dobra",
+        variant: "title",
+        fontSize: 22,
+        fontWeight: 700,
+        color: "#f1f5f9",
+      },
+    },
+    {
+      type: "media",
+      frame: { x: 64, y: 920, w: 520, h: 300 },
+      props: {
+        mediaUrl: HERO_IMG,
+        mediaZoom: 1.4,
+        mediaPosX: 60,
+        mediaPosY: 40,
+        borderRadius: 16,
+        backgroundColor: "#1e293b",
+      },
+    },
+    {
+      type: "media",
+      frame: { x: 608, y: 920, w: 360, h: 300 },
+      props: {
+        mediaUrl: HERO_IMG,
+        mediaZoom: 1.8,
+        mediaPosX: 30,
+        mediaPosY: 20,
+        borderRadius: 16,
+        backgroundColor: "#1e293b",
+      },
+    },
+    {
+      type: "panel",
+      frame: { x: 992, y: 920, w: 384, h: 300 },
+      props: {
+        title: "Zoom & crop no canvas",
+        description:
+          "Cada foto tem enquadramento próprio. No celular o cliente vê a mesma força visual.",
+        backgroundColor: "#111318",
+        borderColor: "#334155",
+        borderRadius: 16,
+        padding: 28,
+        color: "#e2e8f0",
+        variant: "flat",
+      },
+    },
+    /* Prova do editor */
+    {
+      type: "text",
+      frame: { x: 64, y: 1270, w: 700, h: 48 },
+      props: {
+        text: "O mesmo editor que você usa no painel",
+        variant: "title",
+        fontSize: 26,
+        fontWeight: 700,
+        color: "#f1f5f9",
+      },
+    },
+    {
+      type: "text",
+      frame: { x: 64, y: 1328, w: 560, h: 80 },
+      props: {
+        text: "Desktop e celular lado a lado. Publique e o site da barbearia atualiza — white-label de verdade.",
+        fontSize: 16,
+        color: "#94a3b8",
+      },
+    },
+    {
+      type: "media",
+      frame: { x: 640, y: 1270, w: 736, h: 420 },
+      props: {
+        mediaUrl: BUILDER_IMG,
+        mediaZoom: 1.05,
+        mediaPosX: 50,
+        mediaPosY: 45,
+        borderRadius: 20,
+        backgroundColor: "#0f172a",
+        borderColor: "#334155",
+        borderWidth: 1,
+      },
+    },
+    {
+      type: "badge",
+      frame: { x: 64, y: 1440, w: 160, h: 32 },
+      props: {
+        text: "/admin/site",
+        backgroundColor: "#1e293b",
+        color: "#93c5fd",
+        borderRadius: 8,
+        fontSize: 12,
+        fontWeight: 700,
+      },
+    },
+    {
+      type: "button",
+      frame: { x: 64, y: 1520, w: 280, h: 52 },
+      props: {
+        text: "Criar minha barbearia",
+        href: "/cadastro",
+        backgroundColor: "#f8fafc",
+        color: "#020617",
+        borderRadius: 999,
+        fontWeight: 700,
+      },
+    },
+    /* Pull quote */
+    {
+      type: "rect",
+      frame: { x: 0, y: 1740, w: 1440, h: 200 },
+      props: { backgroundColor: "#0c1018", borderRadius: 0 },
+    },
+    {
+      type: "text",
+      frame: { x: 120, y: 1780, w: 1200, h: 120 },
+      props: {
+        text: "“Não é um site genérico. É a cara do seu salão — e o cliente agenda sem baixar app.”",
+        variant: "display",
+        fontSize: 32,
+        fontWeight: 400,
+        color: "#e2e8f0",
+        align: "center",
+      },
+    },
+    /* Serviços reais */
+    {
+      type: "services",
+      frame: { x: 64, y: 1980, w: 1312, h: 380 },
+      props: { title: "Carta de serviços", gridCols: 3 },
+    },
+    {
+      type: "team",
+      frame: { x: 64, y: 2400, w: 640, h: 300 },
+      props: { title: "Quem atende", gridCols: 2 },
+    },
+    {
+      type: "contact",
+      frame: { x: 736, y: 2400, w: 640, h: 300 },
+      props: { title: "Venha conhecer" },
+    },
+    {
+      type: "footer",
+      frame: { x: 0, y: 2740, w: 1440, h: 100 },
+      props: { showPitch: true },
+    },
+  ]);
+
+  const mob = free("mobile", "vitrine", [
+    { type: "navbar", frame: { x: 0, y: 0, w: 390, h: 56 }, zIndex: 60 },
+    {
+      type: "media",
+      frame: { x: 0, y: 56, w: 390, h: 320 },
+      props: {
+        mediaUrl: HERO_IMG,
+        mediaZoom: 1.2,
+        mediaPosX: 45,
+        mediaPosY: 30,
+        borderRadius: 0,
+        backgroundColor: "#0f172a",
+      },
+    },
+    {
+      type: "badge",
+      frame: { x: 16, y: 392, w: 180, h: 28 },
+      props: {
+        text: "DEMO · EDITOR",
+        backgroundColor: "#3b82f6",
+        color: "#020617",
+        borderRadius: 999,
+        fontSize: 10,
+        fontWeight: 700,
+      },
+    },
+    {
+      type: "text",
+      frame: { x: 16, y: 436, w: 358, h: 72 },
+      props: {
+        text: name.toUpperCase(),
+        variant: "display",
+        fontSize: 36,
+        fontWeight: 700,
+        color: "#f8fafc",
+      },
+    },
+    {
+      type: "text",
+      frame: { x: 16, y: 516, w: 358, h: 72 },
+      props: {
+        text: "Marca própria, agenda no celular, editável no painel.",
+        fontSize: 14,
+        color: "#94a3b8",
+      },
+    },
+    {
+      type: "button",
+      frame: { x: 16, y: 600, w: 358, h: 48 },
+      props: {
+        text: "Agendar horário",
+        href: "book",
+        backgroundColor: "#3b82f6",
+        color: "#020617",
+        borderRadius: 999,
+        fontWeight: 700,
+      },
+    },
+    {
+      type: "rect",
+      frame: { x: 0, y: 672, w: 390, h: 88 },
+      props: { backgroundColor: "#3b82f6", borderRadius: 0 },
+    },
+    {
+      type: "text",
+      frame: { x: 16, y: 692, w: 358, h: 52 },
+      props: {
+        text: "IDENTIDADE DE MARCA — NÃO TEMPLATE GENÉRICO.",
+        fontSize: 14,
+        fontWeight: 700,
+        color: "#020617",
+      },
+    },
+    {
+      type: "media",
+      frame: { x: 16, y: 784, w: 358, h: 200 },
+      props: {
+        mediaUrl: HERO_IMG,
+        mediaZoom: 1.5,
+        mediaPosX: 55,
+        borderRadius: 12,
+      },
+    },
+    {
+      type: "media",
+      frame: { x: 16, y: 1000, w: 358, h: 200 },
+      props: {
+        mediaUrl: BUILDER_IMG,
+        mediaZoom: 1.1,
+        borderRadius: 12,
+      },
+    },
+    {
+      type: "text",
+      frame: { x: 16, y: 1220, w: 358, h: 64 },
+      props: {
+        text: "Preview do builder — o que você monta no /admin/site.",
+        fontSize: 14,
+        color: "#94a3b8",
+      },
+    },
+    {
+      type: "button",
+      frame: { x: 16, y: 1300, w: 358, h: 48 },
+      props: {
+        text: "Criar minha barbearia",
+        href: "/cadastro",
+        backgroundColor: "#f8fafc",
+        color: "#020617",
+        borderRadius: 999,
+        fontWeight: 700,
+      },
+    },
+    {
+      type: "services",
+      frame: { x: 16, y: 1380, w: 358, h: 480 },
+      props: { title: "Serviços", gridCols: 1 },
+    },
+    {
+      type: "team",
+      frame: { x: 16, y: 1890, w: 358, h: 240 },
+      props: { title: "Equipe", gridCols: 1 },
+    },
+    {
+      type: "contact",
+      frame: { x: 16, y: 2150, w: 358, h: 220 },
+      props: { title: "Contato" },
+    },
+    {
+      type: "footer",
+      frame: { x: 0, y: 2400, w: 390, h: 80 },
+      props: { showPitch: true },
+    },
+  ]);
+
+  return board(theme, 2900, 2540, [...desk, ...mob]);
+}
+
 /** Modelos de página completa (desktop + mobile) com layouts distintos. */
 export function buildCanvasPageTemplate(
   id: CanvasPageTemplateId,
@@ -2535,6 +2979,8 @@ export function buildCanvasPageTemplate(
       return bauhausTemplate(name);
     case "rua":
       return ruaTemplate(name);
+    case "vitrine":
+      return vitrineTemplate(name);
     default: {
       const _e: never = id;
       void _e;
