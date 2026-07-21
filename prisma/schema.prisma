@@ -112,6 +112,7 @@ model Organization {
   whatsappOutboundLogs WhatsAppOutboundLog[]
   paymentEvents      PaymentEvent[]
   reviews            OrganizationReview[]
+  supportTickets     SupportTicket[]
 
   @@index([planStatus])
   @@index([asaasSubscriptionId])
@@ -162,6 +163,8 @@ model StaffMember {
   appointments          Appointment[]
   workWeekJson          Json?
   pushSubscriptions     StaffPushSubscription[]
+  supportTicketsCreated SupportTicket[]
+  supportMessages       SupportTicketMessage[]
 
   @@index([organizationId])
   @@index([unitId])
@@ -429,4 +432,61 @@ model WhatsAppOutboundLog {
 
   @@index([organizationId, createdAt])
   @@index([appointmentId])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketCategory {
+  WHATSAPP
+  PAYMENTS
+  CLUB
+  SITE
+  BILLING
+  OTHER
+}
+
+enum SupportMessageAuthorKind {
+  STAFF
+  PLATFORM
+}
+
+/// Chamado de suporte do salão para a Barbernegon.
+model SupportTicket {
+  id               String                @id @default(cuid())
+  organizationId   String
+  organization     Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdByStaffId String
+  createdByStaff   StaffMember           @relation(fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  subject          String                @db.VarChar(160)
+  category         SupportTicketCategory @default(OTHER)
+  status           SupportTicketStatus   @default(OPEN)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  resolvedAt       DateTime?
+  messages         SupportTicketMessage[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([status, updatedAt])
+  @@index([createdByStaffId])
+}
+
+model SupportTicketMessage {
+  id            String                   @id @default(cuid())
+  ticketId      String
+  ticket        SupportTicket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body          String                   @db.Text
+  authorKind    SupportMessageAuthorKind
+  authorStaffId String?
+  authorStaff   StaffMember?             @relation(fields: [authorStaffId], references: [id], onDelete: SetNull)
+  /// E-mail do operador da plataforma (quando authorKind = PLATFORM).
+  authorEmail   String?
+  createdAt     DateTime                 @default(now())
+
+  @@index([ticketId, createdAt])
+  @@index([authorStaffId])
 }

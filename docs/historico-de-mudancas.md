@@ -6,6 +6,14 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-21
+
+- **Suporte — contato rápido**: WhatsApp `(12) 99637-3335` e e-mail `iagovventura@gmail.com` como padrão (sobrescrevíveis por `SUPPORT_*`).
+- **Ops — identidade e alerta de chamado**: sidebar mostra “Suporte Barbernegon”; toast/badge (e opcional notificação do navegador) ao detectar chamado aberto; e-mail para `SUPPORT_EMAIL` via Resend ao criar ticket.
+- **Ops — gráficos sem AdminThemeProvider**: `useAdminChartColors` usa tema opcional (fallback escuro) para não quebrar `/plataforma` ao renderizar `DashboardVolumeArea`.
+- **Suporte — parse JSON seguro**: painel e APIs de chamados não quebram mais com “Unexpected end of JSON input” quando a tabela ainda não existe ou a resposta vem vazia; mensagem amigável pedindo migração.
+- **Suporte no painel**: `/admin/suporte` com Ajuda (artigos), Meus chamados e Falar conosco (WhatsApp/e-mail + ticket). Inbox em `/plataforma/suporte`. Env `SUPPORT_WHATSAPP_E164` / `SUPPORT_EMAIL`. Ver [`docs/suporte.md`](./suporte.md).
+
 ## 2026-07-20
 
 - **Marca Barbernegon — nova logo**: selo BN (`barbernegon-logo.png`) na nav/footer públicos, login/cadastro, painel admin e favicon (substitui `logo.jpeg` da plataforma).

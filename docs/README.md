@@ -16,6 +16,7 @@
 | [whatsapp-meta.md](./whatsapp-meta.md) | WhatsApp Cloud API: webhook, tokens, bot, templates, lembretes |
 | [pagamentos-asaas.md](./pagamentos-asaas.md) | Asaas: SaaS Starter/Pro, PIX do salão, clube, webhooks |
 | [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md) | Passo a passo prático: configurar WhatsApp + Asaas (plataforma e salão) |
+| [suporte.md](./suporte.md) | Central de ajuda, chamados e contato (`/admin/suporte` + inbox Ops) |
 | [como-documentar.md](./como-documentar.md) | Regras para manter esta documentação alinhada ao código |
 | [stitch-design-system.md](./stitch-design-system.md) | Design system Barbernegon (Electric Blue) no formato Google Stitch `DESIGN.md` |
 

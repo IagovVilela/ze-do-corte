@@ -133,6 +133,7 @@ function buildGroups(
           label: "Configuração",
           show: true,
         },
+        { href: "/admin/suporte", label: "Suporte", show: true },
       ],
     },
   ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 type PlatformInfo = {
   encryptionConfigured: boolean;
@@ -159,7 +160,14 @@ export function PaymentsAdminPanel() {
       {!platform?.readyForShops ? (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-[var(--bn-status-warn)]">
           A plataforma ainda está preparando os recebimentos. Se não conseguir
-          salvar, fale com o suporte Barbernegon.
+          salvar, fale conosco em{" "}
+          <Link
+            href="/admin/suporte#contato"
+            className="font-semibold underline"
+          >
+            Suporte
+          </Link>
+          .
         </p>
       ) : null}
 

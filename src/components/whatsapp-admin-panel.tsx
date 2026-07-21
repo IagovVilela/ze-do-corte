@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 import { formatWhatsAppDisplayInput } from "@/lib/phone-to-whatsapp-link";
 
@@ -189,8 +190,14 @@ export function WhatsAppAdminPanel() {
           <li>
             <strong className="font-medium text-[var(--bn-on)]">Assistente que agenda sozinho</strong>{" "}
             — precisa de WhatsApp Business oficial (Meta). Se você ainda não tem
-            isso, use só o número; o suporte Barbernegon pode ajudar a ligar o
-            assistente depois.
+            isso, use só o número; em{" "}
+            <Link
+              href="/admin/suporte#contato"
+              className="text-[var(--bn-primary)] hover:underline"
+            >
+              Suporte
+            </Link>{" "}
+            a Barbernegon pode ajudar a ligar o assistente depois.
           </li>
         </ul>
       </section>
@@ -249,13 +256,26 @@ export function WhatsAppAdminPanel() {
             <div className="mt-4 space-y-4">
               <p className="text-sm text-[var(--bn-muted)]">
                 Esses códigos vêm do painel WhatsApp Business (Meta). Na dúvida,
-                peça ao suporte Barbernegon — não invente esses valores.
+                abra um chamado em{" "}
+                <Link
+                  href="/admin/suporte#contato"
+                  className="text-[var(--bn-primary)] hover:underline"
+                >
+                  Suporte
+                </Link>{" "}
+                — não invente esses valores.
               </p>
 
               {!platform?.webhookConfigured || !platform?.encryptionConfigured ? (
                 <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-[var(--bn-status-warn)]">
-                  A plataforma ainda está preparando o assistente. Fale com o
-                  suporte antes de preencher os códigos.
+                  A plataforma ainda está preparando o assistente. Fale conosco em{" "}
+                  <Link
+                    href="/admin/suporte#contato"
+                    className="font-semibold underline"
+                  >
+                    Suporte
+                  </Link>{" "}
+                  antes de preencher os códigos.
                 </p>
               ) : null}
 

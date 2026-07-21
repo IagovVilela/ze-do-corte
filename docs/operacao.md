@@ -78,6 +78,10 @@ Opcional. Configure `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_TO
 
 Opcional até ativar cobrança. Plataforma: `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN`, `ASAAS_ENV`, `ASAAS_TOKEN_ENCRYPTION_KEY`. Webhook: `/api/webhooks/asaas`. Dono assina em **`/admin/plano`**; o salão conecta a própria key em **`/admin/pagamentos`**. Guia: [pagamentos-asaas.md](./pagamentos-asaas.md).
 
+### Suporte (salão + Ops)
+
+Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número, só dígitos) e `SUPPORT_EMAIL`. Salão: **`/admin/suporte`**. Inbox Ops: **`/plataforma/suporte`**. Guia: [suporte.md](./suporte.md).
+
 ### Pagamento e gráficos no `/admin`
 
 **Balcão:** dono/admin regista `paidAt` / método na lista ou `PATCH /api/admin/appointments/[id]`. **Online:** PIX pós-agendamento e clube via Asaas do salão (quando ligado). Gráficos: período **Hoje / 7 dias / Mês / 3 meses** (`chartRange`); `GET /api/admin/dashboard?chartRange=`.

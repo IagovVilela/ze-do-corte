@@ -84,6 +84,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
+| Suporte admin | `src/app/api/admin/support/contact`, `…/tickets`, `…/tickets/[id]/messages` |
+| Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
 | Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
 | Clientes que já agendaram | `src/app/api/admin/booking-clients/route.ts` — `GET` (únicos por telefone; usado no clube balcão) |
 | Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Starter/Pro; `.../cancel` e `.../undo-cancel` — cancelar / desfazer |
@@ -137,6 +139,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
 | `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, outbound, cron de lembretes |
 | `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano |
+| `support.ts` / `support-articles.ts` | Contato (env), labels de ticket, artigos da central de ajuda |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |
 | `notify-barber-booking.ts` | Envio de e-mail via Resend ao barbeiro atribuído (`RESEND_*`) |
 | `work-week.ts` | Expediente semanal do barbeiro (`workWeekJson`), interseção com horário da loja |
@@ -158,6 +161,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Editor de identidade | `brand-editor-form.tsx` |
 | WhatsApp admin | `whatsapp-admin-panel.tsx` |
 | Pagamentos admin | `payments-admin-panel.tsx` |
+| Suporte admin | `support-admin-panel.tsx` (`/admin/suporte`) |
+| Suporte Ops | `plataforma/support-platform-panel.tsx` (`/plataforma/suporte`) |
 | PIX pós-agendar | `appointment-pix-pay.tsx` |
 | Navbar (menu mobile ecrã completo + animações, redes, Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |

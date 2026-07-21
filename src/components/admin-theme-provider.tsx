@@ -108,7 +108,8 @@ export function useAdminTheme(): AdminThemeContextValue {
 }
 
 export function useAdminChartColors() {
-  const { theme } = useAdminTheme();
+  const ctx = useAdminThemeOptional();
+  const theme = ctx?.theme ?? "dark";
   const [colors, setColors] = useState({
     tick: theme === "light" ? "#667085" : "#a1a1aa",
     grid:
