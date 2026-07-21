@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { marketplaceHomePath, publicSurfaceUrl } from "@/lib/public-hosts";
 
 /** Footer público compartilhado (landing + marketplace). */
@@ -10,12 +11,11 @@ export function BarbernegonFooter() {
     <footer className="border-t border-[#2F3336] bg-[#0b0e15] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex w-full max-w-[1280px] flex-col items-center justify-between gap-6 px-4 py-8 sm:px-6 md:flex-row">
         <div className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
-          <Link
+          <BarbernegonMark
             href={publicSurfaceUrl("marketing", "/")}
-            className="font-brand-headline text-xl font-bold text-[#e1e2ec]"
-          >
-            Barbernegon
-          </Link>
+            size={44}
+            className="text-[#e1e2ec]"
+          />
           <p className="text-sm text-[#9CA3AF]">
             © {new Date().getFullYear()} Barbernegon. Excellence in Grooming.
           </p>

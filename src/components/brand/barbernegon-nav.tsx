@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { ExploreFavoritesLink } from "@/components/marketplace/explore-favorites-link";
 import { publicSurfaceUrl } from "@/lib/public-hosts";
 import { cn } from "@/lib/utils";
@@ -111,13 +112,13 @@ export function BarbernegonNav() {
         scrolled ? "pb-1.5" : "pb-2.5",
       )}
     >
-      <nav className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 md:h-14 md:px-6">
-        <Link
+      <nav className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between gap-3 px-4 md:h-16 md:px-6">
+        <BarbernegonMark
           href={homeHref}
-          className="font-brand-headline min-w-0 truncate text-lg font-bold tracking-tight text-[var(--bn-on)] transition-opacity hover:opacity-90 sm:text-xl md:text-2xl"
-        >
-          Barbernegon
-        </Link>
+          size={48}
+          priority
+          className="text-[var(--bn-on)]"
+        />
 
         <div className="hidden items-center gap-7 lg:gap-8 md:flex">
           <Link href={homeHref} className={linkClass(active === "home")}>

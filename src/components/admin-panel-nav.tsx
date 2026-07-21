@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import type { StaffAccess } from "@/lib/staff-access";
 import { cn } from "@/lib/utils";
 
@@ -204,12 +205,11 @@ export function AdminPanelNav({
   const sidebarBody = (
     <>
       <div className="flex items-center justify-between gap-2 border-b border-[var(--bn-border)] px-4 py-4">
-        <Link
+        <BarbernegonMark
           href="/admin"
-          className="font-brand-headline text-base font-bold tracking-tight text-[var(--bn-on)]"
-        >
-          Barbernegon
-        </Link>
+          size={40}
+          className="text-[var(--bn-on)] [&_span]:text-base"
+        />
         <button
           type="button"
           className="inline-flex size-10 items-center justify-center rounded-lg text-[var(--bn-muted)] transition hover:bg-[var(--bn-hover)] hover:text-[var(--bn-on)] lg:hidden"

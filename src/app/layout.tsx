@@ -24,9 +24,9 @@ export const metadata: Metadata = {
   description:
     "Plataforma para barbearias: site com identidade forte, agendamento online, admin, caixa e clube de assinaturas — sem burocracia.",
   icons: {
-    icon: [{ url: "/images/logo.jpeg", type: "image/jpeg" }],
-    apple: "/images/logo.jpeg",
-    shortcut: "/images/logo.jpeg",
+    icon: [{ url: "/images/barbernegon-logo.png", type: "image/png" }],
+    apple: "/images/barbernegon-logo.png",
+    shortcut: "/images/barbernegon-logo.png",
   },
 };
 

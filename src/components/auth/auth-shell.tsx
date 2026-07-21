@@ -2,9 +2,9 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -40,12 +40,12 @@ export function AuthShell({ children, className, aside, mobileBanner }: Props) {
 
         <div className="relative z-10 flex min-h-svh flex-col">
           <header className="flex items-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 sm:px-6 md:px-10">
-            <Link
+            <BarbernegonMark
               href="/"
-              className="font-[family-name:var(--font-auth-headline)] text-xl font-bold tracking-tight text-[#e1e2ec] transition hover:opacity-90 sm:text-2xl"
-            >
-              Barbernegon
-            </Link>
+              size={44}
+              priority
+              className="text-[#e1e2ec]"
+            />
           </header>
 
           <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-14">
@@ -99,12 +99,7 @@ export function AuthShell({ children, className, aside, mobileBanner }: Props) {
         />
 
         <header className="relative z-10 px-8 pt-[max(1.5rem,env(safe-area-inset-top))] xl:px-12">
-          <Link
-            href="/"
-            className="font-[family-name:var(--font-auth-headline)] text-2xl font-bold tracking-tight text-white transition hover:opacity-90"
-          >
-            Barbernegon
-          </Link>
+          <BarbernegonMark href="/" size={48} priority className="text-white" />
         </header>
 
         <div className="relative z-10 px-8 pb-10 xl:px-12 xl:pb-14">
@@ -121,12 +116,7 @@ export function AuthShell({ children, className, aside, mobileBanner }: Props) {
 
         {/* Marca no mobile (a foto vira banner) */}
         <header className="relative z-10 flex items-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2 sm:px-6 lg:hidden">
-          <Link
-            href="/"
-            className="font-[family-name:var(--font-auth-headline)] text-xl font-bold tracking-tight text-[#e1e2ec] transition hover:opacity-90 sm:text-2xl"
-          >
-            Barbernegon
-          </Link>
+          <BarbernegonMark href="/" size={44} className="text-[#e1e2ec]" />
         </header>
 
         {mobileBanner ? (

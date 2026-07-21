@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { publicSurfaceUrl } from "@/lib/public-hosts";
 import { cn } from "@/lib/utils";
 
@@ -51,12 +52,11 @@ export function PlatformSidebar({ email }: { email: string }) {
   const body = (
     <>
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-4">
-        <Link
+        <BarbernegonMark
           href="/plataforma"
-          className="text-base font-semibold tracking-tight text-white"
-        >
-          Barbernegon Ops
-        </Link>
+          size={40}
+          className="text-white [&_span]:text-base"
+        />
         <button
           type="button"
           className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/5 lg:hidden"
@@ -123,7 +123,11 @@ export function PlatformSidebar({ email }: { email: string }) {
         >
           <Menu className="size-5" />
         </button>
-        <span className="text-sm font-semibold text-white">Barbernegon Ops</span>
+        <BarbernegonMark
+          href="/plataforma"
+          size={32}
+          className="pointer-events-none text-white [&_span]:text-sm"
+        />
       </div>
 
       {mobileOpen ? (

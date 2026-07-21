@@ -1,147 +1,110 @@
-# Barbernegon — explicativo para conversa com investidor
+# Barbernegon — texto para apresentar ao investidor
 
-Documento de apoio para apresentar a ideia e o produto. Linguagem direta; pode ler em voz alta ou enviar como one-pager.
+Use como one-pager, e-mail ou roteiro de fala (≈ 3–5 min). Ajuste o pedido final ao que você quiser pedir na reunião.
 
 ---
 
-## Em uma frase
+## Texto pronto (copiar e colar / ler)
 
-**Barbernegon** é um software (SaaS) para barbearias terem **site com a própria marca**, **agenda online** e **gestão do dia a dia** (equipe, serviços, caixa e clube de assinaturas) — sem depender de app de marketplace que dilui a identidade do salão.
+**Barbernegon** é um software de assinatura (SaaS) para barbearias terem **site com a própria marca**, **agenda online** e **gestão do dia a dia** — equipe, serviços, caixa, clube de clientes e assistente no WhatsApp — sem depender de marketplace que dilui a identidade do salão.
 
 **Slogan:** *Sua barbearia, sua cara, sem burocracia.*
 
----
+### O problema
 
-## O problema que resolvemos
+O dono de barbearia vive um triângulo difícil:
 
-O dono de barbearia hoje enfrenta um certo “triângulo de ferro”:
+1. Quer parecer profissional na internet, mas site caro ou genérico não resolve.
+2. Precisa de agenda online — WhatsApp confunde horário, gera falta e retrabalho.
+3. As opções do mercado falham em algum ponto: marketplaces (estilo Booksy) colocam o salão lado a lado com concorrentes e enfraquecem a marca; softwares pesados são difíceis de usar; só Instagram não fecha o ciclo agenda → atendimento → caixa → retenção.
 
-1. **Quer aparecer profissional na internet** — mas montar site caro, lento ou genérico.
-2. **Precisa de agenda online** — WhatsApp confunde horário, gera falta e retrabalho.
-3. **Ferramentas do mercado** costumam falhar em um destes pontos:
-   - **Marketplaces / apps** (estilo Booksy): o cliente compara com concorrentes na mesma tela — a marca do salão perde força.
-   - **Softwares pesados**: onboarding difícil, suporte lento, cancelamento confuso, cobranças pouco transparentes.
-   - **Só site / só Instagram**: não fecha o ciclo agenda → atendimento → caixa → retenção.
+Resultado: tempo perdido, no-show, pouca recorrência e pouca diferenciação.
 
-Resultado: tempo perdido, no-show, pouca recorrência e pouca diferenciação visual.
+### A solução
 
----
+Uma plataforma **multi-tenant**: cada barbearia tem sua “casa” digital.
 
-## A ideia de negócio
+- Site próprio em `barbernegon.com/nome-da-barbearia` (marca do salão, não vitrine compartilhada)
+- Editor visual tipo Canva (templates, cores, seções — desktop e celular)
+- Agendamento no próprio site (cliente marca sozinho; pode remarcar/cancelar)
+- Painel completo: equipe, unidades, serviços, caixa e **clube de assinaturas**
+- Pagamentos do salão via **Asaas** (PIX e cartão) — o dinheiro do cliente cai na conta do salão; a Barbernegon não fica com split desse valor
+- **Assistente no WhatsApp** (Cloud API Meta) para agendar / remarcar / cancelar pelo chat
 
-Criamos uma **plataforma multi-tenant**: cada barbearia é um “inquilino” (organization) com:
+**Modelo de receita:** assinatura mensal da plataforma.
 
-| O que o dono ganha | Para quê |
-|--------------------|----------|
-| Site próprio em `barbernegon.com/nome-da-barbearia` | Presença com marca própria |
-| Editor visual estilo Canva (desktop + mobile) | Identidade sem depender de designer |
-| Agendamento online no próprio site | Cliente marca sozinho |
-| Painel admin (equipe, unidades, serviços, caixa, clube) | Operar o negócio num só lugar |
-| Cadastro em minutos | Começar sem burocracia |
+| Plano | Preço | Foco |
+|-------|-------|------|
+| Trial | 14 dias | Experiência completa (nível Pro) |
+| Starter | R$ 79/mês | Site, agenda, painel, PIX, WhatsApp, marketplace |
+| Pro | R$ 129/mês | Tudo do Starter + **Caixa** + **Clube** |
 
-**Modelo de receita (direção):** assinatura mensal da plataforma (planos Barbernegon) — o billing fino ainda está em evolução; o produto operacional já existe.
+Cobrança do plano SaaS: PIX ou cartão, na conta Asaas da **plataforma**.  
+Receita do salão com clientes (agenda PIX / clube): conta Asaas **do próprio salão**.
 
-Há ainda o **Clube** (assinaturas do cliente final da barbearia): o salão pode vender planos de recorrência e cancelar de forma clara — receita previsível para o salão, não só para nós.
+### Por que é um bom negócio
 
----
+1. **Mercado grande e atrasado digitalmente** — milhares de barbearias no Brasil ainda operam no WhatsApp e no boca a boca.
+2. **Receita recorrente (SaaS)** — mensalidade previsível + expansão multi-unidade já no produto.
+3. **Alto custo de troca** — quanto mais o salão personaliza site e operação, mais difícil sair.
+4. **Posicionamento claro vs marketplace** — vendemos *casa própria*, não comparação com concorrente.
+5. **Upsells naturais** — domínio próprio, mais templates, marketing, multi-loja premium, onboarding WhatsApp facilitado (Embedded Signup).
 
-## Como o sistema funciona (passo a passo)
+### O que já está pronto
 
-### 1. Cadastro do dono
-- Entra em **/cadastro**, cria a conta de proprietário.
-- O sistema cria automaticamente: organização + unidade + site inicial + login admin.
+Produto em **produção**, com:
 
-### 2. Identidade da marca
-- Em **/admin/marca**: nome, logo, cores, slogans, redes, WhatsApp.
-- Em **/admin/site**: editor visual (como Canva) — 14 templates prontos (clássico, neon, brutalista, oceano, boutique, bauhaus, rua…), seções, cores do sistema, tipografia.
+- Multi-tenant com isolamento por barbearia  
+- Site editável (canvas + templates)  
+- Agendamento público + gestão da reserva  
+- Admin (marca, site, equipe, unidades, serviços, caixa, clube)  
+- Billing SaaS Starter/Pro (Asaas)  
+- PIX de agendamento e clube na conta do salão  
+- Bot WhatsApp (agendar / remarcar / cancelar) em integração  
+- Landing, cadastro e planos públicos  
 
-### 3. Cliente final
-- Acessa **`/slug-da-barbearia`** — vê o site daquela marca (não um marketplace).
-- Clica em **Agendar** → escolhe serviço, profissional, data e horário.
-- Recebe gestão da reserva (consultar / remarcar / cancelar com token).
+**Próximo foco comercial:** adquirir e reter os primeiros salões pagantes (piloto), fechar onboarding WhatsApp mais simples para o dono, e validar CAC/LTV na prática.
 
-### 4. Equipe e operação
-- Dono/admin cadastra **unidades**, **serviços** (preço por unidade se quiser), **equipe**.
-- Funcionário (STAFF) vê o que importa para ele; papéis separados (OWNER / ADMIN / STAFF).
-- **Caixa**: visão financeira do que entrou.
-- **Clube**: planos de assinatura para clientes da barbearia.
+### O que pedimos nesta conversa
 
-### 5. Isolamento (importante tecnicamente e comercialmente)
-- Dados de uma barbearia **não misturam** com outra.
-- Cada URL pública é daquela marca — white-label de verdade.
+Não precisa ser cheque na primeira reunião. Pedimos:
 
----
+1. Feedback sincero sobre posicionamento e preço (R$ 79 / R$ 129)  
+2. Introduções a **2–3 donos de barbearia** para piloto pago  
+3. Se fizer sentido: aporte seed para **go-to-market** (aquisição + suporte onboarding) e acelerar os primeiros 20–50 salões  
 
-## Por que isso é interessante como negócio
-
-1. **Mercado fragmentado e digitalmente atrasado** — muitas barbearias ainda vivem de WhatsApp e boca a boca.
-2. **Recorrência (SaaS)** — assinatura mensal + expansão para filiais (multi-unidade já no produto).
-3. **Defesa pela marca do cliente** — quanto mais ele personaliza o site e a operação no Barbernegon, mais alto o custo de troca.
-4. **Diferencial claro vs marketplace** — vendemos *casa própria*, não vitrine compartilhada.
-5. **Upsell natural** — domínio próprio, PWA, mais templates, billing, marketing, multi-loja premium.
+Pergunta de fechamento: *“O que faria sentido para validar Barbernegon com 10–20 barbearias nos próximos 60 dias?”*
 
 ---
 
-## O que já está pronto (hoje)
-
-- Plataforma multi-tenant com isolamento por organização  
-- Site institucional editável (canvas + templates + paleta)  
-- Agendamento público por slug  
-- Admin: marca, site, equipe, unidades, serviços, caixa, clube  
-- Landing da plataforma + fluxo de cadastro  
-- Ambiente em produção (piloto / demonstração)
-
-**Em evolução / próxima camada comercial:** billing completo dos planos Barbernegon, domínio próprio do salão, app nativo (fora do MVP consciente).
-
----
-
-## Como mostrar na conversa (roteiro de 5 minutos)
+## Roteiro rápido (5 minutos)
 
 1. **Problema** (1 min) — WhatsApp + marketplace dilui marca.  
-2. **Solução** (1 min) — “Site da marca + agenda + operação num SaaS.”  
-3. **Demo ao vivo** (2 min)  
-   - Landing: `https://barbernegon-production.up.railway.app/`  
-   - Cadastro ou um slug de teste  
-   - `/admin/site` mexendo cor/template  
-   - Agendar um horário  
-4. **Negócio** (1 min) — Assinatura da plataforma + valor para o salão (agenda + clube).  
-5. **Pergunta ao investidor** — “O que faria sentido para validar com 10–20 barbearias nos próximos 60 dias?”
+2. **Solução** (1 min) — Site da marca + agenda + operação + clube + WhatsApp, num SaaS.  
+3. **Demo** (2 min) — landing → site de um salão → agendar → `/admin/site` → clube/pagamentos.  
+4. **Negócio** (1 min) — R$ 79 / R$ 129; dinheiro do cliente fica no salão; nós cobramos a plataforma.  
+5. **Pedido** — intros + piloto; ou seed para GTM.
+
+### Links da demo
+
+| O quê | URL |
+|-------|-----|
+| Landing | https://barbernegon-production.up.railway.app/ |
+| Planos | https://barbernegon-production.up.railway.app/planos |
+| Cadastro | https://barbernegon-production.up.railway.app/cadastro |
+| Painel | https://barbernegon-production.up.railway.app/admin |
 
 ---
 
-## Perguntas que o investidor pode fazer (e respostas honestas)
+## Respostas curtas se perguntarem
 
-| Pergunta | Direção da resposta |
-|----------|---------------------|
-| Qual o TAM? | Milhares de barbearias só no Brasil; começar por nicho regional / indicação. |
-| Como cobra? | Assinatura SaaS (planos); cobrança end-to-end em fechamento. |
-| Vs Booksy? | Eles são marketplace; nós somos site + operação da marca. |
-| Tração? | Produto construído e em produção; validação comercial é o próximo passo. |
-| Captable / go-to-market? | Indicação, parceria com fornecedores do setor, conteúdo Instagram/TikTok para donos. |
-
----
-
-## Pedido sugerido na conversa (ajuste ao que você quiser)
-
-Não precisa pedir cheque na primeira reunião. Pode pedir:
-
-- Feedback sincero sobre o posicionamento  
-- Introduções a 2–3 donos de barbearia para piloto pago  
-- Ou, se fizer sentido: aporte seed para GTM + billing + primeiros clientes
+| Pergunta | Resposta |
+|----------|----------|
+| Vs Booksy? | Eles são marketplace; nós somos site + operação da marca do salão. |
+| Como ganha dinheiro? | Assinatura mensal Starter/Pro. Não pegamos % do PIX/clube do salão. |
+| Tração? | Produto em produção; validação comercial e primeiros pagantes são o próximo passo. |
+| Por que agora? | Salões querem profissionalizar sem perder a marca; WhatsApp sozinho não escala agenda nem caixa. |
 
 ---
 
-## Links úteis na demo
-
-| O quê | Onde |
-|-------|------|
-| Landing | `/` no domínio de produção |
-| Cadastro | `/cadastro` |
-| Planos (visão) | `/planos` |
-| Site de um tenant | `/{slug}` |
-| Agendar | `/{slug}/agendar` |
-| Painel | `/admin` |
-
----
-
-*Documento interno de apresentação — Barbernegon. Atualizar números de pricing e tração quando forem definidos.*
+*Atualizado em 2026-07-20 — Barbernegon.*

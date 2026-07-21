@@ -8,6 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-20
 
+- **Marca Barbernegon — nova logo**: selo BN (`barbernegon-logo.png`) na nav/footer públicos, login/cadastro, painel admin e favicon (substitui `logo.jpeg` da plataforma).
+- **Pitch investidor**: texto one-pager / roteiro atualizado com Starter/Pro (R$ 79 / R$ 129), Asaas (SaaS vs salão), clube, WhatsApp e pedido de piloto/GTM.
 - **WhatsApp admin — número internacional**: o campo “Número de WhatsApp” aceita `+…` (ex. número de teste Meta `+15551540355`) sem a máscara BR; `wa.me` não força mais DDI 55 quando o valor começa com `+`.
 - **Clube — fix lista de clientes do histórico**: `GET /api/admin/booking-clients` filtrava `organizationId` direto em `Appointment` (campo inexistente) e quebrava o painel com “Unexpected end of JSON input”. Agora usa `appointmentScopeWhere` (`unit.organizationId`); o reload do clube trata resposta vazia/não-JSON com segurança.
 - **Clube — escolher cliente do histórico**: em Vincular cliente (balcão), lista quem já agendou (`GET /api/admin/booking-clients`); ao selecionar, preenche nome e telefone. Ainda dá para digitar cliente novo.
