@@ -69,7 +69,7 @@ export default async function AdminPlanoPage() {
       <AdminPageHeader
         eyebrow="Plataforma"
         title="Seu plano Barbernegon"
-        description="Free para sempre com site e agenda. Pro libera Caixa, Clube e multi-unidade."
+        description="Free para sempre (até 2 barbeiros, 1 loja). Pro libera Caixa, Clube, barbeiros ilimitados e multi-unidade."
       />
 
       {needsBillingAttention(org) ? (

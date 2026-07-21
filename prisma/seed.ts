@@ -9,7 +9,7 @@ import {
   DEMO_ORG_ID,
   DEMO_ORG_SLUG,
   demoSiteJson,
-} from "./demo-vitrine";
+} from "../src/lib/demo-vitrine";
 import { hashPassword } from "../src/lib/password";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 

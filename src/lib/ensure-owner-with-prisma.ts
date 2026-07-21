@@ -6,7 +6,7 @@ import {
   DEMO_ORG_ID,
   DEMO_ORG_SLUG,
   demoSiteJson,
-} from "../prisma/demo-vitrine";
+} from "@/lib/demo-vitrine";
 import { hashPassword } from "./password";
 import { MIN_PASSWORD_LENGTH } from "./password-policy";
 

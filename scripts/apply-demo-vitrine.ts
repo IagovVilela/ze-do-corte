@@ -15,7 +15,7 @@ import {
   DEMO_ORG_ID,
   DEMO_ORG_SLUG,
   demoSiteJson,
-} from "../prisma/demo-vitrine";
+} from "../src/lib/demo-vitrine";
 
 const connectionString = resolveDatabaseUrlForCli();
 const prisma = new PrismaClient({

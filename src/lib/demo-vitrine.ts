@@ -1,10 +1,10 @@
 /**
  * Branding da org demonstrativa (slug ze-do-corte → nome Barbergon + template vitrine).
- * Usado pelo seed e pelo script one-shot de produção.
+ * Usado pelo seed, ensure-owner e script one-shot de produção.
  */
 import type { Prisma } from "@prisma/client";
 
-import { buildCanvasPageTemplate } from "../src/lib/canvas-page-templates";
+import { buildCanvasPageTemplate } from "@/lib/canvas-page-templates";
 
 export const DEMO_ORG_SLUG = "ze-do-corte";
 export const DEMO_ORG_ID = "org_ze_do_corte_default";
