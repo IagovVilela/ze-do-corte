@@ -30,7 +30,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/planos` | `src/app/(public)/planos/page.tsx` | Planos Free + Pro (nav pública + `SaasPlanComparison` tokens BN) |
 | `/explorar` | `src/app/(public)/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
 | `/explorar/favoritos` | `src/app/(public)/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
-| `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops |
+| `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops (`?k=` → gate API) |
 | `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview com KPIs, taxas e gráficos (7d/30d) |
 | `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
 | `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + editar plano |
@@ -84,7 +84,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
 | Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding, `marketplaceListed`) |
 | Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `geocode/route.ts` — cidade via GPS; `reviews/route.ts` — `GET` lista publicamente por slug + `POST` avaliação por token |
-| Plataforma (ops) | `src/app/api/plataforma/login/route.ts`, `overview`, `organizations`, `marketplace`, `consumidores`, `reviews/[id]` |
+| Plataforma (ops) | `src/app/api/plataforma/gate/route.ts` (cookie de entrada), `login`, `overview`, `organizations`, `marketplace`, `consumidores`, `reviews/[id]` |
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |

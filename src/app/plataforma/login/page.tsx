@@ -15,26 +15,24 @@ type Props = { searchParams: Promise<{ k?: string; erro?: string }> };
 
 /**
  * Entrada secreta do Ops.
- * Primeiro acesso: `/plataforma/login?k=CHAVE` → grava cookie httpOnly e tira `k` da URL.
+ * Primeiro acesso: `/plataforma/login?k=CHAVE` → redireciona para
+ * `GET /api/plataforma/gate` (grava cookie httpOnly) e volta sem `k` na URL.
  * Depois: só cookie (sem segredo na barra de endereço / histórico).
  */
 export default async function PlataformaLoginPage({ searchParams }: Props) {
   const { k, erro } = await searchParams;
-  const jar = await cookies();
-  const fromCookie = jar.get(PLATFORM_OPS_GATE_COOKIE)?.value;
 
-  if (k && isValidPlatformOpsGate(k)) {
-    jar.set(PLATFORM_OPS_GATE_COOKIE, k, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/plataforma",
-      maxAge: 60 * 60 * 8,
-    });
-    redirect(erro ? `/plataforma/login?erro=${encodeURIComponent(erro)}` : "/plataforma/login");
+  if (k) {
+    if (!isValidPlatformOpsGate(k)) {
+      notFound();
+    }
+    const q = new URLSearchParams({ k });
+    if (erro) q.set("erro", erro);
+    redirect(`/api/plataforma/gate?${q.toString()}`);
   }
 
-  const gate = fromCookie ?? null;
+  const jar = await cookies();
+  const gate = jar.get(PLATFORM_OPS_GATE_COOKIE)?.value ?? null;
   if (!isValidPlatformOpsGate(gate)) {
     notFound();
   }

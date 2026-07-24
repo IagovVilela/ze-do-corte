@@ -45,9 +45,26 @@ export function isValidPlatformOpsGate(
   return timingSafeEqualString(candidate, expected);
 }
 
+/** Grava o gate na resposta (só Route Handler / Server Action).
+ * path `/` cobre `/plataforma` e `/api/plataforma` (path antigo `/plataforma` não ia na API).
+ */
+export function appendPlatformOpsGateCookie(
+  response: NextResponse,
+  gate: string,
+): void {
+  response.cookies.set(PLATFORM_OPS_GATE_COOKIE, gate, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 8,
+  });
+}
+
 /**
  * URL de entrada inicial (ainda com `?k=` para o primeiro clique).
- * A página troca por cookie httpOnly e remove o segredo da URL.
+ * A página redireciona para `GET /api/plataforma/gate`, que grava cookie httpOnly
+ * e remove o segredo da URL.
  */
 export function platformLoginHref(gate?: string | null): string | null {
   const k = gate ?? getPlatformOpsGate();

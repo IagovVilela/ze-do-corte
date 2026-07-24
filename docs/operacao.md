@@ -43,7 +43,7 @@ Descrição detalhada das variáveis: [README.md](../README.md) (tabela) e [.env
 | `PLATFORM_OPS_GATE` | Segredo da entrada Ops — sem ele, `/plataforma/login` responde **404** |
 
 URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`  
-No primeiro acesso o sistema grava cookie **httpOnly** `bn_ops_gate` e **remove** o `k` da URL (não fica no histórico).
+No primeiro acesso a página redireciona para `GET /api/plataforma/gate`, que grava cookie **httpOnly** `bn_ops_gate` (`path=/`) e **remove** o `k` da URL (não fica no histórico).
 
 ### Domínios marketing vs marketplace
 

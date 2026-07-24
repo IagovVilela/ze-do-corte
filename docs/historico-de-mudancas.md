@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-24
+
+- **Fix Ops login 500**: `/plataforma/login?k=` tentava `cookies().set()` em Server Component (proibido no Next) → **500**. Agora redireciona para `GET /api/plataforma/gate`, que grava o cookie httpOnly e volta ao formulário. Cookie do gate passou de `path=/plataforma` para `path=/` para o `POST /api/plataforma/login` receber a chave.
+
 ## 2026-07-23
 
 - **Fix telemetria por unidade**: cards listavam unidades de **outras** organizações (faltava filtro `organizationId`). Agora usa `unitScopeWhere` — com 1 unidade, aparece 1 card.
