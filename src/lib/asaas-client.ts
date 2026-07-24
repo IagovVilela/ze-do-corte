@@ -1,5 +1,7 @@
 import "server-only";
 
+import { timingSafeEqualString } from "@/lib/rate-limit";
+
 export type AsaasBillingType = "PIX" | "BOLETO" | "CREDIT_CARD" | "UNDEFINED";
 
 export type AsaasCycle =
@@ -83,7 +85,7 @@ export function isPlatformAsaasConfigured(): boolean {
 export function verifyAsaasWebhookToken(headerValue: string | null): boolean {
   const expected = process.env.ASAAS_WEBHOOK_TOKEN?.trim();
   if (!expected || !headerValue) return false;
-  return headerValue.trim() === expected;
+  return timingSafeEqualString(headerValue.trim(), expected);
 }
 
 async function asaasFetch<T>(

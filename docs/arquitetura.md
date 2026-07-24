@@ -38,7 +38,7 @@ CSS vars da paleta: `organizationBrandStyle` / `resolveSiteCanvas` em `src/lib/o
 
 ## Fluxo administrativo
 
-- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`). Query `?from=/caminho` redireciona após login.
+- **`/admin/login`** — `POST /api/auth/login` valida `StaffMember.passwordHash`, cria linha em `Session` e define cookie. O primeiro **OWNER** com senha pode ser criado no deploy com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` (`npm run start:prod` → `ensure-owner.ts`; em produção há reforço em `src/instrumentation.ts`). Query `?from=/caminho` redireciona após login. **Esqueci a senha:** `/admin/esqueci-senha` → `POST /api/auth/forgot-password` (e-mail Resend com link de 1h) → `/admin/redefinir-senha?token=` → `POST /api/auth/reset-password` (invalida sessões). Resposta do “forgot” é sempre genérica (não revela se o e-mail existe).
 - **`/plataforma`** — console **Barbernegon Ops** isolado: entrada secreta `/plataforma/login?k=PLATFORM_OPS_GATE` (404 sem chave); e-mails em `PLATFORM_ADMIN_EMAILS` / `SEED_OWNER_EMAIL`; sidebar com visão geral, barbearias, marketplace e consumidores. Sem sessão → 404 (não revela login). APIs em `/api/plataforma/*`.
 - **`/admin/marca`** — identidade (nome, slug, logo, cores, slogans, redes, uploads, opt-in marketplace).
 - **`/admin/site`** — canvas tipo Canva: biblioteca, cores, arteboards, drag/resize com **linhas-guia** ao centralizar, barra flutuante + dock contextual no mobile, inspector com conteúdo primeiro (posição em “Posição e tamanho”), upload, templates.
@@ -69,6 +69,7 @@ Ver `prisma/schema.prisma` para o contrato exato.
 - **BarbershopUnit** — unidades (slug, endereço, `isDefault` para o site público).
 - **StaffMember** — e-mail, `StaffRole`, hash bcrypt da senha, unidade opcional (obrigatória para STAFF), `displayName`, `phone`, `profileImageUrl` / `profileImagePublicId` (Cloudinary), `websiteBio` e `showOnWebsite` (cartão na página inicial, só para STAFF), `workWeekJson` opcional (expediente semanal do barbeiro), subscrições **Web Push** (`StaffPushSubscription`: `endpoint`, chaves `p256dh` / `auth`).
 - **Session** — `tokenHash` (SHA-256 do token do cookie), `expiresAt`, ligação a `StaffMember`.
+- **PasswordResetToken** — hash SHA-256 do token de “esqueci a senha”, `expiresAt`, `usedAt` opcional; ligação a `StaffMember`.
 - **BarbershopSetting** — pares chave/valor (textos institucionais editáveis no painel).
 
 ## Exportação e métricas

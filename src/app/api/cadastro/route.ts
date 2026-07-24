@@ -6,6 +6,11 @@ import { appendSessionCookie } from "@/lib/admin-auth";
 import { hashPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { createDbSession } from "@/lib/session-cookie";
 import { isReservedSlug, slugifyOrgName } from "@/lib/organization";
 import { getCanvasTemplate } from "@/lib/site-canvas";
@@ -47,13 +52,36 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
+  const ip = clientIpFromRequest(request);
+  const byIp = checkRateLimit(`cadastro:ip:${ip}`, {
+    limit: 8,
+    windowMs: 60 * 60 * 1000,
+  });
+  const byEmail = checkRateLimit(`cadastro:email:${email}`, {
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!byIp.ok || !byEmail.ok) {
+    const retry = Math.max(
+      byIp.ok ? 0 : byIp.retryAfterSec,
+      byEmail.ok ? 0 : byEmail.retryAfterSec,
+    );
+    return NextResponse.json(rateLimitResponse(retry), {
+      status: 429,
+      headers: { "Retry-After": String(retry) },
+    });
+  }
+
   const existingEmail = await prisma.staffMember.findUnique({
     where: { email },
     select: { id: true },
   });
   if (existingEmail) {
     return NextResponse.json(
-      { message: "Já existe uma conta com este e-mail." },
+      {
+        message:
+          "Não foi possível concluir o cadastro com estes dados. Se já tiver conta, entre no painel.",
+      },
       { status: 409 },
     );
   }

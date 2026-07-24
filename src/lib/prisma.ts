@@ -7,7 +7,7 @@ import { Pool } from "pg";
  * (ex.: Organization), para descartar o PrismaClient antigo guardado em `globalThis`.
  * Chave `prismaV2` evita reaproveitar client antigo de hot-reload (ratingAvg/ratingCount).
  */
-const PRISMA_CLIENT_GENERATION = 9;
+const PRISMA_CLIENT_GENERATION = 11;
 
 const globalForPrisma = globalThis as unknown as {
   prismaV2: PrismaClient | undefined;
@@ -40,20 +40,51 @@ function createPrismaClient(pool: Pool) {
   });
 }
 
-if (
-  process.env.NODE_ENV !== "production" &&
-  globalForPrisma.prismaV2 &&
-  globalForPrisma.prismaGenerationV2 !== PRISMA_CLIENT_GENERATION
-) {
-  void globalForPrisma.prismaV2.$disconnect().catch(() => undefined);
-  void globalForPrisma.prismaPoolV2?.end().catch(() => undefined);
+function clientHasExpectedDelegates(client: PrismaClient): boolean {
+  const c = client as PrismaClient & {
+    passwordResetToken?: { findMany?: unknown };
+    platformLead?: { findMany?: unknown };
+  };
+  return (
+    typeof c.passwordResetToken?.findMany === "function" &&
+    typeof c.platformLead?.findMany === "function"
+  );
+}
+
+function discardCachedClient() {
+  if (globalForPrisma.prismaV2) {
+    void globalForPrisma.prismaV2.$disconnect().catch(() => undefined);
+  }
+  if (globalForPrisma.prismaPoolV2) {
+    void globalForPrisma.prismaPoolV2.end().catch(() => undefined);
+  }
   globalForPrisma.prismaV2 = undefined;
   globalForPrisma.prismaPoolV2 = undefined;
 }
 
+if (
+  process.env.NODE_ENV !== "production" &&
+  globalForPrisma.prismaV2 &&
+  (globalForPrisma.prismaGenerationV2 !== PRISMA_CLIENT_GENERATION ||
+    !clientHasExpectedDelegates(globalForPrisma.prismaV2))
+) {
+  discardCachedClient();
+}
+
 function getClient(): PrismaClient {
-  if (globalForPrisma.prismaV2) return globalForPrisma.prismaV2;
-  const pool = globalForPrisma.prismaPoolV2 ?? createPool();
+  if (
+    globalForPrisma.prismaV2 &&
+    globalForPrisma.prismaGenerationV2 === PRISMA_CLIENT_GENERATION &&
+    clientHasExpectedDelegates(globalForPrisma.prismaV2)
+  ) {
+    return globalForPrisma.prismaV2;
+  }
+
+  if (globalForPrisma.prismaV2) {
+    discardCachedClient();
+  }
+
+  const pool = createPool();
   const client = createPrismaClient(pool);
   // Sempre singleton (também em produção): Next pode carregar o módulo
   // várias vezes em chunks distintos e esgotar conexões do Postgres.
@@ -63,4 +94,17 @@ function getClient(): PrismaClient {
   return client;
 }
 
-export const prisma = getClient();
+/**
+ * Proxy: em hot-reload o `export const prisma = getClient()` antigo podia
+ * ficar sem delegates novos (ex.: passwordResetToken). Cada acesso revalida.
+ */
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getClient();
+    const value = Reflect.get(client, prop, client);
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value ?? Reflect.get(client, prop, receiver);
+  },
+});

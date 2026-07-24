@@ -37,6 +37,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
+| `/lista-espera` | `src/app/lista-espera/page.tsx` | Lead B2B só por link (noindex); form `lista-espera-form.tsx` |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
@@ -54,6 +55,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/servicos` | `src/app/admin/(panel)/servicos/page.tsx` | CRUD serviços, filtro por tipo (`ServiceCategory`), cartões |
 | `/admin/configuracao` | `src/app/admin/(panel)/configuracao/page.tsx` | Preferências: aparência (todos), toggles de funções (OWNER/branding), textos `BarbershopSetting` (OWNER) |
 | `/admin/login` | `src/app/admin/login/page.tsx` | Login premium do painel (`admin-login-form.tsx` + `auth/`) |
+| `/admin/esqueci-senha` | `src/app/admin/esqueci-senha/page.tsx` | Pedido de link de redefinição (`forgot-password-form.tsx`) |
+| `/admin/redefinir-senha` | `src/app/admin/redefinir-senha/page.tsx` | Nova senha via token do e-mail (`reset-password-form.tsx`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
 | Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
 
@@ -74,6 +77,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
 | Configuração | `src/app/api/admin/settings/route.ts` |
 | Login / logout painel | `src/app/api/auth/login/route.ts`, `logout/route.ts` |
+| Esqueci / redefinir senha | `src/app/api/auth/forgot-password/route.ts`, `reset-password/route.ts` |
 | Perfil (dados + senha) | `src/app/api/auth/profile/route.ts` — `PATCH` (próprio usuário) |
 | Expediente (funcionário) | `src/app/api/auth/work-schedule/route.ts` — `GET`, `PATCH` (só **STAFF**) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
@@ -92,6 +96,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
 | PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |
 | Cadastro SaaS | `src/app/api/cadastro/route.ts` — cria org com `siteJson` classic |
+| Leads B2B | `src/app/api/leads/route.ts` — `POST` público; lista Ops em `/plataforma/leads` |
 
 ## Biblioteca (`src/lib`)
 
@@ -123,6 +128,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `data.ts` | `getServices` (catálogo da unidade padrão — home), `getServicesForBooking` (todas as unidades ativas para `/agendar`), `getPublicBarbers`, `getBarbersForBooking`, seed assistido se necessário |
 | `barber-card-theme.ts` | Paleta e layout dos cartões da equipe na home (hash estável do `id` do `StaffMember`) |
 | `password.ts` | `hashPassword` / `verifyPassword` (bcryptjs) |
+| `password-reset.ts` | Token SHA-256 + e-mail Resend para “esqueci minha senha” |
 | `session-cookie.ts` | Token de sessão, `createDbSession`, resolução por cookie |
 | `admin-auth.ts` | `getStaffAccessOrNull` (cache por requisição), `requireStaffApiAuth`, cookies de sessão |
 | `staff-access.ts` | Papéis a partir de `StaffMember`, filtros por unidade e por `staffMemberId` (STAFF) |
@@ -149,7 +155,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Componente | Pasta |
 |------------|-------|
 | Site do tenant (canvas) | `tenant-canvas-renderer.tsx` |
-| Auth (login + cadastro) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx` |
+| Auth (login + cadastro + reset) | `auth/auth-shell.tsx`, `auth/auth-fields.tsx`, `auth/cadastro-client.tsx`, `admin-login-form.tsx`, `forgot-password-form.tsx`, `reset-password-form.tsx` |
 | Tokens corporativos BN | `lib/brand-tokens.ts` (`BN` / `BN_LIGHT`) + classe `.brand-onyx` em `globals.css` (marketing/auth/planos/**chrome admin**; light via `data-theme`) |
 | Tema do painel | `lib/admin-theme.ts`, `admin-theme-provider.tsx`, `admin-theme-toggle.tsx`, `admin-config-appearance.tsx` |
 | Nav pública (landing + explorar + planos) | `brand/barbernegon-nav.tsx`, `brand/barbernegon-footer.tsx`, `brand/public-brand-shell.tsx`, `brand/brand-page-transition.tsx` |
@@ -163,6 +169,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Pagamentos admin | `payments-admin-panel.tsx` |
 | Suporte admin | `support-admin-panel.tsx` (`/admin/suporte`) |
 | Suporte Ops | `plataforma/support-platform-panel.tsx` (`/plataforma/suporte`) |
+| Leads Ops | `src/app/plataforma/(ops)/leads/page.tsx` — tabela de `PlatformLead` |
 | PIX pós-agendar | `appointment-pix-pay.tsx` |
 | Navbar (menu mobile ecrã completo + animações, redes, Painel) | `src/components/navbar.tsx`, `navbar-client.tsx` |
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |

@@ -6,6 +6,11 @@ import { normalizeBrProfilePhone } from "@/lib/br-phone-format";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -68,12 +73,26 @@ export async function PATCH(request: Request) {
       select: { id: true },
     });
     if (existing) {
-      return NextResponse.json({ message: "Este e-mail já está em uso." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Não foi possível atualizar o e-mail." },
+        { status: 400 },
+      );
     }
   }
 
   if (hasPasswordChange) {
     const plain = parsed.data.currentPassword ?? "";
+    const ip = clientIpFromRequest(request);
+    const rl = checkRateLimit(`profile-pw:${auth.access.userId}:${ip}`, {
+      limit: 8,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.ok) {
+      return NextResponse.json(rateLimitResponse(rl.retryAfterSec), {
+        status: 429,
+        headers: { "Retry-After": String(rl.retryAfterSec) },
+      });
+    }
     if (!member.passwordHash || !(await verifyPassword(plain, member.passwordHash))) {
       return NextResponse.json({ message: "Senha atual incorreta." }, { status: 400 });
     }

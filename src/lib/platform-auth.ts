@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
+import { timingSafeEqualString } from "@/lib/rate-limit";
 import type { StaffAccess } from "@/lib/staff-access";
+
+export const PLATFORM_OPS_GATE_COOKIE = "bn_ops_gate";
 
 function parseEmailList(raw: string | undefined): string[] {
   if (!raw?.trim()) return [];
@@ -28,7 +31,7 @@ export function isPlatformAdminEmail(email: string | undefined | null): boolean 
   return getPlatformAdminEmails().has(email.trim().toLowerCase());
 }
 
-/** Chave secreta da URL de entrada Ops (`?k=`). Sem ela a tela não existe (404). */
+/** Chave secreta da entrada Ops. Preferir cookie httpOnly após o primeiro acesso. */
 export function getPlatformOpsGate(): string | null {
   const g = process.env.PLATFORM_OPS_GATE?.trim();
   return g || null;
@@ -38,11 +41,14 @@ export function isValidPlatformOpsGate(
   candidate: string | null | undefined,
 ): boolean {
   const expected = getPlatformOpsGate();
-  if (!expected) return false;
-  return Boolean(candidate && candidate === expected);
+  if (!expected || !candidate) return false;
+  return timingSafeEqualString(candidate, expected);
 }
 
-/** URL canônica de entrada (só com GATE configurado). */
+/**
+ * URL de entrada inicial (ainda com `?k=` para o primeiro clique).
+ * A página troca por cookie httpOnly e remove o segredo da URL.
+ */
 export function platformLoginHref(gate?: string | null): string | null {
   const k = gate ?? getPlatformOpsGate();
   if (!k) return null;

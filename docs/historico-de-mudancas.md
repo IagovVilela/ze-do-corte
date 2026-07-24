@@ -6,6 +6,14 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-23
+
+- **Fix telemetria por unidade**: cards listavam unidades de **outras** organizações (faltava filtro `organizationId`). Agora usa `unitScopeWhere` — com 1 unidade, aparece 1 card.
+- **Esqueci minha senha (painel)**: em `/admin/login` → `/admin/esqueci-senha` → e-mail Resend com link (1h, uso único) → `/admin/redefinir-senha?token=…`. APIs `POST /api/auth/forgot-password` e `POST /api/auth/reset-password`. Modelo `PasswordResetToken` (migração `20260723220000_password_reset_tokens`). Mensagem genérica anti-enumeração; invalida sessões após reset.
+- **Ops — Leads (filtros + gráfico)**: `/plataforma/leads` com coluna `#`, filtros GET `q` / `city` / `range` (`7d`|`30d`|`90d`|`all`, padrão `30d`), título `Leads (N)` e gráfico leads/dia (`DashboardVolumeArea`).
+- **Segurança**: rate limit (IP + e-mail) em login, Ops login, cadastro, troca de senha, leads e agendamento público; mensagens genéricas no cadastro (anti-enumeração); login com hash dummy (anti-timing); Ops gate em cookie httpOnly após `?k=`; webhook WhatsApp exige `META_APP_SECRET` + assinatura; Asaas token com `timingSafeEqual`; headers `X-Frame-Options: DENY` + `frame-ancestors 'none'`.
+- **Leads B2B (lista de espera)**: formulário só por link `/lista-espera` (`robots: noindex`, fora da nav). `POST /api/leads` grava `PlatformLead`. Lista em `/plataforma/leads`. Migração `20260723210000_platform_leads`. Divulgação: `…/lista-espera`.
+
 ## 2026-07-21
 
 - **Seats no Free**: Free com **máx. 2 barbeiros** (`STAFF`); 3º exige Pro. Trial padrão **30 dias**; oferta de lançamento **90 dias** via `SAAS_LAUNCH_OFFER_UNTIL`. Sem seats avulsos.

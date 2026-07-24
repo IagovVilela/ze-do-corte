@@ -24,7 +24,7 @@ import {
 } from "@/lib/dashboard-period";
 import { prisma } from "@/lib/prisma";
 import { staffLabelMapByIds } from "@/lib/staff-display-names";
-import { type StaffAccess } from "@/lib/staff-access";
+import { type StaffAccess, unitScopeWhere } from "@/lib/staff-access";
 import type {
   AppointmentRow,
   DashboardPaymentStackRow,
@@ -325,10 +325,10 @@ export async function getAdminDashboardSnapshot(
   const now = new Date();
   const meta = getDashboardPeriodMeta(range, now);
   const whereBase = appointmentListWhere(access, listFilters);
-  const telemetryUnitWhere =
-    listFilters.unit !== undefined
-      ? { id: listFilters.unit }
-      : undefined;
+  const telemetryUnitWhere = {
+    ...unitScopeWhere(access),
+    ...(listFilters.unit !== undefined ? { id: listFilters.unit } : {}),
+  };
 
   const startToday = startOfDay(now);
   const endToday = endOfDay(now);

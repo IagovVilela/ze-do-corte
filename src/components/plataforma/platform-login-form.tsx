@@ -4,10 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function PlatformLoginForm({
-  gate,
   initialError,
 }: {
-  gate: string;
   initialError?: string | null;
 }) {
   const router = useRouter();
@@ -24,7 +22,8 @@ export function PlatformLoginForm({
       const res = await fetch("/api/plataforma/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, gate }),
+        body: JSON.stringify({ email, password }),
+        credentials: "same-origin",
       });
       const data = (await res.json()) as { message?: string; redirect?: string };
       if (!res.ok) {

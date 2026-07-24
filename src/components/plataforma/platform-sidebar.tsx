@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/plataforma", label: "Visão geral", exact: true },
   { href: "/plataforma/barbearias", label: "Barbearias" },
+  { href: "/plataforma/leads", label: "Leads" },
   { href: "/plataforma/marketplace", label: "Marketplace" },
   { href: "/plataforma/consumidores", label: "Consumidores" },
   { href: "/plataforma/suporte", label: "Suporte" },

@@ -40,9 +40,10 @@ Descrição detalhada das variáveis: [README.md](../README.md) (tabela) e [.env
 | Variável | Função |
 |----------|--------|
 | `PLATFORM_ADMIN_EMAILS` | E-mails autorizados (além de `SEED_OWNER_EMAIL`) |
-| `PLATFORM_OPS_GATE` | Segredo da URL — sem ele, `/plataforma/login` responde **404** |
+| `PLATFORM_OPS_GATE` | Segredo da entrada Ops — sem ele, `/plataforma/login` responde **404** |
 
-URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`
+URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`  
+No primeiro acesso o sistema grava cookie **httpOnly** `bn_ops_gate` e **remove** o `k` da URL (não fica no histórico).
 
 ### Domínios marketing vs marketplace
 
@@ -59,14 +60,15 @@ Sem as duas variáveis, a app continua com paths no mesmo host (adequado ao dese
 
 Opcional. Sem `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`, a página **`/admin/perfil`** continua a permitir nome, telefone e senha; os botões de foto mostram aviso e as APIs de avatar respondem **503**. As imagens ficam na pasta `ze-do-corte/profiles` na conta Cloudinary. **Não commite** a API Secret no repositório.
 
-### Resend (notificação ao barbeiro)
+### Resend (e-mail)
 
 Opcional. Com **`RESEND_API_KEY`** e **`RESEND_FROM_EMAIL`** definidos, o sistema envia e-mail ao endereço do **`StaffMember`** quando:
 
 - o cliente escolhe um profissional em **`/agendar`** e confirma a reserva, ou
-- dono/admin atribui um profissional a um agendamento existente no painel (`PATCH /api/admin/appointments/[id]`).
+- dono/admin atribui um profissional a um agendamento existente no painel (`PATCH /api/admin/appointments/[id]`), ou
+- alguém pede **redefinição de senha** em **`/admin/esqueci-senha`** (link válido por 1 hora).
 
-Sem essas variáveis, o agendamento continua normal; apenas não há envio (aviso em log em desenvolvimento). O remetente deve ser um domínio **verificado** na [Resend](https://resend.com/) ou, para testes, `onboarding@resend.dev`. **Não commite** a API key.
+Sem essas variáveis, o agendamento continua normal; no reset de senha o link só aparece no log do servidor (útil em desenvolvimento). O remetente deve ser um domínio **verificado** na [Resend](https://resend.com/) ou, para testes, `onboarding@resend.dev`. Defina também **`NEXT_PUBLIC_APP_URL`** (ou `APP_URL`) para o link do e-mail apontar ao domínio certo. **Não commite** a API key.
 
 **Regra com Web Push:** se o profissional tiver **pelo menos uma** subscrição push ativa na base **e** VAPID estiver configurado (ver abaixo), o sistema **não envia e-mail** para esse aviso — usa só notificação no browser.
 
@@ -173,6 +175,7 @@ Papéis e permissões: **[admin-hierarquia.md](./admin-hierarquia.md)**.
 - Aplicação: `http://localhost:3000`
 - Admin: `http://localhost:3000/admin` (ver [configurar-admin.md](./configurar-admin.md))
 - Login do painel: `http://localhost:3000/admin/login`
+- Lista de espera (lead B2B, só por link): `http://localhost:3000/lista-espera` → Ops em `/plataforma/leads`
 
 ## Erro P1001 — «Can't reach database server at localhost:5432»
 

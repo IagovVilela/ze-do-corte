@@ -16,9 +16,15 @@ import { AuthShell } from "@/components/auth/auth-shell";
 type Props = {
   redirectTo: string;
   className?: string;
+  /** Após redefinir senha com sucesso (`?reset=1`). */
+  passwordResetOk?: boolean;
 };
 
-export function AdminLoginForm({ redirectTo, className }: Props) {
+export function AdminLoginForm({
+  redirectTo,
+  className,
+  passwordResetOk = false,
+}: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +41,12 @@ export function AdminLoginForm({ redirectTo, className }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = (await res.json()) as { message?: string; redirect?: string };
+      let data: { message?: string; redirect?: string } = {};
+      try {
+        data = (await res.json()) as { message?: string; redirect?: string };
+      } catch {
+        /* resposta não-JSON */
+      }
       if (!res.ok) {
         setError(data.message ?? "E-mail ou senha inválidos.");
         return;
@@ -65,6 +76,14 @@ export function AdminLoginForm({ redirectTo, className }: Props) {
           onSubmit={(e) => void onSubmit(e)}
           className="mt-7 space-y-4"
         >
+          {passwordResetOk ? (
+            <p
+              role="status"
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100"
+            >
+              Senha atualizada. Entre com a nova senha.
+            </p>
+          ) : null}
           {error ? <AuthError>{error}</AuthError> : null}
 
           <AuthField
@@ -76,13 +95,23 @@ export function AdminLoginForm({ redirectTo, className }: Props) {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <AuthPasswordField
-            label="Senha"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="space-y-2">
+            <AuthPasswordField
+              label="Senha"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <p className="text-right text-sm">
+              <Link
+                href="/admin/esqueci-senha"
+                className="font-medium text-[#adc6ff] underline-offset-2 hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </p>
+          </div>
 
           <AuthSubmitButton pending={pending} pendingLabel="Entrando…">
             Entrar

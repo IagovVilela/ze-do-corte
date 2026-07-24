@@ -47,12 +47,15 @@ type WaChangeValue = {
 export async function POST(request: Request) {
   const rawBody = await request.text();
 
-  // Com App Secret: exige assinatura. Sem secret (teste inicial): aceita POST.
-  if (isMetaAppSecretConfigured()) {
-    const sig = request.headers.get("x-hub-signature-256");
-    if (!verifyMetaWebhookSignature(rawBody, sig)) {
-      return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
-    }
+  if (!isMetaAppSecretConfigured()) {
+    return NextResponse.json(
+      { message: "Webhook não configurado (META_APP_SECRET)." },
+      { status: 503 },
+    );
+  }
+  const sig = request.headers.get("x-hub-signature-256");
+  if (!verifyMetaWebhookSignature(rawBody, sig)) {
+    return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
   }
 
   let payload: {

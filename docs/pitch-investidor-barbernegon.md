@@ -112,10 +112,10 @@ Pergunta de fechamento: *“O que faria sentido para validar Barbernegon com 10�
 
 ## GTM rápido (feedback investidor)
 
-1. **Waitlist / beta** — “lançando, quero dar acesso grátis para testar”.  
+1. **Lista de espera** — link privado `/lista-espera` (não está na landing); leads em `/plataforma/leads`.  
 2. **Voice note no WhatsApp** para salões sem site (áudio antes do link).  
 3. **CTA no rodapé** de todo site tenant: “Crie o site da sua barbearia — grátis”.
 
 ---
 
-*Atualizado em 2026-07-21 — Barbernegon freemium.*
+*Atualizado em 2026-07-23 — Barbernegon freemium + leads.*

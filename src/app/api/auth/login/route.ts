@@ -3,7 +3,15 @@ import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/password";
+import {
+  DUMMY_PASSWORD_HASH,
+  verifyPassword,
+} from "@/lib/password";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { createDbSession } from "@/lib/session-cookie";
 import { staffEmailSchema } from "@/lib/staff-email";
 
@@ -31,16 +39,30 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.toLowerCase();
-  const member = await prisma.staffMember.findUnique({ where: { email } });
-  if (!member?.passwordHash) {
-    return NextResponse.json(
-      { message: "E-mail ou senha incorretos." },
-      { status: 401 },
+  const ip = clientIpFromRequest(request);
+  const byIp = checkRateLimit(`auth-login:ip:${ip}`, {
+    limit: 30,
+    windowMs: 15 * 60 * 1000,
+  });
+  const byEmail = checkRateLimit(`auth-login:email:${email}`, {
+    limit: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!byIp.ok || !byEmail.ok) {
+    const retry = Math.max(
+      byIp.ok ? 0 : byIp.retryAfterSec,
+      byEmail.ok ? 0 : byEmail.retryAfterSec,
     );
+    return NextResponse.json(rateLimitResponse(retry), {
+      status: 429,
+      headers: { "Retry-After": String(retry) },
+    });
   }
 
-  const ok = await verifyPassword(parsed.data.password, member.passwordHash);
-  if (!ok) {
+  const member = await prisma.staffMember.findUnique({ where: { email } });
+  const hash = member?.passwordHash || DUMMY_PASSWORD_HASH;
+  const ok = await verifyPassword(parsed.data.password, hash);
+  if (!member?.passwordHash || !ok) {
     return NextResponse.json(
       { message: "E-mail ou senha incorretos." },
       { status: 401 },
@@ -49,7 +71,10 @@ export async function POST(request: Request) {
 
   if (member.role === "STAFF" && !member.unitId) {
     return NextResponse.json(
-      { message: "Conta incompleta: funcionário sem unidade. Fale com o administrador." },
+      {
+        message:
+          "Conta incompleta: funcionário sem unidade. Fale com o administrador.",
+      },
       { status: 403 },
     );
   }

@@ -20,7 +20,7 @@ const headline = Montserrat({
   display: "swap",
 });
 
-type Props = { searchParams: Promise<{ from?: string }> };
+type Props = { searchParams: Promise<{ from?: string; reset?: string }> };
 
 function safeRedirectPath(from: string | undefined): string {
   if (from && from.startsWith("/") && !from.startsWith("//")) return from;
@@ -33,8 +33,9 @@ export const metadata = {
 };
 
 export default async function AdminLoginPage({ searchParams }: Props) {
-  const { from } = await searchParams;
+  const { from, reset } = await searchParams;
   const safeFrom = safeRedirectPath(from);
+  const passwordResetOk = reset === "1";
 
   let access: Awaited<ReturnType<typeof getStaffAccessOrNull>> = null;
   try {
@@ -56,6 +57,7 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   return (
     <AdminLoginForm
       redirectTo={safeFrom}
+      passwordResetOk={passwordResetOk}
       className={`${body.variable} ${headline.variable} font-[family-name:var(--font-auth-body)]`}
     />
   );

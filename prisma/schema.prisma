@@ -167,10 +167,25 @@ model StaffMember {
   pushSubscriptions     StaffPushSubscription[]
   supportTicketsCreated SupportTicket[]
   supportMessages       SupportTicketMessage[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@index([organizationId])
   @@index([unitId])
   @@index([showOnWebsite, role])
+}
+
+/** Token de redefinição de senha (só o hash fica no banco; o valor cru vai no e-mail). */
+model PasswordResetToken {
+  id            String      @id @default(cuid())
+  staffMemberId String
+  staffMember   StaffMember @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  tokenHash     String      @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([staffMemberId])
+  @@index([expiresAt])
 }
 
 model StaffPushSubscription {
@@ -491,4 +506,19 @@ model SupportTicketMessage {
 
   @@index([ticketId, createdAt])
   @@index([authorStaffId])
+}
+
+/// Lead B2B captado em /lista-espera (só por link; lista em /plataforma/leads).
+model PlatformLead {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(120)
+  phone     String   @db.VarChar(32)
+  email     String?  @db.VarChar(160)
+  shopName  String   @db.VarChar(120)
+  city      String?  @db.VarChar(80)
+  note      String?  @db.VarChar(400)
+  source    String   @default("lista-espera") @db.VarChar(40)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

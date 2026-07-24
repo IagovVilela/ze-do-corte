@@ -2,11 +2,28 @@ import { NextResponse } from "next/server";
 
 import { createPublicBooking } from "@/lib/booking-domain";
 import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { createAppointmentSchema } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIpFromRequest(request);
+    const rl = checkRateLimit(`booking:ip:${ip}`, {
+      limit: 40,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rl.ok) {
+      return NextResponse.json(rateLimitResponse(rl.retryAfterSec), {
+        status: 429,
+        headers: { "Retry-After": String(rl.retryAfterSec) },
+      });
+    }
+
     const body = await request.json();
     const parsed = createAppointmentSchema.safeParse(body);
 
