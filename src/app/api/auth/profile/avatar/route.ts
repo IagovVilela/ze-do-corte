@@ -6,12 +6,15 @@ import {
   isCloudinaryConfigured,
   uploadProfileImageBuffer,
 } from "@/lib/cloudinary-server";
+import {
+  MEDIA_IMAGE_LIMIT_LABEL,
+  MEDIA_IMAGE_MAX_BYTES,
+} from "@/lib/media-upload-limits";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const auth = await requireStaffApiAuth();
@@ -45,8 +48,11 @@ export async function POST(request: Request) {
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
-  if (buf.length > MAX_BYTES) {
-    return NextResponse.json({ message: "Imagem até 4 MB." }, { status: 400 });
+  if (buf.length > MEDIA_IMAGE_MAX_BYTES) {
+    return NextResponse.json(
+      { message: `Imagem até ${MEDIA_IMAGE_LIMIT_LABEL}.` },
+      { status: 400 },
+    );
   }
 
   const existing = await prisma.staffMember.findUnique({

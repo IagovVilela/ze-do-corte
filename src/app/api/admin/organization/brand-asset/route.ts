@@ -9,13 +9,17 @@ import {
   isCloudinaryConfigured,
   uploadBrandAssetBuffer,
 } from "@/lib/cloudinary-server";
+import {
+  MEDIA_IMAGE_LIMIT_LABEL,
+  MEDIA_IMAGE_MAX_BYTES,
+  MEDIA_IMAGE_OR_VIDEO_HINT,
+  MEDIA_MULTIPART_HARD_CAP_BYTES,
+  MEDIA_VIDEO_LIMIT_LABEL,
+  MEDIA_VIDEO_MAX_BYTES,
+} from "@/lib/media-upload-limits";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
-
-/** Fotos de celular costumam passar de 6 MB; alinhado ao proxyClientMaxBodySize. */
-const IMAGE_MAX_BYTES = 20 * 1024 * 1024;
-const VIDEO_MAX_BYTES = 40 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const auth = await requireStaffApiAuth();
@@ -35,12 +39,10 @@ export async function POST(request: Request) {
   }
 
   const contentLength = Number(request.headers.get("content-length") ?? 0);
-  const hardCap = VIDEO_MAX_BYTES + 1024 * 1024; // margem multipart
-  if (contentLength > hardCap) {
+  if (contentLength > MEDIA_MULTIPART_HARD_CAP_BYTES) {
     return NextResponse.json(
       {
-        message:
-          "Arquivo grande demais. Imagem até 20 MB; vídeo até 40 MB.",
+        message: `Arquivo grande demais. Imagem até ${MEDIA_IMAGE_LIMIT_LABEL}; vídeo até ${MEDIA_VIDEO_LIMIT_LABEL}.`,
       },
       { status: 413 },
     );
@@ -52,8 +54,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       {
-        message:
-          "Não foi possível ler o arquivo. Tente de novo com imagem até 20 MB (JPEG/PNG/WebP) ou vídeo até 40 MB (MP4/WebM).",
+        message: `Não foi possível ler o arquivo. Tente de novo com ${MEDIA_IMAGE_OR_VIDEO_HINT}.`,
       },
       { status: 400 },
     );
@@ -85,13 +86,15 @@ export async function POST(request: Request) {
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
-  const maxBytes = CANVAS_VIDEO_MIME.has(mime) ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+  const maxBytes = CANVAS_VIDEO_MIME.has(mime)
+    ? MEDIA_VIDEO_MAX_BYTES
+    : MEDIA_IMAGE_MAX_BYTES;
   if (buf.length > maxBytes) {
     return NextResponse.json(
       {
         message: CANVAS_VIDEO_MIME.has(mime)
-          ? "Vídeo até 40 MB."
-          : "Imagem até 20 MB.",
+          ? `Vídeo até ${MEDIA_VIDEO_LIMIT_LABEL}.`
+          : `Imagem até ${MEDIA_IMAGE_LIMIT_LABEL}.`,
       },
       { status: 400 },
     );

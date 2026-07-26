@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-26
 
+- **Upload de mídia — limites maiores**: foto de perfil sobe de 4 MB para **30 MB**; marca/canvas **imagem 30 MB** / **vídeo 60 MB** (antes 20/40). Proxy Next `65mb`. Constantes em `src/lib/media-upload-limits.ts`.
 - **Lordicon 502**: API/CDN falhava sem fallback; agora API → CDN → JSON local em `src/data/lordicon/`.
 - **Ops login — sem redirect `ready=1`**: `/plataforma/login?k=` abre o formulário direto (o fluxo via cookie no redirect quebrava com 404). Cookie do gate no login OK; `gate` também vai no body do POST.
 - **Ops — excluir barbearia e gerir como dono**: em `/plataforma/barbearias/[id]`, **Entrar no painel do salão** (impersona OWNER) e zona de perigo para **excluir** (confirmação pelo slug).

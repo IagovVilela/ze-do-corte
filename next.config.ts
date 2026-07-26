@@ -18,14 +18,14 @@ const nextConfig: NextConfig = {
    */
   turbopack: {},
   /**
-   * Upload de mídia do canvas/marca passa pelo `src/proxy.ts`. O default do Next
+   * Upload de mídia (perfil/marca/canvas) passa pelo `src/proxy.ts`. O default do Next
    * corta o body em 10 MB e o FormData quebra com "Formulário inválido."
-   * Vídeo até 40 MB + overhead multipart → margem em 45 MB.
+   * Vídeo até 60 MB + overhead multipart → margem em 65 MB.
    */
   experimental: {
-    proxyClientMaxBodySize: "45mb",
+    proxyClientMaxBodySize: "65mb",
     serverActions: {
-      bodySizeLimit: "45mb",
+      bodySizeLimit: "65mb",
     },
   },
   serverExternalPackages: [

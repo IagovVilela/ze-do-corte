@@ -86,7 +86,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | QR do site (painel) | `src/app/api/admin/shop-qr/route.ts` — `GET` PNG do QR do `/{slug}` |
 | Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `geocode/route.ts` — cidade via GPS; `reviews/route.ts` — `GET` lista publicamente por slug + `POST` avaliação por token |
 | Plataforma (ops) | `gate` / `ops-gate` (cookie), `login`, `overview`, `organizations` (PATCH/DELETE), `organizations/[id]/impersonate`, `impersonate/return`, `marketplace`, `consumidores`, `reviews/[id]` |
-| Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
+| Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; limites em `media-upload-limits.ts` (imagem 30 MB / vídeo 60 MB) |
+| Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — JPEG/PNG/WebP até 30 MB |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
 | Suporte admin | `src/app/api/admin/support/contact`, `…/tickets`, `…/tickets/[id]/messages` |

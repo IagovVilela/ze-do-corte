@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { formatBrPhoneNational } from "@/lib/br-input-masks";
+import { MEDIA_IMAGE_HINT } from "@/lib/media-upload-limits";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 type Props = {
@@ -158,7 +159,7 @@ export function AdminProfileForm({
       <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-low)] p-6">
         <h2 className="text-sm font-semibold text-[var(--bn-on-variant)]">Foto de perfil</h2>
         <p className="mt-1 text-xs text-[var(--bn-muted)]">
-          Aparece na barra do painel. Formatos: JPEG, PNG ou WebP (até 4 MB).
+          Aparece na barra do painel. Formatos: {MEDIA_IMAGE_HINT}.
         </p>
 
         <div className="mt-5 flex flex-col items-start gap-4 sm:flex-row sm:items-center">

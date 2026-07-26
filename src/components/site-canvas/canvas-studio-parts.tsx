@@ -1316,7 +1316,7 @@ export function ElementInspector({
     const title = opts?.title ?? "Arquivo do dispositivo";
     const hint =
       opts?.hint ??
-      "JPEG, PNG, WebP (até 20 MB) ou MP4/WebM (até 40 MB).";
+      "JPEG, PNG, WebP (até 30 MB) ou MP4/WebM (até 60 MB).";
     const url = p.mediaUrl ?? "";
     const isVideo = isCanvasVideoUrl(url);
 
@@ -1639,7 +1639,7 @@ export function ElementInspector({
       {(element.type === "image" || element.type === "media") &&
         renderMediaUploadBlock({
           title: "Imagem ou vídeo",
-          hint: "Escolha um arquivo no celular ou PC. JPEG/PNG/WebP até 20 MB; MP4/WebM até 40 MB.",
+          hint: "Escolha um arquivo no celular ou PC. JPEG/PNG/WebP até 30 MB; MP4/WebM até 60 MB.",
         })}
 
       {element.type === "rect" && (
