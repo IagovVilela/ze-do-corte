@@ -808,7 +808,7 @@ export function SiteCanvasEditor({
             disabled={shareBusy !== null}
             onClick={() => void copyShopLink()}
             title="Copia o endereço público da barbearia"
-            className={cn(secondaryBtn, "hidden sm:inline-flex")}
+            className={secondaryBtn}
           >
             {shareBusy === "copy" ? "…" : "Copiar link"}
           </button>
@@ -817,7 +817,7 @@ export function SiteCanvasEditor({
             disabled={shareBusy !== null}
             onClick={() => void downloadShopQr()}
             title="Baixa um PNG do QR code do site"
-            className={cn(secondaryBtn, "hidden sm:inline-flex")}
+            className={secondaryBtn}
           >
             {shareBusy === "qr" ? "…" : "Baixar QR"}
           </button>
