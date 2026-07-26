@@ -39,6 +39,11 @@ import {
 } from "@/lib/site-canvas";
 import type { PublicBarber, ServiceSummary } from "@/lib/types";
 import { useCanvasHistory } from "@/lib/use-canvas-history";
+import {
+  copyTextToClipboard,
+  downloadShopQrPng,
+  resolveClientShopUrl,
+} from "@/lib/shop-share-client";
 import { cn } from "@/lib/utils";
 
 type UnitInfo = {
@@ -118,6 +123,7 @@ export function SiteCanvasEditor({
     () => !initialCanvasStudioSeen,
   );
   const [phonePreviewOpen, setPhonePreviewOpen] = useState(false);
+  const [shareBusy, setShareBusy] = useState<"copy" | "qr" | null>(null);
   const [leftPanel, setLeftPanel] = useState<"library" | "layers">("library");
 
   const dirty = JSON.stringify(canvas) !== JSON.stringify(lastSavedCanvas);
@@ -263,6 +269,37 @@ export function SiteCanvasEditor({
       setError(friendlyError(e, "Não foi possível salvar. Tente novamente."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function copyShopLink() {
+    setShareBusy("copy");
+    setError("");
+    try {
+      const url = resolveClientShopUrl(org.slug);
+      const ok = await copyTextToClipboard(url);
+      if (!ok) {
+        setError("Não foi possível copiar. Copie manualmente em Ver site.");
+        return;
+      }
+      setToast("Link da barbearia copiado.");
+    } finally {
+      setShareBusy(null);
+    }
+  }
+
+  async function downloadShopQr() {
+    setShareBusy("qr");
+    setError("");
+    try {
+      const ok = await downloadShopQrPng(org.slug);
+      if (!ok) {
+        setError("Não foi possível baixar o QR code. Tente de novo.");
+        return;
+      }
+      setToast("QR code baixado — pode imprimir ou enviar.");
+    } finally {
+      setShareBusy(null);
     }
   }
 
@@ -766,6 +803,24 @@ export function SiteCanvasEditor({
           >
             Ver site
           </Link>
+          <button
+            type="button"
+            disabled={shareBusy !== null}
+            onClick={() => void copyShopLink()}
+            title="Copia o endereço público da barbearia"
+            className={cn(secondaryBtn, "hidden sm:inline-flex")}
+          >
+            {shareBusy === "copy" ? "…" : "Copiar link"}
+          </button>
+          <button
+            type="button"
+            disabled={shareBusy !== null}
+            onClick={() => void downloadShopQr()}
+            title="Baixa um PNG do QR code do site"
+            className={cn(secondaryBtn, "hidden sm:inline-flex")}
+          >
+            {shareBusy === "qr" ? "…" : "Baixar QR"}
+          </button>
           <button
             type="button"
             disabled={saving}
@@ -1306,6 +1361,32 @@ export function SiteCanvasEditor({
                   >
                     Ver site público
                   </Link>
+                  <button
+                    type="button"
+                    disabled={shareBusy !== null}
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)] disabled:opacity-50"
+                    onClick={() => {
+                      void copyShopLink().then(() => setMobileSheet(null));
+                    }}
+                  >
+                    {shareBusy === "copy" ? "Copiando…" : "Copiar link da barbearia"}
+                    <span className="mt-0.5 block text-[11px] font-normal text-[var(--bn-on)]/70">
+                      Para Instagram, WhatsApp ou cartão
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={shareBusy !== null}
+                    className="w-full rounded-xl border border-[var(--bn-border)] px-4 py-3 text-left text-sm text-[var(--bn-on)] hover:bg-[var(--bn-hover)] disabled:opacity-50"
+                    onClick={() => {
+                      void downloadShopQr().then(() => setMobileSheet(null));
+                    }}
+                  >
+                    {shareBusy === "qr" ? "Gerando…" : "Baixar QR code"}
+                    <span className="mt-0.5 block text-[11px] font-normal text-[var(--bn-on)]/70">
+                      PNG para imprimir ou enviar
+                    </span>
+                  </button>
                 </div>
               ) : null}
             </div>

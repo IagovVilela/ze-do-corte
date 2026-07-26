@@ -635,3 +635,66 @@ export async function listPlatformConsumers(
     }),
   };
 }
+
+/**
+ * Remove organização e dependências com Restrict (ordem importa).
+ * Retorna null se não existir.
+ */
+export async function deletePlatformOrganization(
+  organizationId: string,
+): Promise<{ ok: true; name: string; slug: string } | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { id: true, name: true, slug: true },
+  });
+  if (!org) return null;
+
+  await prisma.$transaction(async (tx) => {
+    const units = await tx.barbershopUnit.findMany({
+      where: { organizationId },
+      select: { id: true },
+    });
+    const unitIds = units.map((u) => u.id);
+
+    const services = unitIds.length
+      ? await tx.service.findMany({
+          where: { unitId: { in: unitIds } },
+          select: { id: true },
+        })
+      : [];
+    const serviceIds = services.map((s) => s.id);
+
+    await tx.organizationReview.deleteMany({ where: { organizationId } });
+
+    if (unitIds.length || serviceIds.length) {
+      await tx.appointment.deleteMany({
+        where: {
+          OR: [
+            ...(unitIds.length ? [{ unitId: { in: unitIds } }] : []),
+            ...(serviceIds.length ? [{ serviceId: { in: serviceIds } }] : []),
+          ],
+        },
+      });
+    }
+    await tx.clientSubscription.deleteMany({ where: { organizationId } });
+    await tx.subscriptionPlan.deleteMany({ where: { organizationId } });
+
+    await tx.supportTicketMessage.deleteMany({
+      where: { ticket: { organizationId } },
+    });
+    await tx.supportTicket.deleteMany({ where: { organizationId } });
+
+    if (serviceIds.length) {
+      await tx.service.deleteMany({ where: { id: { in: serviceIds } } });
+    }
+
+    await tx.paymentEvent.updateMany({
+      where: { organizationId },
+      data: { organizationId: null },
+    });
+
+    await tx.organization.delete({ where: { id: organizationId } });
+  });
+
+  return { ok: true, name: org.name, slug: org.slug };
+}

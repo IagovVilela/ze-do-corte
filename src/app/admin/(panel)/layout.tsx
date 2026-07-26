@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AdminPanelNav } from "@/components/admin-panel-nav";
 import { AdminThemeProvider } from "@/components/admin-theme-provider";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
+import { OpsImpersonationBanner } from "@/components/ops-impersonation-banner";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import {
   ADMIN_THEME_COOKIE,
@@ -18,6 +19,7 @@ import {
   needsBillingAttention,
   settleOrgBillingState,
 } from "@/lib/org-entitlements";
+import { PLATFORM_OPS_IMPERSONATOR_COOKIE } from "@/lib/platform-auth";
 import { prisma } from "@/lib/prisma";
 
 const brandHeadline = Montserrat({
@@ -54,10 +56,16 @@ export default async function AdminPanelLayout({
 
   await settleOrgBillingState(access.organizationId);
 
+  const jar = await cookies();
+  const isOpsImpersonating = Boolean(
+    jar.get(PLATFORM_OPS_IMPERSONATOR_COOKIE)?.value?.trim(),
+  );
+
   const [org, initialTheme] = await Promise.all([
     prisma.organization.findUnique({
       where: { id: access.organizationId },
       select: {
+        name: true,
         planStatus: true,
         planTier: true,
         trialEndsAt: true,
@@ -80,6 +88,9 @@ export default async function AdminPanelLayout({
         {/* Tema via cookie SSR; sem <script> (React 19 não executa no client boundary). */}
         <AdminPanelNav access={access} proUnlocked={proUnlocked} />
         <div className="flex min-h-svh flex-col lg:pl-60">
+          {isOpsImpersonating && org ? (
+            <OpsImpersonationBanner shopName={org.name} />
+          ) : null}
           {org && needsBillingAttention(org) && access.role === "OWNER" ? (
             <div className="border-b border-amber-500/20 bg-amber-500/5 px-4 py-3 sm:px-6">
               <BillingAttentionBanner freeUpsell={freeUpsell} />

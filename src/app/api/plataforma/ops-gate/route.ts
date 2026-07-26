@@ -9,27 +9,22 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Aceita `?k=PLATFORM_OPS_GATE`, grava cookie httpOnly e redireciona para o login Ops.
- * Necessário porque Server Components não podem chamar `cookies().set()`.
- * Mantém `k` na URL de destino como fallback se o cookie não gravar.
+ * Alias de `/api/plataforma/gate` — grava cookie e redireciona ao login com `k` na URL
+ * (fallback se o cookie não gravar no redirect).
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const k = extractOpsGateFromSearchParams(url.searchParams);
-  const erro = url.searchParams.get("erro");
-
   if (!isValidPlatformOpsGate(k)) {
-    return new NextResponse("Not Found", { status: 404 });
+    return new NextResponse(null, { status: 404 });
   }
 
+  const erro = url.searchParams.get("erro");
   const dest = new URL("/plataforma/login", url.origin);
   dest.searchParams.set("k", k!);
   if (erro) dest.searchParams.set("erro", erro);
 
-  const res = new NextResponse(null, {
-    status: 307,
-    headers: { Location: `${dest.pathname}${dest.search}` },
-  });
+  const res = NextResponse.redirect(dest);
   appendPlatformOpsGateCookie(res, k!);
   return res;
 }

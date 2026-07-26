@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $ProjectRoot
 
-$DbUrlLine = 'DATABASE_URL="postgresql://postgres:ze_docorte_dev@localhost:5432/ze_do_corte?schema=public"'
+$DbUrlLine = 'DATABASE_URL="postgresql://postgres:ze_docorte_dev@localhost:5435/ze_do_corte?schema=public"'
 
 Write-Host ""
 Write-Host "========================================"  -ForegroundColor Cyan
@@ -26,7 +26,7 @@ try {
 Write-Host "[1/5] A subir o container PostgreSQL (docker compose)..." -ForegroundColor Yellow
 docker compose up -d
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "[ERRO] docker compose falhou. Se a porta 5432 estiver ocupada por outro Postgres, pare esse servico ou altere a porta em docker-compose.yml." -ForegroundColor Red
+  Write-Host "[ERRO] docker compose falhou. Se a porta 5435 estiver ocupada, altere o mapeamento em docker-compose.yml." -ForegroundColor Red
   exit 1
 }
 
@@ -103,7 +103,7 @@ Write-Host "========================================"  -ForegroundColor Green
 Write-Host "  Concluido." -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Postgres Docker: localhost:5432" -ForegroundColor White
+Write-Host "  Postgres Docker: localhost:5435" -ForegroundColor White
 Write-Host "  User / pass: postgres / ze_docorte_dev" -ForegroundColor White
 Write-Host "  Base: ze_do_corte" -ForegroundColor White
 Write-Host ""

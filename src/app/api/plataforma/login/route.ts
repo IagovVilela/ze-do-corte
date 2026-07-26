@@ -1,8 +1,10 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
 import {
+  appendPlatformOpsGateCookie,
   isPlatformAdminEmail,
   isValidPlatformOpsGate,
   PLATFORM_OPS_GATE_COOKIE,
@@ -25,21 +27,20 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   email: staffEmailSchema,
   password: z.string().min(1),
-  /** Legado — preferir cookie httpOnly `bn_ops_gate`. */
+  /** Preferencial — o form envia o gate validado na página (cookie pode não chegar em /api). */
   gate: z.string().min(1).optional(),
 });
 
-function gateFromRequest(request: Request, bodyGate?: string): string | null {
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  const match = cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${PLATFORM_OPS_GATE_COOKIE}=`));
-  if (match) {
-    const v = decodeURIComponent(match.slice(PLATFORM_OPS_GATE_COOKIE.length + 1));
+async function gateFromRequest(bodyGate?: string): Promise<string | null> {
+  if (bodyGate?.trim()) return bodyGate.trim();
+
+  const jar = await cookies();
+  const named = jar.getAll(PLATFORM_OPS_GATE_COOKIE);
+  for (const c of named) {
+    const v = c.value?.trim();
     if (v) return v;
   }
-  return bodyGate?.trim() || null;
+  return null;
 }
 
 export async function POST(request: Request) {
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const gate = gateFromRequest(request, parsed.data.gate);
+  const gate = await gateFromRequest(parsed.data.gate);
   if (!isValidPlatformOpsGate(gate)) {
     return NextResponse.json({ message: "Não autorizado." }, { status: 404 });
   }
@@ -108,5 +109,6 @@ export async function POST(request: Request) {
   const raw = await createDbSession(member.id);
   const res = NextResponse.json({ ok: true, redirect: "/plataforma" });
   appendSessionCookie(res, raw);
+  appendPlatformOpsGateCookie(res, gate!);
   return res;
 }

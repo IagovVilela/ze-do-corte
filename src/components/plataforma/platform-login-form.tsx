@@ -1,18 +1,32 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function PlatformLoginForm({
   initialError,
+  opsGate,
 }: {
   initialError?: string | null;
+  /** Gate já validado no servidor — evita depender do cookie em `/api/*`. */
+  opsGate: string;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [pending, setPending] = useState(false);
+
+  // Tira k/ready da barra de endereço sem depender do cookie no redirect.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("k") && !url.searchParams.has("ready")) return;
+    url.searchParams.delete("k");
+    url.searchParams.delete("ready");
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, "", next);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,12 +36,16 @@ export function PlatformLoginForm({
       const res = await fetch("/api/plataforma/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, gate: opsGate }),
         credentials: "same-origin",
       });
       const data = (await res.json()) as { message?: string; redirect?: string };
       if (!res.ok) {
-        setError(data.message ?? "Não foi possível entrar.");
+        setError(
+          res.status === 404
+            ? "Link Ops expirado ou incompleto. Abra de novo a URL com ?k=…"
+            : (data.message ?? "Não foi possível entrar."),
+        );
         return;
       }
       router.push(data.redirect || "/plataforma");

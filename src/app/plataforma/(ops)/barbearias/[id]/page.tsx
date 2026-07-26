@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PlatformOrgActions } from "@/components/plataforma/platform-org-actions";
 import { PlatformOrgEditor } from "@/components/plataforma/platform-org-editor";
 import {
   planStatusLabel,
@@ -79,6 +80,12 @@ export default async function PlataformaBarbeariaDetailPage({
           trialEndsAt: org.trialEndsAt,
           marketplaceListed: org.marketplaceListed,
         }}
+      />
+
+      <PlatformOrgActions
+        organizationId={org.id}
+        slug={org.slug}
+        name={org.name}
       />
 
       <section className="space-y-3">

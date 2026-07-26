@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requirePlatformApiAuth } from "@/lib/platform-auth";
-import { getPlatformOrganizationDetail } from "@/lib/platform-ops";
+import {
+  deletePlatformOrganization,
+  getPlatformOrganizationDetail,
+} from "@/lib/platform-ops";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +20,10 @@ const patchSchema = z.object({
   marketplaceListed: z.boolean().optional(),
 });
 
+const deleteSchema = z.object({
+  confirmSlug: z.string().trim().min(1),
+});
+
 export async function GET(_request: Request, context: RouteContext) {
   const auth = await requirePlatformApiAuth();
   if (!auth.ok) return auth.response;
@@ -24,7 +31,10 @@ export async function GET(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   const organization = await getPlatformOrganizationDetail(id);
   if (!organization) {
-    return NextResponse.json({ message: "Organização não encontrada." }, { status: 404 });
+    return NextResponse.json(
+      { message: "Organização não encontrada." },
+      { status: 404 },
+    );
   }
   return NextResponse.json({ organization });
 }
@@ -57,7 +67,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     data.trialEndsAt === undefined &&
     data.marketplaceListed === undefined
   ) {
-    return NextResponse.json({ message: "Nada para atualizar." }, { status: 400 });
+    return NextResponse.json(
+      { message: "Nada para atualizar." },
+      { status: 400 },
+    );
   }
 
   const existing = await prisma.organization.findUnique({
@@ -65,7 +78,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     select: { id: true },
   });
   if (!existing) {
-    return NextResponse.json({ message: "Organização não encontrada." }, { status: 404 });
+    return NextResponse.json(
+      { message: "Organização não encontrada." },
+      { status: 404 },
+    );
   }
 
   const update: Prisma.OrganizationUpdateInput = {
@@ -85,4 +101,73 @@ export async function PATCH(request: Request, context: RouteContext) {
   await prisma.organization.update({ where: { id }, data: update });
   const organization = await getPlatformOrganizationDetail(id);
   return NextResponse.json({ organization });
+}
+
+export async function DELETE(request: Request, context: RouteContext) {
+  const auth = await requirePlatformApiAuth();
+  if (!auth.ok) return auth.response;
+
+  const { id } = await context.params;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ message: "JSON inválido." }, { status: 400 });
+  }
+
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        message: "Informe o slug da barbearia para confirmar a exclusão.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const existing = await prisma.organization.findUnique({
+    where: { id },
+    select: { id: true, slug: true, name: true },
+  });
+  if (!existing) {
+    return NextResponse.json(
+      { message: "Organização não encontrada." },
+      { status: 404 },
+    );
+  }
+
+  if (
+    existing.slug.trim().toLowerCase() !==
+    parsed.data.confirmSlug.trim().toLowerCase()
+  ) {
+    return NextResponse.json(
+      { message: "Slug de confirmação não confere." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const result = await deletePlatformOrganization(id);
+    if (!result) {
+      return NextResponse.json(
+        { message: "Organização não encontrada." },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({
+      ok: true,
+      message: `Barbearia “${result.name}” excluída.`,
+      slug: result.slug,
+    });
+  } catch (error) {
+    console.error("[plataforma] delete org:", error);
+    return NextResponse.json(
+      {
+        message:
+          "Não foi possível excluir agora. Tente de novo ou cancele o plano e desative a listagem.",
+      },
+      { status: 500 },
+    );
+  }
 }

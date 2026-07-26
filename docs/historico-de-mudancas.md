@@ -6,9 +6,16 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-26
+
+- **Lordicon 502**: API/CDN falhava sem fallback; agora API → CDN → JSON local em `src/data/lordicon/`.
+- **Ops login — sem redirect `ready=1`**: `/plataforma/login?k=` abre o formulário direto (o fluxo via cookie no redirect quebrava com 404). Cookie do gate no login OK; `gate` também vai no body do POST.
+- **Ops — excluir barbearia e gerir como dono**: em `/plataforma/barbearias/[id]`, **Entrar no painel do salão** (impersona OWNER) e zona de perigo para **excluir** (confirmação pelo slug).
+- **Site — copiar link e QR**: no editor `/admin/site`, botões **Copiar link** e **Baixar QR** (PNG); API `GET /api/admin/shop-qr`.
+
 ## 2026-07-24
 
-- **Fix Ops login 500**: `/plataforma/login?k=` tentava `cookies().set()` em Server Component (proibido no Next) → **500**. Agora redireciona para `GET /api/plataforma/gate`, que grava o cookie httpOnly e volta ao formulário. Cookie do gate passou de `path=/plataforma` para `path=/` para o `POST /api/plataforma/login` receber a chave.
+- **Fix Ops login 500**: `/plataforma/login?k=` tentava `cookies().set()` em Server Component (proibido no Next) → **500**. Agora existe `GET /api/plataforma/gate` (grava cookie httpOnly). Cookie do gate com `path=/`.
 
 ## 2026-07-23
 

@@ -106,6 +106,26 @@ export function marketplaceHomePath(): string {
   return hostsSplitConfigured() ? "/" : "/explorar";
 }
 
+/**
+ * URL absoluta do site público do salão (`/{slug}`).
+ * Com split de hosts, usa o host do marketplace; no browser, cai no `origin` atual.
+ */
+export function shopPublicAbsoluteUrl(
+  slug: string,
+  originFallback?: string | null,
+): string {
+  const path = `/${slug.replace(/^\/+/, "")}`;
+  const fromSplit = publicSurfaceUrl("marketplace", path);
+  if (fromSplit.startsWith("http://") || fromSplit.startsWith("https://")) {
+    return fromSplit;
+  }
+  const origin =
+    originFallback?.replace(/\/$/, "") ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+  if (origin) return `${origin}${path}`;
+  return path;
+}
+
 export function isMarketingOnlyPath(pathname: string): boolean {
   return MARKETING_ONLY_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),

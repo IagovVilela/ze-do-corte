@@ -3,7 +3,21 @@ import "server-only";
 import { LORDICON_CDN_BASE, LORDICON_SLOT_CDN_ID } from "@/lib/lordicon-cdn-ids";
 import type { LordIconSlot } from "@/lib/lordicon-slots";
 
+import arrowLocal from "@/data/lordicon/arrow.json";
+import chatLocal from "@/data/lordicon/chat.json";
+import phoneLocal from "@/data/lordicon/phone.json";
+import scheduleLocal from "@/data/lordicon/schedule.json";
+import socialLocal from "@/data/lordicon/social.json";
+
 const LORDICON_API = "https://api.lordicon.com";
+
+const LOCAL_LOTTIE: Record<LordIconSlot, object> = {
+  schedule: scheduleLocal as object,
+  arrow: arrowLocal as object,
+  phone: phoneLocal as object,
+  chat: chatLocal as object,
+  social: socialLocal as object,
+};
 
 type LordIconApiItem = {
   family: string;
@@ -93,9 +107,6 @@ async function fetchLottieFromUrl(
   return res.json() as Promise<unknown>;
 }
 
-/**
- * Lottie público no CDN Lordicon (sem Bearer). Fallback quando não há API token.
- */
 async function fetchLottieFromCdn(slot: LordIconSlot): Promise<unknown> {
   const id = LORDICON_SLOT_CDN_ID[slot];
   const url = `${LORDICON_CDN_BASE}/${id}.json`;
@@ -108,18 +119,10 @@ async function fetchLottieFromCdn(slot: LordIconSlot): Promise<unknown> {
   return res.json() as Promise<unknown>;
 }
 
-/**
- * Resolve Lottie JSON para um slot da UI.
- *
- * - Com `LORDICON_API_TOKEN`: pesquisa na API Lordicon (ícones à escolha dinâmica).
- * - Sem token: usa JSON público em `cdn.lordicon.com` (`lordicon-cdn-ids.ts`).
- */
-export async function getLordIconLottieForSlot(slot: LordIconSlot): Promise<unknown> {
-  const token = process.env.LORDICON_API_TOKEN?.trim();
-  if (!token) {
-    return fetchLottieFromCdn(slot);
-  }
-
+async function fetchLottieFromApi(
+  token: string,
+  slot: LordIconSlot,
+): Promise<unknown> {
   const attempts = SLOT_QUERIES[slot];
   let chosen: LordIconApiItem | undefined;
 
@@ -134,4 +137,27 @@ export async function getLordIconLottieForSlot(slot: LordIconSlot): Promise<unkn
   }
 
   return fetchLottieFromUrl(token, chosen.files.json);
+}
+
+/**
+ * Resolve Lottie JSON para um slot da UI.
+ *
+ * Ordem: API (se `LORDICON_API_TOKEN`) → CDN público → JSON local em `src/data/lordicon`.
+ */
+export async function getLordIconLottieForSlot(slot: LordIconSlot): Promise<unknown> {
+  const token = process.env.LORDICON_API_TOKEN?.trim();
+  if (token) {
+    try {
+      return await fetchLottieFromApi(token, slot);
+    } catch (error) {
+      console.warn("[lordicon] API falhou; tentando CDN:", error);
+    }
+  }
+
+  try {
+    return await fetchLottieFromCdn(slot);
+  } catch (error) {
+    console.warn("[lordicon] CDN falhou; usando JSON local:", error);
+    return LOCAL_LOTTIE[slot];
+  }
 }

@@ -17,13 +17,14 @@ powershell -ExecutionPolicy Bypass -File scripts/preparar-postgres.ps1
 
 Isto executa `docker compose up -d` (arquivo [`docker-compose.yml`](../docker-compose.yml)), aguarda o banco ficar pronto, define no `.env`:
 
-`postgresql://postgres:ze_docorte_dev@localhost:5432/ze_do_corte?schema=public`
+`postgresql://postgres:ze_docorte_dev@localhost:5435/ze_do_corte?schema=public`
 
 e roda `prisma generate`, `prisma db push` e `prisma db seed`.
 
 - **Usuário / senha de desenvolvimento:** `postgres` / `ze_docorte_dev` (apenas local).
+- **Porta do host:** **5435** (mapeada para 5432 dentro do container — evita conflito com outro Postgres em 5432).
 - **Parar o container:** `docker compose down` (na raiz). **Dados:** volume Docker `ze_do_corte_pgdata`.
-- Se a porta **5432** estiver ocupada por outro Postgres, pare esse serviço ou altere o mapeamento de portas no `docker-compose.yml` e a `DATABASE_URL`.
+- Se a porta **5435** estiver ocupada, altere o mapeamento em `docker-compose.yml` e a `DATABASE_URL`.
 
 ## Variáveis de ambiente
 
@@ -43,7 +44,7 @@ Descrição detalhada das variáveis: [README.md](../README.md) (tabela) e [.env
 | `PLATFORM_OPS_GATE` | Segredo da entrada Ops — sem ele, `/plataforma/login` responde **404** |
 
 URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`  
-No primeiro acesso a página redireciona para `GET /api/plataforma/gate`, que grava cookie **httpOnly** `bn_ops_gate` (`path=/`) e **remove** o `k` da URL (não fica no histórico).
+O formulário abre direto com `?k=` válido (e remove o `k` da barra no cliente). O cookie `bn_ops_gate` (`path=/`) é gravado no login bem-sucedido; também existe `GET /api/plataforma/gate` para gravar o cookie via Route Handler.
 
 ### Domínios marketing vs marketplace
 

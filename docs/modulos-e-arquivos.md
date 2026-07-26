@@ -33,7 +33,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops (`?k=` → gate API) |
 | `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview com KPIs, taxas e gráficos (7d/30d) |
 | `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
-| `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + editar plano |
+| `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + plano + entrar como dono + excluir |
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
@@ -83,8 +83,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
 | Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding, `marketplaceListed`) |
+| QR do site (painel) | `src/app/api/admin/shop-qr/route.ts` — `GET` PNG do QR do `/{slug}` |
 | Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `geocode/route.ts` — cidade via GPS; `reviews/route.ts` — `GET` lista publicamente por slug + `POST` avaliação por token |
-| Plataforma (ops) | `src/app/api/plataforma/gate/route.ts` (cookie de entrada), `login`, `overview`, `organizations`, `marketplace`, `consumidores`, `reviews/[id]` |
+| Plataforma (ops) | `gate` / `ops-gate` (cookie), `login`, `overview`, `organizations` (PATCH/DELETE), `organizations/[id]/impersonate`, `impersonate/return`, `marketplace`, `consumidores`, `reviews/[id]` |
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; canvas/hero aceitam também vídeo (MP4/WebM) |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
@@ -117,14 +118,14 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `marketplace.ts` | Busca de orgs listadas para `/explorar` (server-only) |
 | `marketplace-shared.ts` | Tipos/chips seguros para Client Components |
 | `marketplace-favorites.ts` | Favoritos em localStorage |
-| `public-hosts.ts` | Split marketing vs marketplace (`NEXT_PUBLIC_*_HOST`); URLs por superfície |
+| `public-hosts.ts` | Split marketing vs marketplace (`NEXT_PUBLIC_*_HOST`); URLs por superfície; `shopPublicAbsoluteUrl` |
 | `platform-auth.ts` | Gate Ops (`PLATFORM_ADMIN_EMAILS` / seed); redirect para `/plataforma/login` |
 | `platform-ops.ts` | Queries cross-tenant (overview, orgs, marketplace, consumidores) |
 | `canvas-page-templates.ts` | Modelos de página completa (15 layouts; inclui **`vitrine`** da demo Barbergon) |
 | `canvas-presets.ts` | Estilos prontos, seções pré-montadas, tipografia |
 | `canvas-theme-style.ts` | Tokens CSS do tema do canvas (cliente + servidor) |
 | `org-branding.ts` | Resolve canvas + `organizationBrandStyle` (server) |
-| `lordicon-cdn-ids.ts` | IDs públicos `cdn.lordicon.com` por slot; `lordicon-server.ts` usa sem API token |
+| `lordicon-cdn-ids.ts` / `lordicon-server.ts` | Ícones: API (token) → CDN → JSON local `src/data/lordicon/` |
 | `data.ts` | `getServices` (catálogo da unidade padrão — home), `getServicesForBooking` (todas as unidades ativas para `/agendar`), `getPublicBarbers`, `getBarbersForBooking`, seed assistido se necessário |
 | `barber-card-theme.ts` | Paleta e layout dos cartões da equipe na home (hash estável do `id` do `StaffMember`) |
 | `password.ts` | `hashPassword` / `verifyPassword` (bcryptjs) |
@@ -162,7 +163,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Landing B2B | `landing/barbernegon-landing.tsx`, `landing/stitch-sections.tsx` — assets em `public/images/landing/` |
 | Planos SaaS (UI) | `saas-plan-comparison.tsx` (também em `/admin/plano`) |
 | Marketplace | `marketplace/explore-marketplace-client.tsx`, `explore-chrome.tsx`, `explore-hero-carousel.tsx`, `shop-card.tsx`, `favorites-shops-list.tsx` |
-| Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-review-actions.tsx` |
+| Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-org-actions.tsx`, `ops-impersonation-banner.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx`, `canvas-confirm-modal.tsx`, `canvas-layers-panel.tsx`, `canvas-onboarding.tsx`, `canvas-phone-preview.tsx` (chrome BN; desktop 3 colunas + abas Biblioteca/Camadas; mobile dock + folhas; preview celular; onboarding por modelos) |
 | Editor de identidade | `brand-editor-form.tsx` |
 | WhatsApp admin | `whatsapp-admin-panel.tsx` |
