@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     "@prisma/client",
+    ".prisma/client",
     "@prisma/adapter-pg",
     "pg",
     "pg-native",

@@ -24,6 +24,7 @@ function mapServiceToSummary(
     price: Prisma.Decimal;
     unitId: string;
     isActive: boolean;
+    category?: ServiceSummary["category"];
     unitOverrides?: Array<{
       unitId: string;
       price: Prisma.Decimal | null;
@@ -40,6 +41,7 @@ function mapServiceToSummary(
     price: Number(service.price),
     unitId: service.unitId,
     isActive: service.isActive,
+    ...(service.category ? { category: service.category } : {}),
     ...(service.unitOverrides?.length
       ? {
           unitOverrides: service.unitOverrides.map((o) => ({

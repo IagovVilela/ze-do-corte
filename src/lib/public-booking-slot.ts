@@ -1,9 +1,14 @@
 import "server-only";
 
-import { parseISO } from "date-fns";
+import { parseISO, startOfDay } from "date-fns";
 import type { Service } from "@prisma/client";
 
 import { buildAppointmentSlotConflictWhere } from "@/lib/appointment-slot-conflict";
+import {
+  loadDayAppointments,
+  loadUnitStaffRoster,
+  pickStaffForSlot,
+} from "@/lib/booking-availability";
 import { prisma } from "@/lib/prisma";
 import {
   getSlotEnd,
@@ -20,6 +25,8 @@ export type AssignedStaffForNotify = {
 
 /**
  * Valida data/hora, expediente, profissional e conflitos — usado em `POST /api/appointments` e remarcação pública.
+ * Com duração total (vários serviços), exige bloco contínuo livre.
+ * Sem `staffMemberId`, atribui automaticamente um profissional livre na equipe (se existir).
  */
 export async function assertPublicBookingSlot(options: {
   service: Pick<Service, "durationMinutes">;
@@ -53,8 +60,9 @@ export async function assertPublicBookingSlot(options: {
     return { ok: false, message: "Data inválida.", status: 400 };
   }
 
+  const durationMinutes = service.durationMinutes;
   const startsAt = getSlotStart(day, timeStr);
-  const endsAt = getSlotEnd(startsAt, service.durationMinutes);
+  const endsAt = getSlotEnd(startsAt, durationMinutes);
 
   if (startsAt.getDay() === 0) {
     return {
@@ -64,10 +72,11 @@ export async function assertPublicBookingSlot(options: {
     };
   }
 
-  if (!isSlotWithinBusinessHours(startsAt, service.durationMinutes)) {
+  if (!isSlotWithinBusinessHours(startsAt, durationMinutes)) {
     return {
       ok: false,
-      message: "Horário fora do expediente para este serviço.",
+      message:
+        "Este horário não comporta a duração total dos serviços escolhidos (fora do expediente).",
       status: 400,
     };
   }
@@ -98,23 +107,52 @@ export async function assertPublicBookingSlot(options: {
         status: 400,
       };
     }
-    assignedStaff = {
-      id: staff.id,
-      email: staff.email,
-      displayName: staff.displayName,
-    };
     if (
-      !isSlotWithinStaffSchedule(
-        staff.workWeekJson,
-        startsAt,
-        service.durationMinutes,
-      )
+      !isSlotWithinStaffSchedule(staff.workWeekJson, startsAt, durationMinutes)
     ) {
       return {
         ok: false,
         message: "Horário fora do expediente deste profissional.",
         status: 400,
       };
+    }
+    assignedStaff = {
+      id: staff.id,
+      email: staff.email,
+      displayName: staff.displayName,
+    };
+  } else if (unitId && organizationId) {
+    const [roster, appointments] = await Promise.all([
+      loadUnitStaffRoster({ organizationId, unitId }),
+      loadDayAppointments({
+        unitId,
+        dayStart: startOfDay(day),
+        excludeAppointmentId,
+      }),
+    ]);
+
+    if (roster.length > 0) {
+      const picked = pickStaffForSlot({
+        staffRoster: roster,
+        appointments,
+        slotStart: startsAt,
+        durationMinutes,
+      });
+      if (!picked) {
+        return {
+          ok: false,
+          message:
+            "Nenhum profissional livre para a duração total neste horário. Escolha outro horário.",
+          status: 409,
+        };
+      }
+      const full = await prisma.staffMember.findFirst({
+        where: { id: picked.id },
+        select: { id: true, email: true, displayName: true },
+      });
+      if (full) {
+        assignedStaff = full;
+      }
     }
   }
 
@@ -136,7 +174,7 @@ export async function assertPublicBookingSlot(options: {
   if (conflict) {
     return {
       ok: false,
-      message: "Esse horário já foi reservado.",
+      message: "Esse horário já foi reservado para a duração necessária.",
       status: 409,
     };
   }

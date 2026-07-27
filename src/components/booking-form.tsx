@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { addDays, format, parseISO } from "date-fns";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
-import { LoaderCircle, Copy, Check } from "lucide-react";
+import { LoaderCircle, Copy, Check, Search, Flame } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { BUSINESS_HOURS } from "@/lib/constants";
@@ -16,19 +16,68 @@ import { AppointmentPixPay } from "@/components/appointment-pix-pay";
 type AvailableApiResponse = {
   date: string;
   availableSlots: string[];
+  durationMinutes?: number;
+  slotEndsAt?: Record<string, string>;
 };
 
 type BookingState = "idle" | "loading" | "success" | "error";
 
+type HistorySuggestion = {
+  serviceId: string;
+  name: string;
+  lastAt: string;
+  count: number;
+};
+
+type ServiceCategoryFilter =
+  | "ALL"
+  | "CORTE"
+  | "BARBA"
+  | "COMBO"
+  | "TRATAMENTO"
+  | "OUTRO";
+
+const CATEGORY_LABELS: Record<Exclude<ServiceCategoryFilter, "ALL">, string> = {
+  CORTE: "Corte",
+  BARBA: "Barba",
+  COMBO: "Combo",
+  TRATAMENTO: "Tratamento",
+  OUTRO: "Outros",
+};
+
+/** Dias sem o serviço para considerar “faz algum tempo” (estilo Cash Barber). */
+const MISS_YOU_AFTER_DAYS = 21;
+
 const visibleDates = Array.from({ length: 14 }).map((_, index) =>
   addDays(new Date(), index),
 );
+
+function normalizeSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .trim();
+}
+
+function serviceMatchesQuery(
+  service: ServiceSummary & { price: number; durationMinutes: number },
+  query: string,
+): boolean {
+  if (!query) return true;
+  const hay = normalizeSearch(
+    `${service.name} ${service.description} ${service.category ?? ""} ${CATEGORY_LABELS[service.category ?? "OUTRO"] ?? ""}`,
+  );
+  return query.split(/\s+/).every((token) => hay.includes(token));
+}
 
 type BookingFormProps = {
   services: ServiceSummary[];
   barbers: { id: string; name: string; imageUrl: string | null; unitId: string | null }[];
   units: { id: string; name: string; isDefault: boolean }[];
   organizationSlug: string;
+  /** Mais pedidos da unidade padrão (SSR); atualiza ao trocar filial. */
+  popularServiceIds?: string[];
 };
 
 export function BookingForm({
@@ -36,16 +85,31 @@ export function BookingForm({
   barbers,
   units,
   organizationSlug,
+  popularServiceIds: initialPopularIds = [],
 }: BookingFormProps) {
   const defaultUnitId = units.find((u) => u.isDefault)?.id ?? units[0]?.id ?? "";
   const [unitId, setUnitId] = useState(defaultUnitId);
-  const [serviceId, setServiceId] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceQuery, setServiceQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] =
+    useState<ServiceCategoryFilter>("ALL");
+  const [popularServiceIds, setPopularServiceIds] =
+    useState<string[]>(initialPopularIds);
+  const [historySuggestions, setHistorySuggestions] = useState<
+    HistorySuggestion[]
+  >([]);
+  const dismissedMissYouRef = useRef<string>("");
+  const [missYouOpen, setMissYouOpen] = useState(false);
 
   const [staffMemberId, setStaffMemberId] = useState("");
   const [selectedDate, setSelectedDate] = useState(
     format(visibleDates[0], "yyyy-MM-dd"),
   );
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotEndsAt, setSlotEndsAt] = useState<Record<string, string>>({});
+  const [serverDurationMinutes, setServerDurationMinutes] = useState<
+    number | null
+  >(null);
   const [selectedTime, setSelectedTime] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -90,25 +154,214 @@ export function BookingForm({
   }, [services, unitId]);
 
   useEffect(() => {
+    setServiceQuery("");
+    setCategoryFilter("ALL");
+  }, [unitId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPopular() {
+      try {
+        const qs = new URLSearchParams({
+          organizationSlug,
+        });
+        if (unitId) qs.set("unitId", unitId);
+        const res = await fetch(
+          `/api/appointments/popular-services?${qs.toString()}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { serviceIds?: string[] };
+        if (!cancelled) setPopularServiceIds(data.serviceIds ?? []);
+      } catch {
+        /* mantém ranking SSR */
+      }
+    }
+    void loadPopular();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationSlug, unitId]);
+
+  useEffect(() => {
     if (filteredServices.length === 0) {
-      setServiceId("");
+      setSelectedServiceIds([]);
       return;
     }
-    setServiceId((prev) => {
-      const ok = filteredServices.some((s) => s.id === prev);
-      return ok ? prev : filteredServices[0]!.id;
+    setSelectedServiceIds((prev) => {
+      const kept = prev.filter((id) =>
+        filteredServices.some((s) => s.id === id),
+      );
+      if (kept.length > 0) return kept;
+      return [filteredServices[0]!.id];
     });
   }, [filteredServices]);
 
-  const selectedService = useMemo(
-    () => filteredServices.find((service) => service.id === serviceId),
-    [serviceId, filteredServices],
+  const normalizedQuery = useMemo(
+    () => normalizeSearch(serviceQuery),
+    [serviceQuery],
   );
+
+  const isFiltering = normalizedQuery.length > 0 || categoryFilter !== "ALL";
+
+  const availableCategories = useMemo(() => {
+    const present = new Set(
+      filteredServices.map((s) => s.category ?? "OUTRO"),
+    );
+    return (
+      Object.keys(CATEGORY_LABELS) as Exclude<ServiceCategoryFilter, "ALL">[]
+    ).filter((c) => present.has(c));
+  }, [filteredServices]);
+
+  const matchedServices = useMemo(() => {
+    return filteredServices.filter((s) => {
+      if (categoryFilter !== "ALL" && (s.category ?? "OUTRO") !== categoryFilter) {
+        return false;
+      }
+      return serviceMatchesQuery(s, normalizedQuery);
+    });
+  }, [filteredServices, categoryFilter, normalizedQuery]);
+
+  const popularServices = useMemo(() => {
+    if (isFiltering) return [];
+    const byId = new Map(filteredServices.map((s) => [s.id, s]));
+    return popularServiceIds
+      .map((id) => byId.get(id))
+      .filter((s): s is NonNullable<typeof s> => Boolean(s))
+      .slice(0, 5);
+  }, [popularServiceIds, filteredServices, isFiltering]);
+
+  const otherServices = useMemo(() => {
+    if (isFiltering) return matchedServices;
+    const popularSet = new Set(popularServices.map((s) => s.id));
+    return matchedServices.filter((s) => !popularSet.has(s.id));
+  }, [isFiltering, matchedServices, popularServices]);
+
+  const selectedServices = useMemo(
+    () =>
+      selectedServiceIds
+        .map((id) => filteredServices.find((s) => s.id === id))
+        .filter((s): s is NonNullable<typeof s> => Boolean(s)),
+    [selectedServiceIds, filteredServices],
+  );
+
+  const serviceId = selectedServices[0]?.id ?? "";
+  const extraServiceIds = selectedServices.slice(1).map((s) => s.id);
+
+  const totalDuration = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0),
+    [selectedServices],
+  );
+
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.price, 0),
+    [selectedServices],
+  );
+
+  function toggleService(id: string) {
+    setSelectedServiceIds((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) return prev;
+        return prev.filter((x) => x !== id);
+      }
+      if (prev.length >= 9) return prev;
+      return [...prev, id];
+    });
+    setSelectedTime("");
+  }
+
+  const missYouCandidates = useMemo(() => {
+    const today = new Date();
+    return historySuggestions.filter((s) => {
+      if (selectedServiceIds.includes(s.serviceId)) return false;
+      if (!filteredServices.some((fs) => fs.id === s.serviceId)) return false;
+      const last = parseISO(s.lastAt);
+      if (Number.isNaN(last.getTime())) return false;
+      return differenceInCalendarDays(today, last) >= MISS_YOU_AFTER_DAYS;
+    });
+  }, [historySuggestions, selectedServiceIds, filteredServices]);
+
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, "");
+    if (digits.length < 10 || missYouCandidates.length === 0) {
+      setMissYouOpen(false);
+      return;
+    }
+    const key = `${formatBrPhoneNational(customerPhone)}:${missYouCandidates
+      .map((c) => c.serviceId)
+      .sort()
+      .join(",")}`;
+    if (dismissedMissYouRef.current === key) return;
+    setMissYouOpen(true);
+  }, [customerPhone, missYouCandidates]);
+
+  function acceptMissYou() {
+    setSelectedServiceIds((prev) => {
+      const next = [...prev];
+      for (const c of missYouCandidates) {
+        if (!next.includes(c.serviceId) && next.length < 9) {
+          next.push(c.serviceId);
+        }
+      }
+      return next;
+    });
+    setSelectedTime("");
+    const key = `${formatBrPhoneNational(customerPhone)}:${missYouCandidates
+      .map((c) => c.serviceId)
+      .sort()
+      .join(",")}`;
+    dismissedMissYouRef.current = key;
+    setMissYouOpen(false);
+  }
+
+  function declineMissYou() {
+    const key = `${formatBrPhoneNational(customerPhone)}:${missYouCandidates
+      .map((c) => c.serviceId)
+      .sort()
+      .join(",")}`;
+    dismissedMissYouRef.current = key;
+    setMissYouOpen(false);
+  }
 
   const selectedBarberName = useMemo(() => {
     if (!staffMemberId) return null;
     return barbers.find((b) => b.id === staffMemberId)?.name ?? null;
   }, [barbers, staffMemberId]);
+
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, "");
+    if (digits.length < 10 || !organizationSlug) {
+      setHistorySuggestions([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          const qs = new URLSearchParams({
+            organizationSlug,
+            phone: formatBrPhoneNational(customerPhone),
+          });
+          if (unitId) qs.set("unitId", unitId);
+          const res = await fetch(
+            `/api/appointments/client-history?${qs.toString()}`,
+          );
+          if (!res.ok) return;
+          const data = (await res.json()) as {
+            suggestions?: {
+              serviceId: string;
+              name: string;
+              lastAt: string;
+              count: number;
+            }[];
+          };
+          setHistorySuggestions(data.suggestions ?? []);
+        } catch {
+          setHistorySuggestions([]);
+        }
+      })();
+    }, 450);
+    return () => clearTimeout(t);
+  }, [customerPhone, organizationSlug, unitId]);
 
   useEffect(() => {
     if (!serviceId || !selectedDate || !unitId) return;
@@ -121,30 +374,47 @@ export function BookingForm({
           staffMemberId.length > 0
             ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
             : "";
+        const idsQ = encodeURIComponent(selectedServiceIds.join(","));
         const response = await fetch(
-          `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
+          `/api/appointments/available?serviceIds=${idsQ}&serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
         );
         if (!response.ok) {
           throw new Error("Falha na disponibilidade");
         }
         const payload = (await response.json()) as AvailableApiResponse;
         setAvailableSlots(payload.availableSlots);
+        setSlotEndsAt(payload.slotEndsAt ?? {});
+        setServerDurationMinutes(
+          typeof payload.durationMinutes === "number"
+            ? payload.durationMinutes
+            : totalDuration,
+        );
       } catch {
         setAvailableSlots([]);
+        setSlotEndsAt({});
+        setServerDurationMinutes(null);
       } finally {
         setLoadingSlots(false);
       }
     };
 
     void fetchAvailability();
-  }, [serviceId, selectedDate, staffMemberId, unitId, organizationSlug]);
+  }, [
+    serviceId,
+    selectedServiceIds,
+    selectedDate,
+    staffMemberId,
+    unitId,
+    organizationSlug,
+    totalDuration,
+  ]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!selectedService || !selectedTime) {
+    if (selectedServices.length === 0 || !selectedTime) {
       setBookingState("error");
-      setMessage("Selecione um serviço e um horário disponível.");
+      setMessage("Selecione ao menos um serviço e um horário disponível.");
       return;
     }
 
@@ -162,6 +432,7 @@ export function BookingForm({
           customerEmail,
           notes,
           serviceId,
+          extraServiceIds,
           date: selectedDate,
           time: selectedTime,
           unitId: unitId,
@@ -199,11 +470,16 @@ export function BookingForm({
         staffMemberId.length > 0
           ? `&staffMemberId=${encodeURIComponent(staffMemberId)}`
           : "";
+      const idsQ = encodeURIComponent(selectedServiceIds.join(","));
       const refresh = await fetch(
-        `/api/appointments/available?serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
+        `/api/appointments/available?serviceIds=${idsQ}&serviceId=${encodeURIComponent(serviceId)}&date=${selectedDate}&unitId=${encodeURIComponent(unitId)}&organizationSlug=${encodeURIComponent(organizationSlug)}${staffQ}`,
       );
       const refreshed = (await refresh.json()) as AvailableApiResponse;
       setAvailableSlots(refreshed.availableSlots);
+      setSlotEndsAt(refreshed.slotEndsAt ?? {});
+      if (typeof refreshed.durationMinutes === "number") {
+        setServerDurationMinutes(refreshed.durationMinutes);
+      }
     } catch (error) {
       setBookingState("error");
       setMessage(error instanceof Error ? error.message : "Erro inesperado.");
@@ -216,8 +492,69 @@ export function BookingForm({
   const noSlotsAvailable =
     !loadingSlots && availableSlots.length === 0 && serviceId && selectedDate;
 
+  const effectiveDuration = serverDurationMinutes ?? totalDuration;
+  const selectedEndsAt =
+    selectedTime && slotEndsAt[selectedTime]
+      ? slotEndsAt[selectedTime]
+      : null;
+
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-start">
+      <AnimatePresence>
+        {missYouOpen && missYouCandidates.length > 0 ? (
+          <motion.div
+            key="miss-you"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="miss-you-title"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              className="w-full max-w-sm rounded-2xl bg-zinc-100 p-6 text-center shadow-2xl"
+            >
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full border-2 border-amber-500/80 text-2xl font-bold text-amber-600">
+                !
+              </div>
+              <h3
+                id="miss-you-title"
+                className="mt-4 text-xl font-bold text-zinc-900"
+              >
+                Sentimos sua falta!
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-600">
+                Você realizou os serviços:{" "}
+                <strong className="text-zinc-800">
+                  {missYouCandidates.map((c) => c.name).join(", ")}
+                </strong>{" "}
+                já faz algum tempo, deseja adicioná-los ao seu agendamento?
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={acceptMissYou}
+                  className="rounded-xl bg-amber-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-700"
+                >
+                  Sim
+                </button>
+                <button
+                  type="button"
+                  onClick={declineMissYou}
+                  className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-500"
+                >
+                  Não
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       <motion.form
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -230,15 +567,15 @@ export function BookingForm({
             Nova reserva
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-            Horários já ocupados aparecem indisponíveis. Altere a data ou o serviço se
-            precisar de outra opção.
+            Escolha um ou mais serviços na mesma visita. Horários ocupados ficam
+            indisponíveis conforme a duração total.
           </p>
         </header>
 
         <div className="space-y-6">
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-              Unidade, Serviço e Horário
+              Unidade, serviços e horário
             </p>
             {units.length > 1 ? (
               <label className="mb-4 block space-y-2">
@@ -266,32 +603,132 @@ export function BookingForm({
                 </select>
               </label>
             ) : null}
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-zinc-200">Serviço</span>
-              <select
-                value={serviceId}
-                onChange={(event) => setServiceId(event.target.value)}
-                className={cn(
-                  inputClass,
-                  "min-w-0 max-w-full cursor-pointer truncate appearance-none bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat pr-11",
-                )}
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-                }}
-              >
-                {filteredServices.length === 0 ? (
-                  <option value="" className="bg-zinc-900">
-                    Nenhum serviço cadastrado nesta unidade
-                  </option>
-                ) : (
-                  filteredServices.map((service) => (
-                    <option key={service.id} value={service.id} className="bg-zinc-900">
-                      {service.name} • R$ {service.price.toFixed(2)}
-                    </option>
-                  ))
-                )}
-              </select>
-            </label>
+            <div className="space-y-3">
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">
+                    Selecione os serviços
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    Busque, filtre por tipo ou escolha os mais pedidos — duração e
+                    valor somam na comanda.
+                  </p>
+                </div>
+                {selectedServices.length > 0 ? (
+                  <p className="shrink-0 text-xs tabular-nums text-brand-300">
+                    {selectedServices.length} · R$ {totalPrice.toFixed(2)}
+                  </p>
+                ) : null}
+              </div>
+
+              {filteredServices.length === 0 ? (
+                <p className="rounded-xl border border-white/10 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400">
+                  Nenhum serviço cadastrado nesta unidade.
+                </p>
+              ) : (
+                <>
+                  <label className="relative block">
+                    <Search
+                      className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-zinc-500"
+                      aria-hidden
+                    />
+                    <input
+                      type="search"
+                      value={serviceQuery}
+                      onChange={(e) => setServiceQuery(e.target.value)}
+                      placeholder="Buscar serviço (ex.: barba, corte…)"
+                      className={cn(
+                        inputClass,
+                        "pl-10 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
+                      )}
+                      aria-label="Buscar serviços"
+                    />
+                  </label>
+
+                  {availableCategories.length > 1 ? (
+                    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]">
+                      <button
+                        type="button"
+                        onClick={() => setCategoryFilter("ALL")}
+                        className={cn(
+                          "min-h-9 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                          categoryFilter === "ALL"
+                            ? "bg-brand-500 text-zinc-950"
+                            : "border border-white/10 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200",
+                        )}
+                      >
+                        Todos
+                      </button>
+                      {availableCategories.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setCategoryFilter(cat)}
+                          className={cn(
+                            "min-h-9 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                            categoryFilter === cat
+                              ? "bg-brand-500 text-zinc-950"
+                              : "border border-white/10 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200",
+                          )}
+                        >
+                          {CATEGORY_LABELS[cat]}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="max-h-[26rem] space-y-4 overflow-y-auto overscroll-contain pr-1">
+                    {!isFiltering && popularServices.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-brand-300 uppercase">
+                          <Flame className="size-3.5" aria-hidden />
+                          Mais pedidos
+                        </p>
+                        <ul className="space-y-2">
+                          {popularServices.map((service) => (
+                            <li key={`pop-${service.id}`}>
+                              <ServicePickRow
+                                service={service}
+                                checked={selectedServiceIds.includes(service.id)}
+                                popular
+                                onToggle={() => toggleService(service.id)}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    <div className="space-y-2">
+                      {!isFiltering && popularServices.length > 0 ? (
+                        <p className="text-[11px] font-bold tracking-[0.12em] text-zinc-500 uppercase">
+                          Todos os serviços
+                        </p>
+                      ) : isFiltering ? (
+                        <p className="text-xs text-zinc-500">
+                          {matchedServices.length === 0
+                            ? "Nenhum serviço encontrado."
+                            : `${matchedServices.length} resultado${matchedServices.length === 1 ? "" : "s"}`}
+                        </p>
+                      ) : null}
+                      {otherServices.length > 0 ? (
+                        <ul className="space-y-2">
+                          {otherServices.map((service) => (
+                            <li key={service.id}>
+                              <ServicePickRow
+                                service={service}
+                                checked={selectedServiceIds.includes(service.id)}
+                                onToggle={() => toggleService(service.id)}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {filteredBarbers.length > 0 ? (
               <div className="mt-4 space-y-3">
@@ -479,26 +916,46 @@ export function BookingForm({
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-zinc-200">Horários disponíveis</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-zinc-200">
+                  Horários disponíveis
+                </p>
+                {effectiveDuration > 0 ? (
+                  <p className="mt-0.5 text-[11px] text-zinc-500">
+                    Bloco contínuo de {effectiveDuration} min
+                    {selectedEndsAt
+                      ? ` · termina às ${selectedEndsAt}`
+                      : " · só entram horários que cabem inteiros"}
+                  </p>
+                ) : null}
+              </div>
               {loadingSlots ? (
                 <LoaderCircle className="size-4 shrink-0 animate-spin text-brand-400" />
               ) : null}
             </div>
             {noSlotsAvailable ? (
               <p className="rounded-xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-sm text-sky-200/90">
-                Não há horários livres nesta data para o serviço escolhido. Tente outro dia
-                ou outro serviço.
+                Nenhum horário comporta os {effectiveDuration || "seus"} minutos
+                de atendimento nesta data
+                {staffMemberId ? " com este profissional" : ""}. Tente outro dia,
+                menos serviços ou outro barbeiro.
               </p>
             ) : null}
             <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-1.5 sm:gap-2">
               {BUSINESS_HOURS.map((time) => {
                 const isAvailable = availableSlots.includes(time);
                 const isSelected = selectedTime === time;
+                const ends = slotEndsAt[time];
                 return (
                   <motion.button
                     key={time}
                     type="button"
+                    title={
+                      isAvailable && ends
+                        ? `${time}–${ends} (${effectiveDuration} min)`
+                        : undefined
+                    }
                     onClick={() => {
                       if (isAvailable) setSelectedTime(time);
                     }}
@@ -508,7 +965,9 @@ export function BookingForm({
                       "min-w-0 rounded-lg border px-1.5 py-2 text-center text-xs font-medium transition sm:rounded-xl sm:px-2 sm:text-sm",
                       isSelected &&
                         "border-brand-500 bg-brand-surface-20 text-brand-50 ring-1 ring-brand-500/30",
-                      !isSelected && isAvailable && "border-white/10 bg-zinc-950/50 hover:border-zinc-500",
+                      !isSelected &&
+                        isAvailable &&
+                        "border-white/10 bg-zinc-950/50 hover:border-zinc-500",
                       !isAvailable &&
                         "cursor-not-allowed border-zinc-800/80 bg-zinc-950/30 text-zinc-600 line-through decoration-zinc-600",
                     )}
@@ -554,6 +1013,50 @@ export function BookingForm({
                 />
               </label>
             </div>
+
+            {historySuggestions.filter(
+              (s) =>
+                !selectedServiceIds.includes(s.serviceId) &&
+                filteredServices.some((fs) => fs.id === s.serviceId) &&
+                differenceInCalendarDays(new Date(), parseISO(s.lastAt)) <
+                  MISS_YOU_AFTER_DAYS,
+            ).length > 0 ? (
+              <div className="mt-4 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
+                <p className="text-sm font-semibold text-sky-100">
+                  Serviços recentes no seu histórico
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {historySuggestions
+                    .filter(
+                      (s) =>
+                        !selectedServiceIds.includes(s.serviceId) &&
+                        filteredServices.some((fs) => fs.id === s.serviceId) &&
+                        differenceInCalendarDays(
+                          new Date(),
+                          parseISO(s.lastAt),
+                        ) < MISS_YOU_AFTER_DAYS,
+                    )
+                    .slice(0, 5)
+                    .map((s) => (
+                      <li key={s.serviceId}>
+                        <button
+                          type="button"
+                          onClick={() => toggleService(s.serviceId)}
+                          className="rounded-full border border-sky-400/40 bg-sky-950/40 px-3 py-1.5 text-left text-xs text-sky-50 transition hover:bg-sky-800/50"
+                        >
+                          <span className="font-semibold">{s.name}</span>
+                          <span className="mt-0.5 block text-[10px] text-sky-200/80">
+                            Última vez em{" "}
+                            {format(parseISO(s.lastAt), "dd/MM/yyyy", {
+                              locale: ptBR,
+                            })}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : null}
 
             <label className="mt-4 block space-y-2">
               <span className="text-sm font-medium text-zinc-200">E-mail (opcional)</span>
@@ -607,8 +1110,14 @@ export function BookingForm({
         </div>
         <dl className="space-y-3 text-sm">
           <div className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-3">
-            <dt className="text-zinc-500">Serviço</dt>
-            <dd className="font-medium text-zinc-100">{selectedService?.name ?? "—"}</dd>
+            <dt className="text-zinc-500">
+              Serviço{selectedServices.length > 1 ? "s" : ""}
+            </dt>
+            <dd className="font-medium text-zinc-100">
+              {selectedServices.length > 0
+                ? selectedServices.map((s) => s.name).join(", ")
+                : "—"}
+            </dd>
           </div>
           {units.length > 1 ? (
             <div className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-3">
@@ -645,13 +1154,15 @@ export function BookingForm({
           <div className="flex items-baseline justify-between gap-2 pt-1">
             <dt className="text-zinc-500">Valor</dt>
             <dd className="text-lg font-semibold text-brand-300">
-              {selectedService ? `R$ ${selectedService.price.toFixed(2)}` : "—"}
+              {selectedServices.length > 0
+                ? `R$ ${totalPrice.toFixed(2)}`
+                : "—"}
             </dd>
           </div>
           <div className="flex items-baseline justify-between gap-2">
             <dt className="text-zinc-500">Duração</dt>
             <dd className="text-zinc-200">
-              {selectedService ? `${selectedService.durationMinutes} min` : "—"}
+              {selectedServices.length > 0 ? `${totalDuration} min` : "—"}
             </dd>
           </div>
         </dl>
@@ -729,5 +1240,63 @@ export function BookingForm({
         </AnimatePresence>
       </motion.aside>
     </div>
+  );
+}
+
+function ServicePickRow({
+  service,
+  checked,
+  popular,
+  onToggle,
+}: {
+  service: {
+    id: string;
+    name: string;
+    price: number;
+    durationMinutes: number;
+  };
+  checked: boolean;
+  popular?: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={checked}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
+        checked
+          ? "border-brand-500/50 bg-brand-500/10 ring-1 ring-brand-500/30"
+          : "border-white/10 bg-zinc-950/40 hover:border-white/20 hover:bg-zinc-900/50",
+      )}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-zinc-100">{service.name}</span>
+          {popular ? (
+            <span className="rounded-md bg-brand-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-brand-300 uppercase">
+              Popular
+            </span>
+          ) : null}
+        </span>
+        <span className="mt-0.5 block text-sm text-zinc-400">
+          R$ {service.price.toFixed(2)}
+          <span className="text-zinc-600"> · </span>
+          {service.durationMinutes} min
+        </span>
+      </span>
+      <span
+        className={cn(
+          "flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition",
+          checked
+            ? "border-brand-400 bg-brand-500 text-zinc-950"
+            : "border-zinc-500 bg-transparent",
+        )}
+        aria-hidden
+      >
+        {checked ? <Check className="size-3.5 stroke-[3]" /> : null}
+      </span>
+    </button>
   );
 }

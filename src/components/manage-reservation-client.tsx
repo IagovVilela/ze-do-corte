@@ -23,6 +23,7 @@ type ManageAppointmentPayload = {
     durationMinutes: number;
     price: number;
   };
+  unitId: string | null;
   unitName: string | null;
   organizationSlug: string | null;
   organizationName: string | null;
@@ -104,13 +105,20 @@ export function ManageReservationClient({ token }: Props) {
       data.staffMemberId && data.staffMemberId.length > 0
         ? `&staffMemberId=${encodeURIComponent(data.staffMemberId)}`
         : "";
+    const unitQ = data.unitId
+      ? `&unitId=${encodeURIComponent(data.unitId)}`
+      : "";
+    const orgQ = data.organizationSlug
+      ? `&organizationSlug=${encodeURIComponent(data.organizationSlug)}`
+      : "";
+    const durationQ = `&durationMinutes=${encodeURIComponent(String(data.service.durationMinutes))}`;
 
     const run = async () => {
       setLoadingSlots(true);
       setSelectedTime("");
       try {
         const res = await fetch(
-          `/api/appointments/available?serviceId=${encodeURIComponent(data.service.id)}&date=${rescheduleDate}${staffQ}`,
+          `/api/appointments/available?serviceId=${encodeURIComponent(data.service.id)}&date=${rescheduleDate}${staffQ}${unitQ}${orgQ}${durationQ}`,
         );
         if (!res.ok) {
           setSlots([]);
@@ -126,7 +134,15 @@ export function ManageReservationClient({ token }: Props) {
     };
 
     void run();
-  }, [data?.canManage, data?.service.id, data?.staffMemberId, rescheduleDate]);
+  }, [
+    data?.canManage,
+    data?.service.id,
+    data?.service.durationMinutes,
+    data?.staffMemberId,
+    data?.unitId,
+    data?.organizationSlug,
+    rescheduleDate,
+  ]);
 
   const [origin, setOrigin] = useState("");
   useEffect(() => {

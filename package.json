@@ -21,6 +21,7 @@
     "create-owner": "tsx scripts/create-owner.ts",
     "ensure-owner": "tsx scripts/ensure-owner.ts",
     "demo:vitrine": "tsx scripts/apply-demo-vitrine.ts",
+    "demo:day": "tsx scripts/seed-demo-day.ts",
     "whatsapp:reminders": "tsx scripts/whatsapp-reminders.ts",
     "postinstall": "prisma generate"
   },

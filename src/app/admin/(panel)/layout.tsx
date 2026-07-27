@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AdminPanelNav } from "@/components/admin-panel-nav";
 import { AdminThemeProvider } from "@/components/admin-theme-provider";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
+import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { OpsImpersonationBanner } from "@/components/ops-impersonation-banner";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import {
@@ -32,9 +33,17 @@ const brandHeadline = Montserrat({
 function AdminProductFooter() {
   return (
     <footer className="mt-auto border-t border-[var(--bn-border)] px-4 py-4 sm:px-6">
-      <p className="text-center text-xs text-[var(--bn-muted)] sm:text-left">
-        Barbernegon · Painel · © {new Date().getFullYear()}
-      </p>
+      <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
+        <BarbernegonMark
+          href="/admin"
+          size={24}
+          withWordmark
+          className="text-[var(--bn-on)] [&_span]:text-sm [&_span]:sm:text-sm [&_span]:md:text-sm"
+        />
+        <p className="text-center text-xs text-[var(--bn-muted)] sm:text-right">
+          Painel · © {new Date().getFullYear()}
+        </p>
+      </div>
     </footer>
   );
 }
@@ -66,6 +75,7 @@ export default async function AdminPanelLayout({
       where: { id: access.organizationId },
       select: {
         name: true,
+        logoUrl: true,
         planStatus: true,
         planTier: true,
         trialEndsAt: true,
@@ -86,8 +96,13 @@ export default async function AdminPanelLayout({
         className={`brand-onyx min-h-svh bg-[var(--bn-bg)] text-[var(--bn-on)] ${brandHeadline.variable}`}
       >
         {/* Tema via cookie SSR; sem <script> (React 19 não executa no client boundary). */}
-        <AdminPanelNav access={access} proUnlocked={proUnlocked} />
-        <div className="flex min-h-svh flex-col lg:pl-60">
+        <AdminPanelNav
+          access={access}
+          proUnlocked={proUnlocked}
+          shopName={org?.name ?? "Barbearia"}
+          shopLogoUrl={org?.logoUrl ?? null}
+        />
+        <div className="flex min-h-svh flex-col lg:pl-[17.5rem]">
           {isOpsImpersonating && org ? (
             <OpsImpersonationBanner shopName={org.name} />
           ) : null}

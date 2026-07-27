@@ -116,9 +116,16 @@ export async function GET(_request: Request, context: RouteContext) {
       service: {
         id: appointment.service.id,
         name: appointment.service.name,
-        durationMinutes: appointment.service.durationMinutes,
+        durationMinutes: Math.max(
+          1,
+          Math.round(
+            (appointment.endsAt.getTime() - appointment.startsAt.getTime()) /
+              60_000,
+          ),
+        ),
         price: Number(appointment.service.price),
       },
+      unitId: appointment.unitId,
       unitName: appointment.unit?.name ?? null,
       organizationSlug: org?.slug ?? null,
       organizationName: org?.name ?? null,
@@ -193,8 +200,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ ok: true, status: "CANCELLED" });
   }
 
+  const bookedDurationMinutes = Math.max(
+    1,
+    Math.round(
+      (appointment.endsAt.getTime() - appointment.startsAt.getTime()) / 60_000,
+    ),
+  );
+
   const slot = await assertPublicBookingSlot({
-    service: appointment.service,
+    service: { durationMinutes: bookedDurationMinutes },
     dateStr: parsed.data.date,
     timeStr: parsed.data.time,
     unitId: appointment.unitId,

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Link from "next/link";
 
 import { AdminAppointmentFiltersForm } from "@/components/admin-appointment-filters-form";
 import { AdminExportButton } from "@/components/admin-export-button";
@@ -139,7 +140,23 @@ export default async function AdminPage({
               title="Visão da operação"
               subtitle={overviewSubtitle}
             />
-            <AdminExportButton canExport={access.permissions.exportData} />
+            <div className="flex flex-wrap items-center gap-2">
+              {access.role === "OWNER" || access.role === "ADMIN" ? (
+                <Link
+                  href="/admin/relatorios"
+                  className="rounded-full border border-[var(--bn-border)] px-3 py-1.5 text-xs font-medium text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
+                >
+                  Relatórios
+                </Link>
+              ) : null}
+              <Link
+                href="/admin/operacional"
+                className="rounded-full border border-[var(--bn-border)] px-3 py-1.5 text-xs font-medium text-[var(--bn-on-variant)] hover:bg-[var(--bn-hover)]"
+              >
+                Operacional
+              </Link>
+              <AdminExportButton canExport={access.permissions.exportData} />
+            </div>
           </div>
         </AnimatedSection>
 
@@ -215,6 +232,12 @@ export default async function AdminPage({
                       )}`
                     : "Sem agendamentos futuros"}
                 </p>
+                <a
+                  href="/admin/agendamentos"
+                  className="mt-2 inline-block text-xs font-medium text-[var(--bn-primary)] hover:underline"
+                >
+                  Ver calendário
+                </a>
               </div>
             ) : null}
           </div>
@@ -229,6 +252,12 @@ export default async function AdminPage({
                     )}`
                   : "Sem agendamentos futuros"}
               </p>
+              <a
+                href="/admin/agendamentos"
+                className="mt-2 inline-block text-xs font-medium text-[var(--bn-primary)] hover:underline"
+              >
+                Ver calendário
+              </a>
             </div>
           ) : null}
         </AnimatedSection>

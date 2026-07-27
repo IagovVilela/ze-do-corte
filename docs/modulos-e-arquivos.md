@@ -43,10 +43,21 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
+| `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda |
+| `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview de indicadores do salão |
+| `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
+| `/admin/operacional` | `src/app/admin/(panel)/operacional/page.tsx` | Filas de ação do dia |
+| `/admin/produtos` | `src/app/admin/(panel)/produtos/page.tsx` | Catálogo de produtos (comanda) |
 | `/admin/marca` | `src/app/admin/(panel)/marca/page.tsx` | Identidade (logo, slug, redes) |
 | `/admin/site` | `src/app/admin/(panel)/site/page.tsx` | Canvas Canva (`site-canvas-editor.tsx`) |
 | `/admin/whatsapp` | `src/app/admin/(panel)/whatsapp/page.tsx` | Conexão Meta Cloud API + bot + logs |
 | `/admin/pagamentos` | `src/app/admin/(panel)/pagamentos/page.tsx` | Conta Asaas do salão (API key) |
+| `/admin/financeiro/comissoes` | `…/financeiro/comissoes/page.tsx` | Pagamento de comissões + gerar contas a pagar |
+| `/admin/financeiro/balanco` | `…/financeiro/balanco/page.tsx` | Balanço do período |
+| `/admin/financeiro/contas-a-pagar` | `…/financeiro/contas-a-pagar/page.tsx` | Despesas em aberto |
+| `/admin/financeiro/contas-a-receber` | `…/financeiro/contas-a-receber/page.tsx` | Receitas em aberto |
+| `/admin/financeiro/criar-despesa` | `…/financeiro/criar-despesa/page.tsx` | Formulário de despesa |
+| `/admin/financeiro/criar-receita` | `…/financeiro/criar-receita/page.tsx` | Formulário de receita |
 | `/admin/plano` | `src/app/admin/(panel)/plano/page.tsx` | Assinatura SaaS Barbernegon |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
 | `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio, “Mostrar na home”, **expediente** (`workWeekJson`) para OWNER/ADMIN (`admin-staff-manager.tsx`) |
@@ -58,22 +69,34 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/esqueci-senha` | `src/app/admin/esqueci-senha/page.tsx` | Pedido de link de redefinição (`forgot-password-form.tsx`) |
 | `/admin/redefinir-senha` | `src/app/admin/redefinir-senha/page.tsx` | Nova senha via token do e-mail (`reset-password-form.tsx`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
-| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
+| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` (logo/nome da org) + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
+| Nav config | `src/lib/admin-nav-config.ts` | Grupos, keywords de busca, filtros e match de rota ativa |
 
 ## API Routes
 
 | Caminho | Arquivo |
 |---------|---------|
 | Serviços | `src/app/api/services/route.ts` |
-| Slots disponíveis | `src/app/api/appointments/available/route.ts` — query opcional `staffMemberId` |
+| Slots disponíveis | `src/app/api/appointments/available/route.ts` — `serviceIds`, duração total, capacidade por barbeiro |
+| Serviços mais pedidos | `src/app/api/appointments/popular-services/route.ts` — ranking público por org/unidade |
+| Agenda inteligente | `src/lib/booking-availability.ts` — soma duração, bloco contínuo, auto-sugestão de profissional |
 | Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; `clientManageToken`; notificação Resend se configurada |
 | Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` + `PATCH` (`cancel` / `reschedule`) |
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` — `chartRange`, `telemetryScope=chart`, filtros `status` / `staff` / `unit` / `q` |
 | Export Excel | `src/app/api/admin/export/route.ts` |
+| Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions` |
+| Evolução | `src/app/api/admin/evolution/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
 | Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
 | Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` (corpo com `unitId`; unicidade por par **unidade + nome**) |
 | Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH` (opcional `unitId`), `DELETE` |
+| Agendamentos (lista por intervalo) | `src/app/api/admin/appointments/route.ts` — `GET ?from=&to=` (AAAA-MM-DD) |
+| Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=` (últimos 30 dias) |
+| Comanda | `src/app/api/admin/appointments/[id]/comanda/route.ts` — `GET`/`PATCH` (serviços, produtos, pago) |
+| Produtos | `src/app/api/admin/products/route.ts` + `[id]` |
+| Relatórios | `src/app/api/admin/reports/route.ts` |
+| Operacional | `src/app/api/admin/ops/route.ts` |
+| Histórico cliente (público) | `src/app/api/appointments/client-history/route.ts` |
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
 | Configuração | `src/app/api/admin/settings/route.ts` |
 | Login / logout painel | `src/app/api/auth/login/route.ts`, `logout/route.ts` |
@@ -128,6 +151,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `org-branding.ts` | Resolve canvas + `organizationBrandStyle` (server) |
 | `lordicon-cdn-ids.ts` / `lordicon-server.ts` | Ícones: API (token) → CDN → JSON local `src/data/lordicon/` |
 | `data.ts` | `getServices` (catálogo da unidade padrão — home), `getServicesForBooking` (todas as unidades ativas para `/agendar`), `getPublicBarbers`, `getBarbersForBooking`, seed assistido se necessário |
+| `popular-services.ts` | Ranking dos serviços mais pedidos (comanda / legado) para o agendar público |
 | `barber-card-theme.ts` | Paleta e layout dos cartões da equipe na home (hash estável do `id` do `StaffMember`) |
 | `password.ts` | `hashPassword` / `verifyPassword` (bcryptjs) |
 | `password-reset.ts` | Token SHA-256 + e-mail Resend para “esqueci minha senha” |
@@ -139,11 +163,20 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `slug.ts` | `slugify` para slugs de unidades |
 | `service-category.ts` | Tipos e rótulos pt-BR do enum `ServiceCategory` (Prisma) |
 | `admin-dashboard.ts` | **`getAdminDashboardSnapshot`** com **`appointmentListWhere`** (filtros URL) + lista paginada; **`unitTelemetry`** (OWNER/ADMIN); resumo com valor **confirmados + concluídos** no período |
+| `admin-appointments.ts` | **`listAdminAppointmentsInRange`** para o calendário (máx. 31 dias) |
+| `admin-appointment-frequency.ts` | Heatmap de ocupação por weekday×hora (últimos 30 dias) |
+| `admin-appointment-comanda.ts` | Detalhe da comanda + histórico/recompra |
+| `admin-reports.ts` | Snapshot completo de Relatórios |
+| `admin-finance.ts` | Lançamentos, categorias, balanço do salão |
+| `admin-commissions.ts` | Cálculo de comissões + gerar contas a pagar |
+| `admin-evolution.ts` / `admin-evolution-types.ts` | Snapshot de evolução do salão (faturamento, retorno, KPIs) |
+| `admin-ops.ts` | Snapshot do Operacional (filas do dia) |
 | `admin-list-url.ts` | Parse de `status` / `staff` / `unit` / `q`, `telemetryScope`, `parseTelemetryScope`, `buildAdminPageHref` (URLs `/admin?…`, seguro para cliente) |
 | `admin-appointment-list-where.ts` | `appointmentListWhere` — junta `appointmentScopeWhere` com filtros da lista (só servidor) |
 | `cloudinary-server.ts` | Upload/remoção de avatar e **assets de marca** (logo/hero/canvas, incl. vídeo) no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
 | `appointment-slot-conflict.ts` | Regras de sobreposição de horário (agendamento geral vs. por profissional); `excludeAppointmentId` na remarcação |
-| `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos) — `POST /api/appointments` e gestão pública |
+| `booking-availability.ts` | Motor de disponibilidade: duração multi-serviço, capacidade da equipe, slots que cabem inteiros |
+| `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos, auto-atribuição) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
 | `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, outbound, cron de lembretes |
 | `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano |
@@ -177,7 +210,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-frequency-heatmap.tsx`, `admin-appointments-calendar.tsx`, `admin-appointment-comanda-sheet.tsx`, `admin-products-manager.tsx`, `admin-date-range-picker.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
 | Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |

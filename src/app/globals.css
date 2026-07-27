@@ -236,6 +236,17 @@ input[type="checkbox"]:indeterminate {
   color-scheme: dark;
 }
 
+/* Select nativo (Windows): o popup costuma ser branco e herda texto claro do tema. */
+.brand-onyx select option {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+.brand-onyx[data-theme="light"] select option {
+  background-color: #ffffff;
+  color: #111827;
+}
+
 /* Painel admin — modo claro (só chrome autenticado com data-theme) */
 .brand-onyx[data-theme="light"] {
   --bn-bg: #f4f6fa;

@@ -17,6 +17,8 @@ export type CreateBookingInput = {
   organizationId: string;
   unitId: string;
   serviceId: string;
+  /** Serviços extras na mesma comanda (além do principal). */
+  extraServiceIds?: string[];
   date: string;
   time: string;
   customerName: string;
@@ -75,10 +77,13 @@ export async function createPublicBooking(
 
   const unitOverride = service.unitOverrides.find((o) => o.unitId === input.unitId);
   const isActive = unitOverride ? unitOverride.isActive : service.isActive;
-  const durationMinutes =
+  const primaryDuration =
     unitOverride && unitOverride.durationMinutes !== null
       ? unitOverride.durationMinutes
       : service.durationMinutes;
+  const primaryPrice = Number(
+    unitOverride?.price != null ? unitOverride.price : service.price,
+  );
 
   if (!isActive) {
     return {
@@ -95,10 +100,72 @@ export async function createPublicBooking(
     };
   }
 
+  const extraIds = [
+    ...new Set(
+      (input.extraServiceIds ?? []).filter((id) => id && id !== input.serviceId),
+    ),
+  ];
+  const extraServices = extraIds.length
+    ? await prisma.service.findMany({
+        where: {
+          id: { in: extraIds },
+          unit: { organizationId: input.organizationId },
+        },
+        include: { unitOverrides: true },
+      })
+    : [];
+  if (extraServices.length !== extraIds.length) {
+    return { ok: false, message: "Serviço extra inválido.", status: 400 };
+  }
+
+  type Line = {
+    serviceId: string;
+    name: string;
+    durationMinutes: number;
+    price: number;
+  };
+  const lines: Line[] = [
+    {
+      serviceId: service.id,
+      name: service.name,
+      durationMinutes: primaryDuration,
+      price: primaryPrice,
+    },
+  ];
+  for (const extra of extraServices) {
+    const ov = extra.unitOverrides.find((o) => o.unitId === input.unitId);
+    const active = ov ? ov.isActive : extra.isActive;
+    if (!active) {
+      return {
+        ok: false,
+        message: `Serviço indisponível: ${extra.name}.`,
+        status: 400,
+      };
+    }
+    if (extra.unitId !== input.unitId && !ov) {
+      return {
+        ok: false,
+        message: `Serviço indisponível nesta unidade: ${extra.name}.`,
+        status: 400,
+      };
+    }
+    lines.push({
+      serviceId: extra.id,
+      name: extra.name,
+      durationMinutes:
+        ov && ov.durationMinutes !== null
+          ? ov.durationMinutes
+          : extra.durationMinutes,
+      price: Number(ov?.price != null ? ov.price : extra.price),
+    });
+  }
+
+  const totalDuration = lines.reduce((s, l) => s + l.durationMinutes, 0);
+
   const phoneStored = formatBrPhoneNational(input.customerPhone);
 
   const slot = await assertPublicBookingSlot({
-    service: { ...service, durationMinutes },
+    service: { durationMinutes: totalDuration },
     dateStr: input.date,
     timeStr: input.time,
     unitId: input.unitId,
@@ -136,6 +203,7 @@ export async function createPublicBooking(
         serviceId: input.serviceId,
         unitId: input.unitId,
         staffMemberId: assignedStaff?.id ?? null,
+        bookedWithoutStaffPreference: !input.staffMemberId,
         clientManageToken: randomUUID(),
         bookingSource: input.bookingSource ?? "site",
         usedSubscriptionId,
@@ -147,8 +215,16 @@ export async function createPublicBooking(
               amountPaid: 0,
             }
           : {}),
+        items: {
+          create: lines.map((line, index) => ({
+            serviceId: line.serviceId,
+            price: line.price,
+            durationMinutes: line.durationMinutes,
+            sortOrder: index,
+          })),
+        },
       },
-      include: { service: true },
+      include: { service: true, items: true },
     });
     if (usedSubscriptionId) {
       await tx.clientSubscription.update({
@@ -167,7 +243,7 @@ export async function createPublicBooking(
       clientName: appointment.clientName,
       clientPhone: appointment.clientPhone,
       clientEmail: appointment.clientEmail,
-      serviceName: appointment.service.name,
+      serviceName: lines.map((l) => l.name).join(", "),
       startsAt: appointment.startsAt,
       notes: appointment.notes,
     });
@@ -241,8 +317,15 @@ export async function rescheduleAppointmentById(options: {
     return { ok: false, message: "Unidade inválida.", status: 400 };
   }
 
+  const bookedDurationMinutes = Math.max(
+    1,
+    Math.round(
+      (appointment.endsAt.getTime() - appointment.startsAt.getTime()) / 60_000,
+    ),
+  );
+
   const slot = await assertPublicBookingSlot({
-    service: appointment.service,
+    service: { durationMinutes: bookedDurationMinutes },
     dateStr: options.date,
     timeStr: options.time,
     unitId: appointment.unitId,

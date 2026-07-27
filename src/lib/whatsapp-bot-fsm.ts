@@ -1,6 +1,6 @@
 import "server-only";
 
-import { addDays, format } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
@@ -12,6 +12,7 @@ import {
   normalizeWaUserPhone,
   waPhoneToStored,
 } from "@/lib/booking-domain";
+import { listPublicAvailableSlots } from "@/lib/booking-availability";
 import { BARBER_TIMEZONE } from "@/lib/constants";
 import { decryptSecret } from "@/lib/whatsapp-crypto";
 import {
@@ -21,11 +22,6 @@ import {
 } from "@/lib/whatsapp-meta-client";
 import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
 import { prisma } from "@/lib/prisma";
-import {
-  isSlotWithinBusinessHours,
-  getSlotsForDate,
-} from "@/lib/utils";
-import { buildAppointmentSlotConflictWhere } from "@/lib/appointment-slot-conflict";
 
 export type BotState =
   | "idle"
@@ -133,25 +129,16 @@ async function freeSlotTimes(
   const duration =
     ov?.durationMinutes != null ? ov.durationMinutes : service.durationMinutes;
 
-  const day = new Date(`${dateStr}T12:00:00`);
-  const candidates = getSlotsForDate(day);
-  const out: string[] = [];
+  const day = parseISO(dateStr);
+  if (Number.isNaN(day.getTime())) return [];
 
-  for (const start of candidates) {
-    if (!isSlotWithinBusinessHours(start, duration)) continue;
-    if (start.getTime() <= Date.now()) continue;
-    const conflict = await prisma.appointment.findFirst({
-      where: buildAppointmentSlotConflictWhere({
-        rangeStart: start,
-        rangeEnd: new Date(start.getTime() + duration * 60_000),
-        unitId,
-      }),
-      select: { id: true },
-    });
-    if (conflict) continue;
-    out.push(formatInTimeZone(start, BARBER_TIMEZONE, "HH:mm"));
-  }
-  return out.slice(0, 10);
+  const result = await listPublicAvailableSlots({
+    organizationId,
+    unitId,
+    day,
+    durationMinutes: duration,
+  });
+  return result.availableSlots.slice(0, 10);
 }
 
 export async function handleWhatsAppInbound(options: {

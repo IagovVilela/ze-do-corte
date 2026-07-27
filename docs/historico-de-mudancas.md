@@ -8,6 +8,24 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-26
 
+- **Demo dia a dia**: `npm run demo:day` popula a org `ze-do-corte` (Barbergon) com equipe, cardápio, produtos, ~60 dias de agenda, financeiro e avaliações — para pitch ao cliente.
+- **Agendar — busca e mais pedidos**: no `/{slug}/agendar`, campo de busca (ignora acentos), chips por categoria e seção **Mais pedidos** (últimos 90 dias); API `GET /api/appointments/popular-services`.
+- **Botões novos — paleta BN**: CTAs de financeiro, evolução e comanda usam `--bn-primary` (texto zinc-950); secundários/voltar com borda BN; alertas com `--bn-status-*`.
+- **Sidebar — scroll das seções**: o menu deixa de ficar cortado pelo rodapé (perfil/sair); área do meio com `min-h-0` + scroll; grupos financeiros começam recolhidos.
+- **Agendamentos — carga resiliente**: lista do calendário faz fallback se `AppointmentItem` falhar; mensagem de erro em dev inclui o detalhe do Prisma.
+- **Mobile — financeiro / evolução / sidebar**: contas e comissões em cards no celular (tabela no desktop); filtros e CTAs em largura total; gráficos da Evolução com altura/eixos ajustados e chips com scroll horizontal; favoritar sempre visível no toque; drawer com safe-area e busca sem zoom iOS.
+- **Financeiro — filtro de filial**: Balanço, Comissões e Contas a pagar/receber usam o mesmo seletor (Todas / filial), alinhado à Evolução; gerar comissões respeita a filial escolhida.
+- **Sidebar inteligente**: busca no menu (atalho `/`), filtros por área (Visão / Operação / Financeiro / Marca / Conta), favoritos e recentes (localStorage), grupos colapsáveis com ícones; financeiro dividido em dia a dia / análise / cobrança (`admin-nav-config.ts`).
+- **Evolução do salão**: `/admin/evolucao` — faturamento consolidado (12 meses), KPIs (clientes/serviços/novos/avaliações), taxa de retorno 30/60d, clientes perdidos, agendamentos sem preferência + ranking, crescimento por unidade e clube. Flag `bookedWithoutStaffPreference` no agendamento.
+- **Financeiro do salão**: menu com Comissões, Balanço, Contas a pagar/receber, Criar despesa/receita (`/admin/financeiro/*`). Modelos `FinanceCategory`, `FinanceEntry`, `StaffCommissionRule`, `StaffFinanceAdjustment`. APIs em `/api/admin/finance/*`. Comissões calculam avulso/assinatura (pote)/produtos e geram contas a pagar.
+- **Agenda inteligente (duração × slots)**: motor em `booking-availability.ts` — soma a duração dos serviços, só libera horários em que o bloco cabe no expediente e na agenda; com vários barbeiros, “qualquer profissional” exige alguém livre e a criação **autoatribui**; API `available` aceita `serviceIds` e devolve `durationMinutes` + `slotEndsAt`; UI do agendar mostra “termina às”.
+- **Relatórios + Operacional**: `/admin/relatorios` (overview de indicadores, origem, equipe, clube, heatmap) e `/admin/operacional` (filas do dia: agenda, a receber, clientes, clube).
+- **Agenda inteligente**: calendário com blocos/comanda; multi-serviço + produtos; no site o cliente **marca vários serviços** e, se já fez algo há 21+ dias, aparece o modal **“Sentimos sua falta!”** (Sim/Não) como no Cash Barber.
+- **Heatmap / date picker**: grade de frequência estável; seletor de datas em portal com fundo opaco.
+- **Agendamentos — frequência de cortes**: mapa de calor (dia da semana × hora, últimos 30 dias) em `/admin/agendamentos`, com filtros de filial/profissional e legenda 0–100%. API `GET /api/admin/appointments/frequency`.
+- **Filtro de datas — fundo opaco**: o popover do calendário em Agendamentos usa fundo sólido (`--bn-surface-elevated`) em todo o painel e `z-index` alto, para não misturar com a grade por baixo.
+- **Painel — marca da barbearia**: sidebar e barra mobile mostram **logo + nome** da organização (cadastro em Marca); **logo + nome Barbernegon** ficam no rodapé da sidebar e no rodapé do conteúdo.
+- **Agendamentos — calendário semanal**: nova página `/admin/agendamentos` (menu Operação) com grade por período, filtro de datas estilo Resend (presets + intervalo) e detalhe do dia; API `GET /api/admin/appointments?from=&to=`. Atalho **Ver calendário** no “Próximo horário” da Visão geral.
 - **Upload de mídia — limites maiores**: foto de perfil sobe de 4 MB para **30 MB**; marca/canvas **imagem 30 MB** / **vídeo 60 MB** (antes 20/40). Proxy Next `65mb`. Constantes em `src/lib/media-upload-limits.ts`.
 - **Lordicon 502**: API/CDN falhava sem fallback; agora API → CDN → JSON local em `src/data/lordicon/`.
 - **Ops login — sem redirect `ready=1`**: `/plataforma/login?k=` abre o formulário direto (o fluxo via cookie no redirect quebrava com 404). Cookie do gate no login OK; `gate` também vai no body do POST.

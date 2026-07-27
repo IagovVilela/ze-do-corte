@@ -138,6 +138,7 @@ Se **`db push`** recusar adicionar **`unitId`** em **`Service`** porque já há 
 | `npm run db:push` | Sincroniza schema com o banco |
 | `npm run db:seed` | Serviços de exemplo, unidade matriz, proprietário e **vitrine Barbergon** (`siteJson`) |
 | `npm run demo:vitrine` | Atualiza a org `ze-do-corte` com nome Barbergon + template `vitrine` (local ou `railway run npm run demo:vitrine`) |
+| `npm run demo:day` | Popula a demo com agenda, produtos, financeiro e equipe fictícios (idempotente; `railway run npm run demo:day`) |
 | `npm run setup:admin` | `db:generate` + `db:push` + `db:seed` (preparar painel / BD) |
 | `npm run create-owner` | Cria ou atualiza proprietário (`CREATE_OWNER_*` ou `SEED_OWNER_*` no `.env`) — ver [configurar-admin.md](./configurar-admin.md) |
 | `npm run db:studio` | Prisma Studio |

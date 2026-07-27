@@ -70,6 +70,7 @@ export async function POST(request: Request) {
       organizationId: unit.organizationId,
       unitId: payload.unitId,
       serviceId: payload.serviceId,
+      extraServiceIds: payload.extraServiceIds,
       date: payload.date,
       time: payload.time,
       customerName: payload.customerName,

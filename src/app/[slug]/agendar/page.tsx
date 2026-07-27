@@ -12,6 +12,7 @@ import {
 } from "@/lib/data";
 import { getOrganizationBySlug, isReservedSlug } from "@/lib/organization";
 import { orgDisplaySlogan } from "@/lib/org-branding";
+import { getPopularServiceIds } from "@/lib/popular-services";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,14 @@ export default async function TenantBookingPage({ params }: Props) {
     getBarbersForBooking(org.id),
     getPublicBarbershopUnits(org.id),
   ]);
+
+  const defaultUnitId =
+    units.find((u) => u.isDefault)?.id ?? units[0]?.id ?? null;
+  const popularServiceIds = await getPopularServiceIds({
+    organizationId: org.id,
+    unitId: defaultUnitId,
+    limit: 5,
+  });
 
   const slogans = orgDisplaySlogan(org);
   const homeHref = `/${org.slug}`;
@@ -83,6 +92,7 @@ export default async function TenantBookingPage({ params }: Props) {
               barbers={barbers}
               units={units}
               organizationSlug={org.slug}
+              popularServiceIds={popularServiceIds}
             />
           )}
         </section>

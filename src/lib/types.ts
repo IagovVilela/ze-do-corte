@@ -8,6 +8,8 @@ export type ServiceSummary = {
   price: number;
   /** Unidade dona deste registo no catálogo (serviço por unidade). */
   unitId: string;
+  /** Categoria do catálogo (filtro no agendar). */
+  category?: "CORTE" | "BARBA" | "COMBO" | "TRATAMENTO" | "OUTRO";
   /** Catálogo base (quando carregado do servidor). */
   isActive?: boolean;
   /** Preço/duração/atividade específicos para outras unidades (opcional). */
@@ -99,7 +101,10 @@ export type AppointmentRow = {
   clientPhone: string;
   clientEmail: string | null;
   serviceName: string;
+  /** Nomes dos serviços da comanda (principal + extras). */
+  serviceNames?: string[];
   startsAt: string;
+  endsAt?: string;
   status: "CONFIRMED" | "CANCELLED" | "COMPLETED";
   unitName?: string | null;
   unitId?: string | null;
@@ -108,6 +113,9 @@ export type AppointmentRow = {
   assignedStaffLabel: string | null;
   paidAt: string | null;
   paymentMethod: string | null;
+  amountPaid?: number | null;
+  paymentStatus?: "UNPAID" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+  bookingSource?: string | null;
   /** Token do link `/minha-reserva/...` (null em reservas antigas). */
   clientManageToken: string | null;
 };
@@ -122,6 +130,8 @@ export const createAppointmentSchema = z.object({
   customerPhone: z.string().trim().min(8, "Informe um telefone válido."),
   customerEmail: z.string().trim().email("E-mail inválido.").optional().or(z.literal("")),
   serviceId: z.string().min(1, "Selecione um serviço."),
+  /** Serviços extras além do principal (comanda multi-serviço). */
+  extraServiceIds: z.array(z.string().min(1)).max(8).optional(),
   unitId: z.string().min(1, "Selecione a unidade."),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido."),
