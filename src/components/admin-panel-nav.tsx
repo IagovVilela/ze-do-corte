@@ -107,7 +107,7 @@ export function AdminPanelNav({
   const [mobileOpen, setMobileOpen] = useState(false);
   const topBarRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const navScrollRef = useRef<HTMLNavElement>(null);
+  const navScrollRef = useRef<HTMLElement | null>(null);
   const pendingScrollRestore = useRef<number | null>(null);
 
   const [query, setQuery] = useState("");
@@ -579,7 +579,9 @@ export function AdminPanelNav({
       </div>
 
       <nav
-        ref={navScrollRef}
+        ref={(el) => {
+          navScrollRef.current = el;
+        }}
         aria-label="Seções do painel"
         onScroll={saveNavScroll}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3"
