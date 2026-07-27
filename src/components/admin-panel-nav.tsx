@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -44,6 +45,7 @@ const FAVORITES_KEY = "bn-admin-nav-favorites";
 const RECENT_KEY = "bn-admin-nav-recent";
 const OPEN_GROUPS_KEY = "bn-admin-nav-open-groups";
 const FILTER_KEY = "bn-admin-nav-filter";
+const NAV_SCROLL_KEY = "bn-admin-nav-scroll";
 const MAX_RECENT = 6;
 
 function sessionDisplayName(access: StaffAccess): string {
@@ -105,6 +107,8 @@ export function AdminPanelNav({
   const [mobileOpen, setMobileOpen] = useState(false);
   const topBarRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const navScrollRef = useRef<HTMLNavElement>(null);
+  const pendingScrollRestore = useRef<number | null>(null);
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AdminNavFilterId>("all");
@@ -112,6 +116,43 @@ export function AdminPanelNav({
   const [recent, setRecent] = useState<string[]>([]);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
+
+  const saveNavScroll = useCallback(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    // Após remount o scroll volta a 0 — não apaga a posição salva no clique.
+    if (
+      top === 0 &&
+      pendingScrollRestore.current != null &&
+      pendingScrollRestore.current > 0
+    ) {
+      return;
+    }
+    pendingScrollRestore.current = top;
+    try {
+      window.sessionStorage.setItem(NAV_SCROLL_KEY, String(top));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const restoreNavScroll = useCallback(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    let top = pendingScrollRestore.current;
+    if (top == null) {
+      try {
+        const raw = window.sessionStorage.getItem(NAV_SCROLL_KEY);
+        if (raw != null) top = Number(raw);
+      } catch {
+        top = null;
+      }
+    }
+    if (top == null || Number.isNaN(top)) return;
+    el.scrollTop = top;
+    pendingScrollRestore.current = top;
+  }, []);
 
   const allGroups = useMemo(
     () =>
@@ -183,8 +224,8 @@ export function AdminPanelNav({
   }, [filter, hydrated]);
 
   useEffect(() => {
+    // No desktop mantém a busca; no mobile só fecha o drawer.
     setMobileOpen(false);
-    setQuery("");
   }, [pathname]);
 
   useEffect(() => {
@@ -206,6 +247,31 @@ export function AdminPanelNav({
       return { ...prev, [group.id]: true };
     });
   }, [pathname, hydrated, flatItems, allGroups]);
+
+  // Restaura o scroll do menu após navegação / reordenar “Recentes”.
+  useLayoutEffect(() => {
+    restoreNavScroll();
+    const id = window.requestAnimationFrame(() => restoreNavScroll());
+    return () => window.cancelAnimationFrame(id);
+  }, [pathname, recent, openGroups, restoreNavScroll]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const el = navScrollRef.current;
+    if (!el) return;
+    try {
+      const raw = window.sessionStorage.getItem(NAV_SCROLL_KEY);
+      if (raw != null) {
+        const top = Number(raw);
+        if (!Number.isNaN(top)) {
+          el.scrollTop = top;
+          pendingScrollRestore.current = top;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [hydrated]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -353,6 +419,8 @@ export function AdminPanelNav({
         >
           <Link
             href={item.href}
+            scroll={false}
+            onClick={saveNavScroll}
             className={cn(
               "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition",
               active
@@ -511,7 +579,9 @@ export function AdminPanelNav({
       </div>
 
       <nav
+        ref={navScrollRef}
         aria-label="Seções do painel"
+        onScroll={saveNavScroll}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3"
       >
         {!searching ? (

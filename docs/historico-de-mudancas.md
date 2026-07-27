@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-26
 
+- **Sidebar — posição do scroll**: ao navegar no menu, a lista não volta mais ao topo; scroll é guardado (sessionStorage) e restaurado; links com `scroll={false}`; busca do menu não limpa no desktop.
 - **Demo dia a dia**: `npm run demo:day` popula a org `ze-do-corte` (Barbergon) com equipe, cardápio, produtos, ~60 dias de agenda, financeiro e avaliações — para pitch ao cliente.
 - **Agendar — busca e mais pedidos**: no `/{slug}/agendar`, campo de busca (ignora acentos), chips por categoria e seção **Mais pedidos** (últimos 90 dias); API `GET /api/appointments/popular-services`.
 - **Botões novos — paleta BN**: CTAs de financeiro, evolução e comanda usam `--bn-primary` (texto zinc-950); secundários/voltar com borda BN; alertas com `--bn-status-*`.
