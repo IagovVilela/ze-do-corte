@@ -3,6 +3,10 @@ import "server-only";
 import { endOfDay, startOfDay } from "date-fns";
 
 import { computeFinanceNetAmount } from "@/lib/admin-finance";
+import {
+  parseCommissionTiers,
+  resolveServicePercentFromTiers,
+} from "@/lib/commission-tiers";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_SERVICE_PCT = 50;
@@ -199,9 +203,12 @@ export async function getCommissionsSnapshot(options: {
 
   const rows: CommissionRow[] = staff.map((s) => {
     const b = byStaff.get(s.id)!;
-    const servicePercent = Number(
+    const baseServicePercent = Number(
       s.commissionRule?.servicePercent ?? DEFAULT_SERVICE_PCT,
     );
+    const tiers = parseCommissionTiers(s.commissionRule?.tiersJson);
+    const tiered = resolveServicePercentFromTiers(tiers, b.avulsoGross);
+    const servicePercent = tiered ?? baseServicePercent;
     const subscriptionPercent = Number(
       s.commissionRule?.subscriptionPercent ?? DEFAULT_SUB_PCT,
     );

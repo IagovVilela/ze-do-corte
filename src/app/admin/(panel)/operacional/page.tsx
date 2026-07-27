@@ -32,6 +32,21 @@ export default async function AdminOperacionalPage() {
             description="O que precisa de atenção agora — filas curtas e ações claras."
           />
 
+          {snap.lostClientsCount > 0 ? (
+            <Link
+              href="/admin/clientes?risk=lost"
+              className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--bn-status-danger)]/30 bg-[var(--bn-status-danger)]/10 px-4 py-3 text-sm transition hover:bg-[var(--bn-status-danger)]/15"
+            >
+              <span className="font-medium text-[var(--bn-on)]">
+                {snap.lostClientsCount} cliente
+                {snap.lostClientsCount === 1 ? "" : "s"} sumindo (60+ dias)
+              </span>
+              <span className="text-xs font-semibold text-[var(--bn-status-danger)]">
+                Abrir CRM →
+              </span>
+            </Link>
+          ) : null}
+
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
@@ -203,6 +218,7 @@ export default async function AdminOperacionalPage() {
                     {snap.lowStock.map((p) => (
                       <li key={p.id}>
                         {p.name}: {p.stockQty}
+                        {p.stockMin != null ? ` (mín. ${p.stockMin})` : ""}
                       </li>
                     ))}
                   </ul>

@@ -115,6 +115,10 @@ model Organization {
   whatsappAccessTokenEnc String?        @db.Text
   whatsappDisplayPhone  String?
   whatsappBotEnabled    Boolean         @default(false)
+  /// Enviar confirmação WhatsApp ao criar agendamento (quando conectado).
+  whatsappConfirmBooking Boolean        @default(true)
+  /// Enviar lembrete ~24h antes (script/cron).
+  whatsappReminder24h   Boolean         @default(true)
   whatsappConnectedAt   DateTime?
   /// Checklist de onboarding (JSON booleans).
   onboardingJson Json?
@@ -139,10 +143,12 @@ model Organization {
   reviews            OrganizationReview[]
   supportTickets     SupportTicket[]
   products           Product[]
+  productStockMovements ProductStockMovement[]
   financeCategories  FinanceCategory[]
   financeEntries     FinanceEntry[]
   staffCommissionRules StaffCommissionRule[]
   staffFinanceAdjustments StaffFinanceAdjustment[]
+  staffMonthlyGoals  StaffMonthlyGoal[]
 
   @@index([planStatus])
   @@index([asaasSubscriptionId])
@@ -200,6 +206,7 @@ model StaffMember {
   commissionRule        StaffCommissionRule?
   financeAdjustments    StaffFinanceAdjustment[]
   financeEntriesCreated FinanceEntry[] @relation("FinanceEntryCreatedBy")
+  monthlyGoals          StaffMonthlyGoal[]
 
   @@index([organizationId])
   @@index([unitId])
@@ -372,12 +379,41 @@ model Product {
   isActive       Boolean      @default(true)
   /// Estoque opcional; null = sem controle.
   stockQty       Int?
+  /// Alerta quando stockQty <= stockMin (default operacional 3 se null).
+  stockMin       Int?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   sales          AppointmentProduct[]
+  stockMovements ProductStockMovement[]
 
   @@index([organizationId, isActive])
   @@unique([organizationId, name])
+}
+
+enum ProductStockMovementKind {
+  IN
+  OUT
+  ADJUST
+  SALE
+}
+
+/// Movimento de estoque (entrada/saída/ajuste/venda na comanda).
+model ProductStockMovement {
+  id             String                   @id @default(cuid())
+  organizationId String
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kind           ProductStockMovementKind
+  /// Variação aplicada (positiva = entra, negativa = sai; ADJUST = delta absoluto).
+  quantityDelta  Int
+  balanceAfter   Int
+  note           String?                  @db.VarChar(200)
+  createdById    String?
+  createdAt      DateTime                 @default(now())
+
+  @@index([organizationId, productId, createdAt])
+  @@index([productId, createdAt])
 }
 
 /// Produto vendido em um atendimento.
@@ -682,10 +718,30 @@ model StaffCommissionRule {
   subscriptionPercent  Decimal      @default(30) @db.Decimal(6, 2)
   /// % sobre produtos vendidos na comanda.
   productPercent       Decimal      @default(10) @db.Decimal(6, 2)
+  /// Faixas escalonadas opcionais: [{ "minRevenue": 0, "servicePercent": 40 }, ...]
+  tiersJson            Json?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
   @@index([organizationId])
+}
+
+/// Meta mensal de faturamento/visitas por barbeiro (AAAA-MM).
+model StaffMonthlyGoal {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  staffMemberId  String
+  staffMember    StaffMember  @relation(fields: [staffMemberId], references: [id], onDelete: Cascade)
+  /// Ex.: "2026-07"
+  yearMonth      String       @db.VarChar(7)
+  revenueGoal    Decimal      @db.Decimal(12, 2)
+  visitGoal      Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([staffMemberId, yearMonth])
+  @@index([organizationId, yearMonth])
 }
 
 /// Bônus ou vale (adiantamento) do profissional no período.

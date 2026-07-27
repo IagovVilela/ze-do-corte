@@ -30,6 +30,16 @@ Guia para publicar **Zé do Corte** (Next.js + PostgreSQL + Prisma) na [Railway]
 | `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` | Para seed | Ver passo 4. |
 | `CLOUDINARY_*` | Não | Fotos em `/admin/perfil`. |
 | `RESEND_*` | Não | E-mail ao barbeiro. |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Não | Analytics PostHog (ver [observabilidade-saas.md](./observabilidade-saas.md)). |
+| `SENTRY_DSN` | Não | Erros server/edge (`@sentry/nextjs`). |
+| `NEXT_PUBLIC_SENTRY_DSN` | Não | Mesmo DSN no browser (erros de UI; DSN é semi-público). |
+| `SENTRY_ENVIRONMENT` | Não | Use `production` na Railway. |
+| `SENTRY_AUTH_TOKEN` | Não | Upload de sourcemaps no build (opcional). |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | Não | Defaults `barbergon` / `bargergon` no `next.config`; override se mudar o projeto. |
+
+### Alertas de custo
+
+No painel Railway → projeto → **Usage / Billing**: configure alerta de gasto mensal. O app já limita pool Prisma para não esgotar conexões do Postgres.
 
 Copie o restante a partir de [`.env.example`](../.env.example).
 

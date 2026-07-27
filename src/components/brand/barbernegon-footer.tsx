@@ -26,6 +26,8 @@ export function BarbernegonFooter() {
               [publicSurfaceUrl("marketing", "/"), "Home"],
               [marketplaceHomePath(), "Barbearias"],
               [publicSurfaceUrl("marketing", "/planos"), "Planos"],
+              [publicSurfaceUrl("marketing", "/termos"), "Termos"],
+              [publicSurfaceUrl("marketing", "/privacidade"), "Privacidade"],
               [publicSurfaceUrl("marketing", "/cadastro"), "Cadastro"],
             ] as const
           ).map(([href, label]) => (

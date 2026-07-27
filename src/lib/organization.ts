@@ -76,6 +76,8 @@ export const RESERVED_SLUGS = new Set([
   "www",
   "app",
   "planos",
+  "termos",
+  "privacidade",
   "explorar",
   "plataforma",
   "lista-espera",

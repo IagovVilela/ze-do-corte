@@ -56,6 +56,7 @@ export function CadastroClient({ className }: Props) {
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,6 +67,10 @@ export function CadastroClient({ className }: Props) {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!acceptedTerms) {
+      setError("Aceite os Termos de Uso e a Política de Privacidade para continuar.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -78,6 +83,7 @@ export function CadastroClient({ className }: Props) {
           ownerName,
           email,
           password,
+          acceptTerms: true,
         }),
       });
       const data = (await res.json()) as { message?: string; redirect?: string };
@@ -213,6 +219,35 @@ export function CadastroClient({ className }: Props) {
             minLength={6}
             hint="Mínimo de 6 caracteres."
           />
+
+          <label className="flex items-start gap-3 rounded-lg border border-[#2F3336] bg-[#0b0e15]/60 px-3 py-3 text-sm text-[#c2c6d6]">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-1 size-4 shrink-0 rounded border-[#2F3336] accent-[#3B82F6]"
+              required
+            />
+            <span>
+              Li e aceito os{" "}
+              <Link
+                href="/termos"
+                target="_blank"
+                className="font-medium text-[#adc6ff] underline-offset-2 hover:underline"
+              >
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link
+                href="/privacidade"
+                target="_blank"
+                className="font-medium text-[#adc6ff] underline-offset-2 hover:underline"
+              >
+                Política de Privacidade
+              </Link>
+              .
+            </span>
+          </label>
 
           <div className="pt-1">
             <AuthSubmitButton pending={loading} pendingLabel="Criando…">

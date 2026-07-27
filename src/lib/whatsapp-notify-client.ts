@@ -15,6 +15,8 @@ import { BARBER_TIMEZONE } from "@/lib/constants";
 type OrgWa = {
   id: string;
   whatsappBotEnabled: boolean;
+  whatsappConfirmBooking: boolean;
+  whatsappReminder24h: boolean;
   whatsappPhoneNumberId: string | null;
   whatsappAccessTokenEnc: string | null;
 };
@@ -22,11 +24,15 @@ type OrgWa = {
 async function resolveOrgCreds(organizationId: string): Promise<{
   phoneNumberId: string;
   accessToken: string;
+  confirmBooking: boolean;
+  reminder24h: boolean;
 } | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
     select: {
       whatsappBotEnabled: true,
+      whatsappConfirmBooking: true,
+      whatsappReminder24h: true,
       whatsappPhoneNumberId: true,
       whatsappAccessTokenEnc: true,
     },
@@ -42,6 +48,8 @@ async function resolveOrgCreds(organizationId: string): Promise<{
     return {
       phoneNumberId: org.whatsappPhoneNumberId,
       accessToken: decryptSecret(org.whatsappAccessTokenEnc),
+      confirmBooking: org.whatsappConfirmBooking,
+      reminder24h: org.whatsappReminder24h,
     };
   } catch (err) {
     console.error("[whatsapp-notify] decrypt fail", err);
@@ -82,7 +90,7 @@ export async function notifyClientWhatsAppConfirmation(options: {
   appointment: Appointment & { service: Service };
 }): Promise<void> {
   const creds = await resolveOrgCreds(options.organizationId);
-  if (!creds) return;
+  if (!creds || !creds.confirmBooking) return;
 
   const to = normalizeWaUserPhone(options.appointment.clientPhone);
   const when = whenLabel(options.appointment.startsAt);
@@ -150,7 +158,7 @@ export async function sendClientWhatsAppReminder(options: {
   appointment: Appointment & { service: Pick<Service, "name"> };
 }): Promise<boolean> {
   const creds = await resolveOrgCreds(options.organizationId);
-  if (!creds) return false;
+  if (!creds || !creds.reminder24h) return false;
   const to = normalizeWaUserPhone(options.appointment.clientPhone);
   const when = whenLabel(options.appointment.startsAt);
   const templateName = process.env.META_WA_TEMPLATE_REMINDER?.trim() || "";

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format, subMonths } from "date-fns";
-import { LoaderCircle } from "lucide-react";
+import { Download, LoaderCircle } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -150,6 +150,13 @@ export function AdminEvolutionPanel({ units, initial }: Props) {
         >
           Filtrar
         </button>
+        <a
+          href={`/api/admin/export?pack=month&yearMonth=${encodeURIComponent(rankingMonth)}`}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--bn-primary)]/35 bg-[var(--bn-primary-container)]/12 px-4 py-2.5 text-sm font-semibold text-[var(--bn-primary)] transition hover:bg-[var(--bn-primary-container)]/20 sm:min-h-0 sm:w-auto sm:py-2"
+        >
+          <Download className="size-4" aria-hidden />
+          Baixar mês
+        </a>
         {loading ? (
           <LoaderCircle className="mx-auto size-5 animate-spin text-[var(--bn-primary)] sm:mx-0" />
         ) : null}

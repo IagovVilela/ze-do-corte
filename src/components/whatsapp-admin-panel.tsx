@@ -12,6 +12,8 @@ type PlatformInfo = {
 
 type Connection = {
   whatsappBotEnabled: boolean;
+  whatsappConfirmBooking: boolean;
+  whatsappReminder24h: boolean;
   whatsappPhoneNumberId: string | null;
   whatsappWabaId: string | null;
   whatsappDisplayPhone: string | null;
@@ -31,6 +33,39 @@ type LogRow = {
 const inputClass =
   "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-4 py-2.5 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
+function CheckItem({
+  ok,
+  label,
+  hint,
+}: {
+  ok: boolean;
+  label: string;
+  hint?: string;
+}) {
+  return (
+    <li className="flex items-start gap-2 text-sm">
+      <span
+        className={
+          ok
+            ? "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-xs text-emerald-300"
+            : "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--bn-hover)] text-xs text-[var(--bn-muted)]"
+        }
+        aria-hidden
+      >
+        {ok ? "✓" : "·"}
+      </span>
+      <span>
+        <span className="text-[var(--bn-on-variant)]">{label}</span>
+        {hint ? (
+          <span className="mt-0.5 block text-xs text-[var(--bn-muted)]">
+            {hint}
+          </span>
+        ) : null}
+      </span>
+    </li>
+  );
+}
+
 export function WhatsAppAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +81,8 @@ export function WhatsAppAdminPanel() {
   const [displayPhone, setDisplayPhone] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [botEnabled, setBotEnabled] = useState(false);
+  const [confirmBooking, setConfirmBooking] = useState(true);
+  const [reminder24h, setReminder24h] = useState(true);
 
   async function load() {
     setLoading(true);
@@ -70,6 +107,8 @@ export function WhatsAppAdminPanel() {
         ),
       );
       setBotEnabled(data.connection?.whatsappBotEnabled ?? false);
+      setConfirmBooking(data.connection?.whatsappConfirmBooking ?? true);
+      setReminder24h(data.connection?.whatsappReminder24h ?? true);
       if (
         data.connection?.whatsappPhoneNumberId ||
         data.connection?.hasAccessToken
@@ -98,6 +137,8 @@ export function WhatsAppAdminPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           whatsappBotEnabled: botEnabled,
+          whatsappConfirmBooking: confirmBooking,
+          whatsappReminder24h: reminder24h,
           whatsappDisplayPhone: displayPhone.trim() || null,
           ...(showAdvanced
             ? {
@@ -161,10 +202,10 @@ export function WhatsAppAdminPanel() {
     return <p className="text-sm text-[var(--bn-muted)]">Carregando WhatsApp…</p>;
   }
 
-  const botReady =
+  const connected =
     Boolean(connection?.hasAccessToken) &&
-    Boolean(connection?.whatsappPhoneNumberId) &&
-    botEnabled;
+    Boolean(connection?.whatsappPhoneNumberId);
+  const botReady = connected && botEnabled;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -199,6 +240,36 @@ export function WhatsAppAdminPanel() {
             </Link>{" "}
             a Barbernegon pode ajudar a ligar o assistente depois.
           </li>
+        </ul>
+      </section>
+
+      <section className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 p-5">
+        <h2 className="font-display text-lg text-[var(--bn-on)]">Checklist</h2>
+        <ul className="mt-3 space-y-2">
+          <CheckItem
+            ok={connected}
+            label="Conectado à Meta Cloud API"
+            hint={
+              connected
+                ? "Token e Phone number ID configurados"
+                : "Preencha as opções do assistente abaixo"
+            }
+          />
+          <CheckItem
+            ok={botReady}
+            label="Bot ligado"
+            hint="Responde e agenda automaticamente no chat"
+          />
+          <CheckItem
+            ok={botReady && confirmBooking}
+            label="Confirmação de agendamento"
+            hint="Mensagem ao criar horário (site/bot)"
+          />
+          <CheckItem
+            ok={botReady && reminder24h}
+            label="Lembrete ~24h antes"
+            hint="Cron/script de lembretes"
+          />
         </ul>
       </section>
 
@@ -286,6 +357,24 @@ export function WhatsAppAdminPanel() {
                   onChange={(e) => setBotEnabled(e.target.checked)}
                 />
                 Ligar assistente (responder e agendar automaticamente)
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-[var(--bn-on-variant)]">
+                <input
+                  type="checkbox"
+                  checked={confirmBooking}
+                  onChange={(e) => setConfirmBooking(e.target.checked)}
+                />
+                Enviar confirmação no WhatsApp ao agendar
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-[var(--bn-on-variant)]">
+                <input
+                  type="checkbox"
+                  checked={reminder24h}
+                  onChange={(e) => setReminder24h(e.target.checked)}
+                />
+                Enviar lembrete ~24h antes do horário
               </label>
 
               <label className="block space-y-1.5 text-sm">

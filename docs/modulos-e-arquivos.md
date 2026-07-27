@@ -20,6 +20,11 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `scripts/ensure-owner.ts` | Arranque em produção: cria OWNER se `SEED_OWNER_*` (chamado por `start:prod`) |
 | `src/lib/ensure-owner-with-prisma.ts` | Lógica idempotente OWNER a partir de `SEED_OWNER_*` (script + `instrumentation`) |
 | `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
+| `src/lib/observability.ts` | Logs JSON + `captureException` → Sentry |
+| `src/instrumentation.ts` / `instrumentation-client.ts` | Init Sentry (server/edge/client) |
+| `src/sentry.server.config.ts` / `sentry.edge.config.ts` | `Sentry.init` por runtime |
+| `src/app/global-error.tsx` | Erros React App Router → Sentry |
+| `src/components/analytics-provider.tsx` | PostHog opcional (`NEXT_PUBLIC_POSTHOG_KEY`) |
 | `INICIAR_APLICACAO.bat` | Legado: outro projeto Laravel em `reviews-platform` (não é este app) |
 
 ## App Router — páginas
@@ -37,6 +42,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
+| `/planos` | `src/app/(public)/planos/page.tsx` | Comparação Free / Pro + trial |
+| `/termos` | `src/app/(public)/termos/page.tsx` | Termos de Uso da plataforma |
+| `/privacidade` | `src/app/(public)/privacidade/page.tsx` | Política de Privacidade (LGPD) |
 | `/lista-espera` | `src/app/lista-espera/page.tsx` | Lead B2B só por link (noindex); form `lista-espera-form.tsx` |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
@@ -48,12 +56,13 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
 | `/admin/operacional` | `src/app/admin/(panel)/operacional/page.tsx` | Filas de ação do dia |
 | `/admin/avaliacoes` | `src/app/admin/(panel)/avaliacoes/page.tsx` | Feedback dos clientes (`OrganizationReview`) |
+| `/admin/clientes` | `src/app/admin/(panel)/clientes/page.tsx` | CRM: clientes únicos (agenda + clube) |
 | `/admin/produtos` | `src/app/admin/(panel)/produtos/page.tsx` | Catálogo de produtos (comanda) |
 | `/admin/marca` | `src/app/admin/(panel)/marca/page.tsx` | Identidade (logo, slug, redes) |
 | `/admin/site` | `src/app/admin/(panel)/site/page.tsx` | Canvas Canva (`site-canvas-editor.tsx`) |
 | `/admin/whatsapp` | `src/app/admin/(panel)/whatsapp/page.tsx` | Conexão Meta Cloud API + bot + logs |
 | `/admin/pagamentos` | `src/app/admin/(panel)/pagamentos/page.tsx` | Conta Asaas do salão (API key) |
-| `/admin/financeiro/comissoes` | `…/financeiro/comissoes/page.tsx` | Pagamento de comissões + gerar contas a pagar |
+| `/admin/financeiro/comissoes` | `…/financeiro/comissoes/page.tsx` | Comissões + metas do mês + regras/faixas escalonadas |
 | `/admin/financeiro/balanco` | `…/financeiro/balanco/page.tsx` | Balanço do período |
 | `/admin/financeiro/contas-a-pagar` | `…/financeiro/contas-a-pagar/page.tsx` | Despesas em aberto |
 | `/admin/financeiro/contas-a-receber` | `…/financeiro/contas-a-receber/page.tsx` | Receitas em aberto |
@@ -70,7 +79,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/esqueci-senha` | `src/app/admin/esqueci-senha/page.tsx` | Pedido de link de redefinição (`forgot-password-form.tsx`) |
 | `/admin/redefinir-senha` | `src/app/admin/redefinir-senha/page.tsx` | Nova senha via token do e-mail (`reset-password-form.tsx`) |
 | `/admin` raiz | `src/app/admin/layout.tsx` | Agrupa `(auth)` e `(panel)` |
-| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` (logo/nome da org) + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) |
+| Painel | `src/app/admin/(panel)/layout.tsx` | Navbar + `AdminPanelNav` (logo/nome da org) + gate `getStaffAccessOrNull` + tema claro/escuro (`AdminThemeProvider`) + manifest PWA admin + botão instalar |
 | Nav config | `src/lib/admin-nav-config.ts` | Grupos, keywords de busca, filtros e match de rota ativa |
 
 ## API Routes
@@ -84,8 +93,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; `clientManageToken`; notificação Resend se configurada |
 | Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` + `PATCH` (`cancel` / `reschedule`) |
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` — `chartRange`, `telemetryScope=chart`, filtros `status` / `staff` / `unit` / `q` |
-| Export Excel | `src/app/api/admin/export/route.ts` |
-| Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions` |
+| Export Excel | `src/app/api/admin/export/route.ts` — agenda completa; `?pack=month&yearMonth=AAAA-MM` pacote mensal (XLSX multi-aba) |
+| Metas mensais | `src/app/api/admin/goals/route.ts` — `GET`/`PUT` (`StaffMonthlyGoal`) |
+| Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions`, `commission-rules` (`tiersJson`) |
 | Evolução | `src/app/api/admin/evolution/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
 | Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
@@ -98,6 +108,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Relatórios | `src/app/api/admin/reports/route.ts` |
 | Operacional | `src/app/api/admin/ops/route.ts` |
 | Avaliações | `src/app/api/admin/reviews/route.ts` — `GET ?rating=&page=` |
+| Clientes (CRM) | `src/app/api/admin/clients/route.ts` — `GET ?q=&club=&sort=&page=` |
 | Histórico cliente (público) | `src/app/api/appointments/client-history/route.ts` |
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
 | Configuração | `src/app/api/admin/settings/route.ts` |
@@ -113,7 +124,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Plataforma (ops) | `gate` / `ops-gate` (cookie), `login`, `overview`, `organizations` (PATCH/DELETE), `organizations/[id]/impersonate`, `impersonate/return`, `marketplace`, `consumidores`, `reviews/[id]` |
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; limites em `media-upload-limits.ts` (imagem 30 MB / vídeo 60 MB) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — JPEG/PNG/WebP até 30 MB |
-| WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot) |
+| WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot, confirmação e lembrete 24h) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
 | Suporte admin | `src/app/api/admin/support/contact`, `…/tickets`, `…/tickets/[id]/messages` |
 | Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
@@ -170,7 +181,10 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `admin-appointment-comanda.ts` | Detalhe da comanda + histórico/recompra |
 | `admin-reports.ts` | Snapshot completo de Relatórios |
 | `admin-finance.ts` | Lançamentos, categorias, balanço do salão |
-| `admin-commissions.ts` | Cálculo de comissões + gerar contas a pagar |
+| `admin-commissions.ts` | Cálculo de comissões (faixas `tiersJson`) + gerar contas a pagar |
+| `commission-tiers.ts` | Parse/resolve de faixas escalonadas de % serviço |
+| `admin-export-month.ts` | Pacote XLSX mensal (faturamento, ranking, serviços, CRM, clube) |
+| `club-health.ts` | Calculadora de preço do plano + buckets de saúde do clube |
 | `admin-evolution.ts` / `admin-evolution-types.ts` | Snapshot de evolução do salão (faturamento, retorno, KPIs) |
 | `admin-ops.ts` | Snapshot do Operacional (filas do dia) |
 | `admin-list-url.ts` | Parse de `status` / `staff` / `unit` / `q`, `telemetryScope`, `parseTelemetryScope`, `buildAdminPageHref` (URLs `/admin?…`, seguro para cliente) |
@@ -202,7 +216,10 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-org-actions.tsx`, `ops-impersonation-banner.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx`, `canvas-confirm-modal.tsx`, `canvas-layers-panel.tsx`, `canvas-onboarding.tsx`, `canvas-phone-preview.tsx` (chrome BN; desktop 3 colunas + abas Biblioteca/Camadas; mobile dock + folhas; preview celular; onboarding por modelos) |
 | Editor de identidade | `brand-editor-form.tsx` |
-| WhatsApp admin | `whatsapp-admin-panel.tsx` |
+| WhatsApp admin | `whatsapp-admin-panel.tsx` (checklist + toggles confirmação/lembrete) |
+| Clube admin | `club-admin-panel.tsx` (sugerir preço + saúde do clube) |
+| Metas / regras comissão | `admin-goals-panel.tsx`, `admin-commission-rules-panel.tsx` |
+| PWA painel | `admin-pwa-install-button.tsx`; manifest `public/admin-manifest.webmanifest` |
 | Pagamentos admin | `payments-admin-panel.tsx` |
 | Suporte admin | `support-admin-panel.tsx` (`/admin/suporte`) |
 | Suporte Ops | `plataforma/support-platform-panel.tsx` (`/plataforma/suporte`) |

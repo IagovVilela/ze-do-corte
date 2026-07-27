@@ -1,6 +1,10 @@
 import "server-only";
 
 import { formatBrPhoneNational } from "@/lib/br-phone-format";
+import {
+  clubBadgeLabel,
+  getClubSnapshotByPhone,
+} from "@/lib/club-client-snapshot";
 import { prisma } from "@/lib/prisma";
 import { appointmentScopeWhere, type StaffAccess } from "@/lib/staff-access";
 
@@ -60,6 +64,16 @@ export type AppointmentComanda = {
   grandTotal: number;
   history: ComandaHistoryVisit[];
   repurchase: ComandaRepurchaseHint[];
+  club: {
+    planName: string;
+    status: string;
+    visitsUsed: number;
+    visitsIncluded: number | null;
+    visitsRemaining: number | null;
+    badgeLabel: string;
+  } | null;
+  /** Sugestão de upsell (produto ativo não na comanda). */
+  upsell: { productId: string; name: string; price: number } | null;
 };
 
 export async function getAppointmentComanda(
@@ -216,6 +230,22 @@ export async function getAppointmentComanda(
     (a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime(),
   );
 
+  const clubSnap = await getClubSnapshotByPhone(
+    access.organizationId,
+    appt.clientPhone,
+  );
+
+  const upsellProduct = await prisma.product.findFirst({
+    where: {
+      organizationId: access.organizationId,
+      isActive: true,
+      id: { notIn: [...currentProductIds] },
+      OR: [{ stockQty: null }, { stockQty: { gt: 0 } }],
+    },
+    orderBy: { price: "desc" },
+    select: { id: true, name: true, price: true },
+  });
+
   return {
     id: appt.id,
     clientName: appt.clientName,
@@ -244,5 +274,22 @@ export async function getAppointmentComanda(
     grandTotal: servicesTotal + productsTotal,
     history,
     repurchase: repurchase.slice(0, 6),
+    club: clubSnap
+      ? {
+          planName: clubSnap.planName,
+          status: clubSnap.status,
+          visitsUsed: clubSnap.visitsUsed,
+          visitsIncluded: clubSnap.visitsIncluded,
+          visitsRemaining: clubSnap.visitsRemaining,
+          badgeLabel: clubBadgeLabel(clubSnap),
+        }
+      : null,
+    upsell: upsellProduct
+      ? {
+          productId: upsellProduct.id,
+          name: upsellProduct.name,
+          price: Number(upsellProduct.price),
+        }
+      : null,
   };
 }

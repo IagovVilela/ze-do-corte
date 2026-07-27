@@ -17,6 +17,8 @@
 | [pagamentos-asaas.md](./pagamentos-asaas.md) | Asaas: SaaS Free + Pro, PIX do salão, clube, webhooks |
 | [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md) | Passo a passo prático: configurar WhatsApp + Asaas (plataforma e salão) |
 | [suporte.md](./suporte.md) | Central de ajuda, chamados e contato (`/admin/suporte` + inbox Ops) |
+| [plano-paridade-cash-barber.md](./plano-paridade-cash-barber.md) | Backlog de features vs Cash Barber (fases) |
+| [observabilidade-saas.md](./observabilidade-saas.md) | Tier list S/A/B: Sentry, PostHog, uptime, logs, e2e, Dependabot |
 | [como-documentar.md](./como-documentar.md) | Regras para manter esta documentação alinhada ao código |
 | [stitch-design-system.md](./stitch-design-system.md) | Design system Barbernegon (Electric Blue) no formato Google Stitch `DESIGN.md` |
 

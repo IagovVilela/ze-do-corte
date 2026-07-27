@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 
 const patchSchema = z.object({
   whatsappBotEnabled: z.boolean().optional(),
+  whatsappConfirmBooking: z.boolean().optional(),
+  whatsappReminder24h: z.boolean().optional(),
   whatsappPhoneNumberId: z.string().trim().min(3).max(64).nullable().optional(),
   whatsappWabaId: z.string().trim().min(3).max(64).nullable().optional(),
   whatsappDisplayPhone: z.string().trim().max(32).nullable().optional(),
@@ -33,6 +35,8 @@ export async function GET() {
     where: { id: auth.access.organizationId },
     select: {
       whatsappBotEnabled: true,
+      whatsappConfirmBooking: true,
+      whatsappReminder24h: true,
       whatsappPhoneNumberId: true,
       whatsappWabaId: true,
       whatsappDisplayPhone: true,
@@ -67,6 +71,8 @@ export async function GET() {
     },
     connection: {
       whatsappBotEnabled: org?.whatsappBotEnabled ?? false,
+      whatsappConfirmBooking: org?.whatsappConfirmBooking ?? true,
+      whatsappReminder24h: org?.whatsappReminder24h ?? true,
       whatsappPhoneNumberId: org?.whatsappPhoneNumberId ?? null,
       whatsappWabaId: org?.whatsappWabaId ?? null,
       whatsappDisplayPhone: org?.whatsappDisplayPhone ?? null,
@@ -146,6 +152,12 @@ export async function PATCH(request: Request) {
       ...(data.whatsappBotEnabled !== undefined
         ? { whatsappBotEnabled: data.whatsappBotEnabled }
         : {}),
+      ...(data.whatsappConfirmBooking !== undefined
+        ? { whatsappConfirmBooking: data.whatsappConfirmBooking }
+        : {}),
+      ...(data.whatsappReminder24h !== undefined
+        ? { whatsappReminder24h: data.whatsappReminder24h }
+        : {}),
       ...(data.whatsappPhoneNumberId !== undefined
         ? { whatsappPhoneNumberId: data.whatsappPhoneNumberId }
         : {}),
@@ -165,6 +177,8 @@ export async function PATCH(request: Request) {
     },
     select: {
       whatsappBotEnabled: true,
+      whatsappConfirmBooking: true,
+      whatsappReminder24h: true,
       whatsappPhoneNumberId: true,
       whatsappWabaId: true,
       whatsappDisplayPhone: true,
@@ -179,6 +193,8 @@ export async function PATCH(request: Request) {
     message: "WhatsApp atualizado.",
     connection: {
       whatsappBotEnabled: org.whatsappBotEnabled,
+      whatsappConfirmBooking: org.whatsappConfirmBooking,
+      whatsappReminder24h: org.whatsappReminder24h,
       whatsappPhoneNumberId: org.whatsappPhoneNumberId,
       whatsappWabaId: org.whatsappWabaId,
       whatsappDisplayPhone: org.whatsappDisplayPhone,

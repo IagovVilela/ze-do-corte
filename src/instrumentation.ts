@@ -1,8 +1,19 @@
+import * as Sentry from "@sentry/nextjs";
+
 /**
- * Em produção o OWNER já é criado por `npm run start:prod` → `ensure-owner.ts`.
- * O import dinâmico de `./instrumentation.node` quebrava no bundle Docker
- * (ERR_MODULE_NOT_FOUND) e só gerava ruído/risco no arranque.
+ * Hook de arranque do Next.
+ * - Sentry: importa configs server/edge (só envia eventos se houver DSN).
+ * - OWNER/seed: continua em `npm run start:prod` → `ensure-owner.ts`
+ *   (evitar import Prisma aqui — quebrava o bundle Docker).
  */
 export async function register() {
-  // intencionalmente vazio — auth e seed no start script
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
 }
+
+export const onRequestError = Sentry.captureRequestError;

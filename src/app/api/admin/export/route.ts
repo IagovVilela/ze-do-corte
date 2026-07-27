@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { unitNameMapByIds } from "@/lib/appointment-unit-names";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { buildMonthlyExportPack } from "@/lib/admin-export-month";
 import { prisma } from "@/lib/prisma";
 import { staffLabelMapByIds } from "@/lib/staff-display-names";
 import { appointmentScopeWhere } from "@/lib/staff-access";
@@ -9,7 +10,7 @@ import { formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireStaffApiAuth();
   if (!authResult.ok) {
     return authResult.response;
@@ -19,6 +20,52 @@ export async function GET() {
       { message: "Exportação não disponível para seu papel." },
       { status: 403 },
     );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const pack = searchParams.get("pack");
+  const yearMonth =
+    searchParams.get("yearMonth") ??
+    (() => {
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+    })();
+
+  if (pack === "month") {
+    if (!/^\d{4}-\d{2}$/.test(yearMonth)) {
+      return NextResponse.json(
+        { message: "yearMonth inválido (use AAAA-MM)." },
+        { status: 400 },
+      );
+    }
+    try {
+      const packData = await buildMonthlyExportPack({
+        access: authResult.access,
+        yearMonth,
+      });
+      const workbook = XLSX.utils.book_new();
+      for (const [name, rows] of Object.entries(packData.sheets)) {
+        const sheet = XLSX.utils.json_to_sheet(
+          rows.length > 0 ? rows : [{ info: "Sem dados" }],
+        );
+        XLSX.utils.book_append_sheet(workbook, sheet, name.slice(0, 31));
+      }
+      const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+      return new NextResponse(buffer, {
+        status: 200,
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="${packData.filename}"`,
+        },
+      });
+    } catch (err) {
+      console.error("[export] month pack", err);
+      return NextResponse.json(
+        { error: "Falha ao gerar pacote mensal." },
+        { status: 500 },
+      );
+    }
   }
 
   try {

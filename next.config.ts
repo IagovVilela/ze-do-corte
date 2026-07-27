@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -116,4 +117,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryOrg = process.env.SENTRY_ORG?.trim() || "barbergon";
+const sentryProject = process.env.SENTRY_PROJECT?.trim() || "bargergon";
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+
+export default withSentryConfig(nextConfig, {
+  // Defaults do painel Sentry (org barbergon / project bargergon — slug do UI).
+  // Override via SENTRY_ORG / SENTRY_PROJECT. Upload de maps só com SENTRY_AUTH_TOKEN.
+  org: sentryOrg,
+  project: sentryProject,
+  authToken: sentryAuthToken,
+  silent: !process.env.CI,
+  disableLogger: true,
+  widenClientFileUpload: Boolean(sentryAuthToken),
+  // Sem token no CI/Railway, não tenta upload de sourcemaps (build segue normal).
+  sourcemaps: {
+    disable: !sentryAuthToken,
+  },
+});

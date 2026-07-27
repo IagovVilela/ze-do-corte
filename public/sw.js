@@ -1,4 +1,31 @@
 /* global self, clients */
+
+/** Installability mínima — mantém handlers de push existentes. */
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // Nunca interceptar chunks do Next.js / Turbopack (HMR, "module factory is not available").
+  if (
+    url.pathname.startsWith("/_next/") ||
+    url.pathname.includes("turbopack") ||
+    url.searchParams.has("_rsc")
+  ) {
+    return;
+  }
+
+  // Pass-through: necessário para critérios de instalabilidade em alguns browsers.
+  // Sem Cache API — só reencaminha a rede.
+  event.respondWith(fetch(event.request));
+});
+
 self.addEventListener("push", (event) => {
   let data = { title: "Zé do Corte", body: "Nova notificação", url: "/admin" };
   try {

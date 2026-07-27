@@ -60,7 +60,14 @@ export type AdminOpsSnapshot = {
   topClients: OpsRepeatClient[];
   clubAttention: OpsClubAttention[];
   monthOrigins: OpsBookingOrigin[];
-  lowStock: { id: string; name: string; stockQty: number }[];
+  lowStock: {
+    id: string;
+    name: string;
+    stockQty: number;
+    stockMin: number | null;
+  }[];
+  /** Clientes sumindo (60d+) — link CRM. */
+  lostClientsCount: number;
 };
 
 export async function getAdminOpsSnapshot(
@@ -177,13 +184,43 @@ export async function getAdminOpsSnapshot(
       where: {
         organizationId: access.organizationId,
         isActive: true,
-        stockQty: { not: null, lte: 3 },
+        stockQty: { not: null },
       },
       orderBy: { stockQty: "asc" },
-      take: 8,
-      select: { id: true, name: true, stockQty: true },
+      take: 40,
+      select: { id: true, name: true, stockQty: true, stockMin: true },
     }),
   ]);
+
+  const lostCutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  const [recentPhones, allPhones] = await Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        AND: [
+          whereBase,
+          { status: { in: ["CONFIRMED", "COMPLETED"] } },
+          { startsAt: { gte: lostCutoff } },
+        ],
+      },
+      select: { clientPhone: true },
+      distinct: ["clientPhone"],
+      take: 5000,
+    }),
+    prisma.appointment.findMany({
+      where: {
+        AND: [whereBase, { status: { in: ["CONFIRMED", "COMPLETED"] } }],
+      },
+      select: { clientPhone: true },
+      distinct: ["clientPhone"],
+      take: 5000,
+    }),
+  ]);
+  const recentSet = new Set(
+    recentPhones.map((p) => p.clientPhone.replace(/\D/g, "")),
+  );
+  const lostClientsCount = allPhones.filter(
+    (p) => !recentSet.has(p.clientPhone.replace(/\D/g, "")),
+  ).length;
 
   const staffLabels = await staffLabelMapByIds(
     todayRows.map((r) => r.staffMemberId),
@@ -288,11 +325,18 @@ export async function getAdminOpsSnapshot(
     })),
     monthOrigins,
     lowStock: lowStock
-      .filter((p) => p.stockQty != null)
+      .filter((p) => {
+        if (p.stockQty == null) return false;
+        const min = p.stockMin ?? 3;
+        return p.stockQty <= min;
+      })
+      .slice(0, 8)
       .map((p) => ({
         id: p.id,
         name: p.name,
         stockQty: p.stockQty!,
+        stockMin: p.stockMin,
       })),
+    lostClientsCount,
   };
 }

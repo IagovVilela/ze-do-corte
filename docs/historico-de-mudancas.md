@@ -8,6 +8,18 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-27
 
+- **Paridade Cash Barber (Fases 1–4)**:
+  - CRM: risco `ok` / `at_risk` / `lost` (30d / 60d), filtro, badge, fila **WhatsApp hoje** com texto pré-preenchido; chip no Operacional → `/admin/clientes?risk=lost`.
+  - Estoque: `stockMin`, `ProductStockMovement`, `POST /api/admin/products/[id]/stock` (entrada/saída/ajuste), alerta operacional, movimentos de venda na comanda.
+  - Clube UX: badge “visitas restantes” no agendar e na comanda; calculadora “Sugerir preço”; saúde (subuso / no limite / inadimplente / churn).
+  - WhatsApp: toggles confirmar ao agendar + lembrete 24h + checklist; gates no envio.
+  - PWA admin: manifest + botão Instalar + SW.
+  - Metas mensais + faixas de comissão (`tiersJson`); upsell sugerido na comanda.
+  - Export mensal Excel (`?pack=month&yearMonth=`) na Evolução.
+- **Sentry**: org/projeto default `barbergon` / `bargergon` no `withSentryConfig`; `SENTRY_ENVIRONMENT` documentada; SDK client/server/edge + `global-error` / `onRequestError` / `captureException` — só envia com DSN.
+- **Termos de Uso e Privacidade**: páginas `/termos` e `/privacidade`; links no rodapé; checkbox obrigatório no cadastro; slugs reservados.
+- **Observabilidade SaaS**: mapa Tier S/A/B em `docs/observabilidade-saas.md` (Sentry, PostHog, Railway billing, rate limit, UptimeRobot, logs, Playwright, Dependabot). PostHog opcional via `AnalyticsProvider` + `NEXT_PUBLIC_POSTHOG_KEY`; Dependabot em `.github/dependabot.yml`; helper `src/lib/observability.ts`.
+- **CRM de clientes**: `/admin/clientes` — lista única por telefone (nome, WhatsApp, visitas, gasto, clube, risco); API `GET /api/admin/clients`.
 - **Avaliações no painel**: `/admin/avaliacoes` lista o feedback dos clientes (`OrganizationReview`), com média, filtro por estrelas e atendimento vinculado; API `GET /api/admin/reviews`.
 
 ## 2026-07-26

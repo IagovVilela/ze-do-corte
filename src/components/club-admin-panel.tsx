@@ -10,6 +10,10 @@ import {
   formatIntegerDigits,
   parseBrMoneyInput,
 } from "@/lib/br-input-masks";
+import {
+  buildClubHealthBuckets,
+  suggestClubPlanPrice,
+} from "@/lib/club-health";
 import { formatMoney } from "@/lib/utils";
 
 type Plan = {
@@ -100,6 +104,12 @@ export function ClubAdminPanel({
     "PIX" | "CREDIT_CARD" | null
   >(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [calcTicket, setCalcTicket] = useState(() =>
+    formatBrMoneyFromNumber(50),
+  );
+  const [calcVisits, setCalcVisits] = useState("4");
+  const [calcMargin, setCalcMargin] = useState("30");
 
   async function reload() {
     const [pRes, sRes, cRes] = await Promise.all([
@@ -288,6 +298,14 @@ export function ClubAdminPanel({
   const inputClass =
     "w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60";
 
+  const suggestedPrice = suggestClubPlanPrice({
+    averageTicket: parseBrMoneyInput(calcTicket),
+    visitsPerMonth: Number(calcVisits) || 0,
+    marginPercent: Number(calcMargin) || 0,
+  });
+
+  const healthBuckets = buildClubHealthBuckets(subs);
+
   if (loading) {
     return <p className="text-sm text-[var(--bn-muted)]">Carregando clube…</p>;
   }
@@ -333,6 +351,127 @@ export function ClubAdminPanel({
           </a>
         </div>
       </div>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
+          <h3 className="font-semibold text-[var(--bn-on)]">Sugerir preço</h3>
+          <p className="text-xs text-[var(--bn-muted)]">
+            Estima o valor do plano a partir do ticket médio, visitas no mês e
+            margem (desconto sobre o avulso). Não salva sozinho — use o botão
+            para preencher o campo Preço do formulário.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Ticket médio (R$)
+              </span>
+              <input
+                inputMode="decimal"
+                value={calcTicket}
+                onChange={(e) =>
+                  setCalcTicket(formatBrMoneyInput(e.target.value))
+                }
+                className={`${inputClass} min-w-0`}
+              />
+            </label>
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Visitas / mês
+              </span>
+              <input
+                inputMode="numeric"
+                value={calcVisits}
+                onChange={(e) =>
+                  setCalcVisits(formatIntegerDigits(e.target.value, 3))
+                }
+                className={`${inputClass} min-w-0`}
+              />
+            </label>
+            <label className="block min-w-0 space-y-1">
+              <span className="text-xs font-medium text-[var(--bn-muted)]">
+                Margem %
+              </span>
+              <input
+                inputMode="numeric"
+                value={calcMargin}
+                onChange={(e) =>
+                  setCalcMargin(formatIntegerDigits(e.target.value, 3))
+                }
+                className={`${inputClass} min-w-0`}
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/50 px-4 py-3">
+            <div>
+              <p className="text-xs text-[var(--bn-muted)]">Preço sugerido</p>
+              <p className="text-lg font-semibold tabular-nums text-[var(--bn-on)]">
+                {formatMoney(suggestedPrice)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setPlanPrice(formatBrMoneyFromNumber(suggestedPrice))
+              }
+              className="rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-[var(--bn-primary)] hover:bg-brand-500/20"
+            >
+              Usar no campo Preço
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">
+          <h3 className="font-semibold text-[var(--bn-on)]">Saúde do clube</h3>
+          <p className="text-xs text-[var(--bn-muted)]">
+            Visão rápida de uso, inadimplência e risco de cancelamento.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {healthBuckets.map((b) => (
+              <div
+                key={b.key}
+                className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 px-3 py-2"
+              >
+                <p className="text-xs text-[var(--bn-muted)]">{b.label}</p>
+                <p className="text-xl font-bold tabular-nums text-[var(--bn-on)]">
+                  {b.count}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {healthBuckets
+              .filter((b) => b.count > 0)
+              .map((b) => (
+                <div key={`${b.key}-list`}>
+                  <p className="text-xs font-medium text-[var(--bn-on-variant)]">
+                    {b.label}{" "}
+                    <span className="font-normal text-[var(--bn-muted)]">
+                      — {b.description}
+                    </span>
+                  </p>
+                  <ul className="mt-1 space-y-1 text-xs text-[var(--bn-muted)]">
+                    {b.items.map((item) => (
+                      <li key={`${b.key}-${item.id}`}>
+                        <span className="text-[var(--bn-on-variant)]">
+                          {item.clientName}
+                        </span>{" "}
+                        · {item.detail}
+                      </li>
+                    ))}
+                    {b.count > b.items.length ? (
+                      <li>+{b.count - b.items.length} outro(s)</li>
+                    ) : null}
+                  </ul>
+                </div>
+              ))}
+            {healthBuckets.every((b) => b.count === 0) ? (
+              <p className="text-xs text-[var(--bn-muted)]">
+                Nenhum alerta no momento.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
       <section className="grid gap-8 lg:grid-cols-2">
         <form onSubmit={createPlan} className="space-y-3 rounded-2xl border border-[var(--bn-border)] p-5">

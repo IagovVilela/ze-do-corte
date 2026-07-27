@@ -1,0 +1,26 @@
+{
+  "name": "Barbernegon Admin",
+  "short_name": "BN Admin",
+  "description": "Painel administrativo Barbernegon",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c0c0e",
+  "theme_color": "#0c0c0e",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/images/barbernegon-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/barbernegon-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

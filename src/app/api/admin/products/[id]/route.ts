@@ -12,6 +12,7 @@ const patchSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   price: z.number().finite().nonnegative().optional(),
   stockQty: z.number().int().min(0).nullable().optional(),
+  stockMin: z.number().int().min(0).nullable().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -44,6 +45,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
       ...(parsed.data.stockQty !== undefined
         ? { stockQty: parsed.data.stockQty }
         : {}),
+      ...(parsed.data.stockMin !== undefined
+        ? { stockMin: parsed.data.stockMin }
+        : {}),
       ...(parsed.data.isActive != null ? { isActive: parsed.data.isActive } : {}),
     },
   });
@@ -55,6 +59,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
       price: Number(product.price),
       isActive: product.isActive,
       stockQty: product.stockQty,
+      stockMin: product.stockMin,
     },
   });
 }

@@ -15,17 +15,31 @@ export function formatWhatsAppDisplayInput(value: string): string {
 }
 
 /** Normaliza telefone e monta link wa.me para o site. */
-export function phoneToWhatsAppHref(phone: string): string | null {
+export function phoneToWhatsAppHref(
+  phone: string,
+  prefilledText?: string,
+): string | null {
   const trimmed = phone.trim();
   const digits = trimmed.replace(/\D/g, "");
   if (digits.length < 10 || digits.length > 15) return null;
 
+  let base: string;
   // Internacional explícito (+…) — não força DDI 55
   if (trimmed.startsWith("+")) {
-    return `https://wa.me/${digits}`;
+    base = `https://wa.me/${digits}`;
+  } else {
+    const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+    if (withCountry.length < 12 || withCountry.length > 13) return null;
+    base = `https://wa.me/${withCountry}`;
   }
 
-  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
-  if (withCountry.length < 12 || withCountry.length > 13) return null;
-  return `https://wa.me/${withCountry}`;
+  const text = prefilledText?.trim();
+  if (!text) return base;
+  return `${base}?text=${encodeURIComponent(text)}`;
+}
+
+/** Mensagem padrão de reativação (CRM / “WhatsApp hoje”). */
+export function crmWinBackWhatsAppText(clientName: string): string {
+  const first = clientName.trim().split(/\s+/)[0] || "tudo bem";
+  return `Oi ${first}! Sentimos sua falta aqui na barbearia. Que tal marcar um horário? Estamos com horários bons esta semana.`;
 }

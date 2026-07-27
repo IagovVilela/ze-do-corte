@@ -22,6 +22,7 @@ export async function GET() {
       price: Number(p.price),
       isActive: p.isActive,
       stockQty: p.stockQty,
+      stockMin: p.stockMin,
     })),
   });
 }
@@ -30,6 +31,7 @@ const createSchema = z.object({
   name: z.string().trim().min(2).max(120),
   price: z.number().finite().nonnegative(),
   stockQty: z.number().int().min(0).nullable().optional(),
+  stockMin: z.number().int().min(0).nullable().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
         name: parsed.data.name,
         price: parsed.data.price,
         stockQty: parsed.data.stockQty ?? null,
+        stockMin: parsed.data.stockMin ?? null,
         isActive: parsed.data.isActive ?? true,
       },
     });
@@ -68,6 +71,7 @@ export async function POST(request: Request) {
           price: Number(product.price),
           isActive: product.isActive,
           stockQty: product.stockQty,
+          stockMin: product.stockMin,
         },
       },
       { status: 201 },

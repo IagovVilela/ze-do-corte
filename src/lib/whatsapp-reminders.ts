@@ -24,6 +24,7 @@ export async function runWhatsAppReminders(): Promise<{
       unit: {
         organization: {
           whatsappBotEnabled: true,
+          whatsappReminder24h: true,
           whatsappPhoneNumberId: { not: null },
           whatsappAccessTokenEnc: { not: null },
         },

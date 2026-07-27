@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { Montserrat } from "next/font/google";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AdminPanelNav } from "@/components/admin-panel-nav";
+import { AdminPwaInstallButton } from "@/components/admin-pwa-install-button";
 import { AdminThemeProvider } from "@/components/admin-theme-provider";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
 import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
@@ -23,6 +25,17 @@ import {
 import { PLATFORM_OPS_IMPERSONATOR_COOKIE } from "@/lib/platform-auth";
 import { prisma } from "@/lib/prisma";
 
+export const metadata: Metadata = {
+  applicationName: "Barbernegon Admin",
+  manifest: "/admin-manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Barbernegon Admin",
+    statusBarStyle: "black-translucent",
+  },
+  themeColor: "#0c0c0e",
+};
+
 const brandHeadline = Montserrat({
   subsets: ["latin"],
   weight: ["600", "700"],
@@ -40,9 +53,12 @@ function AdminProductFooter() {
           withWordmark
           className="text-[var(--bn-on)] [&_span]:text-sm [&_span]:sm:text-sm [&_span]:md:text-sm"
         />
-        <p className="text-center text-xs text-[var(--bn-muted)] sm:text-right">
-          Painel · © {new Date().getFullYear()}
-        </p>
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
+          <AdminPwaInstallButton />
+          <p className="text-center text-xs text-[var(--bn-muted)] sm:text-right">
+            Painel · © {new Date().getFullYear()}
+          </p>
+        </div>
       </div>
     </footer>
   );

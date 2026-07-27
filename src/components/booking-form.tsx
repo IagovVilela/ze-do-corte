@@ -126,6 +126,7 @@ export function BookingForm({
   );
   const [successUsedClub, setSuccessUsedClub] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [clubBadge, setClubBadge] = useState<string | null>(null);
 
   const filteredBarbers = useMemo(
     () => barbers.filter((b) => !b.unitId || b.unitId === unitId),
@@ -364,6 +365,36 @@ export function BookingForm({
     }, 450);
     return () => clearTimeout(t);
   }, [customerPhone, organizationSlug, unitId]);
+
+  useEffect(() => {
+    const digits = customerPhone.replace(/\D/g, "");
+    if (digits.length < 10 || !organizationSlug) {
+      setClubBadge(null);
+      return;
+    }
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          const qs = new URLSearchParams({
+            organizationSlug,
+            phone: formatBrPhoneNational(customerPhone),
+          });
+          const res = await fetch(`/api/public/club-status?${qs.toString()}`);
+          if (!res.ok) {
+            setClubBadge(null);
+            return;
+          }
+          const data = (await res.json()) as {
+            club?: { badgeLabel?: string } | null;
+          };
+          setClubBadge(data.club?.badgeLabel ?? null);
+        } catch {
+          setClubBadge(null);
+        }
+      })();
+    }, 450);
+    return () => clearTimeout(t);
+  }, [customerPhone, organizationSlug]);
 
   useEffect(() => {
     if (!serviceId || !selectedDate || !unitId) return;
@@ -1024,6 +1055,11 @@ export function BookingForm({
                   inputMode="numeric"
                   autoComplete="tel"
                 />
+                {clubBadge ? (
+                  <span className="mt-2 inline-flex rounded-full bg-sky-500/15 px-2.5 py-1 text-[11px] font-semibold text-sky-200">
+                    {clubBadge}
+                  </span>
+                ) : null}
               </label>
             </div>
 

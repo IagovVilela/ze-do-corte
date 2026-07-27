@@ -164,6 +164,15 @@ export function AdminAppointmentComandaSheet({
             <div className="space-y-5">
               <div className="space-y-1 text-sm text-[var(--bn-on)]">
                 <p className="text-[var(--bn-muted)]">{comanda.clientPhone}</p>
+                {comanda.club ? (
+                  <p className="inline-flex rounded-full bg-[var(--bn-primary)]/15 px-2.5 py-1 text-[11px] font-semibold text-[var(--bn-primary)]">
+                    {comanda.club.badgeLabel}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-[var(--bn-muted)]">
+                    Cliente avulso
+                  </p>
+                )}
                 <p>
                   {formatInTimeZone(
                     new Date(comanda.startsAt),
@@ -313,6 +322,30 @@ export function AdminAppointmentComandaSheet({
                   </div>
                 ) : null}
               </section>
+
+              {comanda.upsell && canEdit && !comanda.paidAt ? (
+                <div className="rounded-xl border border-[var(--bn-primary)]/30 bg-[var(--bn-primary)]/10 px-3 py-3">
+                  <p className="text-xs font-semibold text-[var(--bn-on)]">
+                    Upsell sugerido
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--bn-on-variant)]">
+                    {comanda.upsell.name} · {money(comanda.upsell.price)}
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-semibold text-[var(--bn-primary)] hover:underline"
+                    onClick={() =>
+                      void patch({
+                        action: "addProduct",
+                        productId: comanda.upsell!.productId,
+                        quantity: 1,
+                      })
+                    }
+                  >
+                    Adicionar à comanda
+                  </button>
+                </div>
+              ) : null}
 
               {comanda.repurchase.length > 0 ? (
                 <section className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-sm text-sky-100">

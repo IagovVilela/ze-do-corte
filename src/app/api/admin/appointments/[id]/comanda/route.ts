@@ -161,9 +161,21 @@ export async function PATCH(request: Request, ctx: Ctx) {
             },
           });
           if (product.stockQty != null) {
+            const balanceAfter = product.stockQty - qty;
             await tx.product.update({
               where: { id: product.id },
-              data: { stockQty: { decrement: qty } },
+              data: { stockQty: balanceAfter },
+            });
+            await tx.productStockMovement.create({
+              data: {
+                organizationId: auth.access.organizationId,
+                productId: product.id,
+                kind: "SALE",
+                quantityDelta: -qty,
+                balanceAfter,
+                note: `Comanda ${id}`,
+                createdById: auth.access.userId,
+              },
             });
           }
         });
@@ -185,9 +197,21 @@ export async function PATCH(request: Request, ctx: Ctx) {
             where: { id: line.productId },
           });
           if (product?.stockQty != null) {
+            const balanceAfter = product.stockQty + line.quantity;
             await tx.product.update({
               where: { id: product.id },
-              data: { stockQty: { increment: line.quantity } },
+              data: { stockQty: balanceAfter },
+            });
+            await tx.productStockMovement.create({
+              data: {
+                organizationId: auth.access.organizationId,
+                productId: product.id,
+                kind: "IN",
+                quantityDelta: line.quantity,
+                balanceAfter,
+                note: `Estorno comanda ${id}`,
+                createdById: auth.access.userId,
+              },
             });
           }
         });

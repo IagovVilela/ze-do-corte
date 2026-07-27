@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 import "./globals.css";
 
@@ -41,7 +44,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col overflow-x-clip bg-brand-950 text-zinc-100">
-        {children}
+        <Suspense fallback={null}>
+          <AnalyticsProvider>{children}</AnalyticsProvider>
+        </Suspense>
       </body>
     </html>
   );

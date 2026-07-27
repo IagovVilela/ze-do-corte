@@ -34,6 +34,9 @@ const bodySchema = z.object({
   password: z
     .string()
     .min(MIN_PASSWORD_LENGTH, `Senha com pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`),
+  acceptTerms: z.literal(true, {
+    error: "Aceite os Termos de Uso e a Política de Privacidade.",
+  }),
 });
 
 export async function POST(request: Request) {
