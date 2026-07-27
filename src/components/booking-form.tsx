@@ -7,6 +7,8 @@ import Link from "next/link";
 import { LoaderCircle, Copy, Check, Search, Flame } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import posthog from "posthog-js";
+
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import type { ServiceSummary } from "@/lib/types";
@@ -455,6 +457,16 @@ export function BookingForm({
 
       setBookingState("success");
       setMessage("Agendamento confirmado com sucesso.");
+
+      posthog.capture("appointment_submitted", {
+        organization_slug: organizationSlug,
+        unit_id: unitId,
+        service_id: serviceId,
+        extra_service_count: extraServiceIds.length,
+        used_club: Boolean(payload.appointment?.usedSubscriptionId),
+        appointment_id: payload.appointment?.id ?? null,
+      });
+
       setSuccessManageToken(
         payload.appointment?.clientManageToken?.trim() || null,
       );
@@ -483,6 +495,7 @@ export function BookingForm({
     } catch (error) {
       setBookingState("error");
       setMessage(error instanceof Error ? error.message : "Erro inesperado.");
+      posthog.captureException(error);
     }
   };
 

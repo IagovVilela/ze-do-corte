@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 import {
   cpfCnpjDigits,
@@ -99,8 +100,17 @@ export function ClubPublicJoin({
       setPix(data.pix ?? null);
       setInvoiceUrl(data.invoiceUrl ?? null);
       setPaidWithCard((data.billingType ?? billingType) === "CREDIT_CARD");
-    } catch {
+
+      posthog.capture("club_subscription_submitted", {
+        organization_slug: slug,
+        plan_id: planId,
+        plan_name: selected?.name ?? null,
+        billing_type: data.billingType ?? billingType,
+        plan_price: selected?.price ?? null,
+      });
+    } catch (err) {
       setError("Erro de rede.");
+      posthog.captureException(err);
     } finally {
       setLoading(false);
     }

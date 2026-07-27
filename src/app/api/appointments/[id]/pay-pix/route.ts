@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   AsaasApiError,
   asaasCreateCustomer,
@@ -119,6 +120,19 @@ export async function POST(request: Request, context: RouteContext) {
     });
 
     const pix = await asaasGetPixQrCode(apiKey, payment.id);
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: appointment.id,
+      event: "pix_payment_initiated",
+      properties: {
+        appointment_id: appointment.id,
+        organization_id: organizationId,
+        service_id: appointment.serviceId,
+        value: price,
+      },
+    });
+    await posthog.flush();
 
     return NextResponse.json({
       ok: true,

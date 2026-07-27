@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createPublicBooking } from "@/lib/booking-domain";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
 import {
   checkRateLimit,
@@ -92,6 +93,21 @@ export async function POST(request: Request) {
       organizationId: unit.organizationId,
       appointment: created.appointment,
     });
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: created.appointment.id,
+      event: "appointment_confirmed",
+      properties: {
+        organization_slug: payload.organizationSlug ?? null,
+        unit_id: payload.unitId,
+        service_id: payload.serviceId,
+        extra_service_count: (payload.extraServiceIds ?? []).length,
+        booking_source: "site",
+        appointment_id: created.appointment.id,
+      },
+    });
+    await posthog.flush();
 
     return NextResponse.json({ appointment: created.appointment }, { status: 201 });
   } catch (error) {

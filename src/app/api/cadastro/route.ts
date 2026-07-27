@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { hashPassword } from "@/lib/password";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { prisma } from "@/lib/prisma";
@@ -167,6 +168,25 @@ export async function POST(request: Request) {
       redirect: "/admin",
     });
     appendSessionCookie(res, raw);
+
+    const posthog = getPostHogClient();
+    posthog.identify({
+      distinctId: result.owner.id,
+      properties: {
+        role: result.owner.role,
+        organization_id: result.org.id,
+      },
+    });
+    posthog.capture({
+      distinctId: result.owner.id,
+      event: "organization_registered",
+      properties: {
+        organization_id: result.org.id,
+        plan_status: result.org.planStatus,
+      },
+    });
+    await posthog.flush();
+
     return res;
   } catch (error) {
     console.error("POST /api/cadastro", error);
