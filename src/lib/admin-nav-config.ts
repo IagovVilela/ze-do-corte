@@ -17,6 +17,7 @@ import {
   Receipt,
   Scissors,
   Settings,
+  Star,
   TrendingUp,
   UserCircle,
   Users,
@@ -95,6 +96,20 @@ export function buildAdminNavGroups(
           show: true,
           icon: ClipboardList,
           keywords: ["fila", "hoje", "tarefas", "a fazer"],
+        },
+        {
+          href: "/admin/avaliacoes",
+          label: "Avaliações",
+          show: true,
+          icon: Star,
+          keywords: [
+            "feedback",
+            "review",
+            "estrelas",
+            "comentários",
+            "comentarios",
+            "nota",
+          ],
         },
         {
           href: "/admin/relatorios",

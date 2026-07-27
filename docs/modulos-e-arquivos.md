@@ -47,6 +47,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview de indicadores do salão |
 | `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
 | `/admin/operacional` | `src/app/admin/(panel)/operacional/page.tsx` | Filas de ação do dia |
+| `/admin/avaliacoes` | `src/app/admin/(panel)/avaliacoes/page.tsx` | Feedback dos clientes (`OrganizationReview`) |
 | `/admin/produtos` | `src/app/admin/(panel)/produtos/page.tsx` | Catálogo de produtos (comanda) |
 | `/admin/marca` | `src/app/admin/(panel)/marca/page.tsx` | Identidade (logo, slug, redes) |
 | `/admin/site` | `src/app/admin/(panel)/site/page.tsx` | Canvas Canva (`site-canvas-editor.tsx`) |
@@ -96,6 +97,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Produtos | `src/app/api/admin/products/route.ts` + `[id]` |
 | Relatórios | `src/app/api/admin/reports/route.ts` |
 | Operacional | `src/app/api/admin/ops/route.ts` |
+| Avaliações | `src/app/api/admin/reviews/route.ts` — `GET ?rating=&page=` |
 | Histórico cliente (público) | `src/app/api/appointments/client-history/route.ts` |
 | Agendamento (atribuir profissional) | `src/app/api/admin/appointments/[id]/route.ts` — `PATCH`, só OWNER/ADMIN |
 | Configuração | `src/app/api/admin/settings/route.ts` |

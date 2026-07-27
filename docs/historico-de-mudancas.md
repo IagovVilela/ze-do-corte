@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-27
+
+- **Avaliações no painel**: `/admin/avaliacoes` lista o feedback dos clientes (`OrganizationReview`), com média, filtro por estrelas e atendimento vinculado; API `GET /api/admin/reviews`.
+
 ## 2026-07-26
 
 - **Link `/minha-reserva`**: aceita token UUID e hex de 32 chars (seed demo); antes o demo gerava hex e a página dava 404.
