@@ -9,7 +9,7 @@
  */
 import "dotenv/config";
 
-import { createHash } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   addDays,
   addMinutes,
@@ -479,10 +479,7 @@ async function main() {
       const bookingSource =
         sourceRoll < 0.55 ? "site" : sourceRoll < 0.8 ? "whatsapp" : "admin";
 
-      const manageToken = createHash("sha256")
-        .update(`${client.phone}-${startsAt.toISOString()}-${rand()}`)
-        .digest("hex")
-        .slice(0, 32);
+      const manageToken = randomUUID();
 
       const appt = await prisma.appointment.create({
         data: {

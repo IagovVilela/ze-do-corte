@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-26
 
+- **Link `/minha-reserva`**: aceita token UUID e hex de 32 chars (seed demo); antes o demo gerava hex e a página dava 404.
 - **Site — telefone e equipe no mobile**: número de contato com máscara `(11) 99990-0112` e clique abre WhatsApp (`wa.me`); cards da equipe não ficam mais invisíveis no celular (animação no mount + stagger sem blur). Telefones também formatados em unidades, agenda e clube.
 - **Sidebar — posição do scroll**: ao navegar no menu, a lista não volta mais ao topo; scroll é guardado (sessionStorage) e restaurado; links com `scroll={false}`; busca do menu não limpa no desktop.
 - **Demo dia a dia**: `npm run demo:day` popula a org `ze-do-corte` (Barbergon) com equipe, cardápio, produtos, ~60 dias de agenda, financeiro e avaliações — para pitch ao cliente.
