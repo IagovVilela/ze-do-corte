@@ -19,13 +19,11 @@ export const staggerContainer = (stagger = 0.1, delayChildren = 0.06) => ({
 export const staggerItem = {
   hidden: {
     opacity: 0,
-    y: 44,
-    filter: "blur(14px)",
+    y: 28,
   },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: {
       duration: DURATION_ITEM,
       ease: EASE_EDITORIAL,
@@ -34,11 +32,10 @@ export const staggerItem = {
 };
 
 export const staggerItemTight = {
-  hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.62, ease: EASE_EDITORIAL },
   },
 };

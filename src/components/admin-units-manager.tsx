@@ -267,8 +267,8 @@ export function AdminUnitsManager({
                   <td className="px-4 py-3 font-medium">{u.name}</td>
                   <td className="px-4 py-3 text-[var(--bn-muted)]">{u.slug}</td>
                   <td className="px-4 py-3 text-[var(--bn-muted)]">{u.city ?? "—"}</td>
-                  <td className="max-w-[140px] truncate px-4 py-3 text-[var(--bn-muted)]" title={u.phone ?? undefined}>
-                    {u.phone ?? "—"}
+                  <td className="max-w-[140px] truncate px-4 py-3 text-[var(--bn-muted)]" title={u.phone ? formatBrPhoneNational(u.phone) : undefined}>
+                    {u.phone ? formatBrPhoneNational(u.phone) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span

@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 import type { AppointmentRow } from "@/lib/types";
+import { formatBrPhoneNational } from "@/lib/br-phone-format";
 
 export type BarberOption = {
   id: string;
@@ -377,7 +378,9 @@ export function AdminTable({
                 <td className="px-5 py-4">
                   {format(new Date(item.startsAt), "HH:mm")}
                 </td>
-                <td className="px-5 py-4 text-[var(--bn-on-variant)]">{item.clientPhone}</td>
+                <td className="px-5 py-4 text-[var(--bn-on-variant)]">
+                  {formatBrPhoneNational(item.clientPhone) || item.clientPhone}
+                </td>
                 <td className="px-5 py-4">
                   <div className="flex flex-col gap-2">
                     <span

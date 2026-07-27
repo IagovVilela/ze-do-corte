@@ -71,7 +71,6 @@ export function HomeContactGrid({
         .map((u, i) => {
           const address = [u.addressLine, u.city].filter(Boolean).join(", ");
           const hasAddress = Boolean(address);
-          const telDigits = phoneLabel?.replace(/\D/g, "") || null;
 
           return (
             <StaggerReveal key={u.id} className={gridClass} stagger={0.14}>
@@ -95,7 +94,6 @@ export function HomeContactGrid({
                     sloganPrimary={sloganPrimary}
                     sloganSecondary={sloganSecondary}
                     phoneLabel={phoneLabel}
-                    phoneHref={telDigits ? `tel:+${telDigits}` : null}
                     whatsappHref={whatsappHref}
                     instagramHref={instagramHref}
                     schedule={schedule}

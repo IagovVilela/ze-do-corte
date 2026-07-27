@@ -551,7 +551,7 @@ export function createLibraryElement(
     case "team":
       return el({
         ...base,
-        frame: { x: pad, y: atY, w: fullW, h: artboard === "mobile" ? 400 : 320 },
+        frame: { x: pad, y: atY, w: fullW, h: artboard === "mobile" ? 720 : 420 },
         props: { title: "Equipe", gridCols: artboard === "mobile" ? 1 : 3 },
       });
     case "contact":

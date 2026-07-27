@@ -7,6 +7,8 @@ import { ArrowRight, CalendarClock, Phone } from "lucide-react";
 
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import { LordIconAnimated } from "@/components/lord-icon-animated";
+import { brPhoneDigits, formatBrPhoneNational } from "@/lib/br-phone-format";
+import { phoneToWhatsAppHref } from "@/lib/phone-to-whatsapp-link";
 
 export type ContactScheduleRow = { label: string; range: string };
 
@@ -35,12 +37,21 @@ export function ContactVisitPanel({
 }: ContactVisitPanelProps = {}) {
   const reduceMotion = useReducedMotion();
   const [ctaHover, setCtaHover] = useState(false);
-  const telHref = phoneHref?.trim() || null;
-  const telLabel = phoneLabel?.trim() || null;
-  const showTel = Boolean(telHref && telLabel);
-  const waHref = whatsappHref?.trim() || null;
+  const rawPhone = phoneLabel?.trim() || null;
+  const telLabel = rawPhone ? formatBrPhoneNational(rawPhone) || rawPhone : null;
+  const digits = rawPhone ? brPhoneDigits(rawPhone) : "";
+  const waHref =
+    whatsappHref?.trim() ||
+    (rawPhone ? phoneToWhatsAppHref(rawPhone) : null) ||
+    null;
+  const telHref =
+    phoneHref?.trim() ||
+    (digits.length >= 10 ? `tel:+55${digits}` : null);
+  /** Número clica no WhatsApp quando possível; senão liga. */
+  const phoneClickHref = waHref || telHref;
+  const showPhone = Boolean(phoneClickHref && telLabel);
+  const showWaChip = Boolean(waHref) && !showPhone;
   const igHref = instagramHref?.trim() || null;
-  const showWa = Boolean(waHref);
   const showIg = Boolean(igHref);
   const rows = schedule?.length
     ? schedule
@@ -132,24 +143,38 @@ export function ContactVisitPanel({
           />
         </Link>
 
-        {(showTel || showWa || showIg) && (
+        {(showPhone || showWaChip || showIg) && (
           <div className="flex flex-wrap gap-2">
-            {showTel ? (
+            {showPhone ? (
               <a
-                href={telHref!}
+                href={phoneClickHref!}
+                {...(waHref
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                aria-label={
+                  waHref
+                    ? `Abrir WhatsApp ${telLabel}`
+                    : `Ligar para ${telLabel}`
+                }
                 className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/[0.07]"
               >
-                <LordIconAnimated
-                  slot="phone"
-                  size={18}
-                  label="Telefone"
-                  colors="primary:#fcd34d,secondary:#a1a1aa"
-                  fallback={<Phone className="h-3.5 w-3.5 text-brand-300" aria-hidden />}
-                />
+                {waHref ? (
+                  <WhatsappIcon className="h-[18px] w-[18px]" aria-hidden />
+                ) : (
+                  <LordIconAnimated
+                    slot="phone"
+                    size={18}
+                    label="Telefone"
+                    colors="primary:#fcd34d,secondary:#a1a1aa"
+                    fallback={
+                      <Phone className="h-3.5 w-3.5 text-brand-300" aria-hidden />
+                    }
+                  />
+                )}
                 {telLabel}
               </a>
             ) : null}
-            {showWa ? (
+            {showWaChip ? (
               <a
                 href={waHref!}
                 target="_blank"

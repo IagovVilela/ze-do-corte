@@ -19,7 +19,7 @@ type StaggerRevealProps = PropsWithChildren<{
 export function StaggerReveal({
   children,
   className,
-  amount = 0.18,
+  amount = 0.02,
   stagger = 0.1,
   delayChildren = 0.06,
 }: StaggerRevealProps) {
@@ -34,7 +34,9 @@ export function StaggerReveal({
       className={className}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount }}
+      // `amount` baixo + margem: cards altos (equipe) dentro de frames do canvas
+      // não ficam presos em opacity:0 no mobile.
+      viewport={{ once: true, amount, margin: "80px 0px" }}
       variants={staggerContainer(stagger, delayChildren)}
     >
       {children}

@@ -481,7 +481,7 @@ export function ClubAdminPanel({
                   const key = `${c.phone}|${c.name}`;
                   return (
                     <option key={key} value={key}>
-                      {c.name} · {c.phone}
+                      {c.name} · {formatBrPhoneNational(c.phone) || c.phone}
                     </option>
                   );
                 })}
@@ -689,7 +689,7 @@ export function ClubAdminPanel({
                     <td className="px-4 py-3">
                       <div>{s.clientName}</div>
                       <div className="text-xs text-[var(--bn-muted)]">
-                        {s.clientPhone}
+                        {formatBrPhoneNational(s.clientPhone) || s.clientPhone}
                       </div>
                     </td>
                     <td className="px-4 py-3">{s.plan.name}</td>

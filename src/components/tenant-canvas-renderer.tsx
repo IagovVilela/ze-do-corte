@@ -323,7 +323,7 @@ export function CanvasElementView({
       }
       return (
         <div
-          className={cn("overflow-auto rounded-xl p-3", className)}
+          className={cn("overflow-y-auto overflow-x-hidden rounded-xl p-3", className)}
           style={{
             ...style,
             backgroundColor: "color-mix(in srgb, var(--site-surface) 80%, transparent)",
@@ -342,6 +342,7 @@ export function CanvasElementView({
             barbers={barbers}
             shopName={org.name}
             gridCols={(p.gridCols as 1 | 2 | 3 | undefined) ?? 3}
+            reveal="mount"
           />
         </div>
       );
