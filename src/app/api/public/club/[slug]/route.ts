@@ -6,6 +6,7 @@ import {
   listPublicClubPlans,
   orgClubPublicAvailable,
 } from "@/lib/club-subscribe";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { getOrganizationBySlug, isReservedSlug } from "@/lib/organization";
 import { formatMoney } from "@/lib/utils";
 
@@ -114,6 +115,19 @@ export async function POST(request: Request, context: RouteContext) {
       { status: result.status },
     );
   }
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: result.subscription.id,
+    event: "club_subscription_created",
+    properties: {
+      organization_id: org.id,
+      organization_slug: org.slug,
+      plan_id: parsed.data.planId,
+      billing_type: result.billingType,
+    },
+  });
+  await posthog.flush();
 
   return NextResponse.json(
     {

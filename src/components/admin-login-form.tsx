@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 import {
   AuthError,
@@ -41,7 +42,7 @@ export function AdminLoginForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      let data: { message?: string; redirect?: string } = {};
+      let data: { message?: string; redirect?: string; userId?: string } = {};
       try {
         data = (await res.json()) as { message?: string; redirect?: string };
       } catch {
@@ -51,6 +52,11 @@ export function AdminLoginForm({
         setError(data.message ?? "E-mail ou senha inválidos.");
         return;
       }
+
+      if (data.userId) {
+        posthog.identify(data.userId);
+      }
+
       router.push(redirectTo || data.redirect || "/admin");
       router.refresh();
     } catch {

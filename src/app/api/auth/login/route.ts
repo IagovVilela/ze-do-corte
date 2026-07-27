@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { prisma } from "@/lib/prisma";
 import {
   DUMMY_PASSWORD_HASH,
@@ -80,7 +81,26 @@ export async function POST(request: Request) {
   }
 
   const raw = await createDbSession(member.id);
-  const res = NextResponse.json({ ok: true, redirect: "/admin" });
+  const res = NextResponse.json({ ok: true, redirect: "/admin", userId: member.id });
   appendSessionCookie(res, raw);
+
+  const posthog = getPostHogClient();
+  posthog.identify({
+    distinctId: member.id,
+    properties: {
+      role: member.role,
+      organization_id: member.organizationId,
+    },
+  });
+  posthog.capture({
+    distinctId: member.id,
+    event: "admin_logged_in",
+    properties: {
+      role: member.role,
+      organization_id: member.organizationId,
+    },
+  });
+  await posthog.flush();
+
   return res;
 }
