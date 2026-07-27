@@ -73,7 +73,7 @@ export async function listAdminAppointmentsInRange(
   type ListItem = {
     id: string;
     clientName: string;
-    clientPhone: string | null;
+    clientPhone: string;
     clientEmail: string | null;
     startsAt: Date;
     endsAt: Date;
@@ -83,7 +83,7 @@ export async function listAdminAppointmentsInRange(
     paidAt: Date | null;
     paymentMethod: string | null;
     amountPaid: unknown;
-    paymentStatus: string | null;
+    paymentStatus: NonNullable<AppointmentRow["paymentStatus"]> | string | null;
     bookingSource: string | null;
     clientManageToken: string | null;
     service: { name: string };
@@ -132,7 +132,7 @@ export async function listAdminAppointmentsInRange(
     return {
       id: item.id,
       clientName: item.clientName,
-      clientPhone: item.clientPhone,
+      clientPhone: item.clientPhone ?? "",
       clientEmail: item.clientEmail,
       serviceName: serviceNames.join(", "),
       serviceNames,
@@ -148,7 +148,9 @@ export async function listAdminAppointmentsInRange(
       paidAt: item.paidAt?.toISOString() ?? null,
       paymentMethod: item.paymentMethod,
       amountPaid: item.amountPaid != null ? Number(item.amountPaid) : null,
-      paymentStatus: item.paymentStatus,
+      paymentStatus: (item.paymentStatus ?? undefined) as
+        | AppointmentRow["paymentStatus"]
+        | undefined,
       bookingSource: item.bookingSource,
       clientManageToken: item.clientManageToken,
     };
