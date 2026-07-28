@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   notifyClientAppointmentChange,
   notifyStaffForAppointmentId,
@@ -344,6 +345,44 @@ export async function PATCH(request: Request, context: RouteContext) {
       previousStartsAt,
     );
   }
+
+  const posthog = getPostHogClient();
+  if (didCancel) {
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "appointment_cancelled",
+      properties: {
+        appointment_id: updated.id,
+        organization_id: organizationId,
+        service_id: updated.serviceId,
+      },
+    });
+  }
+  if (didReschedule) {
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "appointment_rescheduled",
+      properties: {
+        appointment_id: updated.id,
+        organization_id: organizationId,
+        service_id: updated.serviceId,
+      },
+    });
+  }
+  if (touchesPayment && parsed.data.paidAt !== null && parsed.data.paidAt !== undefined) {
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "appointment_payment_recorded",
+      properties: {
+        appointment_id: updated.id,
+        organization_id: organizationId,
+        service_id: updated.serviceId,
+        payment_method: parsed.data.paymentMethod ?? null,
+        amount_paid: parsed.data.amountPaid ?? null,
+      },
+    });
+  }
+  await posthog.flush();
 
   return NextResponse.json({
     ok: true,

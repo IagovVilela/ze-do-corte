@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import {
   useCallback,
   useEffect,
@@ -326,6 +327,7 @@ export function AdminPanelNav({
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    posthog.reset();
     router.push("/admin/login");
     router.refresh();
   }

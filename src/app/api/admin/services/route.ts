@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORY_ORDER } from "@/lib/service-category";
 import { serviceScopeWhere, unitScopeWhere } from "@/lib/staff-access";
@@ -145,6 +146,20 @@ export async function POST(request: Request) {
       where: { id: service.unitId, organizationId },
       select: { name: true },
     });
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "service_created",
+      properties: {
+        organization_id: organizationId,
+        service_id: service.id,
+        category: service.category,
+        duration_minutes: service.durationMinutes,
+        price: Number(service.price),
+      },
+    });
+    await posthog.flush();
+
     return NextResponse.json(
       {
         service: {

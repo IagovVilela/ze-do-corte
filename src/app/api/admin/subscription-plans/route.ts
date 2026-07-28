@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
 
@@ -105,6 +106,20 @@ export async function POST(request: Request) {
       },
       include: { services: true },
     });
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "subscription_plan_created",
+      properties: {
+        organization_id: auth.access.organizationId,
+        plan_id: plan.id,
+        price: parsed.data.price,
+        cycle_days: parsed.data.cycleDays,
+        service_count: parsed.data.serviceIds.length,
+      },
+    });
+    await posthog.flush();
+
     return NextResponse.json({ plan }, { status: 201 });
   } catch (error) {
     console.error("POST subscription-plans", error);
