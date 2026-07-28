@@ -14,6 +14,7 @@ import {
   parseBrMoneyInput,
   parseIntegerDigits,
 } from "@/lib/br-input-masks";
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import { cn, formatMoney } from "@/lib/utils";
 
 type ServiceRow = {
@@ -626,12 +627,12 @@ export function AdminServicesManager({ initialServices, initialUnits }: Props) {
           <span className="text-xs font-medium uppercase tracking-wider text-[var(--bn-muted)]">
             Buscar
           </span>
-          <input
-            type="search"
+          <ClearableSearchInput
             placeholder="Nome ou descrição…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
             className={input}
+            aria-label="Buscar serviços"
           />
         </label>
         </div>

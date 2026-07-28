@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import type { DashboardRange } from "@/lib/admin-dashboard";
 import {
   buildAdminPageHref,
@@ -101,14 +102,14 @@ export function AdminAppointmentFiltersForm({
         ) : null}
         <label className="flex min-w-[180px] flex-[2] flex-col gap-1 text-xs text-[var(--bn-muted)]">
           Buscar (nome, telefone ou e-mail)
-          <input
-            type="search"
+          <ClearableSearchInput
             name="q"
             defaultValue={filters.q ?? ""}
             placeholder="Ex.: João, 11999…"
             maxLength={80}
             className={inputClass}
             autoComplete="off"
+            aria-label="Buscar agendamentos"
           />
         </label>
         <div className="flex flex-wrap items-center gap-2 pb-0.5">

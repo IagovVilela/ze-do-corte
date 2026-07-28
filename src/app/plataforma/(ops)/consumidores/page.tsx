@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import { listPlatformConsumers } from "@/lib/platform-ops";
 import { prisma } from "@/lib/prisma";
 
@@ -66,11 +67,13 @@ export default async function PlataformaConsumidoresPage({
       <form className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <label className="min-w-[12rem] flex-1 text-xs text-zinc-400">
           Busca
-          <input
+          <ClearableSearchInput
             name="q"
             defaultValue={q}
             placeholder="Nome ou telefone"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            containerClassName="mt-1"
+            className="w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            aria-label="Buscar consumidores"
           />
         </label>
         <label className="min-w-[12rem] text-xs text-zinc-400">

@@ -21,6 +21,7 @@ import {
 import { ExploreChrome } from "@/components/marketplace/explore-chrome";
 import { ExploreHeroCarousel } from "@/components/marketplace/explore-hero-carousel";
 import { MarketplaceShopCard } from "@/components/marketplace/shop-card";
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import {
   MARKETPLACE_CATEGORY_CHIPS,
   type MarketplaceShop,
@@ -189,12 +190,13 @@ export function ExploreMarketplaceClient({
                 onSubmit={onSubmit}
                 className="explore-search-container flex flex-col items-stretch gap-2 rounded-xl border border-white/10 bg-[#25282B]/90 p-2 shadow-2xl backdrop-blur-xl transition-all md:flex-row md:p-3"
               >
-                <label className="flex min-h-11 flex-grow items-center gap-3 px-3 sm:px-4">
+                <label className="flex min-h-11 min-w-0 flex-grow items-center gap-3 px-3 sm:px-4">
                   <Search className="size-5 shrink-0 text-[#9CA3AF]" />
-                  <input
+                  <ClearableSearchInput
                     value={q}
-                    onChange={(e) => setQ(e.target.value)}
+                    onChange={setQ}
                     placeholder="Serviço ou barbearia"
+                    containerClassName="min-w-0 flex-1"
                     className="w-full bg-transparent py-2.5 text-base text-[#e1e2ec] outline-none placeholder:text-[#9CA3AF] sm:py-3"
                     aria-label="Serviço ou barbearia"
                   />

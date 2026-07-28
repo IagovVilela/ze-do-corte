@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { LoaderCircle, MessageCircle, Search } from "lucide-react";
+import { LoaderCircle, MessageCircle } from "lucide-react";
 
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import type { AdminCrmRisk, AdminCrmSnapshot } from "@/lib/admin-crm-types";
 import { cn, formatMoney } from "@/lib/utils";
 
@@ -148,7 +149,7 @@ export function AdminCrmPanel({ initial }: Props) {
 
   return (
     <div className="mt-8 space-y-6">
-      {/* Grid fixo (4 slots) evita mismatch de hidratação se o bundle/HMR atrasar. */}
+      {/* KPI: sempre 4 slots (Clientes, Clube, Risco, Gasto) — sem grid-cols-3 condicional. */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-4">
           <p className="text-xs text-[var(--bn-muted)]">Clientes</p>
@@ -250,17 +251,13 @@ export function AdminCrmPanel({ initial }: Props) {
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <label className="relative min-w-0 flex-1 sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--bn-muted)]"
-            aria-hidden
-          />
-          <input
-            type="search"
+        <label className="min-w-0 flex-1 sm:max-w-xs">
+          <ClearableSearchInput
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={setQ}
+            withSearchIcon
             placeholder="Buscar nome, telefone…"
-            className="w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface)] py-2.5 pr-3 pl-10 text-base text-[var(--bn-on)] outline-none placeholder:text-[var(--bn-muted)] focus:border-[var(--bn-primary)]/50 focus:ring-2 focus:ring-[var(--bn-primary)]/20 sm:py-2 sm:text-sm"
+            className="w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface)] py-2.5 pr-3 text-base text-[var(--bn-on)] outline-none placeholder:text-[var(--bn-muted)] focus:border-[var(--bn-primary)]/50 focus:ring-2 focus:ring-[var(--bn-primary)]/20 sm:py-2 sm:text-sm"
             aria-label="Buscar clientes"
           />
         </label>

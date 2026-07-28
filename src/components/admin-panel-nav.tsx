@@ -23,6 +23,7 @@ import {
 
 import { BrandLogo } from "@/components/brand-logo";
 import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import {
   ADMIN_NAV_FILTERS,
   buildAdminNavGroups,
@@ -541,18 +542,14 @@ export function AdminPanelNav({
       </div>
 
       <div className="shrink-0 space-y-2 border-b border-[var(--bn-border)] px-3 py-3">
-        <label className="relative block">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-[var(--bn-muted)]"
-            aria-hidden
-          />
-          <input
+        <label className="block">
+          <ClearableSearchInput
             ref={searchRef}
-            type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={setQuery}
+            withSearchIcon
             placeholder="Buscar no menu…"
-            className="w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface)] py-2.5 pr-3 pl-10 text-base text-[var(--bn-on)] outline-none placeholder:text-[var(--bn-muted)] focus:border-[var(--bn-primary)]/50 focus:ring-2 focus:ring-[var(--bn-primary)]/20 sm:py-2 sm:text-sm [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+            className="w-full rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface)] py-2.5 pr-3 text-base text-[var(--bn-on)] outline-none placeholder:text-[var(--bn-muted)] focus:border-[var(--bn-primary)]/50 focus:ring-2 focus:ring-[var(--bn-primary)]/20 sm:py-2 sm:text-sm"
             aria-label="Buscar no menu"
           />
         </label>

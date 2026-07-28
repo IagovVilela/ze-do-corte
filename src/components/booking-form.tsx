@@ -4,16 +4,17 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
-import { LoaderCircle, Copy, Check, Search, Flame } from "lucide-react";
+import { LoaderCircle, Copy, Check, Flame } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import posthog from "posthog-js";
 
+import { AppointmentPixPay } from "@/components/appointment-pix-pay";
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import type { ServiceSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { AppointmentPixPay } from "@/components/appointment-pix-pay";
 
 type AvailableApiResponse = {
   date: string;
@@ -671,20 +672,14 @@ export function BookingForm({
                 </p>
               ) : (
                 <>
-                  <label className="relative block">
-                    <Search
-                      className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-zinc-500"
-                      aria-hidden
-                    />
-                    <input
-                      type="search"
+                  <label className="block">
+                    <ClearableSearchInput
                       value={serviceQuery}
-                      onChange={(e) => setServiceQuery(e.target.value)}
+                      onChange={setServiceQuery}
+                      withSearchIcon
+                      searchIconClassName="text-zinc-500"
                       placeholder="Buscar serviço (ex.: barba, corte…)"
-                      className={cn(
-                        inputClass,
-                        "pl-10 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
-                      )}
+                      className={cn(inputClass, "pr-3")}
                       aria-label="Buscar serviços"
                     />
                   </label>

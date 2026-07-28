@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-07-27
 
+- **Busca com limpar (X)**: componente `ClearableSearchInput` — botão X quando há texto (aria `Limpar busca`); sidebar admin, CRM, serviços, filtros de agendamentos, agendar, marketplace e buscas da plataforma.
 - **Paridade Cash Barber (Fases 1–4)**:
   - CRM: risco `ok` / `at_risk` / `lost` (30d / 60d), filtro, badge, fila **WhatsApp hoje** com texto pré-preenchido; chip no Operacional → `/admin/clientes?risk=lost`.
   - Estoque: `stockMin`, `ProductStockMovement`, `POST /api/admin/products/[id]/stock` (entrada/saída/ajuste), alerta operacional, movimentos de venda na comanda.

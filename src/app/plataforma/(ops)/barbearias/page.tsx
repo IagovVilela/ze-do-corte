@@ -1,14 +1,15 @@
 import Link from "next/link";
+import type {
+  OrganizationPlanStatus,
+  OrganizationPlanTier,
+} from "@prisma/client";
 
+import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import {
   planStatusLabel,
   planTierLabel,
 } from "@/lib/org-entitlements";
 import { listPlatformOrganizations } from "@/lib/platform-ops";
-import type {
-  OrganizationPlanStatus,
-  OrganizationPlanTier,
-} from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -60,11 +61,13 @@ export default async function PlataformaBarbeariasPage({
       <form className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:flex-row sm:items-end">
         <label className="flex-1 text-xs text-zinc-500">
           Busca
-          <input
+          <ClearableSearchInput
             name="q"
             defaultValue={q}
             placeholder="Nome ou slug"
-            className="mt-1 w-full rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/50"
+            containerClassName="mt-1"
+            className="w-full rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/50"
+            aria-label="Buscar barbearias"
           />
         </label>
         <label className="text-xs text-zinc-500 sm:w-40">
