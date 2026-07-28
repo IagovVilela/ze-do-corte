@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   createFinanceEntry,
   listFinanceCategories,
@@ -145,6 +146,20 @@ export async function POST(request: Request) {
     ...parsed.data,
     dueDate,
   });
+
+  const posthog = getPostHogClient();
+  posthog.capture({
+    distinctId: auth.access.userId,
+    event: "finance_entry_created",
+    properties: {
+      organization_id: auth.access.organizationId,
+      entry_kind: parsed.data.kind,
+      amount: parsed.data.amount,
+      payment_condition: parsed.data.paymentCondition ?? null,
+      repeat_monthly: parsed.data.repeatMonthly ?? false,
+    },
+  });
+  await posthog.flush();
 
   return NextResponse.json(
     { entry: serializeFinanceEntry(entry) },

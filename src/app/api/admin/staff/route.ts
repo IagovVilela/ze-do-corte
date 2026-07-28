@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   freeTierAllowsAnotherStaffSeat,
   settleOrgBillingState,
@@ -164,6 +165,18 @@ export async function POST(request: Request) {
       include: { unit: true },
     });
     const { passwordHash: _ph, ...rest } = member;
+
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: auth.access.userId,
+      event: "staff_member_created",
+      properties: {
+        organization_id: organizationId,
+        new_member_role: role,
+      },
+    });
+    await posthog.flush();
+
     return NextResponse.json(
       { member: { ...rest, hasPassword: Boolean(_ph) } },
       { status: 201 },
