@@ -29,8 +29,8 @@ Como a **tier list** de ferramentas se encaixa neste projeto (Next.js 16 + Prism
 | Item | Detalhe |
 |------|---------|
 | Onde | Landing, cadastro, agendar, funil Free→Pro, uso do canvas |
-| Env | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (default `http s://us.i.posthog.com`) |
-| Código | [`src/components/analytics-provider.tsx`](../src/components/analytics-provider.tsx) — só inicia se a key existir |
+| Env | **`NEXT_PUBLIC_POSTHOG_KEY`** (canônico); alias `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (wizard PostHog — mesmo valor; KEY tem prioridade); `NEXT_PUBLIC_POSTHOG_HOST` (default `https://us.i.posthog.com`) |
+| Código | [`src/components/analytics-provider.tsx`](../src/components/analytics-provider.tsx), [`src/instrumentation-client.ts`](../src/instrumentation-client.ts), [`src/lib/posthog-server.ts`](../src/lib/posthog-server.ts) — só inicia se KEY (ou TOKEN) existir |
 | Eventos sugeridos | `signup_completed`, `booking_created`, `plan_upgrade_clicked`, `site_published` |
 
 ### 3. Alerta de custo na cloud (Railway) — **painel, sem código**
@@ -138,7 +138,7 @@ flowchart TB
 ## Checklist de ativação (ordem sugerida)
 
 1. Confirmar rate limit em produção (já no código).
-2. Criar projeto PostHog → colar `NEXT_PUBLIC_POSTHOG_KEY` na Railway → redeploy.
+2. Criar projeto PostHog → colar **`NEXT_PUBLIC_POSTHOG_KEY`** na Railway (alias `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` também funciona) → redeploy.
 3. Sentry: DSN em `.env.local` (dev) e na Railway (`SENTRY_ENVIRONMENT=production`) — org `barbergon` / project `bargergon`.
 4. UptimeRobot nos 2–3 URLs críticos.
 5. Alerta de billing na Railway.

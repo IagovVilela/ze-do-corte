@@ -30,7 +30,7 @@ Guia para publicar **Zé do Corte** (Next.js + PostgreSQL + Prisma) na [Railway]
 | `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD` | Para seed | Ver passo 4. |
 | `CLOUDINARY_*` | Não | Fotos em `/admin/perfil`. |
 | `RESEND_*` | Não | E-mail ao barbeiro. |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Não | Analytics PostHog (ver [observabilidade-saas.md](./observabilidade-saas.md)). |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Não | Analytics PostHog (canônico). Alias: `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (mesmo valor). Ver [observabilidade-saas.md](./observabilidade-saas.md). |
 | `SENTRY_DSN` | Não | Erros server/edge (`@sentry/nextjs`). |
 | `NEXT_PUBLIC_SENTRY_DSN` | Não | Mesmo DSN no browser (erros de UI; DSN é semi-público). |
 | `SENTRY_ENVIRONMENT` | Não | Use `production` na Railway. |
