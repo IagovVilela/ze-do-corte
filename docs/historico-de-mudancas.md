@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-07-28
+
+- **Mobile admin**: `AnimatedSection` passa a usar `amount: "some"` — páginas altas (Relatórios, Clientes, Agendamentos) não ficam mais invisíveis no celular após o hydrate. Date picker de período empilha no mobile e respeita a largura da tela; heatmap de frequência aceita toque nas células.
+
 ## 2026-07-27
 
 - **PostHog env unificado**: canônico `NEXT_PUBLIC_POSTHOG_KEY`; alias `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` em `instrumentation-client` e `posthog-server` (KEY tem prioridade). Docs + `.env.example` alinhados.

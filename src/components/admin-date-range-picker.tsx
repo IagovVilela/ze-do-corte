@@ -126,16 +126,38 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
 
   useLayoutEffect(() => {
     if (!open || !rootRef.current) return;
-    const rect = rootRef.current.getBoundingClientRect();
-    setPos({
-      top: rect.bottom + 8,
-      left: Math.min(rect.left, window.innerWidth - 460),
-    });
+
+    function place() {
+      if (!rootRef.current) return;
+      const rect = rootRef.current.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const panelW = Math.min(432, vw - 16);
+      const panelH = panelRef.current?.offsetHeight ?? 420;
+      let left = Math.min(rect.left, vw - panelW - 8);
+      left = Math.max(8, left);
+      let top = rect.bottom + 8;
+      if (top + panelH > vh - 8) {
+        top = Math.max(8, rect.top - panelH - 8);
+      }
+      setPos({ top, left });
+    }
+
+    place();
+    // Recalcula após paint (altura real do painel) e em resize/orientação.
+    const raf = requestAnimationFrame(place);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    function onDoc(e: MouseEvent) {
+    function onDoc(e: MouseEvent | TouchEvent) {
       const t = e.target as Node;
       if (rootRef.current?.contains(t)) return;
       if (panelRef.current?.contains(t)) return;
@@ -145,9 +167,11 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
       if (e.key === "Escape") setOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc, { passive: true });
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("touchstart", onDoc);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -210,7 +234,7 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
       id={listId}
       role="dialog"
       aria-label="Escolher período"
-      className="fixed z-[400] flex overflow-hidden rounded-2xl border border-zinc-700 shadow-2xl shadow-black/80"
+      className="fixed z-[400] flex max-h-[min(90dvh,calc(100dvh-16px))] w-[min(27rem,calc(100vw-16px))] flex-col overflow-x-hidden overflow-y-auto rounded-2xl border border-zinc-700 shadow-2xl shadow-black/80 sm:max-h-none sm:w-auto sm:flex-row sm:overflow-hidden"
       style={{
         top: pos.top,
         left: Math.max(8, pos.left),
@@ -218,19 +242,19 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
       }}
     >
       <aside
-        className="w-[9.5rem] shrink-0 border-r border-zinc-700 p-2"
+        className="w-full shrink-0 border-b border-zinc-700 p-2 sm:w-[9.5rem] sm:border-r sm:border-b-0"
         style={{ backgroundColor: "#0f1218" }}
       >
-        <ul className="space-y-0.5">
+        <ul className="flex gap-1 overflow-x-auto pb-0.5 sm:flex-col sm:space-y-0.5 sm:overflow-visible sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PRESETS.map((p) => {
             const selected = activePreset === p.id;
             return (
-              <li key={p.id}>
+              <li key={p.id} className="shrink-0 sm:w-full">
                 <button
                   type="button"
                   onClick={() => applyPreset(p.id)}
                   className={cn(
-                    "flex w-full items-center justify-between rounded-full px-3 py-2 text-left text-sm text-zinc-300 transition",
+                    "flex items-center justify-between gap-2 rounded-full px-3 py-2 text-left text-sm whitespace-nowrap text-zinc-300 transition sm:w-full",
                     selected ? "bg-zinc-800 text-white" : "hover:bg-zinc-900",
                   )}
                 >
@@ -244,7 +268,7 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
       </aside>
 
       <div
-        className="w-[17.5rem] shrink-0 p-4"
+        className="w-full min-w-0 shrink-0 p-4 sm:w-[17.5rem]"
         style={{ backgroundColor: "#0f1218" }}
       >
         <div className="mb-3 flex items-center justify-between">
@@ -339,7 +363,7 @@ export function AdminDateRangePicker({ value, onChange, className }: Props) {
         aria-expanded={open}
         aria-controls={listId}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-w-[12rem] items-center justify-between gap-2 rounded-full border border-[var(--bn-border)] bg-[var(--bn-surface)] px-4 py-2 text-sm font-medium text-[var(--bn-on)] hover:bg-[var(--bn-hover)]"
+        className="inline-flex min-w-0 max-w-full items-center justify-between gap-2 rounded-full border border-[var(--bn-border)] bg-[var(--bn-surface)] px-4 py-2 text-sm font-medium text-[var(--bn-on)] hover:bg-[var(--bn-hover)] sm:min-w-[12rem]"
       >
         <span className="capitalize">{formatTriggerLabel(value)}</span>
         <ChevronRight

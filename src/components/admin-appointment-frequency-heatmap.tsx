@@ -251,10 +251,19 @@ export function AdminAppointmentFrequencyHeatmap({
                         setHover({ weekday: wd, hour, count, percent })
                       }
                       onMouseLeave={() => setHover(null)}
+                      onFocus={() =>
+                        setHover({ weekday: wd, hour, count, percent })
+                      }
+                      onClick={() =>
+                        setHover({ weekday: wd, hour, count, percent })
+                      }
                       className={cn(
                         "flex h-10 items-center justify-center rounded-lg text-xs font-bold transition",
                         bandClass(percent),
                         loading && "opacity-70",
+                        hover?.weekday === wd &&
+                          hover.hour === hour &&
+                          "ring-2 ring-[var(--bn-on)]/40 ring-offset-1 ring-offset-[var(--bn-surface)]",
                       )}
                     >
                       {percent > 0 ? `${percent}%` : null}
@@ -277,8 +286,8 @@ export function AdminAppointmentFrequencyHeatmap({
       ) : data ? (
         <p className="mt-3 text-xs text-[var(--bn-muted)]">
           {data.totalAppointments} agendamento
-          {data.totalAppointments === 1 ? "" : "s"} no período · passe o mouse
-          numa célula para o detalhe
+          {data.totalAppointments === 1 ? "" : "s"} no período · toque ou
+          passe o mouse numa célula para o detalhe
         </p>
       ) : null}
     </section>

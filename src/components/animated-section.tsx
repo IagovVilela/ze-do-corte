@@ -46,7 +46,10 @@ export function AnimatedSection({
         mass: 0.85,
         delay,
       }}
-      viewport={{ once: true, amount: 0.12, margin: "0px 0px -8% 0px" }}
+      // "some" = qualquer pixel visível. Com amount numérico (ex. 0.12), seções
+      // mais altas que o viewport (Relatórios/Clientes no mobile) nunca atingem
+      // o limiar e ficam em opacity:0 para sempre.
+      viewport={{ once: true, amount: "some", margin: "0px 0px -40px 0px" }}
       className={className}
     >
       {children}
