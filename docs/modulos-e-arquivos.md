@@ -46,8 +46,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/termos` | `src/app/(public)/termos/page.tsx` | Termos de Uso da plataforma |
 | `/privacidade` | `src/app/(public)/privacidade/page.tsx` | Política de Privacidade (LGPD) |
 | `/lista-espera` | `src/app/lista-espera/page.tsx` | Lead B2B só por link (noindex); form `lista-espera-form.tsx` |
-| `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
-| `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
+| `/[slug]` | `src/app/[slug]/page.tsx` + `layout.tsx` | Site institucional via canvas + PWA (**Instalar app**) |
+| `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org (+ PWA do tenant) |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
@@ -118,6 +118,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Expediente (funcionário) | `src/app/api/auth/work-schedule/route.ts` — `GET`, `PATCH` (só **STAFF**) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — `POST` (multipart `file`), `DELETE` — Cloudinary |
 | Web Push (VAPID + subscrição) | `src/app/api/auth/push/config/route.ts` — `GET` (chave pública); `subscribe/route.ts` — `POST` (guardar subscrição), `DELETE` (remover por `endpoint`) — sessão staff |
+| PWA manifest (tenant / admin API) | `src/app/api/public/pwa-manifest/[slug]/route.ts` — `GET` JSON (`admin` ou slug da org); painel também usa `public/admin-manifest.webmanifest` |
 | Organização (marca + site) | `src/app/api/admin/organization/route.ts` — `GET`, `PATCH` (`siteJson`, `siteTemplate`, branding, `marketplaceListed`) |
 | QR do site (painel) | `src/app/api/admin/shop-qr/route.ts` — `GET` PNG do QR do `/{slug}` |
 | Marketplace (público) | `src/app/api/marketplace/shops/route.ts` — `GET` busca salões listados; `geocode/route.ts` — cidade via GPS; `reviews/route.ts` — `GET` lista publicamente por slug + `POST` avaliação por token |
@@ -157,6 +158,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `marketplace-favorites.ts` | Favoritos em localStorage |
 | `public-hosts.ts` | Split marketing vs marketplace (`NEXT_PUBLIC_*_HOST`); URLs por superfície; `shopPublicAbsoluteUrl` |
 | `platform-auth.ts` | Gate Ops (`PLATFORM_ADMIN_EMAILS` / seed); redirect para `/plataforma/login` |
+| `pwa-manifest.ts` | Monta web app manifest (tenant ou painel) para instalação PWA |
 | `platform-ops.ts` | Queries cross-tenant (overview, orgs, marketplace, consumidores) |
 | `canvas-page-templates.ts` | Modelos de página completa (15 layouts; inclui **`vitrine`** da demo Barbergon) |
 | `canvas-presets.ts` | Estilos prontos, seções pré-montadas, tipografia |
@@ -219,7 +221,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | WhatsApp admin | `whatsapp-admin-panel.tsx` (checklist + toggles confirmação/lembrete) |
 | Clube admin | `club-admin-panel.tsx` (sugerir preço + saúde do clube) |
 | Metas / regras comissão | `admin-goals-panel.tsx`, `admin-commission-rules-panel.tsx` |
-| PWA painel | `admin-pwa-install-button.tsx`; manifest `public/admin-manifest.webmanifest` |
+| PWA (painel + site/agendar) | `pwa-install-button.tsx`, `pwa-register.tsx`, `admin-pwa-install-button.tsx`; manifests `public/admin-manifest.webmanifest` + API tenant; SW `public/sw.js` |
 | Pagamentos admin | `payments-admin-panel.tsx` |
 | Suporte admin | `support-admin-panel.tsx` (`/admin/suporte`) |
 | Suporte Ops | `plataforma/support-platform-panel.tsx` (`/plataforma/suporte`) |

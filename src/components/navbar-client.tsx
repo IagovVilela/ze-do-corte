@@ -10,6 +10,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { AnimatedText } from "@/components/animated-text";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
+import { PwaInstallButton } from "@/components/pwa-install-button";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
@@ -302,6 +303,9 @@ function MobileMenuOverlay({
                     whatsappHref={whatsappHref}
                     instagramHref={instagramHref}
                   />
+                </div>
+                <div className="flex justify-center">
+                  <PwaInstallButton variant="public" />
                 </div>
                 <div
                   className="[&>div]:w-full [&_a]:min-h-[3.25rem] [&_a]:w-full [&_a]:justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-brand-300/50 [&_a]:bg-gradient-to-r [&_a]:from-brand-300 [&_a]:via-brand-400 [&_a]:to-brand-500 [&_a]:px-6 [&_a]:text-base [&_a]:font-semibold [&_a]:text-zinc-950 [&_a]:shadow-[0_14px_44px_-10px_rgba(59, 130, 246,0.55)] [&_a]:transition [&_a]:hover:brightness-[1.07]"
