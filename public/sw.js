@@ -1,6 +1,10 @@
 /* global self, clients */
+/**
+ * Service worker Barbernegon:
+ * - Web Push (painel)
+ * - fetch handler mínimo (critério de instalabilidade PWA no Chrome)
+ */
 
-/** Installability mínima — mantém handlers de push existentes. */
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
 });
@@ -9,25 +13,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+/** Pass-through — não cacheia; só habilita o app para instalação. */
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-
-  // Nunca interceptar chunks do Next.js / Turbopack (HMR, "module factory is not available").
-  if (
-    url.pathname.startsWith("/_next/") ||
-    url.pathname.includes("turbopack") ||
-    url.searchParams.has("_rsc")
-  ) {
-    return;
-  }
-
-  // Pass-through: necessário para critérios de instalabilidade em alguns browsers.
-  // Sem Cache API — só reencaminha a rede.
   event.respondWith(fetch(event.request));
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "Zé do Corte", body: "Nova notificação", url: "/admin" };
+  let data = { title: "Barbernegon", body: "Nova notificação", url: "/admin" };
   try {
     if (event.data) {
       const parsed = event.data.json();
@@ -44,7 +36,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: "/images/logo.jpeg",
+      icon: "/images/barbernegon-logo.png",
       data: { url: data.url || "/admin" },
     }),
   );
@@ -54,7 +46,9 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/admin";
   const origin = self.location.origin;
-  const target = url.startsWith("http") ? url : `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
+  const target = url.startsWith("http")
+    ? url
+    : `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {

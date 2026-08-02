@@ -10,6 +10,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 - **Seed demo ADMIN + STAFF**: `gerente@zdc.local` (ADMIN) e `barbeiro@zdc.local` (STAFF) na org Barbergon; senha via `SEED_DEMO_PASSWORD` ou `SEED_OWNER_PASSWORD`. Rodam no `db:seed` e no `ensure-owner` (produção). Docs em `configurar-admin.md` + `.env.example`.
 
+## 2026-07-31
+
+- **PWA no site e no agendar**: clientes podem **Instalar app** em `/{slug}` e `/{slug}/agendar` (mesmo padrão do painel). Manifest dinâmico em `GET /api/public/pwa-manifest/[slug]` (nome/logo da barbearia, atalho Agendar); `public/sw.js` com `fetch` pass-through para o Chrome oferecer instalação; botão compartilhado `PwaInstallButton` (Chrome/Edge + instrução iOS).
+
 ## 2026-07-28
 
 - **Mobile admin**: `AnimatedSection` passa a usar `amount: "some"` — páginas altas (Relatórios, Clientes, Agendamentos) não ficam mais invisíveis no celular após o hydrate. Date picker de período empilha no mobile e respeita a largura da tela; heatmap de frequência aceita toque nas células.
