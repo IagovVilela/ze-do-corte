@@ -50,12 +50,13 @@ Se não usou o `PREPARAR_BASE.bat`, preencha no `.env`:
 | `DATABASE_URL` | String de conexão PostgreSQL |
 | `SEED_OWNER_EMAIL` | (Seed) E-mail do primeiro proprietário — padrão `admin@zdc.local` |
 | `SEED_OWNER_PASSWORD` | (Seed) Senha inicial (mín. 6 caracteres) para esse proprietário |
+| `SEED_DEMO_PASSWORD` | (Opcional) Senha das contas demo `gerente@zdc.local` (ADMIN) e `barbeiro@zdc.local` (STAFF); se omitir, usa `SEED_OWNER_PASSWORD` |
 | `LORDICON_API_TOKEN` | (Opcional) Token Bearer da [API Lordicon](https://lordicon.com/docs/api/documentation) — só no servidor; com token, `/api/lordicon/icon` escolhe ícones via API. **Sem token**, o mesmo endpoint serve Lottie público a partir do [CDN Lordicon](https://cdn.lordicon.com) (`src/lib/lordicon-cdn-ids.ts`). **Nunca** uses prefixo `NEXT_PUBLIC_` nem commits este valor. |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | (Opcional) [Cloudinary](https://cloudinary.com/) — fotos de perfil em **`/admin/perfil`**. Sem estas variáveis, nome/telefone/senha funcionam; upload de foto retorna indisponível. **Não commite** a API Secret. |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | (Opcional) [Resend](https://resend.com/) — e-mail ao barbeiro quando um agendamento fica atribuído a ele (cliente escolhe em **`/agendar`** ou dono/admin atribui no painel), **exceto** se o profissional tiver Web Push ativo; também envia o link de **esqueci minha senha** (`/admin/esqueci-senha`). **Não commite** a API key. |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | (Opcional) [Web Push](https://developer.mozilla.org/en-US/docs/Web/API/Push_API) — notificação no browser em **`/admin/perfil`**. Com subscrição ativa, o aviso de novo agendamento **não** usa e-mail. Gere chaves com `npx web-push generate-vapid-keys`. **Não commite** a chave privada. |
 
-**Admin:** após `npm run db:seed`, acesse **`/admin/login`** com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD`. Novos membros e senhas iniciais em **`/admin/equipe`**. Guia: **`docs/configurar-admin.md`**. Papéis: **`docs/admin-hierarquia.md`**.
+**Admin:** após `npm run db:seed`, acesse **`/admin/login`** com `SEED_OWNER_EMAIL` / `SEED_OWNER_PASSWORD`. Contas demo: **`gerente@zdc.local`** (ADMIN) e **`barbeiro@zdc.local`** (STAFF) — mesma senha de `SEED_DEMO_PASSWORD` ou do OWNER. Novos membros em **`/admin/equipe`**. Guia: **`docs/configurar-admin.md`**. Papéis: **`docs/admin-hierarquia.md`**.
 
 4. **Se no `npm run dev` aparecer erro de Turbopack** (`Compaction failed`, `ENOENT` em `.next`): pare o servidor, apague a pasta **`.next`** e tente de novo; em último caso use **`npm run dev:webpack`** (ver [docs/operacao.md](./docs/operacao.md)).
 

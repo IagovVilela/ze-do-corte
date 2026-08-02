@@ -18,7 +18,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `scripts/preparar-postgres.ps1` | Script chamado pelo `PREPARAR_BASE.bat` |
 | `scripts/create-owner.ts` | `npm run create-owner` — upsert de `StaffMember` OWNER + senha |
 | `scripts/ensure-owner.ts` | Arranque em produção: cria OWNER se `SEED_OWNER_*` (chamado por `start:prod`) |
-| `src/lib/ensure-owner-with-prisma.ts` | Lógica idempotente OWNER a partir de `SEED_OWNER_*` (script + `instrumentation`) |
+| `src/lib/ensure-owner-with-prisma.ts` | Lógica idempotente OWNER a partir de `SEED_OWNER_*` (script + `instrumentation`); chama demo staff |
+| `src/lib/ensure-demo-staff-with-prisma.ts` | Contas demo `gerente@zdc.local` (ADMIN) + `barbeiro@zdc.local` (STAFF) |
 | `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
 | `src/lib/observability.ts` | Logs JSON + `captureException` → Sentry |
 | `src/instrumentation.ts` / `instrumentation-client.ts` | Init Sentry (server/edge/client) |
@@ -240,7 +241,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Arquivo | Função |
 |---------|--------|
 | `prisma/schema.prisma` | `Organization` (+ `siteJson`), `Service`, `Appointment`, `BarbershopUnit`, `StaffMember`, `Session`, `BarbershopSetting`, enums |
-| `prisma/seed.ts` | Serviços + unidade matriz + proprietário inicial + `unitId` em agendamentos sem unidade |
+| `prisma/seed.ts` | Serviços + unidade matriz + proprietário + demo ADMIN/STAFF + `unitId` em agendamentos sem unidade |
 | `prisma.config.ts` | Configuração Prisma 7 (se presente) |
 
 ## Autenticação e proxy

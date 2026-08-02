@@ -10,6 +10,12 @@ import {
   DEMO_ORG_SLUG,
   demoSiteJson,
 } from "../src/lib/demo-vitrine";
+import {
+  DEMO_ADMIN_EMAIL,
+  DEMO_STAFF_DEFAULT_PASSWORD,
+  DEMO_STAFF_EMAIL,
+  ensureDemoStaffWithPrisma,
+} from "../src/lib/ensure-demo-staff-with-prisma";
 import { hashPassword } from "../src/lib/password";
 import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 
@@ -154,6 +160,18 @@ async function main() {
       },
     });
   }
+
+  await ensureDemoStaffWithPrisma(prisma);
+  const demoPassword =
+    process.env.SEED_DEMO_PASSWORD?.trim() ||
+    process.env.SEED_OWNER_PASSWORD?.trim() ||
+    DEMO_STAFF_DEFAULT_PASSWORD;
+  console.log(
+    `[seed] Contas demo Barbergon (/admin/login):\n` +
+      `  OWNER  ${ownerEmail} / (SEED_OWNER_PASSWORD)\n` +
+      `  ADMIN  ${DEMO_ADMIN_EMAIL} / ${demoPassword}\n` +
+      `  STAFF  ${DEMO_STAFF_EMAIL} / ${demoPassword}`,
+  );
 }
 
 main()

@@ -30,7 +30,19 @@ npm run db:seed
 
 Ou: `npm run setup:admin`.
 
-Isto cria/atualiza tabelas (incl. `StaffMember`, `Session`, `BarbershopUnit`, etc.), dados iniciais (serviços, unidade matriz) e, se ainda não existir, um **proprietário** (`OWNER`) para login em **`/admin/login`**.
+Isto cria/atualiza tabelas (incl. `StaffMember`, `Session`, `BarbershopUnit`, etc.), dados iniciais (serviços, unidade matriz), um **proprietário** (`OWNER`) e contas **demo** de **ADMIN** e **STAFF** para login em **`/admin/login`**.
+
+### Contas demo Barbergon (apresentação a clientes)
+
+Criadas/atualizadas pelo `npm run db:seed` e pelo `ensure-owner` em produção (mesma org `ze-do-corte`):
+
+| Papel | E-mail | Senha |
+|-------|--------|-------|
+| Proprietário (`OWNER`) | `SEED_OWNER_EMAIL` (padrão `admin@zdc.local`) | `SEED_OWNER_PASSWORD` |
+| Gerente (`ADMIN`) | `gerente@zdc.local` | `SEED_DEMO_PASSWORD` ou a mesma do OWNER (padrão `AlterarSenha123!`) |
+| Barbeiro (`STAFF`) | `barbeiro@zdc.local` | idem |
+
+O barbeiro fica na unidade **matriz** e marcado para aparecer no site. Em produção, um redeploy com `SEED_OWNER_*` já alinha essas contas.
 
 ### Criar ou redefinir um proprietário depois (sem rodar o seed completo)
 

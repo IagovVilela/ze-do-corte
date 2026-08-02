@@ -7,11 +7,13 @@ import {
   DEMO_ORG_SLUG,
   demoSiteJson,
 } from "@/lib/demo-vitrine";
+import { ensureDemoStaffWithPrisma } from "./ensure-demo-staff-with-prisma";
 import { hashPassword } from "./password";
 import { MIN_PASSWORD_LENGTH } from "./password-policy";
 
 /**
  * Garante Organization padrão + OWNER com senha a partir de SEED_OWNER_*.
+ * Em seguida cria/atualiza contas demo ADMIN e STAFF (apresentação a clientes).
  */
 export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void> {
   const emailRaw = process.env.SEED_OWNER_EMAIL?.trim();
@@ -66,19 +68,20 @@ export async function ensureOwnerWithPrisma(prisma: PrismaClient): Promise<void>
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
         console.log(`[ensure-owner] OWNER já existia (corrida no arranque): ${ownerEmail}`);
-        return;
+      } else {
+        throw e;
       }
-      throw e;
     }
-    return;
+  } else {
+    await prisma.staffMember.update({
+      where: { email: ownerEmail },
+      data: {
+        organizationId: org.id,
+        ...(!existing.passwordHash ? { passwordHash: ownerHash } : {}),
+      },
+    });
+    console.log(`[ensure-owner] Proprietário alinhado: ${ownerEmail}`);
   }
 
-  await prisma.staffMember.update({
-    where: { email: ownerEmail },
-    data: {
-      organizationId: org.id,
-      ...(!existing.passwordHash ? { passwordHash: ownerHash } : {}),
-    },
-  });
-  console.log(`[ensure-owner] Proprietário alinhado: ${ownerEmail}`);
+  await ensureDemoStaffWithPrisma(prisma);
 }
