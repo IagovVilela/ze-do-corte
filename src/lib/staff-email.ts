@@ -7,5 +7,5 @@ import { z } from "zod";
 export const staffEmailSchema = z
   .string()
   .trim()
-  .min(3)
+  .min(3, "Informe o e-mail.")
   .regex(/^[^\s@]+@[^\s@]+$/, "E-mail inválido.");

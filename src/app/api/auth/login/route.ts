@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
   email: staffEmailSchema,
-  password: z.string().min(1),
+  password: z.string().min(1, "Informe a senha."),
 });
 
 export async function POST(request: Request) {

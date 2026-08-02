@@ -38,9 +38,11 @@ Criadas/atualizadas pelo `npm run db:seed` e pelo `ensure-owner` em produção (
 
 | Papel | E-mail | Senha |
 |-------|--------|-------|
-| Proprietário (`OWNER`) | `SEED_OWNER_EMAIL` (padrão `admin@zdc.local`) | `SEED_OWNER_PASSWORD` |
-| Gerente (`ADMIN`) | `gerente@zdc.local` | `SEED_DEMO_PASSWORD` ou a mesma do OWNER (padrão `AlterarSenha123!`) |
+| Proprietário (`OWNER`) | valor de `SEED_OWNER_EMAIL` (local costuma ser `admin@zdc.local`; **produção Railway** usa o e-mail definido lá, ex. `admin@barbernegon.app`) | `SEED_OWNER_PASSWORD` do ambiente |
+| Gerente (`ADMIN`) | `gerente@zdc.local` | `SEED_DEMO_PASSWORD` **ou a mesma** `SEED_OWNER_PASSWORD` do ambiente |
 | Barbeiro (`STAFF`) | `barbeiro@zdc.local` | idem |
+
+**Atenção:** em produção a senha das contas demo **não** é o padrão do `.env.example` (`AlterarSenha123!`) se a Railway tiver outra `SEED_OWNER_PASSWORD` — use exatamente a senha do OWNER de produção.
 
 O barbeiro fica na unidade **matriz** e marcado para aparecer no site. Em produção, um redeploy com `SEED_OWNER_*` já alinha essas contas.
 

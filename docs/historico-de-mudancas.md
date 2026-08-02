@@ -8,7 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-02
 
-- **Seed demo ADMIN + STAFF**: `gerente@zdc.local` (ADMIN) e `barbeiro@zdc.local` (STAFF) na org Barbergon; senha via `SEED_DEMO_PASSWORD` ou `SEED_OWNER_PASSWORD`. Rodam no `db:seed` e no `ensure-owner` (produção). Docs em `configurar-admin.md` + `.env.example`.
+- **Seed demo ADMIN + STAFF**: `gerente@zdc.local` (ADMIN) e `barbeiro@zdc.local` (STAFF) na org Barbergon; senha via `SEED_DEMO_PASSWORD` ou `SEED_OWNER_PASSWORD` **do ambiente** (em produção Railway = senha do OWNER, não o padrão local). Rodam no `db:seed` e no `ensure-owner`.
+- **Login**: mensagens Zod em português (`Informe a senha.` / `Informe o e-mail.`) em vez do texto cru em inglês.
 
 ## 2026-07-31
 
