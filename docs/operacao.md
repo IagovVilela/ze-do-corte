@@ -87,11 +87,16 @@ Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número,
 
 ### Briefing matinal + resumo inteligente
 
-No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia. O botão **Gerar resumo do dia** chama `POST /api/admin/morning-briefing/narrative`.
+No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia, chip **Faça agora** e CTAs (caixa → `/admin/operacional#a-receber`). O botão **Gerar resumo do dia** chama `POST /api/admin/morning-briefing/narrative`.
+
+A mesma flag/chave alimenta também:
+
+- `POST /api/admin/ai/whatsapp-draft` — mensagem de retenção/clube (CRM, clube, cards do briefing)
+- `POST /api/admin/ai/reports-narrative` — leitura do período em `/admin/relatorios`
 
 | Variável | Uso |
 |----------|-----|
-| `MORNING_BRIEFING_AI_ENABLED` | `true` / `1` para tentar LLM |
+| `MORNING_BRIEFING_AI_ENABLED` | `true` / `1` para tentar LLM (briefing, WhatsApp draft, relatórios) |
 | `OPENAI_API_KEY` | Chave da API (Gemini, Groq, OpenAI…) |
 | `OPENAI_BASE_URL` | Endpoint compatível OpenAI (ver presets abaixo) |
 | `MORNING_BRIEFING_AI_MODEL` | Nome do modelo |

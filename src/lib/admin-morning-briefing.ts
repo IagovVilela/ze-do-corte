@@ -1,6 +1,6 @@
 import "server-only";
 
-import { startOfDay, subDays } from "date-fns";
+import { endOfMonth, startOfDay, startOfMonth, subDays } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 import { appointmentListWhere } from "@/lib/admin-appointment-list-where";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/club-health";
 import { prisma } from "@/lib/prisma";
 import type { StaffAccess } from "@/lib/staff-access";
+import type { WhatsAppDraftKind } from "@/lib/whatsapp-draft-types";
 
 export type MorningBriefingTone = "urgent" | "attention" | "positive";
 
@@ -22,6 +23,7 @@ export type MorningBriefingKind =
   | "retention"
   | "club"
   | "stock"
+  | "goals"
   | "positive";
 
 export type MorningBriefingCard = {
@@ -34,6 +36,20 @@ export type MorningBriefingCard = {
   cta: string;
   /** Maior = mais prioritário. */
   score: number;
+  /** CTA secundário: gerar mensagem WhatsApp (IA ou regras). */
+  draftAction?: {
+    kind: WhatsAppDraftKind;
+    clientName: string;
+    phone: string;
+    daysSinceLastActivity?: number | null;
+    planName?: string | null;
+    lastServiceHint?: string | null;
+  };
+};
+
+export type MorningBriefingPrimaryAction = {
+  label: string;
+  href: string;
 };
 
 export type MorningBriefingFacts = {
@@ -55,13 +71,19 @@ export type MorningBriefingFacts = {
   };
   clubBuckets: { key: string; label: string; count: number }[];
   topClientHint: string | null;
+  goals: {
+    yearMonth: string;
+    behindCount: number;
+    topHint: string | null;
+  };
 };
 
 export type AdminMorningBriefing = {
   greeting: string;
   subtitle: string;
   cards: MorningBriefingCard[];
-  /** JSON fechado para narrativa IA (fase 2) — sem PII de telefone. */
+  primaryAction: MorningBriefingPrimaryAction | null;
+  /** JSON fechado para narrativa IA — sem PII de telefone. */
   facts: MorningBriefingFacts;
 };
 
@@ -79,6 +101,37 @@ function pctDelta(current: number, previous: number): number | null {
   if (previous <= 0 && current <= 0) return null;
   if (previous <= 0) return 100;
   return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+function primaryFromTopCard(
+  card: MorningBriefingCard | undefined,
+): MorningBriefingPrimaryAction | null {
+  if (!card) return null;
+  switch (card.kind) {
+    case "cash":
+      return { label: "Faça agora: registrar a receber", href: card.href };
+    case "retention":
+      return card.draftAction?.phone
+        ? {
+            label: `Faça agora: WhatsApp — ${card.draftAction.clientName.split(/\s+/)[0]}`,
+            href: card.href,
+          }
+        : { label: "Faça agora: reativar no CRM", href: card.href };
+    case "club":
+      return { label: "Faça agora: falar com o clube", href: card.href };
+    case "agenda":
+      return { label: "Faça agora: conferir agenda", href: card.href };
+    case "stock":
+      return { label: "Faça agora: checar estoque", href: card.href };
+    case "goals":
+      return { label: "Faça agora: ver metas da equipe", href: card.href };
+    case "positive":
+      return { label: card.cta, href: card.href };
+    default: {
+      const _n: never = card.kind;
+      return _n;
+    }
+  }
 }
 
 /**
@@ -100,6 +153,9 @@ export async function getAdminMorningBriefing(
   const now = new Date();
   const zNow = toZonedTime(now, tz);
   const hour = zNow.getHours();
+  const yearMonth = `${zNow.getFullYear()}-${String(zNow.getMonth() + 1).padStart(2, "0")}`;
+  const monthFrom = fromZonedTime(startOfMonth(zNow), tz);
+  const monthTo = fromZonedTime(endOfMonth(zNow), tz);
 
   const weekStart = fromZonedTime(startOfDay(subDays(zNow, 6)), tz);
   const weekEnd = now;
@@ -164,6 +220,39 @@ export async function getAdminMorningBriefing(
       : Promise.resolve([]),
   ]);
 
+  // Metas em segundo lote — reduz pico de conexões no pool pg.
+  const [staffGoals, paidForGoals] = canRevenue
+    ? await Promise.all([
+        prisma.staffMonthlyGoal.findMany({
+          where: {
+            organizationId: access.organizationId,
+            yearMonth,
+          },
+          include: {
+            staffMember: {
+              select: { displayName: true, email: true },
+            },
+          },
+        }),
+        prisma.appointment.findMany({
+          where: {
+            unit: { organizationId: access.organizationId },
+            paidAt: { gte: monthFrom, lte: monthTo },
+            status: { in: ["CONFIRMED", "COMPLETED"] },
+            staffMemberId: { not: null },
+          },
+          select: {
+            staffMemberId: true,
+            amountPaid: true,
+            service: { select: { price: true } },
+            items: { select: { price: true } },
+            products: { select: { quantity: true, unitPrice: true } },
+          },
+          take: 4000,
+        }),
+      ])
+    : [[], []];
+
   const sumPaid = (
     rows: { amountPaid: unknown; service: { price: unknown } }[],
   ) =>
@@ -180,9 +269,44 @@ export async function getAdminMorningBriefing(
     : null;
 
   const unpaidTotal =
-    Math.round(
-      ops.unpaid.reduce((s, u) => s + u.amount, 0) * 100,
-    ) / 100;
+    Math.round(ops.unpaid.reduce((s, u) => s + u.amount, 0) * 100) / 100;
+
+  const revenueByStaff = new Map<string, number>();
+  for (const a of paidForGoals) {
+    const id = a.staffMemberId;
+    if (!id) continue;
+    const service =
+      a.amountPaid != null
+        ? Number(a.amountPaid)
+        : Number(a.service.price) +
+          a.items.reduce((s, i) => s + Number(i.price), 0);
+    const products = a.products.reduce(
+      (s, p) => s + Number(p.unitPrice) * p.quantity,
+      0,
+    );
+    revenueByStaff.set(id, (revenueByStaff.get(id) ?? 0) + service + products);
+  }
+
+  type GoalProg = {
+    name: string;
+    progress: number;
+    revenueGoal: number;
+  };
+  const goalProgress: GoalProg[] = [];
+  for (const g of staffGoals) {
+    const goal = Number(g.revenueGoal);
+    if (!Number.isFinite(goal) || goal <= 0) continue;
+    const rev = revenueByStaff.get(g.staffMemberId) ?? 0;
+    const progress = Math.round((rev / goal) * 1000) / 10;
+    const name =
+      g.staffMember.displayName?.trim() ||
+      g.staffMember.email.split("@")[0] ||
+      "Profissional";
+    goalProgress.push({ name, progress, revenueGoal: goal });
+  }
+  goalProgress.sort((a, b) => a.progress - b.progress);
+  const behindGoals = goalProgress.filter((g) => g.progress < 70);
+  const worstGoal = goalProgress[0] ?? null;
 
   const clubBuckets: ClubHealthBucket[] = buildClubHealthBuckets(clubSubs, now);
   const pastDueBucket = clubBuckets.find((b) => b.key === "pastDue");
@@ -216,18 +340,20 @@ export async function getAdminMorningBriefing(
   }
 
   if (canRevenue && ops.kpis.unpaidCompleted > 0) {
+    const n = ops.kpis.unpaidCompleted;
     cards.push({
       id: "cash-unpaid",
       kind: "cash",
       tone: "urgent",
       title:
         unpaidTotal > 0
-          ? `${money(unpaidTotal)} a receber em comandas concluídas`
-          : `${ops.kpis.unpaidCompleted} comanda${ops.kpis.unpaidCompleted === 1 ? "" : "s"} sem pagamento`,
-      detail: "Feche o caixa dos atendimentos já feitos — dinheiro parado no balcão.",
-      href: "/admin/operacional",
-      cta: "Ver a receber",
-      score: 90 + Math.min(50, unpaidTotal / 20) + ops.kpis.unpaidCompleted,
+          ? `${money(unpaidTotal)} a receber (${n} comanda${n === 1 ? "" : "s"})`
+          : `${n} comanda${n === 1 ? "" : "s"} sem pagamento`,
+      detail:
+        "Atendimentos já concluídos sem registro de pagamento. Registre PIX, dinheiro ou cartão na hora.",
+      href: "/admin/operacional#a-receber",
+      cta: "Registrar pagamentos",
+      score: 90 + Math.min(50, unpaidTotal / 20) + n,
     });
   }
 
@@ -237,19 +363,29 @@ export async function getAdminMorningBriefing(
     const parts: string[] = [];
     if (lost > 0) parts.push(`${lost} sumindo`);
     if (atRisk > 0) parts.push(`${atRisk} em risco`);
+    const first = crm.actionQueue[0];
     cards.push({
       id: "retention",
       kind: "retention",
       tone: lost > 0 ? "urgent" : "attention",
       title: `${parts.join(" · ")} — reative pelo WhatsApp`,
-      detail:
-        crm.actionQueue.length > 0
-          ? `Fila pronta: comece por ${crm.actionQueue[0]!.name}.`
-          : "Abra o CRM e mande a mensagem de retorno antes de perder o cliente.",
+      detail: first
+        ? `Fila pronta: comece por ${first.name}.`
+        : "Abra o CRM e mande a mensagem de retorno antes de perder o cliente.",
       href:
         lost > 0 ? "/admin/clientes?risk=lost" : "/admin/clientes?risk=at_risk",
       cta: "Abrir CRM",
       score: 80 + lost * 2 + atRisk,
+      draftAction: first
+        ? {
+            kind: "winback",
+            clientName: first.name,
+            phone: first.phone,
+            daysSinceLastActivity: first.daysSinceLastActivity,
+            planName: first.clubPlanName,
+            lastServiceHint: first.lastServiceName,
+          }
+        : undefined,
     });
   }
 
@@ -257,6 +393,10 @@ export async function getAdminMorningBriefing(
     (pastDueBucket?.count ?? ops.kpis.clubPastDue) +
     (churnBucket?.count ?? 0);
   if (clubAttentionCount > 0) {
+    const pastItem = pastDueBucket?.items[0];
+    const churnItem = churnBucket?.items[0];
+    const lead = pastItem ?? churnItem;
+    const sub = clubSubs.find((s) => s.id === lead?.id);
     cards.push({
       id: "club-risk",
       kind: "club",
@@ -269,8 +409,19 @@ export async function getAdminMorningBriefing(
       href: "/admin/clube",
       cta: "Ver clube",
       score: 75 + clubAttentionCount * 3,
+      draftAction:
+        lead && sub
+          ? {
+              kind: pastItem ? "club_past_due" : "club_churn",
+              clientName: lead.clientName,
+              phone: sub.clientPhone,
+              planName: sub.plan.name,
+            }
+          : undefined,
     });
   } else if ((underuseBucket?.count ?? 0) >= 3) {
+    const lead = underuseBucket!.items[0];
+    const sub = clubSubs.find((s) => s.id === lead?.id);
     cards.push({
       id: "club-underuse",
       kind: "club",
@@ -280,6 +431,15 @@ export async function getAdminMorningBriefing(
       href: "/admin/clube",
       cta: "Saúde do clube",
       score: 62 + underuseBucket!.count,
+      draftAction:
+        lead && sub
+          ? {
+              kind: "club_underuse",
+              clientName: lead.clientName,
+              phone: sub.clientPhone,
+              planName: sub.plan.name,
+            }
+          : undefined,
     });
   }
 
@@ -300,7 +460,22 @@ export async function getAdminMorningBriefing(
     });
   }
 
-  // Positivos (score menor — entram se sobrar espaço)
+  if (canRevenue && worstGoal && behindGoals.length > 0) {
+    cards.push({
+      id: "goals-behind",
+      kind: "goals",
+      tone: worstGoal.progress < 40 ? "urgent" : "attention",
+      title: `${worstGoal.name} em ${worstGoal.progress}% da meta do mês`,
+      detail:
+        behindGoals.length === 1
+          ? `Meta ${money(worstGoal.revenueGoal)} — acelere agenda e ticket.`
+          : `${behindGoals.length} profissionais abaixo de 70% da meta de receita.`,
+      href: "/admin/financeiro/comissoes",
+      cta: "Ver metas",
+      score: 68 + Math.max(0, 70 - worstGoal.progress) / 2,
+    });
+  }
+
   if (
     canRevenue &&
     receivedDeltaPercent != null &&
@@ -393,6 +568,13 @@ export async function getAdminMorningBriefing(
       ops.topClients[0] != null
         ? `${ops.topClients[0].visits} visitas no mês (primeiro da lista)`
         : null,
+    goals: {
+      yearMonth,
+      behindCount: behindGoals.length,
+      topHint: worstGoal
+        ? `${worstGoal.name} em ${worstGoal.progress}% da meta`
+        : null,
+    },
   };
 
   const urgentCount = topCards.filter((c) => c.tone === "urgent").length;
@@ -407,6 +589,7 @@ export async function getAdminMorningBriefing(
     greeting: `${greetingForHour(hour)} — foco de hoje`,
     subtitle,
     cards: topCards,
+    primaryAction: primaryFromTopCard(topCards[0]),
     facts,
   };
 }

@@ -60,13 +60,14 @@ export default async function AdminPage({
   const showUnitColumn = access.role !== "STAFF";
   const showMorningBriefing =
     access.role === "OWNER" || access.role === "ADMIN";
+  // Briefing fora do Promise.all do dashboard: evita esgotar o pool pg
+  // (timeout "when trying to connect") com dezenas de queries simultâneas.
   const [
     snapshot,
     { rows, total, pageSize },
     barberRows,
     unitRows,
     onboardingItems,
-    morningBriefing,
   ] = await Promise.all([
     getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
     getAdminAppointmentsPaginated(access, page, undefined, listFilters),
@@ -101,10 +102,17 @@ export default async function AdminPage({
             return computeOnboardingChecklist(access);
           })
       : Promise.resolve([]),
-    showMorningBriefing
-      ? getAdminMorningBriefing(access)
-      : Promise.resolve(null),
   ]);
+
+  let morningBriefing = null;
+  if (showMorningBriefing) {
+    try {
+      morningBriefing = await getAdminMorningBriefing(access);
+    } catch (err) {
+      console.error("[admin] morning briefing falhou:", err);
+      morningBriefing = null;
+    }
+  }
 
   const {
     metrics,

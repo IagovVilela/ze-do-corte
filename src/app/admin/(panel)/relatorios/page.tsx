@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AdminAppointmentFrequencyHeatmap } from "@/components/admin-appointment-frequency-heatmap";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { AdminReportsPeriodAi } from "@/components/admin-reports-period-ai";
 import { AnimatedSection } from "@/components/animated-section";
 import { DashboardPaymentStack } from "@/components/dashboard-payment-stack";
 import { DashboardRevenueLine } from "@/components/dashboard-revenue-line";
@@ -83,6 +84,13 @@ export default async function AdminRelatoriosPage({
             title="Relatórios"
             description={`Visão completa do salão · ${snapshot.periodLabel}`}
           />
+
+          {access.permissions.viewRevenue &&
+          (access.role === "OWNER" || access.role === "ADMIN") ? (
+            <div className="mt-6">
+              <AdminReportsPeriodAi chartRange={chartRange} />
+            </div>
+          ) : null}
 
           <div className="mt-6 flex flex-wrap gap-2">
             {RANGE_OPTS.map((o) => {

@@ -10,11 +10,33 @@ import {
   formatIntegerDigits,
   parseBrMoneyInput,
 } from "@/lib/br-input-masks";
+import { AdminWhatsAppDraftButton } from "@/components/admin-whatsapp-draft-button";
 import {
   buildClubHealthBuckets,
+  type ClubHealthBucketKey,
   suggestClubPlanPrice,
 } from "@/lib/club-health";
+import type { WhatsAppDraftKind } from "@/lib/whatsapp-draft-types";
 import { formatMoney } from "@/lib/utils";
+
+function clubBucketDraftKind(
+  key: ClubHealthBucketKey,
+): WhatsAppDraftKind | null {
+  switch (key) {
+    case "underuse":
+      return "club_underuse";
+    case "pastDue":
+      return "club_past_due";
+    case "churnRisk":
+      return "club_churn";
+    case "nearLimit":
+      return "club_near_limit";
+    default: {
+      const _n: never = key;
+      return _n;
+    }
+  }
+}
 
 type Plan = {
   id: string;
@@ -449,15 +471,32 @@ export function ClubAdminPanel({
                       — {b.description}
                     </span>
                   </p>
-                  <ul className="mt-1 space-y-1 text-xs text-[var(--bn-muted)]">
-                    {b.items.map((item) => (
-                      <li key={`${b.key}-${item.id}`}>
-                        <span className="text-[var(--bn-on-variant)]">
-                          {item.clientName}
-                        </span>{" "}
-                        · {item.detail}
-                      </li>
-                    ))}
+                  <ul className="mt-1 space-y-2 text-xs text-[var(--bn-muted)]">
+                    {b.items.map((item) => {
+                      const draftKind = clubBucketDraftKind(b.key);
+                      return (
+                        <li
+                          key={`${b.key}-${item.id}`}
+                          className="flex flex-wrap items-center justify-between gap-2"
+                        >
+                          <span>
+                            <span className="text-[var(--bn-on-variant)]">
+                              {item.clientName}
+                            </span>{" "}
+                            · {item.detail}
+                          </span>
+                          {draftKind ? (
+                            <AdminWhatsAppDraftButton
+                              kind={draftKind}
+                              clientName={item.clientName}
+                              phone={item.clientPhone}
+                              planName={item.planName}
+                              label="Mensagem WA"
+                            />
+                          ) : null}
+                        </li>
+                      );
+                    })}
                     {b.count > b.items.length ? (
                       <li>+{b.count - b.items.length} outro(s)</li>
                     ) : null}

@@ -30,6 +30,8 @@ export type AdminCrmClientRow = {
   risk: AdminCrmRisk;
   /** Dias desde última visita (ou agenda), null se nunca. */
   daysSinceLastActivity: number | null;
+  /** Nome do último serviço concluído (para rascunho WhatsApp). */
+  lastServiceName: string | null;
 };
 
 export type AdminCrmSnapshot = {

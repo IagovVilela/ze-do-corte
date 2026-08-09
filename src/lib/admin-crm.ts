@@ -28,6 +28,7 @@ type Agg = {
   visitCount: number;
   bookingCount: number;
   totalSpent: number;
+  lastServiceName: string | null;
 };
 
 const CLUB_RANK: Record<Exclude<AdminCrmClubStatus, null>, number> = {
@@ -115,6 +116,12 @@ export async function getAdminCrmSnapshot(
         status: true,
         amountPaid: true,
         paymentStatus: true,
+        service: { select: { name: true } },
+        items: {
+          orderBy: { sortOrder: "asc" },
+          take: 1,
+          select: { service: { select: { name: true } } },
+        },
       },
       orderBy: { startsAt: "desc" },
       take: 8000,
@@ -151,6 +158,7 @@ export async function getAdminCrmSnapshot(
         visitCount: 0,
         bookingCount: 0,
         totalSpent: 0,
+        lastServiceName: null,
       };
       byPhone.set(key, agg);
     }
@@ -168,7 +176,12 @@ export async function getAdminCrmSnapshot(
 
     if (row.status === "COMPLETED") {
       agg.visitCount += 1;
-      if (!agg.lastVisitAt) agg.lastVisitAt = row.startsAt;
+      if (!agg.lastVisitAt) {
+        agg.lastVisitAt = row.startsAt;
+        const fromItem = row.items[0]?.service.name?.trim();
+        agg.lastServiceName =
+          fromItem || row.service.name?.trim() || null;
+      }
     }
 
     if (
@@ -231,6 +244,7 @@ export async function getAdminCrmSnapshot(
         visitCount: 0,
         bookingCount: 0,
         totalSpent: 0,
+        lastServiceName: null,
       });
     }
   }
@@ -265,6 +279,7 @@ export async function getAdminCrmSnapshot(
         ),
         risk,
         daysSinceLastActivity,
+        lastServiceName: agg.lastServiceName,
       };
     },
   );

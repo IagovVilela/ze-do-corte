@@ -43,6 +43,13 @@ const factsSchema = z.object({
     }),
   ),
   topClientHint: z.string().nullable(),
+  goals: z
+    .object({
+      yearMonth: z.string(),
+      behindCount: z.number(),
+      topHint: z.string().nullable(),
+    })
+    .optional(),
 });
 
 /**
@@ -88,9 +95,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Dados inválidos." }, { status: 400 });
   }
 
-  let facts: MorningBriefingFacts | null = parsedBody.data.facts ?? null;
-  if (facts && facts.organizationId !== access.organizationId) {
-    return NextResponse.json({ message: "Facts inválidos." }, { status: 403 });
+  let facts: MorningBriefingFacts | null = null;
+  if (parsedBody.data.facts) {
+    const f = parsedBody.data.facts;
+    if (f.organizationId !== access.organizationId) {
+      return NextResponse.json({ message: "Facts inválidos." }, { status: 403 });
+    }
+    facts = {
+      ...f,
+      goals: f.goals ?? {
+        yearMonth: f.generatedAt.slice(0, 7),
+        behindCount: 0,
+        topHint: null,
+      },
+    };
   }
 
   if (!facts) {

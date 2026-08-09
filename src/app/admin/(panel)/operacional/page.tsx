@@ -2,6 +2,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+import { AdminOpsUnpaidList } from "@/components/admin-ops-unpaid-list";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AnimatedSection } from "@/components/animated-section";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
@@ -122,7 +123,7 @@ export default async function AdminOperacionalPage() {
               )}
             </section>
 
-            <section className={card}>
+            <section id="a-receber" className={`${card} scroll-mt-24`}>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold text-[var(--bn-on)]">
                   A receber
@@ -134,26 +135,10 @@ export default async function AdminOperacionalPage() {
                   Caixa
                 </Link>
               </div>
-              {snap.unpaid.length === 0 ? (
-                <p className="mt-3 text-sm text-[var(--bn-muted)]">
-                  Nada pendente.
-                </p>
-              ) : (
-                <ul className="mt-3 divide-y divide-[var(--bn-border)]">
-                  {snap.unpaid.map((u) => (
-                    <li key={u.id} className="py-2 text-sm">
-                      <p className="font-medium text-[var(--bn-on)]">
-                        {u.clientName}
-                      </p>
-                      <p className="text-xs text-[var(--bn-muted)]">
-                        {u.clientPhone} ·{" "}
-                        {format(new Date(u.startsAt), "dd/MM", { locale: ptBR })}{" "}
-                        · {money(u.amount)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <AdminOpsUnpaidList
+                unpaid={snap.unpaid}
+                canManagePayment={access.permissions.viewRevenue}
+              />
             </section>
 
             <section className={card}>

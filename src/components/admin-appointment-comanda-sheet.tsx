@@ -326,20 +326,32 @@ export function AdminAppointmentComandaSheet({
               {comanda.upsell && canEdit && !comanda.paidAt ? (
                 <div className="rounded-xl border border-[var(--bn-primary)]/30 bg-[var(--bn-primary)]/10 px-3 py-3">
                   <p className="text-xs font-semibold text-[var(--bn-on)]">
-                    Upsell sugerido
+                    Coach de upsell
                   </p>
                   <p className="mt-1 text-sm text-[var(--bn-on-variant)]">
+                    {comanda.upsell.kind === "service" ? "Serviço" : "Produto"}
+                    {" · "}
                     {comanda.upsell.name} · {money(comanda.upsell.price)}
+                  </p>
+                  <p className="mt-2 rounded-lg border border-[var(--bn-border)]/60 bg-[var(--bn-surface)]/50 px-2.5 py-2 text-xs leading-relaxed text-[var(--bn-on)]">
+                    “{comanda.upsell.pitch}”
                   </p>
                   <button
                     type="button"
                     className="mt-2 text-xs font-semibold text-[var(--bn-primary)] hover:underline"
                     onClick={() =>
-                      void patch({
-                        action: "addProduct",
-                        productId: comanda.upsell!.productId,
-                        quantity: 1,
-                      })
+                      void patch(
+                        comanda.upsell!.kind === "service"
+                          ? {
+                              action: "addService",
+                              serviceId: comanda.upsell!.id,
+                            }
+                          : {
+                              action: "addProduct",
+                              productId: comanda.upsell!.id,
+                              quantity: 1,
+                            },
+                      )
                     }
                   >
                     Adicionar à comanda

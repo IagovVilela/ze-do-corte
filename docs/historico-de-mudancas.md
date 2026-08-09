@@ -8,6 +8,8 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-09
 
+- **IA operacional — fases 2–3 (polimento)**: rascunho WhatsApp com preview, variantes, copiar e abrir wa.me; CRM envia último serviço ao draft; clube gera script também no bucket “no limite”; comanda sugere serviço ou produto com pitch; Relatórios com 3 ações linkadas.
+- **IA operacional (briefing + ações)**: Operacional `#a-receber` registra pagamento (método + PATCH); briefing com copy clara, chip **Faça agora**, card de metas, CTA `#a-receber` e botão **Mensagem IA** em retenção/clube. `POST /api/admin/ai/whatsapp-draft` (CRM + saúde do clube). Comanda com **coach de upsell** (pitch). Relatórios: **leitura do período** via `POST /api/admin/ai/reports-narrative`.
 - **Briefing matinal do dono** (`/admin`, OWNER/ADMIN): bloco “Ritual do dia” com até 5 prioridades ranqueadas (agenda 2h, caixa a receber, CRM risco/sumindo, clube, estoque, sinais positivos/queda 7d) e CTAs. Lib `admin-morning-briefing.ts`.
 - **Resumo inteligente (fase 2)**: botão gera narrativa a partir de facts JSON (sem telefones); `POST /api/admin/morning-briefing/narrative` — LLM se `MORNING_BRIEFING_AI_ENABLED` + `OPENAI_API_KEY`, senão regras; cache diário por organização. Preset documentado: **Google Gemini** (`OPENAI_BASE_URL` do AI Studio) ou Groq.
 

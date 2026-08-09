@@ -59,6 +59,13 @@ function rulesFallback(facts: MorningBriefingFacts): MorningNarrative {
   if (k.lowStockCount > 0) {
     parts.push(`Estoque: ${k.lowStockCount} produto(s) no mínimo.`);
   }
+  if (facts.goals?.behindCount && facts.goals.behindCount > 0) {
+    parts.push(
+      facts.goals.topHint
+        ? `Metas: ${facts.goals.behindCount} abaixo de 70% (${facts.goals.topHint}).`
+        : `Metas: ${facts.goals.behindCount} profissional(is) abaixo de 70%.`,
+    );
+  }
   if (k.receivedDeltaPercent != null) {
     parts.push(
       `Recebido 7d ${k.receivedDeltaPercent >= 0 ? "+" : ""}${k.receivedDeltaPercent}% vs semana anterior.`,

@@ -5,6 +5,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LoaderCircle, MessageCircle } from "lucide-react";
 
+import { AdminWhatsAppDraftButton } from "@/components/admin-whatsapp-draft-button";
 import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import type { AdminCrmRisk, AdminCrmSnapshot } from "@/lib/admin-crm-types";
 import { cn, formatMoney } from "@/lib/utils";
@@ -233,17 +234,31 @@ export function AdminCrmPanel({ initial }: Props) {
                       : ""}
                   </p>
                 </div>
-                {c.whatsappWinBackHref ? (
-                  <a
-                    href={c.whatsappWinBackHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[var(--bn-primary)] px-3 text-xs font-semibold text-zinc-950"
-                  >
-                    <MessageCircle className="size-3.5" aria-hidden />
-                    WhatsApp
-                  </a>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {c.risk !== "ok" ? (
+                    <AdminWhatsAppDraftButton
+                      kind="winback"
+                      clientName={c.name}
+                      phone={c.phone}
+                      daysSinceLastActivity={c.daysSinceLastActivity}
+                      planName={c.clubPlanName}
+                      lastServiceHint={c.lastServiceName}
+                      label="Gerar mensagem"
+                      size="md"
+                    />
+                  ) : null}
+                  {c.whatsappWinBackHref ? (
+                    <a
+                      href={c.whatsappWinBackHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[var(--bn-primary)] px-3 text-xs font-semibold text-zinc-950"
+                    >
+                      <MessageCircle className="size-3.5" aria-hidden />
+                      WhatsApp
+                    </a>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
@@ -471,6 +486,20 @@ export function AdminCrmPanel({ initial }: Props) {
                     </dd>
                   </div>
                 </dl>
+                {c.risk !== "ok" ? (
+                  <div className="mt-3">
+                    <AdminWhatsAppDraftButton
+                      kind="winback"
+                      clientName={c.name}
+                      phone={c.phone}
+                      daysSinceLastActivity={c.daysSinceLastActivity}
+                      planName={c.clubPlanName}
+                      lastServiceHint={c.lastServiceName}
+                      label="Gerar mensagem"
+                      size="md"
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -488,6 +517,7 @@ export function AdminCrmPanel({ initial }: Props) {
                     <th className="px-4 py-3">Gasto</th>
                   ) : null}
                   <th className="px-4 py-3">Clube</th>
+                  <th className="px-4 py-3">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--bn-border)]">
@@ -568,6 +598,21 @@ export function AdminCrmPanel({ initial }: Props) {
                             </div>
                           ) : null}
                         </div>
+                      ) : (
+                        <span className="text-[var(--bn-muted)]">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.risk !== "ok" ? (
+                        <AdminWhatsAppDraftButton
+                          kind="winback"
+                          clientName={c.name}
+                          phone={c.phone}
+                          daysSinceLastActivity={c.daysSinceLastActivity}
+                          planName={c.clubPlanName}
+                          lastServiceHint={c.lastServiceName}
+                          label="Gerar mensagem"
+                        />
                       ) : (
                         <span className="text-[var(--bn-muted)]">—</span>
                       )}

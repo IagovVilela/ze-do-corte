@@ -72,8 +72,16 @@ export type AppointmentComanda = {
     visitsRemaining: number | null;
     badgeLabel: string;
   } | null;
-  /** Sugestão de upsell (produto ativo não na comanda). */
-  upsell: { productId: string; name: string; price: number } | null;
+  /** Sugestão de upsell (produto ou serviço) + frase de balcão. */
+  upsell: {
+    kind: "product" | "service";
+    id: string;
+    name: string;
+    price: number;
+    /** Frase curta para o barbeiro falar no balcão. */
+    pitch: string;
+    reason: "repurchase" | "catalog" | "club";
+  } | null;
 };
 
 export async function getAppointmentComanda(
@@ -235,16 +243,120 @@ export async function getAppointmentComanda(
     appt.clientPhone,
   );
 
-  const upsellProduct = await prisma.product.findFirst({
-    where: {
-      organizationId: access.organizationId,
-      isActive: true,
-      id: { notIn: [...currentProductIds] },
-      OR: [{ stockQty: null }, { stockQty: { gt: 0 } }],
-    },
-    orderBy: { price: "desc" },
-    select: { id: true, name: true, price: true },
-  });
+  const repurchaseProductIds = repurchase
+    .filter((r) => r.kind === "product")
+    .map((r) => r.id);
+  const repurchaseServiceIds = repurchase
+    .filter((r) => r.kind === "service")
+    .map((r) => r.id);
+
+  let upsell: NonNullable<AppointmentComanda["upsell"]> | null = null;
+
+  // 1) Serviço de recompra (histórico) — pitch de balcão.
+  if (repurchaseServiceIds.length > 0) {
+    const preferredSvc = await prisma.service.findFirst({
+      where: {
+        id: { in: repurchaseServiceIds },
+        isActive: true,
+        unit: { organizationId: access.organizationId },
+      },
+      orderBy: { price: "desc" },
+      select: { id: true, name: true, price: true },
+    });
+    if (preferredSvc) {
+      upsell = {
+        kind: "service",
+        id: preferredSvc.id,
+        name: preferredSvc.name,
+        price: Number(preferredSvc.price),
+        reason: "repurchase",
+        pitch: "",
+      };
+    }
+  }
+
+  // 2) Produto de recompra com estoque.
+  if (!upsell && repurchaseProductIds.length > 0) {
+    const preferred = await prisma.product.findFirst({
+      where: {
+        organizationId: access.organizationId,
+        isActive: true,
+        id: { in: repurchaseProductIds },
+        OR: [{ stockQty: null }, { stockQty: { gt: 0 } }],
+      },
+      orderBy: { price: "desc" },
+      select: { id: true, name: true, price: true },
+    });
+    if (preferred) {
+      upsell = {
+        kind: "product",
+        id: preferred.id,
+        name: preferred.name,
+        price: Number(preferred.price),
+        reason: "repurchase",
+        pitch: "",
+      };
+    }
+  }
+
+  // 3) Catálogo de produto (maior preço com estoque).
+  if (!upsell) {
+    const catalog = await prisma.product.findFirst({
+      where: {
+        organizationId: access.organizationId,
+        isActive: true,
+        id: { notIn: [...currentProductIds] },
+        OR: [{ stockQty: null }, { stockQty: { gt: 0 } }],
+      },
+      orderBy: { price: "desc" },
+      select: { id: true, name: true, price: true },
+    });
+    if (catalog) {
+      const clubBoost =
+        clubSnap != null &&
+        (clubSnap.status === "ACTIVE" || clubSnap.status === "PAST_DUE") &&
+        (clubSnap.visitsRemaining == null || clubSnap.visitsRemaining > 0);
+      upsell = {
+        kind: "product",
+        id: catalog.id,
+        name: catalog.name,
+        price: Number(catalog.price),
+        reason: clubBoost ? "club" : "catalog",
+        pitch: "",
+      };
+    }
+  }
+
+  function moneyBr(n: number) {
+    return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
+  const clientFirstName =
+    appt.clientName.trim().split(/\s+/)[0] || "cliente";
+
+  function buildUpsellPitch(
+    item: NonNullable<AppointmentComanda["upsell"]>,
+  ): string {
+    const price = moneyBr(item.price);
+    switch (item.reason) {
+      case "repurchase":
+        return item.kind === "service"
+          ? `${clientFirstName} costuma fazer ${item.name} — oferece incluir hoje por ${price}.`
+          : `${clientFirstName} já levou ${item.name} antes — oferece de novo por ${price}.`;
+      case "club":
+        return `Cliente do clube: sugere ${item.name} (${price}) pra complementar o atendimento.`;
+      case "catalog":
+        return `Oferece ${item.name} por ${price} — uma frase basta no balcão.`;
+      default: {
+        const _n: never = item.reason;
+        return _n;
+      }
+    }
+  }
+
+  if (upsell) {
+    upsell = { ...upsell, pitch: buildUpsellPitch(upsell) };
+  }
 
   return {
     id: appt.id,
@@ -284,12 +396,6 @@ export async function getAppointmentComanda(
           badgeLabel: clubBadgeLabel(clubSnap),
         }
       : null,
-    upsell: upsellProduct
-      ? {
-          productId: upsellProduct.id,
-          name: upsellProduct.name,
-          price: Number(upsellProduct.price),
-        }
-      : null,
+    upsell,
   };
 }

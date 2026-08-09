@@ -25,12 +25,27 @@ const connectionString =
   process.env.DATABASE_URL ??
   "postgresql://postgres:postgres@localhost:5432/postgres";
 
+function isLocalDatabaseHost(url: string): boolean {
+  try {
+    const host = new URL(url.replace(/^postgresql:/i, "http:")).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 function createPool() {
+  const local = isLocalDatabaseHost(connectionString);
+  // Local: /admin dispara dezenas de queries em paralelo (dashboard + briefing).
+  // Railway free: mantenha pool baixo; sobrescreva com PG_POOL_MAX se precisar.
+  const defaultMax = local ? 15 : 5;
   return new Pool({
     connectionString,
-    max: Number(process.env.PG_POOL_MAX ?? 5),
+    max: Number(process.env.PG_POOL_MAX ?? defaultMax),
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 10_000,
+    connectionTimeoutMillis: Number(
+      process.env.PG_CONNECTION_TIMEOUT_MS ?? (local ? 20_000 : 15_000),
+    ),
     allowExitOnIdle: false,
   });
 }

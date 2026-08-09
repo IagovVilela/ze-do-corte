@@ -23,7 +23,13 @@ export type ClubHealthBucket = {
   label: string;
   description: string;
   count: number;
-  items: { id: string; clientName: string; detail: string }[];
+  items: {
+    id: string;
+    clientName: string;
+    clientPhone: string;
+    detail: string;
+    planName: string;
+  }[];
 };
 
 const LIST_LIMIT = 8;
@@ -60,6 +66,8 @@ export function buildClubHealthBuckets(
         underuse.push({
           id: s.id,
           clientName: s.clientName,
+          clientPhone: s.clientPhone,
+          planName: s.plan.name,
           detail: `${s.visitsUsed}/${included} visitas · ${s.plan.name}`,
         });
       }
@@ -67,6 +75,8 @@ export function buildClubHealthBuckets(
         nearLimit.push({
           id: s.id,
           clientName: s.clientName,
+          clientPhone: s.clientPhone,
+          planName: s.plan.name,
           detail: `${s.visitsUsed}/${included} visitas · ${s.plan.name}`,
         });
       }
@@ -76,6 +86,8 @@ export function buildClubHealthBuckets(
       pastDue.push({
         id: s.id,
         clientName: s.clientName,
+        clientPhone: s.clientPhone,
+        planName: s.plan.name,
         detail: s.plan.name,
       });
     }
@@ -91,6 +103,8 @@ export function buildClubHealthBuckets(
       churnRisk.push({
         id: s.id,
         clientName: s.clientName,
+        clientPhone: s.clientPhone,
+        planName: s.plan.name,
         detail: `${reason} · ${s.plan.name}`,
       });
     }
