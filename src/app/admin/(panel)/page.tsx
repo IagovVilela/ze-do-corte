@@ -20,8 +20,10 @@ import {
   OnboardingChecklist,
   computeOnboardingChecklist,
 } from "@/components/onboarding-checklist";
+import { AdminMorningBriefingPanel } from "@/components/admin-morning-briefing";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
+import { getAdminMorningBriefing } from "@/lib/admin-morning-briefing";
 import { cn } from "@/lib/utils";
 import {
   getAdminAppointmentsPaginated,
@@ -56,42 +58,53 @@ export default async function AdminPage({
   const telemetryScope = parseTelemetryScope(sp);
 
   const showUnitColumn = access.role !== "STAFF";
-  const [snapshot, { rows, total, pageSize }, barberRows, unitRows, onboardingItems] =
-    await Promise.all([
-      getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
-      getAdminAppointmentsPaginated(access, page, undefined, listFilters),
-      access.role === "STAFF"
-        ? Promise.resolve([] as const)
-        : prisma.staffMember.findMany({
-            where: { role: "STAFF", ...staffMemberScopeWhere(access) },
-            select: { id: true, displayName: true, email: true, unitId: true },
-            orderBy: [{ displayName: "asc" }, { email: "asc" }],
-          }),
-      showUnitColumn
-        ? prisma.barbershopUnit.findMany({
-            where: { isActive: true, ...unitScopeWhere(access) },
-            select: { id: true, name: true },
-            orderBy: { name: "asc" },
+  const showMorningBriefing =
+    access.role === "OWNER" || access.role === "ADMIN";
+  const [
+    snapshot,
+    { rows, total, pageSize },
+    barberRows,
+    unitRows,
+    onboardingItems,
+    morningBriefing,
+  ] = await Promise.all([
+    getAdminDashboardSnapshot(access, chartRange, listFilters, telemetryScope),
+    getAdminAppointmentsPaginated(access, page, undefined, listFilters),
+    access.role === "STAFF"
+      ? Promise.resolve([] as const)
+      : prisma.staffMember.findMany({
+          where: { role: "STAFF", ...staffMemberScopeWhere(access) },
+          select: { id: true, displayName: true, email: true, unitId: true },
+          orderBy: [{ displayName: "asc" }, { email: "asc" }],
+        }),
+    showUnitColumn
+      ? prisma.barbershopUnit.findMany({
+          where: { isActive: true, ...unitScopeWhere(access) },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([] as { id: string; name: string }[]),
+    access.role === "OWNER" || access.permissions.manageBranding
+      ? prisma.organization
+          .findUnique({
+            where: { id: access.organizationId },
+            select: { onboardingJson: true },
           })
-        : Promise.resolve([] as { id: string; name: string }[]),
-      access.role === "OWNER" || access.permissions.manageBranding
-        ? prisma.organization
-            .findUnique({
-              where: { id: access.organizationId },
-              select: { onboardingJson: true },
-            })
-            .then((org) => {
-              const flags =
-                org?.onboardingJson &&
-                typeof org.onboardingJson === "object" &&
-                !Array.isArray(org.onboardingJson)
-                  ? (org.onboardingJson as Record<string, unknown>)
-                  : {};
-              if (flags.hideChecklist === true) return [];
-              return computeOnboardingChecklist(access);
-            })
-        : Promise.resolve([]),
-    ]);
+          .then((org) => {
+            const flags =
+              org?.onboardingJson &&
+              typeof org.onboardingJson === "object" &&
+              !Array.isArray(org.onboardingJson)
+                ? (org.onboardingJson as Record<string, unknown>)
+                : {};
+            if (flags.hideChecklist === true) return [];
+            return computeOnboardingChecklist(access);
+          })
+      : Promise.resolve([]),
+    showMorningBriefing
+      ? getAdminMorningBriefing(access)
+      : Promise.resolve(null),
+  ]);
 
   const {
     metrics,
@@ -159,6 +172,15 @@ export default async function AdminPage({
             </div>
           </div>
         </AnimatedSection>
+
+        {morningBriefing ? (
+          <AnimatedSection>
+            <AdminMorningBriefingPanel
+              briefing={morningBriefing}
+              aiEnabled
+            />
+          </AnimatedSection>
+        ) : null}
 
         {onboardingItems.length > 0 ? (
           <OnboardingChecklist items={onboardingItems} />

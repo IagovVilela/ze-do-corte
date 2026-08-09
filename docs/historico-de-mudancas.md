@@ -6,6 +6,11 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-08-09
+
+- **Briefing matinal do dono** (`/admin`, OWNER/ADMIN): bloco “Ritual do dia” com até 5 prioridades ranqueadas (agenda 2h, caixa a receber, CRM risco/sumindo, clube, estoque, sinais positivos/queda 7d) e CTAs. Lib `admin-morning-briefing.ts`.
+- **Resumo inteligente (fase 2)**: botão gera narrativa a partir de facts JSON (sem telefones); `POST /api/admin/morning-briefing/narrative` — LLM se `MORNING_BRIEFING_AI_ENABLED` + `OPENAI_API_KEY`, senão regras; cache diário por organização. Preset documentado: **Google Gemini** (`OPENAI_BASE_URL` do AI Studio) ou Groq.
+
 ## 2026-08-02
 
 - **Seed demo ADMIN + STAFF**: `gerente@zdc.local` (ADMIN) e `barbeiro@zdc.local` (STAFF) na org Barbergon; senha via `SEED_DEMO_PASSWORD` ou `SEED_OWNER_PASSWORD` **do ambiente** (em produção Railway = senha do OWNER, não o padrão local). Rodam no `db:seed` e no `ensure-owner`.

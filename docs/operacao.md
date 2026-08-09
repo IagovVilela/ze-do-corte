@@ -85,6 +85,40 @@ Opcional até ativar cobrança. Plataforma: `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKE
 
 Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número, só dígitos) e `SUPPORT_EMAIL`. Salão: **`/admin/suporte`**. Inbox Ops: **`/plataforma/suporte`**. Guia: [suporte.md](./suporte.md).
 
+### Briefing matinal + resumo inteligente
+
+No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia. O botão **Gerar resumo do dia** chama `POST /api/admin/morning-briefing/narrative`.
+
+| Variável | Uso |
+|----------|-----|
+| `MORNING_BRIEFING_AI_ENABLED` | `true` / `1` para tentar LLM |
+| `OPENAI_API_KEY` | Chave da API (Gemini, Groq, OpenAI…) |
+| `OPENAI_BASE_URL` | Endpoint compatível OpenAI (ver presets abaixo) |
+| `MORNING_BRIEFING_AI_MODEL` | Nome do modelo |
+
+**Preset recomendado — Google Gemini (free tier):**
+
+1. Crie a chave em [Google AI Studio](https://aistudio.google.com/apikey).
+2. Variáveis:
+
+```env
+MORNING_BRIEFING_AI_ENABLED=true
+OPENAI_API_KEY=AIza...sua_chave
+OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+MORNING_BRIEFING_AI_MODEL=gemini-2.0-flash
+```
+
+**Preset Groq (se a conta liberar Create API Key):**
+
+```env
+MORNING_BRIEFING_AI_ENABLED=true
+OPENAI_API_KEY=gsk_...
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+MORNING_BRIEFING_AI_MODEL=llama-3.3-70b-versatile
+```
+
+Sem flag/chave, o resumo usa **regras** sobre as mesmas métricas (sem PII de telefone). Cache em memória por organização/dia.
+
 ### Pagamento e gráficos no `/admin`
 
 **Balcão:** dono/admin regista `paidAt` / método na lista ou `PATCH /api/admin/appointments/[id]`. **Online:** PIX pós-agendamento e clube via Asaas do salão (quando ligado). Gráficos: período **Hoje / 7 dias / Mês / 3 meses** (`chartRange`); `GET /api/admin/dashboard?chartRange=`.

@@ -20,6 +20,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `scripts/ensure-owner.ts` | Arranque em produção: cria OWNER se `SEED_OWNER_*` (chamado por `start:prod`) |
 | `src/lib/ensure-owner-with-prisma.ts` | Lógica idempotente OWNER a partir de `SEED_OWNER_*` (script + `instrumentation`); chama demo staff |
 | `src/lib/ensure-demo-staff-with-prisma.ts` | Contas demo `gerente@zdc.local` (ADMIN) + `barbeiro@zdc.local` (STAFF) |
+| `src/lib/admin-morning-briefing.ts` | Briefing matinal OWNER/ADMIN: prioridades ranqueadas + facts JSON |
+| `src/lib/morning-briefing-ai.ts` | Narrativa do briefing (LLM opcional + fallback regras + cache diário) |
 | `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
 | `src/lib/observability.ts` | Logs JSON + `captureException` → Sentry |
 | `src/instrumentation.ts` / `instrumentation-client.ts` | Init Sentry (server/edge/client) |
@@ -51,7 +53,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org (+ PWA do tenant) |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
-| `/admin` | `src/app/admin/(panel)/page.tsx` | Dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
+| `/admin` | `src/app/admin/(panel)/page.tsx` | Briefing matinal (OWNER/ADMIN) + dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
 | `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda |
 | `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview de indicadores do salão |
 | `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
@@ -94,6 +96,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; `clientManageToken`; notificação Resend se configurada |
 | Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` + `PATCH` (`cancel` / `reschedule`) |
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` — `chartRange`, `telemetryScope=chart`, filtros `status` / `staff` / `unit` / `q` |
+| Briefing narrativa | `src/app/api/admin/morning-briefing/narrative/route.ts` — `POST` gera resumo (IA ou regras); `GET` status `aiConfigured` |
 | Export Excel | `src/app/api/admin/export/route.ts` — agenda completa; `?pack=month&yearMonth=AAAA-MM` pacote mensal (XLSX multi-aba) |
 | Metas mensais | `src/app/api/admin/goals/route.ts` — `GET`/`PUT` (`StaffMonthlyGoal`) |
 | Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions`, `commission-rules` (`tiersJson`) |
@@ -232,7 +235,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-frequency-heatmap.tsx`, `admin-appointments-calendar.tsx`, `admin-appointment-comanda-sheet.tsx`, `admin-products-manager.tsx`, `admin-date-range-picker.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-morning-briefing.tsx`, `admin-morning-briefing-ai.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-frequency-heatmap.tsx`, `admin-appointments-calendar.tsx`, `admin-appointment-comanda-sheet.tsx`, `admin-products-manager.tsx`, `admin-date-range-picker.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
 | Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |
