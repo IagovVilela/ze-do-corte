@@ -165,8 +165,10 @@ export async function getAdminMorningBriefing(
   const whereBase = appointmentListWhere(access, {});
   const canRevenue = access.permissions.viewRevenue;
 
-  const [ops, crm, clubSubs, paidLast, paidPrev] = await Promise.all([
-    getAdminOpsSnapshot(access),
+  // Sequencial em ondas: ops sozinho já usa várias queries; em paralelo com CRM
+  // estoura o pool (timeout "when trying to connect").
+  const ops = await getAdminOpsSnapshot(access);
+  const [crm, clubSubs] = await Promise.all([
     getAdminCrmSnapshot(access, {
       riskFilter: "actionable",
       sort: "risk",
@@ -186,8 +188,10 @@ export async function getAdminMorningBriefing(
       },
       take: 800,
     }),
-    canRevenue
-      ? prisma.appointment.findMany({
+  ]);
+  const [paidLast, paidPrev] = canRevenue
+    ? await Promise.all([
+        prisma.appointment.findMany({
           where: {
             AND: [
               whereBase,
@@ -200,10 +204,8 @@ export async function getAdminMorningBriefing(
             service: { select: { price: true } },
           },
           take: 2000,
-        })
-      : Promise.resolve([]),
-    canRevenue
-      ? prisma.appointment.findMany({
+        }),
+        prisma.appointment.findMany({
           where: {
             AND: [
               whereBase,
@@ -216,9 +218,9 @@ export async function getAdminMorningBriefing(
             service: { select: { price: true } },
           },
           take: 2000,
-        })
-      : Promise.resolve([]),
-  ]);
+        }),
+      ])
+    : [[], []];
 
   // Metas em segundo lote — reduz pico de conexões no pool pg.
   const [staffGoals, paidForGoals] = canRevenue

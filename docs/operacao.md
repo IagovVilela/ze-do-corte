@@ -85,18 +85,17 @@ Opcional até ativar cobrança. Plataforma: `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKE
 
 Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número, só dígitos) e `SUPPORT_EMAIL`. Salão: **`/admin/suporte`**. Inbox Ops: **`/plataforma/suporte`**. Guia: [suporte.md](./suporte.md).
 
-### Briefing matinal + resumo inteligente
+### Briefing matinal + Braço Direito
 
-No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia, chip **Faça agora** e CTAs (caixa → `/admin/operacional#a-receber`). O botão **Gerar resumo do dia** chama `POST /api/admin/morning-briefing/narrative`.
+No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia e CTA **Abrir análise da operação** → `/admin/inteligencia`.
 
-A mesma flag/chave alimenta também:
+Em **`/admin/inteligencia`**: KPIs vs período anterior, gráficos, heatmap de demanda, reativação WhatsApp e **Análise da operação** (auto ao abrir; âncoras `#reativacao` / `#demanda-fraca`; `POST /api/admin/ai/right-hand`). Snapshot em `GET /api/admin/right-hand`.
 
-- `POST /api/admin/ai/whatsapp-draft` — mensagem de retenção/clube (CRM, clube, cards do briefing)
-- `POST /api/admin/ai/reports-narrative` — leitura do período em `/admin/relatorios`
+A mesma flag/chave Gemini alimenta briefing legado, WhatsApp draft, relatórios e Braço Direito:
 
 | Variável | Uso |
 |----------|-----|
-| `MORNING_BRIEFING_AI_ENABLED` | `true` / `1` para tentar LLM (briefing, WhatsApp draft, relatórios) |
+| `MORNING_BRIEFING_AI_ENABLED` | `true` / `1` para tentar LLM |
 | `OPENAI_API_KEY` | Chave da API (Gemini, Groq, OpenAI…) |
 | `OPENAI_BASE_URL` | Endpoint compatível OpenAI (ver presets abaixo) |
 | `MORNING_BRIEFING_AI_MODEL` | Nome do modelo |
@@ -147,6 +146,10 @@ Causas típicas: cache do **Turbopack** inconsistente; pasta **`.next`** apagada
 3. Suba de novo: **`npm run dev`**.
 
 Se os erros **continuarem**, use o bundler clássico em desenvolvimento: **`npm run dev:webpack`** (`next dev --webpack`), que evita o cache interno do Turbopack.
+
+### Prisma: `timeout exceeded when trying to connect`
+
+O pool `pg` esgotou (muitas queries em paralelo no `/admin` + briefing, ou Postgres remoto lento). Em **development** o default já sobe (`PG_POOL_MAX` ~12). Se ainda falhar: suba `PG_POOL_MAX=15` no `.env`, reinicie o `next dev` (hot-reload recria o pool quando a geração do cliente muda). Em produção Railway mantenha o pool baixo.
 
 ### Prisma: `Unknown field` no desenvolvimento (Turbopack)
 

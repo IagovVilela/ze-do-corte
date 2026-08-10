@@ -88,14 +88,8 @@ export async function getAdminOpsSnapshot(
 
   const whereBase = appointmentListWhere(access, {});
 
-  const [
-    todayRows,
-    unpaidRows,
-    monthRows,
-    clubPastDue,
-    clubAttentionRows,
-    lowStock,
-  ] = await Promise.all([
+  // Lotes pequenos: evita esgotar o pool pg (timeout "when trying to connect").
+  const [todayRows, unpaidRows, monthRows] = await Promise.all([
     prisma.appointment.findMany({
       where: {
         AND: [
@@ -155,6 +149,9 @@ export async function getAdminOpsSnapshot(
         paidAt: true,
       },
     }),
+  ]);
+
+  const [clubPastDue, clubAttentionRows, lowStock] = await Promise.all([
     access.permissions.manageSubscriptions
       ? prisma.clientSubscription.count({
           where: {
@@ -193,28 +190,26 @@ export async function getAdminOpsSnapshot(
   ]);
 
   const lostCutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-  const [recentPhones, allPhones] = await Promise.all([
-    prisma.appointment.findMany({
-      where: {
-        AND: [
-          whereBase,
-          { status: { in: ["CONFIRMED", "COMPLETED"] } },
-          { startsAt: { gte: lostCutoff } },
-        ],
-      },
-      select: { clientPhone: true },
-      distinct: ["clientPhone"],
-      take: 5000,
-    }),
-    prisma.appointment.findMany({
-      where: {
-        AND: [whereBase, { status: { in: ["CONFIRMED", "COMPLETED"] } }],
-      },
-      select: { clientPhone: true },
-      distinct: ["clientPhone"],
-      take: 5000,
-    }),
-  ]);
+  const recentPhones = await prisma.appointment.findMany({
+    where: {
+      AND: [
+        whereBase,
+        { status: { in: ["CONFIRMED", "COMPLETED"] } },
+        { startsAt: { gte: lostCutoff } },
+      ],
+    },
+    select: { clientPhone: true },
+    distinct: ["clientPhone"],
+    take: 5000,
+  });
+  const allPhones = await prisma.appointment.findMany({
+    where: {
+      AND: [whereBase, { status: { in: ["CONFIRMED", "COMPLETED"] } }],
+    },
+    select: { clientPhone: true },
+    distinct: ["clientPhone"],
+    take: 5000,
+  });
   const recentSet = new Set(
     recentPhones.map((p) => p.clientPhone.replace(/\D/g, "")),
   );

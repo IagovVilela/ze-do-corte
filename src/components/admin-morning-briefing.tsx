@@ -24,8 +24,6 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   briefing: AdminMorningBriefing;
-  /** Liga o botão de narrativa IA quando o servidor permite. */
-  aiEnabled?: boolean;
 };
 
 function kindIcon(kind: MorningBriefingKind) {
@@ -133,10 +131,7 @@ function CardBlock({ card }: { card: MorningBriefingCard }) {
   );
 }
 
-export function AdminMorningBriefingPanel({
-  briefing,
-  aiEnabled = false,
-}: Props) {
+export function AdminMorningBriefingPanel({ briefing }: Props) {
   return (
     <section
       aria-label="Briefing matinal"
@@ -184,9 +179,7 @@ export function AdminMorningBriefingPanel({
         </p>
       )}
 
-      {aiEnabled ? (
-        <AdminMorningBriefingAi facts={briefing.facts} />
-      ) : null}
+      <AdminMorningBriefingAi />
     </section>
   );
 }

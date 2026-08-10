@@ -183,10 +183,7 @@ export default async function AdminPage({
 
         {morningBriefing ? (
           <AnimatedSection>
-            <AdminMorningBriefingPanel
-              briefing={morningBriefing}
-              aiEnabled
-            />
+            <AdminMorningBriefingPanel briefing={morningBriefing} />
           </AnimatedSection>
         ) : null}
 

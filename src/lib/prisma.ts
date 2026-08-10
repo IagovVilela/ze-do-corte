@@ -6,7 +6,7 @@ import { Pool } from "pg";
  * Incrementar quando modelos novos forem adicionados ao schema (força trocar
  * o singleton em hot-reload).
  */
-const PRISMA_CLIENT_GENERATION = 17;
+const PRISMA_CLIENT_GENERATION = 18;
 
 type PrismaBundle = {
   generation: number;
@@ -36,15 +36,17 @@ function isLocalDatabaseHost(url: string): boolean {
 
 function createPool() {
   const local = isLocalDatabaseHost(connectionString);
-  // Local: /admin dispara dezenas de queries em paralelo (dashboard + briefing).
-  // Railway free: mantenha pool baixo; sobrescreva com PG_POOL_MAX se precisar.
-  const defaultMax = local ? 15 : 5;
+  const isDev = process.env.NODE_ENV === "development";
+  // Dev (mesmo com Postgres remoto): /admin + briefing pedem várias queries;
+  // max 5 esgota o pool → "timeout exceeded when trying to connect".
+  // Produção Railway: pool baixo; sobrescreva com PG_POOL_MAX se precisar.
+  const defaultMax = isDev || local ? 12 : 5;
   return new Pool({
     connectionString,
     max: Number(process.env.PG_POOL_MAX ?? defaultMax),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: Number(
-      process.env.PG_CONNECTION_TIMEOUT_MS ?? (local ? 20_000 : 15_000),
+      process.env.PG_CONNECTION_TIMEOUT_MS ?? (isDev || local ? 25_000 : 15_000),
     ),
     allowExitOnIdle: false,
   });
