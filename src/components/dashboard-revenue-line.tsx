@@ -4,6 +4,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,16 +13,30 @@ import {
 
 import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { DashboardRevenuePoint } from "@/lib/types";
+import { findPeakValley } from "@/lib/right-hand-metrics";
 
 type Props = {
   data: DashboardRevenuePoint[];
   periodLabel: string;
+  peakIndex?: number | null;
+  valleyIndex?: number | null;
 };
 
-export function DashboardRevenueLine({ data, periodLabel }: Props) {
+export function DashboardRevenueLine({
+  data,
+  periodLabel,
+  peakIndex: peakProp,
+  valleyIndex: valleyProp,
+}: Props) {
   const chart = useAdminChartColors();
   const maxAmt = Math.max(...data.map((d) => d.amount), 1);
   const hasAny = data.some((d) => d.amount > 0);
+  const computed = findPeakValley(data.map((d) => d.amount));
+  const peakIndex = peakProp ?? computed.peakIndex;
+  const valleyIndex = valleyProp ?? computed.valleyIndex;
+  const peak = peakIndex != null ? data[peakIndex] : null;
+  const valley =
+    valleyIndex != null && valleyIndex !== peakIndex ? data[valleyIndex] : null;
 
   return (
     <div className="glass-card rounded-2xl border border-sky-500/15 p-5 shadow-[0_0_40px_-20px_rgba(59,130,246,0.35)]">
@@ -29,10 +44,21 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
         Recebimentos
       </h3>
       <p className="mt-1 text-sm text-[var(--bn-muted)]">
-        Soma por <span className="text-[var(--bn-on-variant)]">data do pagamento</span> registrada
-        (após &quot;Marcar como pago&quot;) — inclui reservas{" "}
-        <span className="text-[var(--bn-on-variant)]">confirmadas</span> ou{" "}
-        <span className="text-[var(--bn-on-variant)]">concluídas</span> · {periodLabel}
+        Soma por{" "}
+        <span className="text-[var(--bn-on-variant)]">data do pagamento</span> ·{" "}
+        {periodLabel}
+        {peak ? (
+          <>
+            {" "}
+            · Pico {peak.dateLabel} (R$ {peak.amount.toFixed(0)})
+          </>
+        ) : null}
+        {valley && valley.amount >= 0 ? (
+          <>
+            {" "}
+            · Vale {valley.dateLabel} (R$ {valley.amount.toFixed(0)})
+          </>
+        ) : null}
       </p>
       <div className="mt-5 h-56">
         {hasAny ? (
@@ -70,13 +96,30 @@ export function DashboardRevenueLine({ data, periodLabel }: Props) {
                 dot={{ fill: "#3b82f6", r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5 }}
               />
+              {peak ? (
+                <ReferenceDot
+                  x={peak.dateLabel}
+                  y={peak.amount}
+                  r={6}
+                  fill="#22c55e"
+                  stroke="#14532d"
+                />
+              ) : null}
+              {valley ? (
+                <ReferenceDot
+                  x={valley.dateLabel}
+                  y={valley.amount}
+                  r={6}
+                  fill="#f59e0b"
+                  stroke="#78350f"
+                />
+              ) : null}
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-[var(--bn-border)] bg-[var(--bn-hover)] text-sm text-[var(--bn-muted)]">
-            Sem pagamentos registados neste intervalo (use &quot;Marcar como pago&quot; na lista).
-            Só entram registos cuja <span className="text-[var(--bn-muted)]">data do pagamento</span>{" "}
-            cai no período das abas.
+            Sem pagamentos registados neste intervalo (use &quot;Marcar como
+            pago&quot; na lista).
           </div>
         )}
       </div>

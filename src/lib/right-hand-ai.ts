@@ -123,7 +123,7 @@ function rulesFallback(facts: RightHandFacts): RightHandNarrative {
   }
 
   const parts = [
-    `${facts.periodLabel}: receita ${money(k.revenue)}, ${k.appointments} agendamentos, ticket ${money(k.avgTicket)}.`,
+    `${facts.periodLabel}: receita ${money(k.revenue)} (${k.paidCount} pagos), ${k.appointmentsHint}, ticket ${money(k.avgTicket)}.`,
   ];
   if (rev?.deltaPercent != null && facts.maturity !== "insufficient") {
     parts.push(

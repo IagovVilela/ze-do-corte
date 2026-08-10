@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, LoaderCircle, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Lightbulb,
+  LoaderCircle,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { DashboardRange } from "@/lib/dashboard-period";
@@ -16,7 +22,6 @@ type Narrative = {
 
 type Props = {
   chartRange: DashboardRange;
-  /** Dispara análise automaticamente ao abrir a página. */
   autoRun?: boolean;
 };
 
@@ -59,7 +64,7 @@ export function AdminRightHandInsights({
     lastRange.current = chartRange;
     setNarrative(null);
     void run(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao mudar período
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartRange, autoRun]);
 
   return (
@@ -114,8 +119,9 @@ export function AdminRightHandInsights({
             {narrative.summary}
           </p>
 
-          <div className="rounded-xl border border-[var(--bn-status-danger)]/30 bg-[var(--bn-status-danger)]/10 p-3">
-            <p className="text-[10px] font-bold tracking-wide text-[var(--bn-status-danger)] uppercase">
+          <div className="animate-pulse rounded-xl border-2 border-[var(--bn-status-danger)] bg-[var(--bn-status-danger)]/15 p-3 shadow-[0_0_24px_-8px_rgba(239,68,68,0.55)] [animation-duration:2.4s]">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-[var(--bn-status-danger)] uppercase">
+              <AlertTriangle className="size-3.5" aria-hidden />
               Faça agora
             </p>
             <p className="mt-1 text-sm font-semibold text-[var(--bn-on)]">
@@ -137,9 +143,13 @@ export function AdminRightHandInsights({
             {narrative.opportunities.map((o) => (
               <li
                 key={o.title}
-                className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface)]/70 p-3"
+                className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3"
               >
-                <p className="text-sm font-semibold text-[var(--bn-on)]">
+                <p className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wide text-amber-200/90 uppercase">
+                  <Lightbulb className="size-3" aria-hidden />
+                  Oportunidade
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[var(--bn-on)]">
                   {o.title}
                 </p>
                 <p className="mt-1 text-xs text-[var(--bn-muted)]">{o.detail}</p>

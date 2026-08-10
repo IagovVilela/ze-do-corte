@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-09
 
+- **Braço Direito v2**: corrige KPI Atendimentos (era all-time) vs Receita do período; LTV histórico org-wide; funil, coorte, heatmap no topo, chat consultivo, previsão de demanda, campanha de horário e **Aprovar e enviar** WhatsApp (Cloud API). Vitest em `right-hand-metrics`.
 - **Pool pg / `/admin`**: em desenvolvimento o pool padrão sobe para 12 (também com Postgres remoto); briefing e ops carregam queries em lotes menores para evitar `timeout exceeded when trying to connect`.
 - **Braço Direito** (`/admin/inteligencia`): painel de gestão com KPIs comparativos, gráficos, heatmap de demanda, fila de reativação (WhatsApp IA) e **Análise da operação** (insights 1 urgência + oportunidades; autoexecução ao abrir; âncoras `#reativacao` / `#demanda-fraca`). Menu Análise; CTA no Ritual do dia. APIs `GET /api/admin/right-hand`, `POST /api/admin/ai/right-hand`.
 - **IA operacional — fases 2–3 (polimento)**: rascunho WhatsApp com preview, variantes, copiar e abrir wa.me; CRM envia último serviço ao draft; clube gera script também no bucket “no limite”; comanda sugere serviço ou produto com pitch; Relatórios com 3 ações linkadas.

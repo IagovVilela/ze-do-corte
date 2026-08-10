@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Copy, LoaderCircle, MessageCircle, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Check, Copy, LoaderCircle, MessageCircle, Send, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { phoneToWhatsAppHref } from "@/lib/phone-to-whatsapp-link";
@@ -9,18 +10,17 @@ import type { WhatsAppDraftKind } from "@/lib/whatsapp-draft-types";
 
 type Props = {
   kind: WhatsAppDraftKind;
-  /** Nome completo ou primeiro nome — enviamos só o primeiro token à API. */
   clientName: string;
   phone: string;
   daysSinceLastActivity?: number | null;
   planName?: string | null;
   lastServiceHint?: string | null;
   className?: string;
-  /** rótulo do botão principal */
   label?: string;
   size?: "sm" | "md";
-  /** Se true, mostra painel com variantes / copiar após gerar. */
   showPreview?: boolean;
+  /** Mostra botão Aprovar e enviar via Cloud API. */
+  allowApproveSend?: boolean;
 };
 
 export function AdminWhatsAppDraftButton({
@@ -34,9 +34,12 @@ export function AdminWhatsAppDraftButton({
   label = "Gerar mensagem",
   size = "sm",
   showPreview = true,
+  allowApproveSend = false,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sendNote, setSendNote] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [variants, setVariants] = useState<string[]>([]);
   const [source, setSource] = useState<"llm" | "rules" | null>(null);
@@ -45,6 +48,7 @@ export function AdminWhatsAppDraftButton({
   async function generate() {
     setBusy(true);
     setError(null);
+    setSendNote(null);
     const firstName = clientName.trim().split(/\s+/)[0] || "tudo bem";
     try {
       const res = await fetch("/api/admin/ai/whatsapp-draft", {
@@ -114,6 +118,36 @@ export function AdminWhatsAppDraftButton({
     }
   }
 
+  async function approveAndSend(text: string) {
+    setSending(true);
+    setError(null);
+    setSendNote(null);
+    try {
+      const res = await fetch("/api/admin/whatsapp/approve-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, message: text }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        message?: string;
+        code?: string;
+      } | null;
+      if (!res.ok || !data?.ok) {
+        setSendNote(
+          data?.message ??
+            "API indisponível — use Abrir WhatsApp (wa.me).",
+        );
+        return;
+      }
+      setSendNote("Enviado pela Cloud API.");
+    } catch {
+      setSendNote("Falha no envio — use Abrir WhatsApp.");
+    } finally {
+      setSending(false);
+    }
+  }
+
   const pad =
     size === "md"
       ? "min-h-9 gap-1.5 px-3 text-xs"
@@ -150,6 +184,21 @@ export function AdminWhatsAppDraftButton({
             {message}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
+            {allowApproveSend ? (
+              <button
+                type="button"
+                disabled={sending}
+                onClick={() => void approveAndSend(message)}
+                className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-200 disabled:opacity-50"
+              >
+                {sending ? (
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Send className="size-3.5" aria-hidden />
+                )}
+                Aprovar e enviar
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => openWhatsApp(message)}
@@ -171,6 +220,9 @@ export function AdminWhatsAppDraftButton({
               {copied ? "Copiado" : "Copiar"}
             </button>
           </div>
+          {sendNote ? (
+            <p className="mt-2 text-[10px] text-[var(--bn-muted)]">{sendNote}</p>
+          ) : null}
           {variants.length > 0 ? (
             <div className="mt-3 space-y-2 border-t border-[var(--bn-border)] pt-2">
               <p className="text-[10px] font-semibold tracking-wide text-[var(--bn-muted)] uppercase">

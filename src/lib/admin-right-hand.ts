@@ -1,6 +1,6 @@
 import "server-only";
 
-import { differenceInCalendarDays, subDays } from "date-fns";
+import { differenceInCalendarDays, getISODay, startOfISOWeek, subDays } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { getAppointmentFrequencyHeatmap } from "@/lib/admin-appointment-frequency";
@@ -12,6 +12,8 @@ import type {
   RightHandCompareMetric,
   RightHandFacts,
   RightHandMaturity,
+  RightHandPrediction,
+  RightHandPromoSuggestion,
   RightHandRetentionClient,
   RightHandSnapshot,
 } from "@/lib/admin-right-hand-types";
@@ -21,6 +23,17 @@ import {
   type DashboardRange,
 } from "@/lib/dashboard-period";
 import { prisma } from "@/lib/prisma";
+import {
+  aggregatePeriodMetrics,
+  appointmentsSubtitle,
+  averageHistoricalLtv,
+  computeReturnCohorts,
+  findPeakValley,
+  pctDelta,
+  pointsDelta,
+  predictWeekdayDemand,
+  type MetricAppointmentRow,
+} from "@/lib/right-hand-metrics";
 import type { StaffAccess } from "@/lib/staff-access";
 
 export type {
@@ -38,6 +51,9 @@ type CacheEntry = {
   expiresAt: number;
 };
 
+/** Bump ao mudar fórmula de KPIs (invalida cache in-process). */
+const CACHE_VER = "v2";
+
 const snapshotCache = new Map<string, CacheEntry>();
 
 function dayKeyInTz(iso: string, tz: string): string {
@@ -46,12 +62,6 @@ function dayKeyInTz(iso: string, tz: string): string {
   } catch {
     return iso.slice(0, 10);
   }
-}
-
-function pctDelta(current: number, previous: number): number | null {
-  if (previous <= 0 && current <= 0) return null;
-  if (previous <= 0) return 100;
-  return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
 function asOfForPrevious(range: DashboardRange, now: Date): Date {
@@ -72,52 +82,59 @@ function asOfForPrevious(range: DashboardRange, now: Date): Date {
   }
 }
 
-async function periodTotals(
-  access: StaffAccess,
-  from: Date,
-  to: Date,
-): Promise<{
-  appointments: number;
-  completed: number;
-  cancelled: number;
-  revenue: number;
-  completedValue: number;
-}> {
+function toMetricRows(
+  rows: {
+    status: string;
+    paidAt: Date | null;
+    amountPaid: unknown;
+    startsAt: Date;
+    service: { price: unknown };
+  }[],
+): MetricAppointmentRow[] {
+  return rows.map((r) => ({
+    status: r.status,
+    paidAt: r.paidAt,
+    amountPaid: r.amountPaid != null ? Number(r.amountPaid) : null,
+    servicePrice: Number(r.service.price),
+    startsAt: r.startsAt,
+  }));
+}
+
+async function loadPeriodRows(access: StaffAccess, from: Date, to: Date) {
   const whereBase = appointmentListWhere(access, {});
-  const rows = await prisma.appointment.findMany({
-    where: {
-      AND: [whereBase, { startsAt: { gte: from, lte: to } }],
-    },
-    select: {
-      status: true,
-      paidAt: true,
-      amountPaid: true,
-      service: { select: { price: true } },
-    },
-  });
-
-  let revenue = 0;
-  let completedValue = 0;
-  let completed = 0;
-  let cancelled = 0;
-  for (const r of rows) {
-    if (r.status === "COMPLETED") {
-      completed += 1;
-      completedValue += Number(r.service.price);
-    }
-    if (r.status === "CANCELLED") cancelled += 1;
-    if (r.paidAt && r.paidAt >= from && r.paidAt <= to) {
-      revenue +=
-        r.amountPaid != null ? Number(r.amountPaid) : Number(r.service.price);
-    }
-  }
-
+  const [startsAtRows, paidRows] = await Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        AND: [whereBase, { startsAt: { gte: from, lte: to } }],
+      },
+      select: {
+        status: true,
+        paidAt: true,
+        amountPaid: true,
+        startsAt: true,
+        service: { select: { price: true } },
+      },
+    }),
+    prisma.appointment.findMany({
+      where: {
+        AND: [
+          whereBase,
+          { status: { not: "CANCELLED" } },
+          { paidAt: { not: null, gte: from, lte: to } },
+        ],
+      },
+      select: {
+        status: true,
+        paidAt: true,
+        amountPaid: true,
+        startsAt: true,
+        service: { select: { price: true } },
+      },
+    }),
+  ]);
   return {
-    appointments: rows.length,
-    completed,
-    cancelled,
-    revenue: Math.round(revenue * 100) / 100,
-    completedValue: Math.round(completedValue * 100) / 100,
+    startsAtRows: toMetricRows(startsAtRows),
+    paidRows: toMetricRows(paidRows),
   };
 }
 
@@ -147,6 +164,19 @@ function weakHeatHint(heatmap: AppointmentFrequencyHeatmap): string | null {
   return `${weakest.weekdayLabel} às ${String(weakest.hour).padStart(2, "0")}h com ~${weakest.percent}% de carga estimada`;
 }
 
+function buildPromo(
+  heatHint: string | null,
+): RightHandPromoSuggestion | null {
+  if (!heatHint) return null;
+  const copyText = `🔥 Horário especial: ${heatHint.replace(/ com ~.*/, "")} com 20% off no corte. Reserve pelo link da agenda!`;
+  return {
+    title: "Campanha de horário fraco",
+    detail: `Sugestão a partir do heatmap: ${heatHint}.`,
+    copyText,
+    href: "/admin/whatsapp",
+  };
+}
+
 /**
  * Snapshot do Braço Direito — métricas + séries + fila de retenção.
  */
@@ -166,7 +196,7 @@ export async function getRightHandSnapshot(
   const now = new Date();
   const generatedAt = now.toISOString();
   const dayKey = dayKeyInTz(generatedAt, tz);
-  const cacheKey = `${access.organizationId}:${range}:${dayKey}`;
+  const cacheKey = `${CACHE_VER}:${access.organizationId}:${range}:${dayKey}`;
 
   if (!opts?.forceRefresh) {
     const hit = snapshotCache.get(cacheKey);
@@ -178,19 +208,25 @@ export async function getRightHandSnapshot(
   const meta = getDashboardPeriodMeta(range, now);
   const prevAsOf = asOfForPrevious(range, now);
   const prevMeta = getDashboardPeriodMeta(range, prevAsOf);
-
   const whereBase = appointmentListWhere(access, {});
+
+  const fourWeeksAgo = subDays(now, 28);
 
   const [
     currentReport,
-    prevTotals,
+    currentPeriod,
+    prevPeriod,
     firstAppt,
     crm,
     heatmap,
     currentClientsInPeriod,
+    paidHistory,
+    completedHistory,
+    recentStarts,
   ] = await Promise.all([
     getAdminReportsSnapshot(access, range, {}),
-    periodTotals(access, prevMeta.from, prevMeta.to),
+    loadPeriodRows(access, meta.from, meta.to),
+    loadPeriodRows(access, prevMeta.from, prevMeta.to),
     prisma.appointment.findFirst({
       where: { AND: [whereBase] },
       orderBy: { startsAt: "asc" },
@@ -214,7 +250,47 @@ export async function getRightHandSnapshot(
       select: { clientPhone: true, status: true },
       take: 5000,
     }),
+    prisma.appointment.findMany({
+      where: {
+        AND: [
+          whereBase,
+          { paymentStatus: "PAID", amountPaid: { not: null } },
+        ],
+      },
+      select: { clientPhone: true, amountPaid: true },
+      take: 8000,
+    }),
+    prisma.appointment.findMany({
+      where: {
+        AND: [whereBase, { status: "COMPLETED" }],
+      },
+      select: { clientPhone: true, startsAt: true },
+      orderBy: { startsAt: "asc" },
+      take: 12000,
+    }),
+    prisma.appointment.findMany({
+      where: {
+        AND: [
+          whereBase,
+          { startsAt: { gte: fourWeeksAgo, lte: now } },
+          { status: { in: ["CONFIRMED", "COMPLETED"] } },
+        ],
+      },
+      select: { startsAt: true },
+      take: 5000,
+    }),
   ]);
+
+  const currentAgg = aggregatePeriodMetrics(
+    currentPeriod.startsAtRows,
+    { from: meta.from, to: meta.to },
+    currentPeriod.paidRows,
+  );
+  const prevAgg = aggregatePeriodMetrics(
+    prevPeriod.startsAtRows,
+    { from: prevMeta.from, to: prevMeta.to },
+    prevPeriod.paidRows,
+  );
 
   const historyAnchor = firstAppt?.startsAt ?? org?.createdAt ?? now;
   const historyDays = Math.max(
@@ -234,61 +310,61 @@ export async function getRightHandSnapshot(
       "Histórico parcial — use os números com cautela até completar ~2 semanas.";
   }
 
-  const empty = currentReport.metrics.totalAppointments === 0;
-
-  const revenue = currentReport.metrics.receivedInPeriod;
-  const appointments = currentReport.metrics.totalAppointments;
-  const avgTicket = currentReport.avgTicket;
-  const cancelRate = currentReport.cancelRate;
-  const prevAvgTicket =
-    prevTotals.completed > 0
-      ? Math.round((prevTotals.completedValue / prevTotals.completed) * 100) /
-        100
-      : 0;
-  const prevCancelRate = prevTotals.appointments
-    ? Math.round((prevTotals.cancelled / prevTotals.appointments) * 1000) / 10
-    : 0;
-
+  const empty = currentAgg.appointments === 0 && currentAgg.paidCount === 0;
   const allowDelta = maturity !== "insufficient";
+
+  const revenue = currentAgg.revenuePaid;
+  const appointments = currentAgg.appointments;
+  const avgTicket = currentAgg.avgTicketPaid;
+  const cancelRate = currentAgg.cancelRate;
 
   const compare: RightHandCompareMetric[] = [
     {
       key: "revenue",
       label: "Receita",
       current: revenue,
-      previous: prevTotals.revenue,
-      deltaPercent: allowDelta ? pctDelta(revenue, prevTotals.revenue) : null,
+      previous: prevAgg.revenuePaid,
+      deltaPercent: allowDelta
+        ? pctDelta(revenue, prevAgg.revenuePaid)
+        : null,
+      deltaMode: "percent",
       format: "money",
     },
     {
       key: "appointments",
       label: "Atendimentos",
       current: appointments,
-      previous: prevTotals.appointments,
+      previous: prevAgg.appointments,
       deltaPercent: allowDelta
-        ? pctDelta(appointments, prevTotals.appointments)
+        ? pctDelta(appointments, prevAgg.appointments)
         : null,
+      deltaMode: "percent",
       format: "number",
     },
     {
       key: "avgTicket",
-      label: "Ticket médio",
+      label: "Ticket médio (pagos)",
       current: avgTicket,
-      previous: prevAvgTicket,
-      deltaPercent: allowDelta ? pctDelta(avgTicket, prevAvgTicket) : null,
+      previous: prevAgg.avgTicketPaid,
+      deltaPercent: allowDelta
+        ? pctDelta(avgTicket, prevAgg.avgTicketPaid)
+        : null,
+      deltaMode: "percent",
       format: "money",
     },
     {
       key: "cancelRate",
       label: "Cancelamentos",
       current: cancelRate,
-      previous: prevCancelRate,
-      deltaPercent: allowDelta ? pctDelta(cancelRate, prevCancelRate) : null,
+      previous: prevAgg.cancelRate,
+      deltaPercent: allowDelta
+        ? pointsDelta(cancelRate, prevAgg.cancelRate)
+        : null,
+      deltaMode: "points",
       format: "percent",
     },
   ];
 
-  // Novos vs recorrentes no período (telefone): COMPLETED antes do período = recorrente.
   const phonesInPeriod = new Set(
     currentClientsInPeriod
       .map((a) => a.clientPhone.replace(/\D/g, ""))
@@ -317,15 +393,50 @@ export async function getRightHandSnapshot(
     }
   }
 
-  const spentClients = crm.clients.filter((c) => (c.totalSpent ?? 0) > 0);
-  const estimatedLtv =
-    spentClients.length > 0 && crm.canViewRevenue
-      ? Math.round(
-          (spentClients.reduce((s, c) => s + (c.totalSpent ?? 0), 0) /
-            spentClients.length) *
-            100,
-        ) / 100
-      : null;
+  // LTV org-wide: média de gasto por telefone com PAID (não CRM page 1).
+  const spendByPhone = new Map<string, number>();
+  for (const p of paidHistory) {
+    const key = p.clientPhone.replace(/\D/g, "");
+    if (key.length < 10) continue;
+    spendByPhone.set(
+      key,
+      (spendByPhone.get(key) ?? 0) + Number(p.amountPaid ?? 0),
+    );
+  }
+  const estimatedLtv = averageHistoricalLtv([...spendByPhone.values()]);
+
+  // Coortes
+  const firstByPhone = new Map<string, Date>();
+  const completedFlat: { phoneKey: string; at: Date }[] = [];
+  for (const row of completedHistory) {
+    const key = row.clientPhone.replace(/\D/g, "");
+    if (key.length < 10) continue;
+    completedFlat.push({ phoneKey: key, at: row.startsAt });
+    const prev = firstByPhone.get(key);
+    if (!prev || row.startsAt < prev) firstByPhone.set(key, row.startsAt);
+  }
+  const cohorts = computeReturnCohorts(firstByPhone, completedFlat, now);
+
+  // Intervalos usuais para early churn
+  const visitsByPhone = new Map<string, Date[]>();
+  for (const row of completedFlat) {
+    const list = visitsByPhone.get(row.phoneKey) ?? [];
+    list.push(row.at);
+    visitsByPhone.set(row.phoneKey, list);
+  }
+  const usualGap = new Map<string, number>();
+  for (const [phone, dates] of visitsByPhone) {
+    if (dates.length < 3) continue;
+    dates.sort((a, b) => a.getTime() - b.getTime());
+    const gaps: number[] = [];
+    for (let i = 1; i < dates.length; i++) {
+      gaps.push(
+        differenceInCalendarDays(dates[i]!, dates[i - 1]!),
+      );
+    }
+    const avg = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+    usualGap.set(phone, avg);
+  }
 
   const retentionQueue: RightHandRetentionClient[] = crm.actionQueue
     .filter(
@@ -333,29 +444,79 @@ export async function getRightHandSnapshot(
         c.risk === "at_risk" || c.risk === "lost",
     )
     .slice(0, 5)
-    .map((c) => ({
-      phoneKey: c.phoneKey,
-      name: c.name,
-      phone: c.phone,
-      risk: c.risk,
-      daysSinceLastActivity: c.daysSinceLastActivity,
-      lastServiceName: c.lastServiceName,
-      totalSpent: c.totalSpent,
-      clubPlanName: c.clubPlanName,
-    }));
+    .map((c) => {
+      const gap = usualGap.get(c.phoneKey);
+      const days = c.daysSinceLastActivity;
+      let earlyChurnHint: string | null = null;
+      if (
+        gap != null &&
+        days != null &&
+        days < 45 &&
+        days >= Math.max(14, gap * 1.4)
+      ) {
+        earlyChurnHint = `Costuma voltar a cada ~${Math.round(gap)}d; já faz ${days}d — risco antecipado.`;
+      }
+      return {
+        phoneKey: c.phoneKey,
+        name: c.name,
+        phone: c.phone,
+        risk: c.risk,
+        daysSinceLastActivity: c.daysSinceLastActivity,
+        lastServiceName: c.lastServiceName,
+        totalSpent: c.totalSpent,
+        clubPlanName: c.clubPlanName,
+        earlyChurnHint,
+      };
+    });
 
   const topSpend = retentionQueue
     .filter((c) => (c.totalSpent ?? 0) > 0)
     .sort((a, b) => (b.totalSpent ?? 0) - (a.totalSpent ?? 0))[0];
 
   const heatHint = weakHeatHint(heatmap);
+  const promoSuggestion = buildPromo(heatHint);
+
+  // Previsão próxima semana (média por weekday nas últimas 4 semanas)
+  const byWeek: Record<number, number[]> = {};
+  const weekBuckets = new Map<string, Map<number, number>>();
+  for (const r of recentStarts) {
+    const wd = getISODay(r.startsAt);
+    const weekKey = startOfISOWeek(r.startsAt).toISOString().slice(0, 10);
+    if (!weekBuckets.has(weekKey)) weekBuckets.set(weekKey, new Map());
+    const m = weekBuckets.get(weekKey)!;
+    m.set(wd, (m.get(wd) ?? 0) + 1);
+  }
+  for (const m of weekBuckets.values()) {
+    for (let wd = 1; wd <= 7; wd++) {
+      const n = m.get(wd) ?? 0;
+      if (!byWeek[wd]) byWeek[wd] = [];
+      byWeek[wd]!.push(n);
+    }
+  }
+  const demandPred = predictWeekdayDemand(byWeek);
+  let prediction: RightHandPrediction | null = null;
+  if (demandPred.length > 0 && demandPred[0]!.avg < (demandPred[demandPred.length - 1]?.avg ?? 0) * 0.7) {
+    const weak = demandPred[0]!;
+    prediction = {
+      weakWeekdayLabel: weak.label,
+      weakAvg: weak.avg,
+      detail: `${weak.label} costuma ter ~${weak.avg} atendimentos (média das últimas semanas). Considere promoção antecipada.`,
+    };
+  }
+
+  const peakValley = findPeakValley(
+    currentReport.revenueSeries.map((p) => p.amount),
+  );
 
   const kpis = {
     revenue,
     appointments,
+    paidCount: currentAgg.paidCount,
+    completedUnpaid: currentAgg.completedUnpaid,
+    appointmentsHint: appointmentsSubtitle(currentAgg),
     avgTicket,
     cancelRate,
-    completionRate: currentReport.completionRate,
+    completionRate: currentAgg.completionRate,
     newClients,
     recurringClients,
     atRiskClients: crm.atRiskCount,
@@ -378,7 +539,10 @@ export async function getRightHandSnapshot(
       current: c.current,
       previous: c.previous,
       deltaPercent: c.deltaPercent,
+      deltaMode: c.deltaMode,
     })),
+    funnel: currentAgg.funnel,
+    cohorts,
     topServices: currentReport.servicesInPeriod.slice(0, 5).map((s) => ({
       name: s.name,
       count: s.count,
@@ -396,6 +560,8 @@ export async function getRightHandSnapshot(
         : null,
     },
     weakHeatHint: heatHint,
+    prediction,
+    promoSuggestion,
   };
 
   const snapshot: RightHandSnapshot = {
@@ -411,7 +577,10 @@ export async function getRightHandSnapshot(
     publicBookingPath: org?.slug ? `/${org.slug}/agendar` : null,
     kpis,
     compare,
+    funnel: currentAgg.funnel,
+    cohorts,
     revenueSeries: currentReport.revenueSeries,
+    peakValley,
     services: currentReport.servicesInPeriod,
     staffRanking: currentReport.staffRanking.map((s) => ({
       label: s.label,
@@ -422,6 +591,8 @@ export async function getRightHandSnapshot(
     })),
     heatmap,
     retentionQueue,
+    prediction,
+    promoSuggestion,
     facts,
   };
 

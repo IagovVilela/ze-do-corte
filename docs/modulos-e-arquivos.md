@@ -23,7 +23,9 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `src/lib/admin-morning-briefing.ts` | Briefing matinal OWNER/ADMIN: prioridades ranqueadas + facts JSON + ação primária |
 | `src/lib/morning-briefing-ai.ts` | Narrativa do briefing (LLM opcional + fallback regras + cache diário) |
 | `src/lib/admin-right-hand.ts` / `admin-right-hand-types.ts` | Motor Braço Direito (snapshot + cache) |
+| `src/lib/right-hand-metrics.ts` | Agregações puras (KPIs, funil, coorte, deltas) + testes Vitest |
 | `src/lib/right-hand-ai.ts` | Insights narrativos (LLM ou regras) |
+| `src/lib/right-hand-chat-ai.ts` | Chat consultivo com facts do tenant |
 | `src/lib/whatsapp-draft-ai.ts` / `whatsapp-draft-types.ts` | Rascunho WhatsApp (retenção/clube) |
 | `src/lib/reports-period-ai.ts` | Leitura IA do período em Relatórios |
 | `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
@@ -60,7 +62,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Briefing matinal (OWNER/ADMIN) + dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
 | `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda |
 | `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview + leitura IA do período (`AdminReportsPeriodAi`) |
-| `/admin/inteligencia` | `src/app/admin/(panel)/inteligencia/page.tsx` | **Braço Direito**: KPIs comparativos, gráficos, heatmap, retenção WhatsApp, análise IA |
+| `/admin/inteligencia` | `src/app/admin/(panel)/inteligencia/page.tsx` | **Braço Direito**: KPIs do período, funil, coorte, heatmap, chat, retenção WhatsApp |
 | `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
 | `/admin/operacional` | `src/app/admin/(panel)/operacional/page.tsx` | Filas do dia; `#a-receber` com registrar pagamento |
 | `/admin/avaliacoes` | `src/app/admin/(panel)/avaliacoes/page.tsx` | Feedback dos clientes (`OrganizationReview`) |
@@ -104,7 +106,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Briefing narrativa | `src/app/api/admin/morning-briefing/narrative/route.ts` — `POST` gera resumo (IA ou regras); `GET` status `aiConfigured` |
 | WhatsApp draft IA | `src/app/api/admin/ai/whatsapp-draft/route.ts` — `POST` mensagem curta (winback/clube); sem telefone no payload |
 | Relatórios narrativa | `src/app/api/admin/ai/reports-narrative/route.ts` — `POST` leitura do período + 3 ações |
-| Braço Direito | `src/app/api/admin/right-hand/route.ts` — `GET` snapshot; `src/app/api/admin/ai/right-hand/route.ts` — `POST` análise |
+| Braço Direito | `src/app/api/admin/right-hand/route.ts` — `GET` snapshot; `src/app/api/admin/ai/right-hand/route.ts` — `POST` análise; `src/app/api/admin/ai/right-hand-chat/route.ts` — chat; `src/app/api/admin/whatsapp/approve-send/route.ts` — envio aprovado |
 | Export Excel | `src/app/api/admin/export/route.ts` — agenda completa; `?pack=month&yearMonth=AAAA-MM` pacote mensal (XLSX multi-aba) |
 | Metas mensais | `src/app/api/admin/goals/route.ts` — `GET`/`PUT` (`StaffMonthlyGoal`) |
 | Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions`, `commission-rules` (`tiersJson`) |

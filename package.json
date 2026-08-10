@@ -23,7 +23,9 @@
     "demo:vitrine": "tsx scripts/apply-demo-vitrine.ts",
     "demo:day": "tsx scripts/seed-demo-day.ts",
     "whatsapp:reminders": "tsx scripts/whatsapp-reminders.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@lordicon/react": "^1.11.0",
@@ -62,10 +64,12 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "@types/xlsx": "^0.0.35",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

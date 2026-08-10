@@ -89,7 +89,9 @@ Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número,
 
 No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia e CTA **Abrir análise da operação** → `/admin/inteligencia`.
 
-Em **`/admin/inteligencia`**: KPIs vs período anterior, gráficos, heatmap de demanda, reativação WhatsApp e **Análise da operação** (auto ao abrir; âncoras `#reativacao` / `#demanda-fraca`; `POST /api/admin/ai/right-hand`). Snapshot em `GET /api/admin/right-hand`.
+Em **`/admin/inteligencia`**: KPIs alinhados ao período (**Receita** = pagos com `paidAt`; **Atendimentos** = `startsAt` no range, com subtítulo de pagos); LTV histórico; heatmap no topo; funil; coorte; tendência com pico/vale; chat consultivo (`POST /api/admin/ai/right-hand-chat`); reativação com **Aprovar e enviar** (`POST /api/admin/whatsapp/approve-send`). Snapshot `GET /api/admin/right-hand` / análise `POST /api/admin/ai/right-hand`.
+
+**Receita vs atendimentos:** receita zero com volume no período significa “ainda sem marcar como pago” (não misturar com total histórico).
 
 A mesma flag/chave Gemini alimenta briefing legado, WhatsApp draft, relatórios e Braço Direito:
 

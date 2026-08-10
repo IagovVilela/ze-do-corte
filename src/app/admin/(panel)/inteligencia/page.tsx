@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 
 import { AdminAppointmentFrequencyHeatmap } from "@/components/admin-appointment-frequency-heatmap";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { AdminRightHandChat } from "@/components/admin-right-hand-chat";
+import { AdminRightHandCohort } from "@/components/admin-right-hand-cohort";
 import { AdminRightHandCompareBars } from "@/components/admin-right-hand-compare-bars";
+import { AdminRightHandFunnel } from "@/components/admin-right-hand-funnel";
 import { AdminRightHandInsights } from "@/components/admin-right-hand-insights";
 import { AdminRightHandRetention } from "@/components/admin-right-hand-retention";
 import { AnimatedSection } from "@/components/animated-section";
@@ -92,6 +95,10 @@ export default async function AdminInteligenciaPage({
             <AdminRightHandInsights chartRange={chartRange} />
           </div>
 
+          <div className="mt-4">
+            <AdminRightHandChat chartRange={chartRange} />
+          </div>
+
           <div className="mt-6 flex flex-wrap gap-2">
             {RANGE_OPTS.map((o) => {
               const href =
@@ -119,6 +126,13 @@ export default async function AdminInteligenciaPage({
           {snapshot.maturityMessage ? (
             <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--bn-on)]">
               {snapshot.maturityMessage}
+            </p>
+          ) : null}
+
+          {snapshot.prediction ? (
+            <p className="mt-3 rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-[var(--bn-on)]">
+              <span className="font-semibold">Previsão: </span>
+              {snapshot.prediction.detail}
             </p>
           ) : null}
 
@@ -152,34 +166,48 @@ export default async function AdminInteligenciaPage({
             <>
               <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { label: "Receita", value: formatMoney(k.revenue) },
+                  {
+                    label: "Receita (pagos no período)",
+                    value: formatMoney(k.revenue),
+                    hint: `${k.paidCount} pagamento(s)`,
+                  },
                   {
                     label: "Atendimentos",
                     value: String(k.appointments),
+                    hint: k.appointmentsHint,
                   },
-                  { label: "Ticket médio", value: formatMoney(k.avgTicket) },
+                  {
+                    label: "Ticket médio (pagos)",
+                    value: formatMoney(k.avgTicket),
+                    hint: undefined,
+                  },
                   {
                     label: "Cancelamentos",
                     value: `${k.cancelRate}%`,
+                    hint: undefined,
                   },
                   {
                     label: "Novos no período",
                     value: String(k.newClients),
+                    hint: undefined,
                   },
                   {
                     label: "Recorrentes",
                     value: String(k.recurringClients),
+                    hint: undefined,
                   },
                   {
                     label: "Em risco / sumindo",
                     value: `${k.atRiskClients} / ${k.lostClients}`,
+                    hint: undefined,
                   },
                   {
-                    label: "LTV estimado",
+                    label: "LTV histórico (gasto médio)",
                     value:
                       k.estimatedLtv != null
                         ? formatMoney(k.estimatedLtv)
                         : "—",
+                    hint: "Média all-time por cliente — não é só deste período",
                   },
                 ].map((c) => (
                   <div
@@ -190,21 +218,90 @@ export default async function AdminInteligenciaPage({
                     <p className="mt-2 text-xl font-semibold text-[var(--bn-on)]">
                       {c.value}
                     </p>
+                    {c.hint ? (
+                      <p className="mt-1 text-[11px] text-[var(--bn-muted)]">
+                        {c.hint}
+                      </p>
+                    ) : null}
                   </div>
                 ))}
               </div>
 
+              <div className="mt-8">
+                <p className="mb-2 text-xs text-[var(--bn-muted)]">
+                  Mapa de demanda (estimativa weekday × hora — não é ocupação de
+                  slots).
+                </p>
+                <AdminAppointmentFrequencyHeatmap
+                  units={units}
+                  staffOptions={staffOptions}
+                />
+              </div>
+
+              {snapshot.facts.weakHeatHint || snapshot.promoSuggestion ? (
+                <div
+                  id="demanda-fraca"
+                  className="scroll-mt-24 mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4"
+                >
+                  <p className="text-xs font-bold tracking-wide text-amber-200 uppercase">
+                    Horário fraco · campanha sugerida
+                  </p>
+                  {snapshot.facts.weakHeatHint ? (
+                    <p className="mt-1 text-sm text-[var(--bn-on)]">
+                      {snapshot.facts.weakHeatHint}
+                    </p>
+                  ) : null}
+                  {snapshot.promoSuggestion ? (
+                    <div className="mt-3 rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface)]/60 p-3">
+                      <p className="text-sm font-semibold text-[var(--bn-on)]">
+                        {snapshot.promoSuggestion.title}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--bn-muted)]">
+                        {snapshot.promoSuggestion.detail}
+                      </p>
+                      <p className="mt-2 text-xs whitespace-pre-wrap text-[var(--bn-on-variant)]">
+                        {snapshot.promoSuggestion.copyText}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-3">
+                        <Link
+                          href={snapshot.promoSuggestion.href}
+                          className="text-xs font-semibold text-[var(--bn-primary)] hover:underline"
+                        >
+                          Abrir WhatsApp config →
+                        </Link>
+                        <Link
+                          href="/admin/agendamentos"
+                          className="text-xs font-semibold text-[var(--bn-primary)] hover:underline"
+                        >
+                          Abrir agenda →
+                        </Link>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="mt-8 grid gap-4 lg:grid-cols-2">
+                <DashboardRevenueLine
+                  data={snapshot.revenueSeries}
+                  periodLabel={snapshot.periodLabel}
+                  peakIndex={snapshot.peakValley.peakIndex}
+                  valleyIndex={snapshot.peakValley.valleyIndex}
+                />
+                <AdminRightHandFunnel
+                  funnel={snapshot.funnel}
+                  periodLabel={snapshot.periodLabel}
+                />
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 <AdminRightHandCompareBars
                   metrics={snapshot.compare}
                   currentLabel={snapshot.periodLabel}
                   previousLabel={snapshot.previousPeriodLabel}
                   showDelta={snapshot.maturity !== "insufficient"}
                 />
-                <DashboardRevenueLine
-                  data={snapshot.revenueSeries}
-                  periodLabel={snapshot.periodLabel}
-                />
+                <AdminRightHandCohort cohorts={snapshot.cohorts} />
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -240,48 +337,6 @@ export default async function AdminInteligenciaPage({
 
               <div className="mt-8">
                 <AdminRightHandRetention clients={snapshot.retentionQueue} />
-              </div>
-
-              {snapshot.facts.weakHeatHint ? (
-                <div
-                  id="demanda-fraca"
-                  className="scroll-mt-24 mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4"
-                >
-                  <p className="text-xs font-bold tracking-wide text-amber-200 uppercase">
-                    Horário fraco (padrão estimado)
-                  </p>
-                  <p className="mt-1 text-sm text-[var(--bn-on)]">
-                    {snapshot.facts.weakHeatHint}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--bn-muted)]">
-                    Use para promoção de horário vago ou realocar profissional.
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    <Link
-                      href="/admin/agendamentos"
-                      className="text-xs font-semibold text-[var(--bn-primary)] hover:underline"
-                    >
-                      Abrir agenda →
-                    </Link>
-                    <Link
-                      href="/admin/whatsapp"
-                      className="text-xs font-semibold text-[var(--bn-primary)] hover:underline"
-                    >
-                      Configurar WhatsApp →
-                    </Link>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="mt-8">
-                <p className="mb-2 text-xs text-[var(--bn-muted)]">
-                  Mapa de demanda (estimativa weekday × hora — não é taxa de
-                  ocupação de slots).
-                </p>
-                <AdminAppointmentFrequencyHeatmap
-                  units={units}
-                  staffOptions={staffOptions}
-                />
               </div>
             </>
           )}

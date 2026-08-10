@@ -49,7 +49,7 @@ export function AdminRightHandRetention({ clients }: Props) {
             {historicSpend > 0
               ? ` · ~${formatMoney(historicSpend)} em receita histórica nesta fila`
               : ""}
-            . Gere a mensagem e abra o WhatsApp.
+            . Gere, aprove o envio (Cloud API) ou abra o WhatsApp.
           </p>
         </div>
         <Link
@@ -80,6 +80,11 @@ export function AdminRightHandRetention({ clients }: Props) {
                   ? ` · ${formatMoney(c.totalSpent)} histórico`
                   : ""}
               </p>
+              {c.earlyChurnHint ? (
+                <p className="mt-1 text-[11px] text-amber-200/90">
+                  {c.earlyChurnHint}
+                </p>
+              ) : null}
             </div>
             <AdminWhatsAppDraftButton
               kind={
@@ -95,6 +100,7 @@ export function AdminRightHandRetention({ clients }: Props) {
               planName={c.clubPlanName}
               lastServiceHint={c.lastServiceName}
               label="Mensagem IA"
+              allowApproveSend
             />
           </li>
         ))}

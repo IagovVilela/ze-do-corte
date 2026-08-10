@@ -13,6 +13,10 @@ import {
 
 import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { RightHandCompareMetric } from "@/lib/admin-right-hand-types";
+import {
+  formatDeltaPercent,
+  formatDeltaPoints,
+} from "@/lib/right-hand-metrics";
 
 type Props = {
   metrics: RightHandCompareMetric[];
@@ -43,11 +47,12 @@ export function AdminRightHandCompareBars({
   showDelta,
 }: Props) {
   const chart = useAdminChartColors();
-  const data = metrics.map((m) => ({
+  // Só métricas comparáveis no mesmo eixo (sem misturar % de cancelamento com R$).
+  const chartMetrics = metrics.filter((m) => m.key !== "cancelRate");
+  const data = chartMetrics.map((m) => ({
     name: m.label,
     atual: m.current,
     anterior: m.previous,
-    delta: m.deltaPercent,
     format: m.format,
   }));
 
@@ -96,6 +101,7 @@ export function AdminRightHandCompareBars({
                   current: 0,
                   previous: 0,
                   deltaPercent: null,
+                  deltaMode: "percent",
                   format: row?.format ?? "number",
                 };
                 return [formatValue(fake, n), label];
@@ -123,9 +129,9 @@ export function AdminRightHandCompareBars({
             <li key={m.key}>
               {m.label}:{" "}
               <span className="font-medium text-[var(--bn-on)]">
-                {m.deltaPercent == null
-                  ? "—"
-                  : `${m.deltaPercent > 0 ? "+" : ""}${m.deltaPercent}%`}
+                {m.deltaMode === "points"
+                  ? formatDeltaPoints(m.deltaPercent)
+                  : formatDeltaPercent(m.deltaPercent)}
               </span>
             </li>
           ))}

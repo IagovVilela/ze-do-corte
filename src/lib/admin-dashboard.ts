@@ -63,6 +63,7 @@ export type AdminDashboardSnapshot = {
   metrics: {
     totalToday: number;
     totalWeek: number;
+    /** Agendamentos com `startsAt` no período das abas (qualquer status). */
     totalAppointments: number;
     distinctClients: number;
     /** Concluídos no mês civil corrente (valor dos serviços) — cartões superiores. */
@@ -75,6 +76,8 @@ export type AdminDashboardSnapshot = {
     completedValueInPeriod: number;
     /** Soma do preço do serviço para CONFIRMED + COMPLETED no período (`startsAt`), exclui cancelados. */
     scheduledValueInPeriod: number;
+    /** Contagem histórica (sem filtro de período). */
+    lifetimeAppointments: number;
   };
   series: DashboardPoint[];
   statusSlices: DashboardStatusSlice[];
@@ -402,6 +405,7 @@ export async function getAdminDashboardSnapshot(
         status: true,
         paidAt: true,
         unitId: true,
+        amountPaid: true,
         service: { select: { price: true } },
       },
     }),
@@ -600,7 +604,14 @@ export async function getAdminDashboardSnapshot(
   ];
 
   const receivedInPeriod = access.permissions.viewRevenue
-    ? paidInPeriodRows.reduce((s, r) => s + Number(r.service.price), 0)
+    ? paidInPeriodRows.reduce(
+        (s, r) =>
+          s +
+          (r.amountPaid != null
+            ? Number(r.amountPaid)
+            : Number(r.service.price)),
+        0,
+      )
     : 0;
 
   const completedInPeriod = periodRows.filter((r) => r.status === "COMPLETED");
@@ -762,13 +773,14 @@ export async function getAdminDashboardSnapshot(
     metrics: {
       totalToday: todayCount,
       totalWeek: weekCount,
-      totalAppointments: totalCount,
+      totalAppointments: periodTotal,
       distinctClients: distinctPhones.length,
       revenueMonth,
       pendingPaymentTotal: pendingPaymentCount,
       receivedInPeriod,
       completedValueInPeriod,
       scheduledValueInPeriod,
+      lifetimeAppointments: totalCount,
     },
     series,
     statusSlices,
