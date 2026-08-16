@@ -39,9 +39,10 @@ export function ConsultantSidebar({
   const links = (
     <>
       {NAV.map((item) => {
-        const active = item.exact
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active =
+          "exact" in item && item.exact
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.href}

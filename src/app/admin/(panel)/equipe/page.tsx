@@ -43,17 +43,20 @@ export default async function AdminEquipePage() {
     ),
   ]);
 
-  const staffSeatCount = staff.filter((s) => s.role === "STAFF").length;
+  const salonStaff = staff.filter(
+    (s) => s.role === "OWNER" || s.role === "ADMIN" || s.role === "STAFF",
+  );
+  const staffSeatCount = salonStaff.filter((s) => s.role === "STAFF").length;
   const staffSeatLimitReached = org
     ? !freeTierAllowsAnotherStaffSeat(org, staffSeatCount)
     : false;
   const defaults = defaultWorkWeekFromShop();
-  const staffRows = staff.map((s) => {
+  const staffRows = salonStaff.map((s) => {
     const base = {
       id: s.id,
       email: s.email,
       displayName: s.displayName,
-      role: s.role,
+      role: s.role as "OWNER" | "ADMIN" | "STAFF",
       unitId: s.unitId,
       unitName: s.unit?.name ?? null,
       hasPassword: Boolean(s.passwordHash),

@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({
       ...snap,
-      rows: snap.rows.map((row) => ({
+      clients: snap.clients.map((row) => ({
         ...row,
         phone: maskPhone(row.phone),
         phoneKey: "",

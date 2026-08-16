@@ -1,5 +1,7 @@
 node_modules
 .next
+.next-broken*
+marketing-seedance
 .git
 .gitignore
 .cursor
