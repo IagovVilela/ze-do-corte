@@ -247,7 +247,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | WhatsApp admin | `whatsapp-admin-panel.tsx` (checklist + toggles confirmação/lembrete) |
 | Clube admin | `club-admin-panel.tsx` (sugerir preço + saúde do clube) |
 | Metas / regras comissão | `admin-goals-panel.tsx`, `admin-commission-rules-panel.tsx` |
-| PWA (painel + site/agendar) | `pwa-install-button.tsx`, `pwa-register.tsx`, `admin-pwa-install-button.tsx`; manifests `public/admin-manifest.webmanifest` + API tenant; SW `public/sw.js` |
+| PWA (painel + site/agendar) | `pwa-install-button.tsx`, `pwa-client-install-bar.tsx`, `pwa-agendar-install-card.tsx`, `pwa-register.tsx`, `admin-pwa-install-button.tsx`, hook `use-pwa-install.ts`; manifests `public/admin-manifest.webmanifest` + API tenant; SW `public/sw.js` |
 | Pagamentos admin | `payments-admin-panel.tsx` |
 | Suporte admin | `support-admin-panel.tsx` (`/admin/suporte`) |
 | Suporte Ops | `plataforma/support-platform-panel.tsx` (`/plataforma/suporte`) |

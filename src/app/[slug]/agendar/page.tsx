@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BookingForm } from "@/components/booking-form";
 import { DatabaseUnavailableNotice } from "@/components/database-unavailable-notice";
 import { Navbar } from "@/components/navbar";
+import { PwaAgendarInstallCard } from "@/components/pwa-agendar-install-card";
 import { SiteFooter } from "@/components/site-footer";
 import {
   getBarbersForBooking,
@@ -81,6 +82,7 @@ export default async function TenantBookingPage({ params }: Props) {
                 {slogans.secondary} Escolha o serviço e o melhor horário; em
                 seguida informe seus dados para confirmar.
               </p>
+              <PwaAgendarInstallCard shopName={org.name} />
             </div>
           </div>
 

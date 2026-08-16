@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PwaInstallButton } from "@/components/pwa-install-button";
+import { PwaClientInstallBar } from "@/components/pwa-client-install-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { getOrganizationBySlug, isReservedSlug } from "@/lib/organization";
 import { orgDisplaySlogan, organizationBrandStyle } from "@/lib/org-branding";
@@ -56,12 +56,7 @@ export default async function TenantLayout({ children, params }: Props) {
     <div style={organizationBrandStyle(org)} className="flex min-h-full flex-1 flex-col">
       {children}
       <PwaRegister />
-      {/* Atalho fixo (mesmo padrão do painel) — cobre site canvas sem rodapé. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex justify-end px-3 sm:px-5">
-        <div className="pointer-events-auto">
-          <PwaInstallButton variant="public" />
-        </div>
-      </div>
+      <PwaClientInstallBar />
     </div>
   );
 }

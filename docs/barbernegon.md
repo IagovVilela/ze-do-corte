@@ -12,7 +12,7 @@ Transformar o produto mono-marca **Zé do Corte** em **Barbernegon**: SaaS onde 
 |------|---------|
 | URL pública | Path slug: `barbernegon.com/[slug]`; marketplace e landing B2B em hosts distintos (opcional) |
 | MVP | Site white-label + agendamento + admin + caixa + clube de assinaturas |
-| App nativo | Fora do MVP; PWA no site/`agendar` e no painel (**Instalar app**) |
+| App nativo | Fora do MVP; PWA no site/`agendar` (clientes no celular: **Baixar aplicativo**) e no painel (**Instalar app**) |
 | Domínio próprio | Fase posterior (salão); **split marketing/marketplace** já suportado via env |
 
 ## Diferenciação vs mercado
