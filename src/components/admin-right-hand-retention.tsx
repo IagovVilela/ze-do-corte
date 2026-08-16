@@ -8,9 +8,14 @@ import { formatMoney } from "@/lib/utils";
 
 type Props = {
   clients: RightHandRetentionClient[];
+  /** Resumo de coorte quando o gráfico standalone está oculto. */
+  cohortSummary?: string | null;
 };
 
-export function AdminRightHandRetention({ clients }: Props) {
+export function AdminRightHandRetention({
+  clients,
+  cohortSummary,
+}: Props) {
   const historicSpend = clients.reduce(
     (s, c) => s + (c.totalSpent ?? 0),
     0,
@@ -51,6 +56,9 @@ export function AdminRightHandRetention({ clients }: Props) {
               : ""}
             . Gere, aprove o envio (Cloud API) ou abra o WhatsApp.
           </p>
+          {cohortSummary ? (
+            <p className="mt-1 text-[11px] text-amber-200/90">{cohortSummary}</p>
+          ) : null}
         </div>
         <Link
           href="/admin/clientes?risk=actionable"

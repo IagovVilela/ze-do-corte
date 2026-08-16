@@ -25,6 +25,12 @@ export const BN = {
   chartTick: "#a1a1aa",
   chartGrid: "rgba(255, 255, 255, 0.08)",
   chartTooltipBg: "#11131a",
+  /** Braço Direito — série positiva / crescimento */
+  rhPositive: "#4ade80",
+  rhDanger: "#f87171",
+  rhInfo: "#adc6ff",
+  rhMuted: "#64748b",
+  rhTrack: "rgba(255,255,255,0.08)",
 } as const;
 
 /** Paleta clara do painel admin (mesmo contrato semântico que `BN`). */
@@ -49,6 +55,11 @@ export const BN_LIGHT = {
   chartTick: "#667085",
   chartGrid: "rgba(16, 19, 26, 0.08)",
   chartTooltipBg: "#ffffff",
+  rhPositive: "#16a34a",
+  rhDanger: "#dc2626",
+  rhInfo: "#2563eb",
+  rhMuted: "#94a3b8",
+  rhTrack: "rgba(16, 19, 26, 0.06)",
 } as const;
 
 /** Alias legado da landing — aponta para os mesmos valores. */
@@ -91,6 +102,11 @@ export const BN_CSS_VARS = {
   "--bn-chart-tick": BN.chartTick,
   "--bn-chart-grid": BN.chartGrid,
   "--bn-chart-tooltip-bg": BN.chartTooltipBg,
+  "--bn-rh-positive": BN.rhPositive,
+  "--bn-rh-danger": BN.rhDanger,
+  "--bn-rh-info": BN.rhInfo,
+  "--bn-rh-muted": BN.rhMuted,
+  "--bn-rh-track": BN.rhTrack,
 } as const;
 
 export const BN_LIGHT_CSS_VARS = {
@@ -111,4 +127,9 @@ export const BN_LIGHT_CSS_VARS = {
   "--bn-chart-tick": BN_LIGHT.chartTick,
   "--bn-chart-grid": BN_LIGHT.chartGrid,
   "--bn-chart-tooltip-bg": BN_LIGHT.chartTooltipBg,
+  "--bn-rh-positive": BN_LIGHT.rhPositive,
+  "--bn-rh-danger": BN_LIGHT.rhDanger,
+  "--bn-rh-info": BN_LIGHT.rhInfo,
+  "--bn-rh-muted": BN_LIGHT.rhMuted,
+  "--bn-rh-track": BN_LIGHT.rhTrack,
 } as const;

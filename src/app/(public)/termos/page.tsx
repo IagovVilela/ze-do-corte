@@ -13,7 +13,7 @@ export default function TermosPage() {
     <LegalDoc
       eyebrow="Legal"
       title="Termos de Uso"
-      updatedAt="27 de julho de 2026"
+      updatedAt="15 de agosto de 2026"
     >
       <p>
         Estes Termos de Uso (“Termos”) regem o acesso e a utilização da
@@ -23,8 +23,11 @@ export default function TermosPage() {
       </p>
       <p>
         Ao criar uma conta, assinar um plano ou usar qualquer funcionalidade, você
-        declara que leu e concorda com estes Termos e com a{" "}
-        <Link href="/privacidade">Política de Privacidade</Link>.
+        declara que leu e concorda com estes Termos, com a{" "}
+        <Link href="/privacidade">Política de Privacidade</Link> e com os
+        informativos reunidos em{" "}
+        <Link href="/condicoes">/condicoes</Link> (PDFs de pagamentos Asaas e
+        WhatsApp Plus+).
       </p>
 
       <h2>1. Quem somos e o que oferecemos</h2>
@@ -60,9 +63,12 @@ export default function TermosPage() {
       <h2>3. Planos, trial e cobrança</h2>
       <ul>
         <li>
-          Existem planos <strong className="text-[var(--bn-on)]">Free</strong> e{" "}
-          <strong className="text-[var(--bn-on)]">Pro</strong>, além de período
+          Existem planos <strong className="text-[var(--bn-on)]">Free</strong>,{" "}
+          <strong className="text-[var(--bn-on)]">Pro</strong> e{" "}
+          <strong className="text-[var(--bn-on)]">Plus+</strong>, além de período
           de trial com recursos Pro, conforme a página de planos e o painel.
+          Detalhes de PIX/clube e do WhatsApp oficial estão nos PDFs em{" "}
+          <Link href="/condicoes">Condições</Link>.
         </li>
         <li>
           Limites do Free (ex.: número de barbeiros e unidades) e benefícios do

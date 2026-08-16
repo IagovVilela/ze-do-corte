@@ -21,6 +21,7 @@ export type StaffAccess = {
   profileImageUrl: string | null;
   role: StaffRole;
   organizationId: string;
+  isActive: boolean;
   /**
    * Quando definido, métricas e listagens ficam restritas a estas unidades.
    * Proprietário / admin sem unidade = visão da organização inteira.
@@ -64,6 +65,18 @@ function permissionsForRole(role: StaffRole): StaffPermissions {
         manageSubscriptions: false,
         manageBranding: false,
       };
+    case "SUPPORT_CONSULTANT":
+    case "SUPPORT_ASSIST":
+      return {
+        manageUnits: false,
+        manageStaff: "none",
+        manageServices: false,
+        manageSettings: false,
+        exportData: false,
+        viewRevenue: false,
+        manageSubscriptions: false,
+        manageBranding: false,
+      };
     default: {
       const _exhaustive: never = role;
       return _exhaustive;
@@ -86,6 +99,7 @@ export function staffAccessFromMember(member: StaffMember): StaffAccess | null {
     profileImageUrl: member.profileImageUrl ?? null,
     role: member.role,
     organizationId: member.organizationId,
+    isActive: member.isActive !== false,
     unitIdsFilter:
       unitIdsFilter && unitIdsFilter.length > 0 ? unitIdsFilter : undefined,
     permissions: permissionsForRole(member.role),
@@ -116,7 +130,11 @@ export function appointmentScopeWhere(
     };
   }
 
-  if (access.role === "OWNER" || access.role === "ADMIN") {
+  if (
+    access.role === "OWNER" ||
+    access.role === "ADMIN" ||
+    access.role === "SUPPORT_ASSIST"
+  ) {
     return orgViaUnit;
   }
 

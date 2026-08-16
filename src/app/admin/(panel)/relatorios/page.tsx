@@ -295,6 +295,7 @@ export default async function AdminRelatoriosPage({
             <AdminAppointmentFrequencyHeatmap
               units={units}
               staffOptions={staffOptions}
+              chartRange={chartRange}
             />
           </div>
 

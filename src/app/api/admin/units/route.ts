@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import {
   freeTierAllowsAnotherActiveUnit,
   settleOrgBillingState,
@@ -23,9 +23,12 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageUnits) {
+  if (
+    auth.access.role !== "SUPPORT_ASSIST" &&
+    !auth.access.permissions.manageUnits
+  ) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
 

@@ -10,14 +10,20 @@ import {
   YAxis,
 } from "recharts";
 
+import { AdminRightHandChartShell } from "@/components/admin-right-hand-chart-shell";
 import { useAdminChartColors } from "@/components/admin-theme-provider";
+import type { ConfidenceLevel } from "@/lib/right-hand-confidence";
 import type { CohortBucket } from "@/lib/right-hand-metrics";
 
 type Props = {
   cohorts: CohortBucket[];
+  confidence?: ConfidenceLevel;
 };
 
-export function AdminRightHandCohort({ cohorts }: Props) {
+export function AdminRightHandCohort({
+  cohorts,
+  confidence = "conclusive",
+}: Props) {
   const chart = useAdminChartColors();
   const data = cohorts.map((c) => ({
     name: `${c.windowDays}d`,
@@ -28,22 +34,17 @@ export function AdminRightHandCohort({ cohorts }: Props) {
   const hasEligible = cohorts.some((c) => c.eligible > 0);
 
   return (
-    <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface)] p-5">
-      <h3 className="text-sm font-semibold text-[var(--bn-on)]">
-        Retenção por coorte
-      </h3>
-      <p className="mt-1 text-xs text-[var(--bn-muted)]">
-        % que voltou em 30 / 60 / 90 dias após o 1º atendimento concluído
-      </p>
-      <div className="mt-4 h-52">
+    <AdminRightHandChartShell
+      title="Retenção por coorte"
+      subtitle="% que voltou em 30 / 60 / 90 dias após o 1º atendimento"
+      confidence={confidence}
+    >
+      <div className="h-52">
         {hasEligible ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: chart.tick, fontSize: 11 }}
-              />
+              <XAxis dataKey="name" tick={{ fill: chart.tick, fontSize: 11 }} />
               <YAxis
                 tick={{ fill: chart.tick, fontSize: 10 }}
                 domain={[0, 100]}
@@ -56,6 +57,8 @@ export function AdminRightHandCohort({ cohorts }: Props) {
                   background: chart.tooltipBg,
                   color: chart.tooltipColor,
                 }}
+                labelStyle={{ color: chart.tooltipColor }}
+                itemStyle={{ color: chart.tooltipColor }}
                 formatter={(value, _name, item) => {
                   const p = item?.payload as {
                     eligible?: number;
@@ -70,17 +73,17 @@ export function AdminRightHandCohort({ cohorts }: Props) {
               <Bar
                 dataKey="rate"
                 name="Retorno"
-                fill="#38bdf8"
+                fill={chart.info}
                 radius={[6, 6, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-[var(--bn-muted)]">
-            Ainda sem base elegível para coorte (precisa de histórico).
+            Ainda sem base elegível para coorte.
           </div>
         )}
       </div>
-    </div>
+    </AdminRightHandChartShell>
   );
 }

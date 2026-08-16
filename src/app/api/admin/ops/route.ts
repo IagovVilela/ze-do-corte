@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth } from "@/lib/admin-auth";
 import { getAdminOpsSnapshot } from "@/lib/admin-ops";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
 
   try {

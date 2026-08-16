@@ -41,6 +41,8 @@ const roleLabel: Record<StaffAccess["role"], string> = {
   OWNER: "Proprietário",
   ADMIN: "Administrador",
   STAFF: "Funcionário",
+  SUPPORT_CONSULTANT: "Consultor",
+  SUPPORT_ASSIST: "Assistência",
 };
 
 const FAVORITES_KEY = "bn-admin-nav-favorites";

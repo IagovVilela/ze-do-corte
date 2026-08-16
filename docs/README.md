@@ -16,6 +16,8 @@
 | [whatsapp-meta.md](./whatsapp-meta.md) | WhatsApp Cloud API: webhook, tokens, bot, templates, lembretes |
 | [pagamentos-asaas.md](./pagamentos-asaas.md) | Asaas: SaaS Free + Pro, PIX do salão, clube, webhooks |
 | [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md) | Passo a passo prático: configurar WhatsApp + Asaas (plataforma e salão) |
+| [informativo-pagamentos-asaas.pdf](./informativo-pagamentos-asaas.pdf) | Fonte interna do PDF Asaas (cópia pública em `/informativos/pagamentos-asaas.pdf`) |
+| [informativo-whatsapp-plus.pdf](./informativo-whatsapp-plus.pdf) | Fonte interna do PDF Plus+ (cópia pública em `/informativos/whatsapp-plus.pdf`) |
 | [suporte.md](./suporte.md) | Central de ajuda, chamados e contato (`/admin/suporte` + inbox Ops) |
 | [plano-paridade-cash-barber.md](./plano-paridade-cash-barber.md) | Backlog de features vs Cash Barber (fases) |
 | [observabilidade-saas.md](./observabilidade-saas.md) | Tier list S/A/B: Sentry, PostHog, uptime, logs, e2e, Dependabot |

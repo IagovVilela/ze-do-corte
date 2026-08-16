@@ -57,19 +57,21 @@ export default async function AdminPlanoPage() {
   const proUnlocked = hasProFeatures(org);
   const freeUpsell = isFreePlanUpsell(org);
   const currentPlanId: SaasPlanId | "free" | null =
-    org.planStatus === "ACTIVE" && org.planTier === "PRO"
-      ? "pro"
-      : org.planStatus === "ACTIVE" &&
-          (org.planTier === "FREE" || org.planTier === "STARTER")
-        ? "free"
-        : null;
+    org.planStatus === "ACTIVE" && org.planTier === "PLUS"
+      ? "plus"
+      : org.planStatus === "ACTIVE" && org.planTier === "PRO"
+        ? "pro"
+        : org.planStatus === "ACTIVE" &&
+            (org.planTier === "FREE" || org.planTier === "STARTER")
+          ? "free"
+          : null;
 
   return (
     <div className="space-y-8 py-6">
       <AdminPageHeader
         eyebrow="Plataforma"
         title="Seu plano Barbernegon"
-        description="Free para sempre (até 2 barbeiros, 1 loja). Pro libera Caixa, Clube, barbeiros ilimitados e multi-unidade."
+        description="Free para sempre (até 2 barbeiros, 1 loja). Pro libera Caixa e Clube. Plus+ adiciona IA de agenda e reativação no WhatsApp."
       />
 
       {needsBillingAttention(org) ? (
@@ -126,6 +128,14 @@ export default async function AdminPlanoPage() {
           )}
         </div>
       </div>
+
+      <p className="max-w-3xl text-sm text-[var(--bn-muted)]">
+        Antes de assinar, leia as{" "}
+        <Link href="/admin/condicoes" className="text-[var(--bn-primary)] hover:underline">
+          condições e informativos
+        </Link>{" "}
+        (Termos, Privacidade e PDFs de pagamentos e WhatsApp).
+      </p>
 
       <div className="max-w-4xl space-y-4">
         <h2 className="text-lg font-semibold text-[var(--bn-on)]">Compare e escolha</h2>

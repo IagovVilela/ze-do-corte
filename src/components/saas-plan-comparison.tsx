@@ -70,7 +70,7 @@ export function SaasPlanComparison({
         <p className="mt-1 opacity-90">{trialBody}</p>
       </div>
 
-      <ul className="grid items-stretch gap-4 md:grid-cols-2 md:gap-5">
+      <ul className="grid items-stretch gap-4 md:grid-cols-3 md:gap-5">
         {cards.map((plan) => {
           const isCurrent =
             !trialActive &&
@@ -105,7 +105,7 @@ export function SaasPlanComparison({
                     Seu plano
                   </span>
                 ) : null}
-                {trialActive && isPro ? (
+                {trialActive && plan.id === "pro" ? (
                   <span className="rounded-md border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-[var(--bn-status-ok)] uppercase">
                     Liberado no trial
                   </span>

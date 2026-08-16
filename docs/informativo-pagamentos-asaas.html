@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Como você recebe o dinheiro dos clientes — Barbernegon</title>
+  <style>
+    @page { size: A4; margin: 14mm 14mm 16mm; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Calibri, Arial, sans-serif;
+      color: #10131a;
+      background: #fff;
+      font-size: 10.5pt;
+      line-height: 1.45;
+    }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+
+    header.hero {
+      background: #10131a;
+      color: #e1e2ec;
+      border-radius: 12px;
+      padding: 22px 24px 20px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      font-size: 11pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #adc6ff;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 8px 0 6px;
+      font-size: 20pt;
+      line-height: 1.2;
+      font-weight: 750;
+      color: #fff;
+    }
+    .lede { margin: 0; color: #c2c6d6; font-size: 11pt; max-width: 92%; }
+
+    h2 {
+      font-size: 13pt;
+      margin: 18px 0 8px;
+      color: #10131a;
+      border-bottom: 2px solid #3B82F6;
+      padding-bottom: 4px;
+    }
+    h3 { font-size: 11pt; margin: 12px 0 6px; color: #1d4ed8; }
+
+    p { margin: 0 0 8px; }
+    ul { margin: 0 0 10px; padding-left: 18px; }
+    li { margin-bottom: 4px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0 4px;
+    }
+    .step {
+      border: 1px solid #d5dbe7;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f4f6fa;
+    }
+    .step b { display: block; color: #2563eb; font-size: 9pt; margin-bottom: 4px; }
+
+    .callout {
+      background: #eef4ff;
+      border-left: 4px solid #3B82F6;
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0 12px;
+    }
+    .warn {
+      background: #fff8e8;
+      border-left: 4px solid #C5A059;
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin: 8px 0 12px;
+    }
+    th, td {
+      border: 1px solid #d5dbe7;
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #10131a; color: #fff; font-weight: 600; }
+    tr:nth-child(even) td { background: #f4f6fa; }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid #d5dbe7;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card h3 { margin-top: 0; }
+
+    ol.num { padding-left: 20px; margin: 6px 0 10px; }
+    ol.num li { margin-bottom: 6px; }
+
+    footer.note {
+      margin-top: 14px;
+      font-size: 8.5pt;
+      color: #667085;
+      border-top: 1px solid #d5dbe7;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <header class="hero">
+      <div class="brand">Barbernegon</div>
+      <h1>Como você recebe o dinheiro dos clientes</h1>
+      <p class="lede">Guia prático para o dono da barbearia: PIX, clube, taxas do Asaas e como sacar para o seu banco.</p>
+    </header>
+
+    <p>Este material é para <strong>você, dono do salão</strong> — não precisa ser técnico. A Barbernegon usa o <strong>Asaas</strong> (conta digital autorizada pelo Banco Central) para gerar PIX e assinaturas com comprovação automática.</p>
+
+    <div class="steps">
+      <div class="step">
+        <b>1. Cliente paga no site</b>
+        PIX do agendamento ou mensalidade do Clube.
+      </div>
+      <div class="step">
+        <b>2. Cai na sua conta Asaas</b>
+        É uma conta da <em>sua</em> barbearia. A Barbernegon não fica com esse valor.
+      </div>
+      <div class="step">
+        <b>3. Você transfere para o banco</b>
+        No app ou site Asaas, Pix para a conta que você cadastrou.
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>A Barbernegon não é o banco.</strong> Não usamos a chave PIX pessoal da barbearia porque o site precisa gerar um PIX novo para cada cliente e saber sozinho quando pagou. O Asaas faz isso. O plano Pro da plataforma (R$ 129/mês) é outro pagamento, em outra conta — não desconta do que o seu cliente pagou pelo corte ou pelo clube.
+    </div>
+
+    <h2>Ligar o recebimento (uma vez)</h2>
+    <ol class="num">
+      <li>Crie conta grátis em <strong>asaas.com</strong> com CPF ou CNPJ da barbearia e envie os documentos até a conta ser aprovada.</li>
+      <li>No Asaas, cadastre a <strong>conta bancária</strong> para onde quer sacar.</li>
+      <li>Copie a <strong>API Key</strong> (Integrações — começa com <code>$aact_</code>).</li>
+      <li>No painel Barbernegon, abra <strong>/admin/pagamentos</strong>, cole a chave, marque “Quero receber online” e salve.</li>
+    </ol>
+
+    <h2>PIX ou cartão — o que muda no seu bolso</h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>PIX</th>
+          <th>Cartão (Clube)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Quando o cliente paga</strong></td>
+          <td>Escaneia o QR na hora. Todo mês precisa pagar de novo.</td>
+          <td>Cadastra o cartão uma vez; o Asaas cobra os meses seguintes sozinho.</td>
+        </tr>
+        <tr>
+          <td><strong>Clube no site</strong></td>
+          <td>Ativa em segundos após o PIX confirmar.</td>
+          <td>Ativa em segundos após o cartão ser aprovado.</td>
+        </tr>
+        <tr>
+          <td><strong>Quando vira saldo para sacar</strong></td>
+          <td><strong>Na hora</strong>, na conta Asaas (menos a taxa fixa).</td>
+          <td><strong>Em cerca de 32 dias</strong> (prazo padrão do cartão), salvo se você antecipar.</td>
+        </tr>
+        <tr>
+          <td><strong>Indicado se você quer dinheiro rápido</strong></td>
+          <td>Sim.</td>
+          <td>Só se aceitar esperar ou pagar para antecipar.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      <strong>Assinar no site não libera dinheiro.</strong> Só depois que o PIX (ou o cartão) for pago de verdade. Se você cadastrar o clube no balcão sem CPF (offline), o Asaas não cobra — o dinheiro, se houve, ficou no caixa da loja.
+    </div>
+  </section>
+
+  <section class="page">
+    <h2>Taxas (Asaas, não Barbernegon)</h2>
+    <p>Não há mensalidade Asaas. A tarifa só cai <strong>quando o cliente paga</strong>. Valores abaixo são os <strong>padrão públicos</strong> do Asaas (agosto/2026). Confira os seus em: conta Asaas → <strong>Menu do usuário → Taxas</strong>.</p>
+
+    <h3>Para receber</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Forma</th>
+          <th>Taxa típica</th>
+          <th>Exemplo: clube de R$ 80</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PIX gerado pelo site (QR da fatura)</td>
+          <td>R$ 0,99 nos 3 primeiros meses da conta Asaas; depois <strong>R$ 1,99</strong> por cobrança paga. Sem porcentagem.</td>
+          <td>Entra <strong>R$ 79,01</strong> (promo) ou <strong>R$ 78,01</strong> (depois).</td>
+        </tr>
+        <tr>
+          <td>Cartão (assinatura do Clube)</td>
+          <td>R$ 0,49 + % (à vista cerca de 2,99%; nos 3 primeiros meses a % costuma ser menor).</td>
+          <td>Entra cerca de <strong>R$ 77</strong> (confira o simulador no Asaas).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Os “100 Pix grátis” do Asaas valem para chave PIX / QR estático. O PIX do site é <strong>QR dinâmico</strong> (uma cobrança por cliente) — <strong>não entra nessa gratuidade</strong>.</p>
+
+    <h3>Para tirar o dinheiro da conta Asaas (pessoa jurídica)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Saída</th>
+          <th>Custo típico</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pix para o seu banco</td>
+          <td>Até <strong>30 por mês grátis</strong>; depois R$ 2,00 cada.</td>
+        </tr>
+        <tr>
+          <td>TED</td>
+          <td>R$ 5,00</td>
+        </tr>
+        <tr>
+          <td>Saque no Cartão Asaas (caixa 24h)</td>
+          <td>cerca de R$ 8,60</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Dica: deixe acumular vários pagamentos e faça <strong>um Pix no fim do dia ou da semana</strong> — gasta só 1 das 30 transferências grátis.</p>
+
+    <h2>Como sacar, na prática</h2>
+    <ol class="num">
+      <li>Abra o <strong>app ou site Asaas</strong> (não é no painel Barbernegon — lá não tem botão de saque).</li>
+      <li>Veja o <strong>saldo disponível</strong>.</li>
+      <li>Toque em transferir / Pix e envie para a conta bancária cadastrada.</li>
+      <li>Pedido em <strong>dia útil até cerca de 15h</strong>: costuma cair <strong>no mesmo dia</strong>. Depois disso, fim de semana ou feriado: <strong>próximo dia útil</strong>.</li>
+    </ol>
+    <p>Conta Asaas nova pode <strong>segurar o primeiro saque</strong> até a análise de documentos terminar.</p>
+
+    <h2>Cartão: o que é “antecipar”</h2>
+    <p>No cartão, a operadora não entrega o dinheiro no mesmo dia. O Asaas, no modo padrão, espera cerca de <strong>32 dias</strong> (D+32). O cliente já usa o clube; você ainda não pode sacar aquele valor.</p>
+    <p><strong>Antecipar</strong> é pedir ao Asaas: “me deposita em até 2 dias úteis e fica com uma porcentagem”. Taxa típica publicada: cerca de <strong>1,25% ao mês</strong>, com análise de crédito (pode recusar).</p>
+    <ol class="num">
+      <li>No Asaas, abra a cobrança (ou ligue antecipação automática nas configurações).</li>
+      <li>Escolha <strong>Antecipar / receber em até 2 dias</strong> e confira o valor líquido.</li>
+      <li>Se aprovado, o saldo cai na conta Asaas em 1–2 dias úteis. Aí você faz o Pix para o banco.</li>
+    </ol>
+    <div class="callout">
+      PIX <strong>não precisa</strong> de antecipação: já vira saldo na hora. Se a prioridade é “assinou e já está no meu banco”, cobre o Clube no <strong>PIX</strong>.
+    </div>
+  </section>
+
+  <section class="page">
+    <h2>Perguntas rápidas</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>O cliente logou / gerou o QR. Já posso sacar?</h3>
+        <p>Não. Só depois que ele <strong>pagar</strong>. No PIX, segundos depois o saldo Asaas já serve para transferir (conta aprovada).</p>
+      </div>
+      <div class="card">
+        <h3>A Barbernegon fica com uma fatia do corte?</h3>
+        <p>Não. O valor do cliente cai na <strong>sua</strong> conta Asaas. A plataforma cobra só o plano Pro, à parte.</p>
+      </div>
+      <div class="card">
+        <h3>Posso usar a chave PIX do meu banco no site?</h3>
+        <p>Não neste fluxo. O site precisa de cobrança identificada (QR por cliente) para marcar o agendamento e o clube como pagos sozinhos.</p>
+      </div>
+      <div class="card">
+        <h3>10 assinantes de R$ 80 no PIX (conta já fora da promo)</h3>
+        <p>Bruto R$ 800 − (10 × R$ 1,99) = <strong>R$ 780,10</strong> no Asaas. Um Pix para o banco no mês: R$ 0 de tarifa de saída (dentro das 30 grátis).</p>
+      </div>
+    </div>
+
+    <h2>Checklist</h2>
+    <ul>
+      <li>Conta Asaas criada e documentos aprovados</li>
+      <li>Conta bancária cadastrada no Asaas</li>
+      <li>API Key colada em /admin/pagamentos e “receber online” ligado</li>
+      <li>Teste: agendar no site e gerar um PIX de valor pequeno</li>
+      <li>No Clube (plano Pro): testar adesão PIX; cartão só se aceitar D+32 ou antecipação</li>
+    </ul>
+
+    <footer class="note">
+      Barbernegon — informativo para clientes da plataforma. Taxas ilustrativas com base na página pública de preços do Asaas (consulta em agosto de 2026). O contrato da sua conta pode ser diferente; a fonte oficial é sempre o menu Taxas no Asaas. Este PDF não substitui o contrato Asaas nem o contrato Barbernegon.
+    </footer>
+  </section>
+</body>
+</html>

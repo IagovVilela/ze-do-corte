@@ -1,10 +1,10 @@
-export type SaasPlanId = "pro";
+export type SaasPlanId = "pro" | "plus";
 
 export type SaasPlanDef = {
   id: SaasPlanId;
   name: string;
   priceMonthly: number;
-  tier: "PRO";
+  tier: "PRO" | "PLUS";
   blurb: string;
   badge: string | null;
   features: string[];
@@ -24,7 +24,7 @@ export const SAAS_FREE_PLAN = {
     "Clientes agendam pelo celular",
     "Painel: agenda, equipe e serviços",
     "Editor visual do site",
-    "WhatsApp no site (+ assistente, se ligar)",
+    "WhatsApp no site (+ assistente de botões, se ligar)",
     "Receber PIX dos clientes (sua conta Asaas)",
     "Aparecer no Explorar (marketplace)",
     "Até 2 barbeiros",
@@ -33,7 +33,7 @@ export const SAAS_FREE_PLAN = {
   notIncluded: [
     "Caixa e relatório de quanto entrou",
     "Clube de assinaturas dos clientes",
-    "Mais de 2 barbeiros",
+    "IA que agenda e reativa clientes no WhatsApp (Plus+)",
     "Várias unidades",
   ],
   ctaHint: "Comece grátis e opere de verdade.",
@@ -59,7 +59,26 @@ export const SAAS_PLANS: SaasPlanDef[] = [
       "Clube: planos mensais com visitas e cancelamento fácil",
       "Cobrança do clube na sua conta Asaas (quando ligada)",
     ],
+    notIncluded: [
+      "IA de agenda e reativação automática no WhatsApp (Plus+)",
+    ],
     ctaHint: "Para quem quer equipe maior, recorrência e controle financeiro.",
+  },
+  {
+    id: "plus",
+    name: "Plus+",
+    priceMonthly: 199,
+    tier: "PLUS",
+    blurb: "Tudo do Pro + assistente inteligente no WhatsApp (Cloud API oficial).",
+    badge: "IA",
+    features: [
+      "Tudo que está no Pro",
+      "Fila de reativação pelo intervalo de cada cliente",
+      "Opt-out (PARE) e teto mensal de marketing (Meta)",
+      "Aprovar envio antes de gastar na fatura da Meta",
+      "Botão de conectar Cloud API (número comercial do salão)",
+    ],
+    ctaHint: "O salão paga a Meta à parte (cartão no Billing Hub).",
   },
 ];
 
@@ -102,6 +121,7 @@ export function saasPlanByTier(
   tier: "STARTER" | "PRO" | "TRIAL_FULL" | "FREE" | string,
 ): SaasPlanDef | null {
   if (tier === "PRO") return saasPlanById("pro");
+  if (tier === "PLUS") return saasPlanById("plus");
   return null;
 }
 
@@ -123,11 +143,10 @@ export function parseExternalRef(ref: string | null | undefined): {
   planId?: SaasPlanId;
 } | null {
   if (!ref) return null;
-  const saas = /^saas_org:([^:]+):(starter|pro)$/i.exec(ref);
+  const saas = /^saas_org:([^:]+):(starter|pro|plus)$/i.exec(ref);
   if (saas) {
     const raw = saas[2]!.toLowerCase();
-    // Starter legado no Asaas → trata como Pro (único plano cobrável)
-    const planId: SaasPlanId = raw === "pro" ? "pro" : "pro";
+    const planId: SaasPlanId = raw === "plus" ? "plus" : "pro";
     return {
       kind: "saas",
       id: saas[1]!,

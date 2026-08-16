@@ -231,6 +231,12 @@ input[type="checkbox"]:indeterminate {
   --bn-status-info: #93c5fd;
   --bn-status-warn: #fcd34d;
   --bn-status-danger: #fda4af;
+  /* Braço Direito — séries / semáforos (antes só em BN_CSS_VARS, sem injeção no DOM) */
+  --bn-rh-positive: #4ade80;
+  --bn-rh-danger: #f87171;
+  --bn-rh-info: #adc6ff;
+  --bn-rh-muted: #64748b;
+  --bn-rh-track: rgba(255, 255, 255, 0.08);
   background-color: var(--bn-bg);
   color: var(--bn-on);
   color-scheme: dark;
@@ -270,6 +276,11 @@ input[type="checkbox"]:indeterminate {
   --bn-status-info: #1d4ed8;
   --bn-status-warn: #b45309;
   --bn-status-danger: #b91c1c;
+  --bn-rh-positive: #16a34a;
+  --bn-rh-danger: #dc2626;
+  --bn-rh-info: #2563eb;
+  --bn-rh-muted: #94a3b8;
+  --bn-rh-track: rgba(16, 19, 26, 0.06);
   color-scheme: light;
 }
 

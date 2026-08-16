@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth } from "@/lib/admin-auth";
 import { getAdminCrmSnapshot } from "@/lib/admin-crm";
+import { maskEmail, maskPhone } from "@/lib/pii-mask";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
 
   const url = new URL(request.url);
@@ -43,7 +44,21 @@ export async function GET(request: Request) {
       sort,
       page,
     });
-    return NextResponse.json(snap);
+    if (auth.access.role !== "SUPPORT_ASSIST") {
+      return NextResponse.json(snap);
+    }
+    return NextResponse.json({
+      ...snap,
+      rows: snap.rows.map((row) => ({
+        ...row,
+        phone: maskPhone(row.phone),
+        phoneKey: "",
+        email: maskEmail(row.email),
+        totalSpent: null,
+        whatsappHref: null,
+        whatsappWinBackHref: null,
+      })),
+    });
   } catch (error) {
     console.error("[admin crm]", error);
     return NextResponse.json(

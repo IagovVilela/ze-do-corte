@@ -40,6 +40,9 @@ function money(n: number): string {
 const ALLOWED_HREFS = new Set([
   "/admin/inteligencia#reativacao",
   "/admin/inteligencia#demanda-fraca",
+  "/admin/inteligencia#funil",
+  "/admin/inteligencia#tendencia",
+  "/admin/inteligencia#fila-acoes",
   "/admin/clientes?risk=actionable",
   "/admin/clientes?risk=lost",
   "/admin/agendamentos",
@@ -51,95 +54,41 @@ const ALLOWED_HREFS = new Set([
   "/admin/marca",
 ]);
 
-function safeHref(href: string, fallback = "/admin/inteligencia#reativacao"): string {
+function safeHref(href: string, fallback = "/admin/inteligencia#fila-acoes"): string {
   const t = href.trim();
   return ALLOWED_HREFS.has(t) ? t : fallback;
 }
 
+/** Narrative a partir da actionQueue já ranqueada (regras). */
 function rulesFallback(facts: RightHandFacts): RightHandNarrative {
   const k = facts.kpis;
-  const rev = facts.compare.find((c) => c.key === "revenue");
+  const queue = facts.actionQueue;
+  const top = queue[0];
+  const urgent: RightHandInsightItem = top
+    ? { title: top.title, detail: top.detail, href: top.href }
+    : {
+        title: "Operação estável",
+        detail: "Revise a agenda e compartilhe o link de agendar.",
+        href: "/admin/marca",
+      };
 
-  let urgent: RightHandInsightItem;
-  if (k.lostClients + k.atRiskClients > 0) {
-    urgent = {
-      title: `${k.lostClients + k.atRiskClients} cliente(s) pedem reativação`,
-      detail: facts.retention.topSpendHint
-        ? `Priorize quem mais gerou receita: ${facts.retention.topSpendHint}. Use Mensagem IA abaixo.`
-        : "Na fila de reativação abaixo, gere a mensagem e abra o WhatsApp.",
-      href: "/admin/inteligencia#reativacao",
-    };
-  } else if (k.cancelRate >= 12) {
-    urgent = {
-      title: `Cancelamentos em ${k.cancelRate}% no período`,
-      detail:
-        "Confirme lembretes WhatsApp e revise no-shows antes de abrir mais agenda.",
-      href: "/admin/whatsapp",
-    };
-  } else if (rev && rev.deltaPercent != null && rev.deltaPercent <= -12) {
-    urgent = {
-      title: `Receita caiu ${Math.abs(rev.deltaPercent)}% vs período anterior`,
-      detail: `Atual ${money(rev.current)} · anterior ${money(rev.previous)}. Olhe ocupação e ticket.`,
-      href: "/admin/relatorios",
-    };
-  } else {
-    urgent = {
-      title: "Operação estável — foque em preencher horários fracos",
-      detail: facts.weakHeatHint
-        ? `Padrão fraco: ${facts.weakHeatHint}.`
-        : "Revise a agenda e incentive indicação dos clientes fiéis.",
-      href: "/admin/agendamentos",
-    };
-  }
-
-  const opportunities: RightHandInsightItem[] = [];
-  if (facts.weakHeatHint) {
-    opportunities.push({
-      title: "Horário com baixa demanda",
-      detail: `${facts.weakHeatHint}. Considere promoção pontual ou realocar equipe.`,
-      href: "/admin/inteligencia#demanda-fraca",
-    });
-  }
-  if (k.lostClients > 0) {
-    opportunities.push({
-      title: "Campanha de reativação",
-      detail: `${k.lostClients} sumindo (60d+). Use Mensagem IA na fila desta página.`,
-      href: "/admin/inteligencia#reativacao",
-    });
-  }
-  if (facts.topStaff[0]) {
-    opportunities.push({
-      title: `Destaque: ${facts.topStaff[0].label}`,
-      detail: `${facts.topStaff[0].completed} concluídos · ${money(facts.topStaff[0].received)} recebidos — reconheça e peça indicação.`,
-      href: "/admin/financeiro/comissoes",
-    });
-  }
-  if (opportunities.length < 2) {
-    opportunities.push({
-      title: "Compartilhe o link de agendar",
-      detail: "Mais agenda online reduz ociosidade e melhora o comparativo da próxima semana.",
-      href: "/admin/marca",
-    });
-  }
+  const opportunities = queue.slice(1, 4).map((a) => ({
+    title: a.title,
+    detail: a.detail,
+    href: a.href,
+  }));
 
   const parts = [
-    `${facts.periodLabel}: receita ${money(k.revenue)} (${k.paidCount} pagos), ${k.appointmentsHint}, ticket ${money(k.avgTicket)}.`,
+    `${facts.periodLabel}: receita ${money(k.revenue)} (${k.paidCount} pagos), ${k.appointmentsHint}.`,
   ];
-  if (rev?.deltaPercent != null && facts.maturity !== "insufficient") {
-    parts.push(
-      `Vs anterior: ${rev.deltaPercent > 0 ? "+" : ""}${rev.deltaPercent}%.`,
-    );
-  }
-  if (k.atRiskClients + k.lostClients > 0) {
-    parts.push(
-      `Retenção: ${k.atRiskClients} em risco, ${k.lostClients} sumindo.`,
-    );
+  if (top?.estimatedImpactBrl != null) {
+    parts.push(`Prioridade: ${top.title} (~${money(top.estimatedImpactBrl)}).`);
   }
 
   return {
     summary: parts.join(" "),
     urgent,
-    opportunities: opportunities.slice(0, 3),
+    opportunities,
     source: "rules",
     cached: false,
   };
@@ -151,11 +100,10 @@ async function llmNarrative(
   const system = `Você é o braço direito do dono de barbearia no Brasil.
 Responda SOMENTE JSON:
 {"summary":"...","urgent":{"title":"...","detail":"...","href":"..."},"opportunities":[{"title":"...","detail":"...","href":"..."}]}
-Regras: pt-BR, tom de consultor direto, summary 2–4 frases.
-urgent: exatamente 1 ação prioritária de hoje.
-opportunities: 2 ou 3 itens.
-href deve ser um destes: /admin/inteligencia#reativacao, /admin/inteligencia#demanda-fraca, /admin/clientes?risk=actionable, /admin/clientes?risk=lost, /admin/agendamentos, /admin/operacional#a-receber, /admin/whatsapp, /admin/clube, /admin/financeiro/comissoes, /admin/relatorios, /admin/marca
-Não invente números. Sem telefones/CPF. Sem jargão longo. Preferir #reativacao quando a ação for WhatsApp de retorno.`;
+Use a actionQueue dos facts (já ranqueada) — reescreva títulos/details em tom direto, sem inventar números.
+urgent = ação rank 1; opportunities = ranks 2–4.
+href deve ser um destes: ${[...ALLOWED_HREFS].join(", ")}
+Sem telefones/CPF.`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 4500);
@@ -163,7 +111,10 @@ Não invente números. Sem telefones/CPF. Sem jargão longo. Preferir #reativaca
     const content = await Promise.race([
       callAdminAiChat({
         system,
-        user: `Facts do Braço Direito:\n${JSON.stringify(facts)}`,
+        user: `Facts:\n${JSON.stringify({
+          ...facts,
+          actionQueue: facts.actionQueue,
+        })}`,
         temperature: 0.4,
       }),
       new Promise<null>((resolve) => {
@@ -224,7 +175,7 @@ export async function generateRightHandNarrative(
   facts: RightHandFacts,
   opts?: { forceRefresh?: boolean },
 ): Promise<RightHandNarrative> {
-  const dayKey = `${dayKeyFromFacts(facts)}:${facts.range}`;
+  const dayKey = `${dayKeyFromFacts(facts)}:${facts.range}:v3`;
   const cacheKey = `${facts.organizationId}:${dayKey}`;
   const hit = cache.get(cacheKey);
   if (

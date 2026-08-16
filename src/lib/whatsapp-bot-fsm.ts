@@ -12,7 +12,10 @@ import {
   normalizeWaUserPhone,
   waPhoneToStored,
 } from "@/lib/booking-domain";
-import { listPublicAvailableSlots } from "@/lib/booking-availability";
+import { listPublicAvailableSlots, resolveBookingDurationMinutes } from "@/lib/booking-availability";
+import { getPopularServiceIds } from "@/lib/popular-services";
+import { hasPlusFeatures } from "@/lib/org-entitlements";
+import { tryWhatsAppAgentTurn } from "@/lib/whatsapp-agent-ai";
 import { BARBER_TIMEZONE } from "@/lib/constants";
 import { decryptSecret } from "@/lib/whatsapp-crypto";
 import {
@@ -21,26 +24,40 @@ import {
   sendWhatsAppText,
 } from "@/lib/whatsapp-meta-client";
 import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
+import {
+  applyMarketingOptOut,
+  phoneKeyFromRaw,
+  touchClientProfileInbound,
+} from "@/lib/client-profile";
 import { prisma } from "@/lib/prisma";
 
 export type BotState =
   | "idle"
   | "pick_unit"
   | "pick_service"
+  | "pick_addon"
   | "pick_day"
   | "pick_slot"
   | "ask_name"
   | "list_upcoming_cancel"
   | "list_upcoming_reschedule"
   | "reschedule_day"
-  | "reschedule_slot";
+  | "reschedule_slot"
+  | "agent_slots";
 
 type SessionContext = {
   unitId?: string;
   serviceId?: string;
+  extraServiceId?: string;
   date?: string;
   time?: string;
   appointmentId?: string;
+  pendingSlots?: {
+    date: string;
+    times: string[];
+    serviceId: string;
+    unitId: string;
+  };
 };
 
 type OrgCreds = {
@@ -119,15 +136,15 @@ async function freeSlotTimes(
   unitId: string,
   serviceId: string,
   dateStr: string,
+  extraServiceId?: string,
 ): Promise<string[]> {
-  const service = await prisma.service.findFirst({
-    where: { id: serviceId, unit: { organizationId } },
-    include: { unitOverrides: true },
+  const ids = extraServiceId ? [serviceId, extraServiceId] : [serviceId];
+  const dur = await resolveBookingDurationMinutes({
+    organizationId,
+    unitId,
+    serviceIds: ids,
   });
-  if (!service) return [];
-  const ov = service.unitOverrides.find((o) => o.unitId === unitId);
-  const duration =
-    ov?.durationMinutes != null ? ov.durationMinutes : service.durationMinutes;
+  if (!dur.ok) return [];
 
   const day = parseISO(dateStr);
   if (Number.isNaN(day.getTime())) return [];
@@ -136,9 +153,48 @@ async function freeSlotTimes(
     organizationId,
     unitId,
     day,
-    durationMinutes: duration,
+    durationMinutes: dur.durationMinutes,
   });
   return result.availableSlots.slice(0, 10);
+}
+
+async function suggestAddon(
+  organizationId: string,
+  unitId: string,
+  primaryServiceId: string,
+): Promise<{ id: string; name: string; price: number } | null> {
+  const popular = await getPopularServiceIds({
+    organizationId,
+    unitId,
+    limit: 6,
+  });
+  const candidateIds = popular.filter((id) => id !== primaryServiceId);
+  const id = candidateIds[0];
+  if (!id) {
+    const other = await prisma.service.findFirst({
+      where: {
+        isActive: true,
+        id: { not: primaryServiceId },
+        unit: { organizationId },
+        OR: [
+          { unitId },
+          { unitOverrides: { some: { unitId, isActive: true } } },
+        ],
+      },
+      orderBy: { price: "desc" },
+      select: { id: true, name: true, price: true },
+    });
+    return other
+      ? { id: other.id, name: other.name, price: Number(other.price) }
+      : null;
+  }
+  const row = await prisma.service.findFirst({
+    where: { id, unit: { organizationId } },
+    select: { id: true, name: true, price: true },
+  });
+  return row
+    ? { id: row.id, name: row.name, price: Number(row.price) }
+    : null;
 }
 
 export async function handleWhatsAppInbound(options: {
@@ -154,6 +210,10 @@ export async function handleWhatsAppInbound(options: {
       whatsappBotEnabled: true,
       whatsappPhoneNumberId: true,
       whatsappAccessTokenEnc: true,
+      planStatus: true,
+      planTier: true,
+      trialEndsAt: true,
+      planCancelAt: true,
     },
   });
   if (
@@ -180,6 +240,12 @@ export async function handleWhatsAppInbound(options: {
   };
 
   const to = normalizeWaUserPhone(options.incoming.from);
+  await touchClientProfileInbound({
+    organizationId: org.id,
+    phoneKey: phoneKeyFromRaw(to),
+    grantMarketingOptIn: true,
+  });
+
   const session = await prisma.whatsAppSession.findUnique({
     where: {
       organizationId_waUserPhone: {
@@ -193,6 +259,22 @@ export async function handleWhatsAppInbound(options: {
   let ctx = ctxOf(session?.contextJson);
   const choice = parseChoice(options.incoming);
   const rawText = options.incoming.text.trim();
+  const optOut =
+    /^(pare|parar|sair|stop|cancelar mensagens|não quero mais|nao quero mais)$/i.test(
+      rawText,
+    ) || choice === "pare";
+  if (optOut) {
+    await applyMarketingOptOut({
+      organizationId: org.id,
+      phoneKey: phoneKeyFromRaw(to),
+    });
+    await sendText(
+      org,
+      to,
+      "Ok — não vamos mais te chamar para voltar a cortar. Se quiser agendar, é só mandar oi.",
+    );
+    return;
+  }
 
   if (
     ["menu", "oi", "olá", "ola", "inicio", "início", "help", "ajuda"].includes(
@@ -204,8 +286,36 @@ export async function handleWhatsAppInbound(options: {
     return;
   }
 
+  const plus = hasPlusFeatures({
+    planStatus: orgRow.planStatus,
+    planTier: orgRow.planTier,
+    trialEndsAt: orgRow.trialEndsAt,
+    planCancelAt: orgRow.planCancelAt,
+  });
+
+  if (
+    plus &&
+    !options.incoming.buttonOrListId &&
+    (state === "idle" || state === "agent_slots") &&
+    rawText.length >= 2
+  ) {
+    const handled = await tryWhatsAppAgentTurn({
+      organizationId: org.id,
+      orgName: org.name,
+      phoneNumberId: org.phoneNumberId,
+      accessToken: org.accessToken,
+      waUserPhone: to,
+      text: rawText,
+      sessionState: state,
+      sessionContext: ctx as Record<string, unknown>,
+      saveSession: (st, context) =>
+        upsertSession(org.id, to, st as BotState, context as SessionContext),
+    });
+    if (handled) return;
+  }
+
   if (state === "idle") {
-    if (choice === "menu_book" || choice === "1" || choice.includes("agendar")) {
+    if (choice === "menu_book" || choice.includes("agendar") || (!plus && choice === "1")) {
       const units = await prisma.barbershopUnit.findMany({
         where: { organizationId: org.id, isActive: true },
         orderBy: [{ isDefault: "desc" }, { name: "asc" }],
@@ -297,6 +407,37 @@ export async function handleWhatsAppInbound(options: {
       return;
     }
     ctx = { ...ctx, serviceId: service.id };
+    const addon = await suggestAddon(org.id, ctx.unitId!, service.id);
+    if (addon) {
+      await upsertSession(org.id, to, "pick_addon", ctx);
+      await sendWhatsAppButtons({
+        phoneNumberId: org.phoneNumberId,
+        accessToken: org.accessToken,
+        toE164Digits: to,
+        body: `Quer acrescentar *${addon.name}* (R$ ${addon.price.toFixed(2).replace(".", ",")})? Pode recusar.`,
+        buttons: [
+          { id: `addon:${addon.id}`, title: "Sim, incluir" },
+          { id: "addon:skip", title: "Não, só esse" },
+        ],
+      });
+      return;
+    }
+    await upsertSession(org.id, to, "pick_day", ctx);
+    await sendDays(org, to);
+    return;
+  }
+
+  if (state === "pick_addon") {
+    if (!ctx.unitId || !ctx.serviceId) {
+      await upsertSession(org.id, to, "idle", {});
+      await sendMenu(org, to);
+      return;
+    }
+    if (choice === "addon:skip" || choice.includes("não") || choice.includes("nao")) {
+      ctx = { ...ctx, extraServiceId: undefined };
+    } else if (choice.startsWith("addon:")) {
+      ctx = { ...ctx, extraServiceId: choice.slice(6) };
+    }
     await upsertSession(org.id, to, "pick_day", ctx);
     await sendDays(org, to);
     return;
@@ -341,6 +482,7 @@ export async function handleWhatsAppInbound(options: {
         ctx.unitId,
         ctx.serviceId,
         dateStr,
+        ctx.extraServiceId,
       );
       await sendSlots(org, to, times);
     }
@@ -374,15 +516,38 @@ export async function handleWhatsAppInbound(options: {
       await sendMenu(org, to);
       return;
     }
+    const pref = await prisma.clientProfile.findUnique({
+      where: {
+        organizationId_phoneKey: {
+          organizationId: org.id,
+          phoneKey: phoneKeyFromRaw(to),
+        },
+      },
+      select: { preferredStaffMemberId: true },
+    });
+    let staffMemberId: string | undefined;
+    if (pref?.preferredStaffMemberId) {
+      const st = await prisma.staffMember.findFirst({
+        where: {
+          id: pref.preferredStaffMemberId,
+          organizationId: org.id,
+          unitId: ctx.unitId,
+        },
+        select: { id: true },
+      });
+      staffMemberId = st?.id;
+    }
     const created = await createPublicBooking({
       organizationId: org.id,
       unitId: ctx.unitId,
       serviceId: ctx.serviceId,
+      extraServiceIds: ctx.extraServiceId ? [ctx.extraServiceId] : undefined,
       date: ctx.date,
       time: ctx.time,
       customerName: name,
       customerPhone: waPhoneToStored(to),
       bookingSource: "whatsapp",
+      staffMemberId,
     });
     if (!created.ok) {
       await sendText(

@@ -29,6 +29,17 @@ export const SUPPORT_ARTICLE_CATEGORY_LABEL: Record<
 
 export const SUPPORT_ARTICLES: SupportArticle[] = [
   {
+    slug: "condicoes-informativos",
+    title: "Onde estão as condições e os PDFs",
+    category: "billing",
+    summary: "Termos, privacidade e informativos de pagamentos e WhatsApp.",
+    body: [
+      "Em /admin/condicoes (e na página pública /condicoes) estão os Termos, a Privacidade e os PDFs para o dono do salão.",
+      "O PDF de pagamentos explica PIX, clube, taxas Asaas e saque. O PDF do WhatsApp explica Cloud API, Plus+ e a fatura da Meta.",
+      "No cadastro você declara ciência desses documentos. Sempre que atualizarmos, a lista em /condicoes é a referência.",
+    ],
+  },
+  {
     slug: "site-marca",
     title: "Como deixar o site com a cara da barbearia",
     category: "site",

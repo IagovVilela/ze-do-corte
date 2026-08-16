@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdminRightHandChartShell } from "@/components/admin-right-hand-chart-shell";
 import type {
   AppointmentFrequencyHeatmap,
   FrequencyCell,
   IsoWeekday,
 } from "@/lib/admin-appointment-frequency-types";
+import type { DashboardRange } from "@/lib/dashboard-period";
+import type { ConfidenceLevel } from "@/lib/right-hand-confidence";
 import { cn } from "@/lib/utils";
 
 type UnitOption = { id: string; name: string };
@@ -15,6 +18,10 @@ type StaffOption = { id: string; label: string };
 type Props = {
   units: UnitOption[];
   staffOptions: StaffOption[];
+  /** Quando definido, a API usa a mesma janela do dashboard (Inteligência / Relatórios). */
+  chartRange?: DashboardRange;
+  /** Força selo/opacidade (ex.: pagos &lt; 15 no snapshot). */
+  forceConfidence?: ConfidenceLevel;
 };
 
 const WEEKDAY_LABEL: Record<IsoWeekday, string> = {
@@ -28,11 +35,11 @@ const WEEKDAY_LABEL: Record<IsoWeekday, string> = {
 };
 
 const LEGEND = [
-  { label: "0% - 20%", className: "bg-sky-300 text-sky-950" },
-  { label: "21% - 40%", className: "bg-emerald-400 text-emerald-950" },
-  { label: "41% - 60%", className: "bg-amber-300 text-amber-950" },
-  { label: "61% - 80%", className: "bg-orange-400 text-orange-950" },
-  { label: "81% - 100%", className: "bg-rose-500 text-white" },
+  { label: "0% – 20%", className: "bg-sky-300 text-sky-950" },
+  { label: "21% – 40%", className: "bg-emerald-400 text-emerald-950" },
+  { label: "41% – 60%", className: "bg-amber-300 text-amber-950" },
+  { label: "61% – 80%", className: "bg-orange-400 text-orange-950" },
+  { label: "81% – 100%", className: "bg-rose-500 text-white" },
 ] as const;
 
 function bandClass(percent: number): string {
@@ -52,6 +59,8 @@ const COLS = "2.75rem repeat(7, minmax(3.5rem, 1fr))";
 export function AdminAppointmentFrequencyHeatmap({
   units,
   staffOptions,
+  chartRange,
+  forceConfidence,
 }: Props) {
   const [unitDraft, setUnitDraft] = useState("");
   const [staffDraft, setStaffDraft] = useState("");
@@ -62,37 +71,41 @@ export function AdminAppointmentFrequencyHeatmap({
   const [error, setError] = useState<string | null>(null);
   const [hover, setHover] = useState<FrequencyCell | null>(null);
 
-  const load = useCallback(async (unit: string, staff: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const qs = new URLSearchParams();
-      if (unit) qs.set("unit", unit);
-      if (staff) qs.set("staff", staff);
-      const res = await fetch(
-        `/api/admin/appointments/frequency?${qs.toString()}`,
-        { credentials: "same-origin" },
-      );
-      const json = (await res.json()) as
-        | AppointmentFrequencyHeatmap
-        | { message?: string };
-      if (!res.ok) {
-        setError(
-          "message" in json && json.message
-            ? json.message
-            : "Não foi possível carregar a frequência.",
+  const load = useCallback(
+    async (unit: string, staff: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const qs = new URLSearchParams();
+        if (unit) qs.set("unit", unit);
+        if (staff) qs.set("staff", staff);
+        if (chartRange) qs.set("chartRange", chartRange);
+        const res = await fetch(
+          `/api/admin/appointments/frequency?${qs.toString()}`,
+          { credentials: "same-origin" },
         );
+        const json = (await res.json()) as
+          | AppointmentFrequencyHeatmap
+          | { message?: string };
+        if (!res.ok) {
+          setError(
+            "message" in json && json.message
+              ? json.message
+              : "Não foi possível carregar a frequência.",
+          );
+          setData(null);
+          return;
+        }
+        setData(json as AppointmentFrequencyHeatmap);
+      } catch {
+        setError("Erro de rede ao carregar a frequência.");
         setData(null);
-        return;
+      } finally {
+        setLoading(false);
       }
-      setData(json as AppointmentFrequencyHeatmap);
-    } catch {
-      setError("Erro de rede ao carregar a frequência.");
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [chartRange],
+  );
 
   useEffect(() => {
     void load(unitApplied, staffApplied);
@@ -116,11 +129,28 @@ export function AdminAppointmentFrequencyHeatmap({
   const showFilters = showUnitFilter || showStaffFilter;
   const weekdays = data?.weekdays ?? ([1, 2, 3, 4, 5, 6, 7] as IsoWeekday[]);
   const hours = data?.hours ?? [];
+  const confidence: ConfidenceLevel =
+    forceConfidence === "indicative" || data?.confidence === "indicative"
+      ? "indicative"
+      : (data?.confidence ?? "conclusive");
+  const periodSubtitle =
+    data?.periodLabel ??
+    (chartRange ? "Período selecionado" : "Últimos 30 dias");
+  const scaleNote =
+    data?.scaleMode === "relative"
+      ? "Intensidade relativa (amostra pequena) — não é ocupação de agenda."
+      : "Ocupação estimada vs capacidade no período.";
 
   return (
-    <section className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-elevated)] p-4 sm:p-5">
+    <AdminRightHandChartShell
+      id="demanda-fraca"
+      title="Frequência de cortes"
+      subtitle={`${periodSubtitle} · ${scaleNote}`}
+      confidence={confidence}
+      className="bg-[var(--bn-surface-elevated)]"
+    >
       {showFilters ? (
-        <div className="flex flex-col gap-4 border-b border-[var(--bn-border)] pb-4">
+        <div className="mb-4 flex flex-col gap-4 border-b border-[var(--bn-border)] pb-4">
           <div>
             <h2 className="text-sm font-bold tracking-wide text-[var(--bn-muted)] uppercase">
               Filtros
@@ -172,46 +202,37 @@ export function AdminAppointmentFrequencyHeatmap({
         </div>
       ) : null}
 
-      <div
-        className={cn(
-          "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
-          showFilters && "mt-5",
-        )}
-      >
-        <div>
-          <h3 className="text-lg font-semibold text-[var(--bn-on)]">
-            Frequência de cortes
-          </h3>
-          <p className="text-sm text-[var(--bn-muted)]">Últimos 30 dias</p>
-        </div>
-        <ul className="flex flex-wrap gap-2" aria-label="Legenda de ocupação">
-          {LEGEND.map((item) => (
-            <li
-              key={item.label}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-[11px] font-semibold",
-                item.className,
-              )}
-            >
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="mb-3 flex flex-wrap gap-2" aria-label="Legenda de ocupação">
+        {LEGEND.map((item) => (
+          <li
+            key={item.label}
+            className={cn(
+              "rounded-md px-2.5 py-1 text-[11px] font-semibold",
+              item.className,
+            )}
+          >
+            {item.label}
+          </li>
+        ))}
+      </ul>
 
       {error ? (
-        <p className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+        <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
           {error}
         </p>
       ) : null}
 
-      <div className="mt-4 overflow-x-auto rounded-xl bg-[var(--bn-surface)] p-2">
+      <div className="overflow-x-auto rounded-xl bg-[var(--bn-surface)] p-2">
         {loading && !data ? (
           <p className="py-10 text-center text-sm text-[var(--bn-muted)]">
             Carregando frequência…
           </p>
         ) : data ? (
-          <div className="min-w-[32rem] space-y-1.5 sm:min-w-[36rem]" role="table" aria-label="Frequência de cortes por dia e hora">
+          <div
+            className="min-w-[32rem] space-y-1.5 sm:min-w-[36rem]"
+            role="table"
+            aria-label="Frequência de cortes por dia e hora"
+          >
             <div
               className="grid gap-1.5"
               style={{ gridTemplateColumns: COLS }}
@@ -279,17 +300,19 @@ export function AdminAppointmentFrequencyHeatmap({
       {hover ? (
         <p className="mt-3 text-xs text-[var(--bn-muted)]">
           {WEEKDAY_LABEL[hover.weekday]} {String(hover.hour).padStart(2, "0")}h:{" "}
-          <span className="font-semibold text-[var(--bn-on)]">{hover.percent}%</span>
+          <span className="font-semibold text-[var(--bn-on)]">
+            {hover.percent}%
+          </span>
           {" · "}
           {hover.count} corte{hover.count === 1 ? "" : "s"} no período
         </p>
       ) : data ? (
         <p className="mt-3 text-xs text-[var(--bn-muted)]">
           {data.totalAppointments} agendamento
-          {data.totalAppointments === 1 ? "" : "s"} no período · toque ou
-          passe o mouse numa célula para o detalhe
+          {data.totalAppointments === 1 ? "" : "s"} confirmado/concluído no
+          período · toque ou passe o mouse numa célula para o detalhe
         </p>
       ) : null}
-    </section>
+    </AdminRightHandChartShell>
   );
 }

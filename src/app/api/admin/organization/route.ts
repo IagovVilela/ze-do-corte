@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { isReservedSlug } from "@/lib/organization";
 import {
@@ -52,7 +52,7 @@ function emptyToNull(v: string | null | undefined) {
 }
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
 
   const org = await prisma.organization.findUnique({
@@ -61,7 +61,27 @@ export async function GET() {
   if (!org) {
     return NextResponse.json({ message: "Organização não encontrada." }, { status: 404 });
   }
-  return NextResponse.json({ organization: org });
+  if (auth.access.role === "SUPPORT_ASSIST") {
+    const {
+      asaasApiKeyEnc: _k,
+      asaasCustomerId: _c,
+      asaasSubscriptionId: _s,
+      asaasAccountEmail: _e,
+      whatsappAccessTokenEnc: _t,
+      whatsappPhoneNumberId: _p,
+      whatsappWabaId: _w,
+      ...safe
+    } = org;
+    return NextResponse.json({
+      organization: {
+        ...safe,
+        asaasEnabled: org.asaasEnabled,
+        whatsappBotEnabled: org.whatsappBotEnabled,
+      },
+    });
+  }
+  const { asaasApiKeyEnc: _key, whatsappAccessTokenEnc: _tok, ...rest } = org;
+  return NextResponse.json({ organization: rest });
 }
 
 export async function PATCH(request: Request) {

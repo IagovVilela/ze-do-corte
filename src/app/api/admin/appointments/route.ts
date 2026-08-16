@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { fromZonedTime } from "date-fns-tz";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth } from "@/lib/admin-auth";
+import { maskEmail, maskPhone } from "@/lib/pii-mask";
 import {
   AppointmentRangeError,
   listAdminAppointmentsInRange,
@@ -33,7 +34,7 @@ function dayEndInShopTz(dateStr: string, tz: string): Date {
 }
 
 export async function GET(request: Request) {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
 
   const url = new URL(request.url);
@@ -69,8 +70,19 @@ export async function GET(request: Request) {
       to,
       filters,
     );
+    const safeRows =
+      auth.access.role === "SUPPORT_ASSIST"
+        ? rows.map((row) => ({
+            ...row,
+            clientPhone: maskPhone(row.clientPhone),
+            clientEmail: maskEmail(row.clientEmail),
+            clientManageToken: null,
+            amountPaid: null,
+            paymentMethod: null,
+          }))
+        : rows;
     return NextResponse.json({
-      rows,
+      rows: safeRows,
       from: fromParsed.data,
       to: toParsed.data,
       timezone: tz,

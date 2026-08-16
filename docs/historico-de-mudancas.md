@@ -6,8 +6,24 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
-## 2026-08-09
+## 2026-08-16
 
+- **Login Ops**: e-mail de consultor com senha correta vai para `/consultores` (o formulário “Entrar no Ops” deixava 401 porque `suporte1@…` não é admin da plataforma).
+- **Login do salão**: conta de consultor/assistência recebe o mesmo “E-mail ou senha incorretos.” (sem apontar `/consultores` nem o gate).
+- **Login staff**: lookup de e-mail saiu de `support-org.ts` (módulo com parse quebrado no cache do Turbopack) para `src/lib/staff-auth-lookup.ts`; helpers de consultor em `src/lib/support-consultant.ts`.
+- **Consultores de suporte**: console `/consultores` (gate `SUPPORT_CONSULTANT_GATE`), papéis `SUPPORT_CONSULTANT` / `SUPPORT_ASSIST`, inbox de chamados, ficha sem secrets, assistência no painel do salão (PII mascarada, sem financeiro). Ops cadastra em `/plataforma/consultores`. Migração `20260816153000_support_consultants`.
+
+## 2026-08-15
+
+- **Condições no produto**: páginas `/condicoes` e `/admin/condicoes` listam Termos, Privacidade e PDFs (`/informativos/*.pdf`). Cadastro, rodapé, planos, pagamentos, WhatsApp e suporte apontam para essa lista.
+- **Informativo WhatsApp Plus+ (PDF)**: `docs/informativo-whatsapp-plus.pdf` para o dono do salão (Cloud API, o que o cliente vê, reativação com aprovação, Plus+ R$ 199 + fatura Meta). Fonte HTML: `docs/informativo-whatsapp-plus.html`.
+- **Informativo Asaas (PDF)**: `docs/informativo-pagamentos-asaas.pdf` para mostrar ao dono do salão (fluxo do dinheiro, taxas, PIX vs cartão, saque e antecipação). Fonte HTML: `docs/informativo-pagamentos-asaas.html`.
+- **Plus+**: plano `PLUS` (R$ 199/mês, inclui Pro); fila de reativação com aprovação; opt-out PARE; webhook idempotente; agente de texto livre (slots reais, confirma 1/2/3); extra opcional no bot de botões; `npm run whatsapp:jobs` para lembretes.
+
+## 2026-08-10
+
+- **Braço Direito — correções Visão Geral / heatmap**: tokens `--bn-rh-*` no CSS (semáforos verde/vermelho visíveis); heatmap com janela alinhada a `chartRange` e escala relativa com amostra &lt;15; selo “Poucos dados ainda” quando pagos &lt;15; cards de saúde com número + variação; Comparativo em barras removido (deltas na tendência); Funil mantido.
+- **Braço Direito UX**: guarda-corpo estatístico (selo “poucos dados”), paleta RH unificada, hierarquia N1/N2/N3, fila de ação por impacto R$, Visão Geral com semáforos (`?view=geral|analise`). Coorte standalone só com amostra ≥10; deltas sem base falsa (+100%).
 - **Braço Direito v2**: corrige KPI Atendimentos (era all-time) vs Receita do período; LTV histórico org-wide; funil, coorte, heatmap no topo, chat consultivo, previsão de demanda, campanha de horário e **Aprovar e enviar** WhatsApp (Cloud API). Vitest em `right-hand-metrics`.
 - **Pool pg / `/admin`**: em desenvolvimento o pool padrão sobe para 12 (também com Postgres remoto); briefing e ops carregam queries em lotes menores para evitar `timeout exceeded when trying to connect`.
 - **Braço Direito** (`/admin/inteligencia`): painel de gestão com KPIs comparativos, gráficos, heatmap de demanda, fila de reativação (WhatsApp IA) e **Análise da operação** (insights 1 urgência + oportunidades; autoexecução ao abrir; âncoras `#reativacao` / `#demanda-fraca`). Menu Análise; CTA no Ritual do dia. APIs `GET /api/admin/right-hand`, `POST /api/admin/ai/right-hand`.

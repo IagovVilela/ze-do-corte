@@ -11,8 +11,10 @@ export const MARKETING_ONLY_PATH_PREFIXES = [
   "/planos",
   "/admin",
   "/plataforma",
+  "/consultores",
   "/api/admin",
   "/api/plataforma",
+  "/api/consultores",
   "/api/auth",
 ] as const;
 

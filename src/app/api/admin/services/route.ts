@@ -2,7 +2,7 @@ import type { ServiceCategory } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_CATEGORY_ORDER } from "@/lib/service-category";
@@ -29,9 +29,12 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageServices) {
+  if (
+    auth.access.role !== "SUPPORT_ASSIST" &&
+    !auth.access.permissions.manageServices
+  ) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
 

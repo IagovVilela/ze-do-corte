@@ -118,6 +118,9 @@ export type PlatformAccess = StaffAccess & { email: string };
 export async function getPlatformAccessOrNull(): Promise<PlatformAccess | null> {
   const access = await getStaffAccessOrNull();
   if (!access?.email) return null;
+  if (access.role === "SUPPORT_CONSULTANT" || access.role === "SUPPORT_ASSIST") {
+    return null;
+  }
   if (!isPlatformAdminEmail(access.email)) return null;
   return { ...access, email: access.email };
 }
@@ -129,7 +132,12 @@ export async function getPlatformAccessOrNull(): Promise<PlatformAccess | null> 
  */
 export async function requirePlatformPageAccess(): Promise<PlatformAccess> {
   const staff = await getStaffAccessOrNull();
-  if (!staff?.email || !isPlatformAdminEmail(staff.email)) {
+  if (
+    !staff?.email ||
+    !isPlatformAdminEmail(staff.email) ||
+    staff.role === "SUPPORT_CONSULTANT" ||
+    staff.role === "SUPPORT_ASSIST"
+  ) {
     notFound();
   }
   return { ...staff, email: staff.email };
@@ -147,7 +155,12 @@ export async function requirePlatformApiAuth(): Promise<PlatformApiAuthResult> {
       response: NextResponse.json({ message: "Não autorizado." }, { status: 401 }),
     };
   }
-  if (!staff.email || !isPlatformAdminEmail(staff.email)) {
+  if (
+    !staff.email ||
+    !isPlatformAdminEmail(staff.email) ||
+    staff.role === "SUPPORT_CONSULTANT" ||
+    staff.role === "SUPPORT_ASSIST"
+  ) {
     return {
       ok: false,
       response: NextResponse.json(

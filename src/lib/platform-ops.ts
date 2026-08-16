@@ -97,6 +97,7 @@ const PLAN_TIER_COLORS: Record<string, string> = {
   STARTER: "#60a5fa",
   FREE: "#34d399",
   PRO: "#3b82f6",
+  PLUS: "#a78bfa",
 };
 
 export async function getPlatformOverview(

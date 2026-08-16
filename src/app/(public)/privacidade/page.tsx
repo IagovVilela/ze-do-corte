@@ -23,7 +23,8 @@ export default function PrivacidadePage() {
       </p>
       <p>
         Ao usar o serviço, você também concorda com os{" "}
-        <Link href="/termos">Termos de Uso</Link>.
+        <Link href="/termos">Termos de Uso</Link> e declara ciência das{" "}
+        <Link href="/condicoes">condições e informativos</Link>.
       </p>
 
       <h2>1. Controladores e operadores</h2>

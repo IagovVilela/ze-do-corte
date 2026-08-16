@@ -7,6 +7,7 @@ import {
   CircleHelp,
   ClipboardList,
   Contact,
+  ScrollText,
   CreditCard,
   Globe2,
   LayoutDashboard,
@@ -72,6 +73,36 @@ export const ADMIN_NAV_FILTERS: {
 ];
 
 export function buildAdminNavGroups(
+  access: StaffAccess,
+  proUnlocked: boolean,
+): AdminNavGroup[] {
+  if (access.role === "SUPPORT_ASSIST") {
+    const allow = new Set([
+      "/admin",
+      "/admin/operacional",
+      "/admin/avaliacoes",
+      "/admin/agendamentos",
+      "/admin/clientes",
+      "/admin/clube",
+      "/admin/site",
+      "/admin/whatsapp",
+    ]);
+    return buildAdminNavGroupsForRoles(
+      { ...access, role: "OWNER" },
+      proUnlocked,
+    )
+      .map((g) => ({
+        ...g,
+        items: g.items
+          .map((i) => ({ ...i, show: allow.has(i.href) }))
+          .filter((i) => i.show),
+      }))
+      .filter((g) => g.items.length > 0);
+  }
+  return buildAdminNavGroupsForRoles(access, proUnlocked);
+}
+
+function buildAdminNavGroupsForRoles(
   access: StaffAccess,
   proUnlocked: boolean,
 ): AdminNavGroup[] {
@@ -367,6 +398,20 @@ export function buildAdminNavGroups(
           show: true,
           icon: Settings,
           keywords: ["tema", "preferências", "preferencias"],
+        },
+        {
+          href: "/admin/condicoes",
+          label: "Condições",
+          show: true,
+          icon: ScrollText,
+          keywords: [
+            "pdf",
+            "termos",
+            "privacidade",
+            "informativo",
+            "asaas",
+            "whatsapp",
+          ],
         },
         {
           href: "/admin/suporte",

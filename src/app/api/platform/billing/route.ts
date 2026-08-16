@@ -16,6 +16,7 @@ import {
 import { saasExternalRef, saasPlanById, SAAS_PLANS } from "@/lib/asaas-plans";
 import { requireStaffApiAuth } from "@/lib/admin-auth";
 import {
+  hasPlusFeatures,
   hasProFeatures,
   isPlanCancelScheduled,
   isTrialActive,
@@ -29,7 +30,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const postSchema = z.object({
-  planId: z.enum(["pro"]),
+  planId: z.enum(["pro", "plus"]),
   billingType: z.enum(["PIX", "CREDIT_CARD"]).default("PIX"),
   cpfCnpj: z
     .string()
@@ -75,6 +76,7 @@ export async function GET() {
         planTierLabel: planTierLabel(org.planTier),
         trialActive: isTrialActive(org),
         hasProFeatures: hasProFeatures(org),
+        hasPlusFeatures: hasPlusFeatures(org),
         needsBillingAttention: needsBillingAttention(org),
         cancelScheduled: isPlanCancelScheduled(org),
       },

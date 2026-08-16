@@ -85,3 +85,8 @@ Uma vez só — o dono do salão **não** precisa ver isso:
 | `WHATSAPP_TOKEN_ENCRYPTION_KEY` + `META_*` | Assistente WhatsApp na plataforma |
 
 Detalhes técnicos: [pagamentos-asaas.md](./pagamentos-asaas.md) · [whatsapp-meta.md](./whatsapp-meta.md).
+
+PDFs para enviar ao dono da barbearia (também no produto em `/condicoes` e `/admin/condicoes`):
+
+- Pagamentos: [informativo-pagamentos-asaas.pdf](./informativo-pagamentos-asaas.pdf) → público `/informativos/pagamentos-asaas.pdf`
+- WhatsApp inteligente (Plus+): [informativo-whatsapp-plus.pdf](./informativo-whatsapp-plus.pdf) → público `/informativos/whatsapp-plus.pdf`

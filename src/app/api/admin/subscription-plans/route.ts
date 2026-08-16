@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import { getPostHogClient } from "@/lib/posthog-server";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
@@ -32,9 +32,12 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageSubscriptions) {
+  if (
+    auth.access.role !== "SUPPORT_ASSIST" &&
+    !auth.access.permissions.manageSubscriptions
+  ) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
   const denied = await assertPro(auth.access.organizationId);

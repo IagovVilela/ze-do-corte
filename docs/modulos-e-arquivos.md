@@ -24,12 +24,18 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `src/lib/morning-briefing-ai.ts` | Narrativa do briefing (LLM opcional + fallback regras + cache diário) |
 | `src/lib/admin-right-hand.ts` / `admin-right-hand-types.ts` | Motor Braço Direito (snapshot + cache) |
 | `src/lib/right-hand-metrics.ts` | Agregações puras (KPIs, funil, coorte, deltas) + testes Vitest |
+| `src/lib/right-hand-confidence.ts` | Limiares / selo “poucos dados” |
+| `src/lib/right-hand-actions.ts` | Fila de ação por impacto R$ |
+| `src/lib/right-hand-health.ts` | Semáforos Visão Geral |
 | `src/lib/right-hand-ai.ts` | Insights narrativos (LLM ou regras) |
 | `src/lib/right-hand-chat-ai.ts` | Chat consultivo com facts do tenant |
-| `src/lib/whatsapp-draft-ai.ts` / `whatsapp-draft-types.ts` | Rascunho WhatsApp (retenção/clube) |
+| `src/lib/client-profile.ts` / `client-profile-math.ts` | Perfil por telefone, intervalo usual, fila de reativação |
+| `src/lib/whatsapp-agent-ai.ts` | Texto livre Plus+: tools de slot/reserva (sem inventar horário) |
 | `src/lib/reports-period-ai.ts` | Leitura IA do período em Relatórios |
 | `src/instrumentation.ts` | Produção: reforço da criação do OWNER no arranque do Next |
 | `src/lib/observability.ts` | Logs JSON + `captureException` → Sentry |
+| `src/lib/staff-auth-lookup.ts` | Login staff: busca por e-mail via SQL (`findStaffAuthByEmail`) |
+| `src/lib/support-consultant.ts` | Org interna de consultores, CRUD SQL e log de assistência |
 | `src/instrumentation.ts` / `instrumentation-client.ts` | Init Sentry (server/edge/client) |
 | `src/sentry.server.config.ts` / `sentry.edge.config.ts` | `Sentry.init` por runtime |
 | `src/app/global-error.tsx` | Erros React App Router → Sentry |
@@ -41,17 +47,21 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Rota | Arquivo | Notas |
 |------|---------|--------|
 | `/` | `src/app/(public)/page.tsx` | Landing **Barbernegon** premium (shell em `(public)/layout.tsx`) |
-| `/planos` | `src/app/(public)/planos/page.tsx` | Planos Free + Pro (nav pública + `SaasPlanComparison` tokens BN) |
+| `/planos` | `src/app/(public)/planos/page.tsx` | Planos Free + Pro + Plus+ |
 | `/explorar` | `src/app/(public)/explorar/page.tsx` | Marketplace: busca salões → site/`agendar` do tenant |
 | `/explorar/favoritos` | `src/app/(public)/explorar/favoritos/page.tsx` | Favoritos salvos neste aparelho |
 | `/plataforma/login` | `src/app/plataforma/login/page.tsx` | Login exclusivo Ops (`?k=` → gate API) |
+| `/consultores/login` | `src/app/consultores/login/page.tsx` | Login consultores (`?k=SUPPORT_CONSULTANT_GATE`) |
+| `/consultores` | `src/app/consultores/(console)/page.tsx` | Inbox de chamados + assistência |
+| `/plataforma/consultores` | `src/app/plataforma/(ops)/consultores/page.tsx` | Ops cria/desativa consultores + auditoria |
 | `/plataforma` | `src/app/plataforma/(ops)/page.tsx` | Ops: overview com KPIs, taxas e gráficos (7d/30d) |
 | `/plataforma/barbearias` | `src/app/plataforma/(ops)/barbearias/page.tsx` | Lista de orgs |
 | `/plataforma/barbearias/[id]` | `src/app/plataforma/(ops)/barbearias/[id]/page.tsx` | Detalhe + plano + entrar como dono + excluir |
 | `/plataforma/marketplace` | `src/app/plataforma/(ops)/marketplace/page.tsx` | Listagens + reviews |
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic (`auth/cadastro-client.tsx`) |
-| `/planos` | `src/app/(public)/planos/page.tsx` | Comparação Free / Pro + trial |
+| `/planos` | `src/app/(public)/planos/page.tsx` | Comparação Free / Pro / Plus+ + trial |
+| `/condicoes` | `src/app/(public)/condicoes/page.tsx` | Lista Termos, Privacidade e PDFs informativos |
 | `/termos` | `src/app/(public)/termos/page.tsx` | Termos de Uso da plataforma |
 | `/privacidade` | `src/app/(public)/privacidade/page.tsx` | Política de Privacidade (LGPD) |
 | `/lista-espera` | `src/app/lista-espera/page.tsx` | Lead B2B só por link (noindex); form `lista-espera-form.tsx` |
@@ -79,6 +89,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/financeiro/criar-despesa` | `…/financeiro/criar-despesa/page.tsx` | Formulário de despesa |
 | `/admin/financeiro/criar-receita` | `…/financeiro/criar-receita/page.tsx` | Formulário de receita |
 | `/admin/plano` | `src/app/admin/(panel)/plano/page.tsx` | Assinatura SaaS Barbernegon |
+| `/admin/condicoes` | `src/app/admin/(panel)/condicoes/page.tsx` | Informativos e páginas legais para o dono |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
 | `/admin/equipe` | `src/app/admin/(panel)/equipe/page.tsx` | Membros `StaffMember` + senha inicial; por **STAFF**: bio, “Mostrar na home”, **expediente** (`workWeekJson`) para OWNER/ADMIN (`admin-staff-manager.tsx`) |
 | `/admin/perfil` | `src/app/admin/(panel)/perfil/page.tsx` | Dados pessoais, foto (Cloudinary), senha |
@@ -116,7 +127,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` (corpo com `unitId`; unicidade por par **unidade + nome**) |
 | Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH` (opcional `unitId`), `DELETE` |
 | Agendamentos (lista por intervalo) | `src/app/api/admin/appointments/route.ts` — `GET ?from=&to=` (AAAA-MM-DD) |
-| Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=` (últimos 30 dias) |
+| Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=&chartRange=` (sem `chartRange`: últimos 30 dias; com: janela do dashboard) |
 | Comanda | `src/app/api/admin/appointments/[id]/comanda/route.ts` — `GET`/`PATCH` (serviços, produtos, pago) |
 | Produtos | `src/app/api/admin/products/route.ts` + `[id]` |
 | Relatórios | `src/app/api/admin/reports/route.ts` |
@@ -140,12 +151,13 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Upload logo/hero/canvas | `src/app/api/admin/organization/brand-asset/route.ts` — `POST` multipart (`kind`: logo \| hero \| canvas) → Cloudinary; limites em `media-upload-limits.ts` (imagem 30 MB / vídeo 60 MB) |
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — JPEG/PNG/WebP até 30 MB |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot, confirmação e lembrete 24h) |
-| WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot |
+| WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot (idempotência `WhatsAppInboundDedup`) |
+| WhatsApp reativação Plus+ | `src/app/api/admin/whatsapp/winback/route.ts` — `GET` fila / `POST` aprovar template |
 | Suporte admin | `src/app/api/admin/support/contact`, `…/tickets`, `…/tickets/[id]/messages` |
 | Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
 | Asaas admin | `src/app/api/admin/payments/route.ts` — `GET`/`PATCH` API key do salão |
 | Clientes que já agendaram | `src/app/api/admin/booking-clients/route.ts` — `GET` (únicos por telefone; usado no clube balcão) |
-| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Pro (Free sem cobrança); `.../cancel` e `.../undo-cancel` — cancelar / desfazer (volta ao Free); Free: máx. 2 STAFF + 1 unidade (`org-entitlements`) |
+| Asaas billing SaaS | `src/app/api/platform/billing/route.ts` — assinatura Pro/Plus+ (Free sem cobrança); `.../cancel` e `.../undo-cancel`; Free: máx. 2 STAFF + 1 unidade (`org-entitlements`) |
 | Asaas webhook | `src/app/api/webhooks/asaas/route.ts` — PIX/assinaturas |
 | PIX agendamento | `src/app/api/appointments/[id]/pay-pix/route.ts` |
 | Cadastro SaaS | `src/app/api/cadastro/route.ts` — cria org com `siteJson` classic |

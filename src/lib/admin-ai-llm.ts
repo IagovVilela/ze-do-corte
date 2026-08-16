@@ -15,6 +15,7 @@ export async function callAdminAiChat(opts: {
   system: string;
   user: string;
   temperature?: number;
+  timeoutMs?: number;
 }): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) return null;
@@ -50,12 +51,19 @@ export async function callAdminAiChat(opts: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 12_000),
     });
   }
 
-  let res = await post(!isGemini);
-  if (!res.ok && !isGemini) {
-    res = await post(false);
+  let res: Response;
+  try {
+    res = await post(!isGemini);
+    if (!res.ok && !isGemini) {
+      res = await post(false);
+    }
+  } catch (err) {
+    console.error("[admin-ai-llm] fetch", err);
+    return null;
   }
 
   if (!res.ok) {

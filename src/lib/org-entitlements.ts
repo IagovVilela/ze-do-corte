@@ -121,10 +121,17 @@ export function hasPlatformAccess(org: OrgBillingSlice, now = new Date()): boole
   return false;
 }
 
-/** Features Pro (caixa + clube) — trial ativo ou Pro pago. */
+/** Features Pro (caixa + clube) — trial ativo, Pro ou Plus+. */
 export function hasProFeatures(org: OrgBillingSlice, now = new Date()): boolean {
   if (isTrialActive(org, now)) return true;
-  if (org.planStatus === "ACTIVE" && org.planTier === "PRO") return true;
+  if (org.planStatus !== "ACTIVE") return false;
+  return org.planTier === "PRO" || org.planTier === "PLUS";
+}
+
+/** IA de agenda / fila de reativação WhatsApp — só Plus+ pago. */
+export function hasPlusFeatures(org: OrgBillingSlice, now = new Date()): boolean {
+  if (org.planStatus === "ACTIVE" && org.planTier === "PLUS") return true;
+  void now;
   return false;
 }
 
@@ -139,6 +146,7 @@ export function needsBillingAttention(
 ): boolean {
   if (isPlanCancelScheduled(org, now)) return false;
   if (org.planStatus === "ACTIVE" && org.planTier === "PRO") return false;
+  if (org.planStatus === "ACTIVE" && org.planTier === "PLUS") return false;
   if (isTrialActive(org, now)) return false;
   return true;
 }
@@ -205,6 +213,8 @@ export function planTierLabel(tier: OrganizationPlanTier): string {
       return "Free";
     case "PRO":
       return "Pro";
+    case "PLUS":
+      return "Plus+";
     default: {
       const _exhaustive: never = tier;
       return _exhaustive;

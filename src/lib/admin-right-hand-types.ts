@@ -5,6 +5,7 @@ import type {
   DashboardServiceBar,
 } from "@/lib/types";
 import type { CohortBucket } from "@/lib/right-hand-metrics";
+import type { ConfidenceLevel } from "@/lib/right-hand-confidence";
 
 export type RightHandMaturity = "insufficient" | "partial" | "full";
 
@@ -13,10 +14,9 @@ export type RightHandCompareMetric = {
   label: string;
   current: number;
   previous: number;
-  /** Variação relativa (%) ou, para cancelRate, pontos percentuais. */
   deltaPercent: number | null;
-  /** Como interpretar deltaPercent na UI. */
   deltaMode: "percent" | "points";
+  deltaReason: "ok" | "no_baseline" | "insufficient_maturity";
   format: "money" | "number" | "percent";
 };
 
@@ -29,7 +29,6 @@ export type RightHandRetentionClient = {
   lastServiceName: string | null;
   totalSpent: number | null;
   clubPlanName: string | null;
-  /** Alerta preditivo: intervalo usual sugere risco antes dos 45d. */
   earlyChurnHint?: string | null;
 };
 
@@ -59,6 +58,57 @@ export type RightHandPrediction = {
   weakWeekdayLabel: string;
   weakAvg: number;
   detail: string;
+  weekSampleCount: number;
+};
+
+export type RightHandProofChart =
+  | "funnel"
+  | "revenue"
+  | "retention"
+  | "heatmap"
+  | "compare"
+  | null;
+
+export type RightHandAction = {
+  id: string;
+  rank: number;
+  title: string;
+  detail: string;
+  href: string;
+  estimatedImpactBrl: number | null;
+  impactBasis: string;
+  confidence: "low" | "med" | "high";
+  score: number;
+  kind: "winback" | "slot" | "cash" | "staff" | "promo" | "cancel" | "funnel";
+  proofChart: RightHandProofChart;
+};
+
+export type RightHandHealthTone = "green" | "yellow" | "red";
+
+export type RightHandHealthItem = {
+  tone: RightHandHealthTone;
+  /** Número principal do período (ex.: R$ 75,00). */
+  metric: string;
+  /** Variação % ou texto “sem base…”. */
+  variation: string;
+  detail: string;
+  href: string;
+  confidence: ConfidenceLevel;
+};
+
+export type RightHandHealth = {
+  finance: RightHandHealthItem;
+  retention: RightHandHealthItem;
+  occupancy: RightHandHealthItem;
+};
+
+export type RightHandConfidence = {
+  funnel: ConfidenceLevel;
+  cohort: ConfidenceLevel;
+  prediction: ConfidenceLevel;
+  /** Pagos no período &lt; 15 → indicativo em visão geral / heatmap / tendência. */
+  volume: ConfidenceLevel;
+  showCohortChart: boolean;
 };
 
 export type RightHandFacts = {
@@ -91,6 +141,7 @@ export type RightHandFacts = {
     previous: number;
     deltaPercent: number | null;
     deltaMode: "percent" | "points";
+    deltaReason: "ok" | "no_baseline" | "insufficient_maturity";
   }[];
   funnel: RightHandFunnel;
   cohorts: CohortBucket[];
@@ -104,6 +155,8 @@ export type RightHandFacts = {
   weakHeatHint: string | null;
   prediction: RightHandPrediction | null;
   promoSuggestion: RightHandPromoSuggestion | null;
+  confidence: RightHandConfidence;
+  actionQueue: RightHandAction[];
 };
 
 export type RightHandSnapshot = {
@@ -129,5 +182,8 @@ export type RightHandSnapshot = {
   retentionQueue: RightHandRetentionClient[];
   prediction: RightHandPrediction | null;
   promoSuggestion: RightHandPromoSuggestion | null;
+  confidence: RightHandConfidence;
+  actionQueue: RightHandAction[];
+  health: RightHandHealth;
   facts: RightHandFacts;
 };

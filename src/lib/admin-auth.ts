@@ -42,6 +42,48 @@ export async function requireStaffApiAuth(): Promise<AdminApiAuthResult> {
       response: NextResponse.json({ message: "Não autorizado." }, { status: 401 }),
     };
   }
+  if (access.role === "SUPPORT_CONSULTANT") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { message: "Use o console de consultores." },
+        { status: 403 },
+      ),
+    };
+  }
+  if (access.role === "SUPPORT_ASSIST") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          message:
+            "Modo assistência: esta ação ou dado não está disponível.",
+        },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true, access };
+}
+
+/** GET de rotas operacionais que o consultor pode ver (com PII mascarada). */
+export async function requireAssistReadApiAuth(): Promise<AdminApiAuthResult> {
+  const access = await getStaffAccessOrNull();
+  if (!access) {
+    return {
+      ok: false,
+      response: NextResponse.json({ message: "Não autorizado." }, { status: 401 }),
+    };
+  }
+  if (access.role === "SUPPORT_CONSULTANT") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { message: "Use o console de consultores." },
+        { status: 403 },
+      ),
+    };
+  }
   return { ok: true, access };
 }
 

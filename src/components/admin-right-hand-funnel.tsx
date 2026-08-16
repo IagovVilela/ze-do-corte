@@ -4,40 +4,48 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
+import { AdminRightHandChartShell } from "@/components/admin-right-hand-chart-shell";
 import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { RightHandFunnel } from "@/lib/admin-right-hand-types";
+import type { ConfidenceLevel } from "@/lib/right-hand-confidence";
 
 type Props = {
   funnel: RightHandFunnel;
   periodLabel: string;
+  confidence?: ConfidenceLevel;
+  highlightStage?: "scheduled" | "confirmed" | "completed" | "paid";
+  callout?: string;
+  compact?: boolean;
 };
 
-export function AdminRightHandFunnel({ funnel, periodLabel }: Props) {
+export function AdminRightHandFunnel({
+  funnel,
+  periodLabel,
+  confidence = "conclusive",
+  highlightStage,
+  callout,
+  compact = false,
+}: Props) {
   const chart = useAdminChartColors();
   const data = [
-    { stage: "Agendado", value: funnel.scheduled },
-    { stage: "Confirmado", value: funnel.confirmed },
-    { stage: "Concluído", value: funnel.completed },
-    { stage: "Pago", value: funnel.paid },
+    { stage: "Agendado", key: "scheduled" as const, value: funnel.scheduled },
+    { stage: "Confirmado", key: "confirmed" as const, value: funnel.confirmed },
+    { stage: "Concluído", key: "completed" as const, value: funnel.completed },
+    { stage: "Pago", key: "paid" as const, value: funnel.paid },
   ];
   const max = Math.max(...data.map((d) => d.value), 1);
   const hasAny = data.some((d) => d.value > 0);
 
-  return (
-    <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface)] p-5">
-      <h3 className="text-sm font-semibold text-[var(--bn-on)]">
-        Funil de conversão
-      </h3>
-      <p className="mt-1 text-xs text-[var(--bn-muted)]">
-        Onde a operação perde dinheiro · {periodLabel}
-      </p>
-      <div className="mt-4 h-56">
+  const body = (
+    <>
+      <div className={compact ? "h-40" : "h-56"}>
         {hasAny ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -64,13 +72,19 @@ export function AdminRightHandFunnel({ funnel, periodLabel }: Props) {
                   background: chart.tooltipBg,
                   color: chart.tooltipColor,
                 }}
+                labelStyle={{ color: chart.tooltipColor }}
+                itemStyle={{ color: chart.tooltipColor }}
               />
-              <Bar
-                dataKey="value"
-                name="Qtd"
-                fill="var(--bn-primary)"
-                radius={[0, 6, 6, 0]}
-              />
+              <Bar dataKey="value" name="Qtd" radius={[0, 6, 6, 0]}>
+                {data.map((d) => (
+                  <Cell
+                    key={d.key}
+                    fill={
+                      highlightStage === d.key ? chart.danger : chart.info
+                    }
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -79,11 +93,29 @@ export function AdminRightHandFunnel({ funnel, periodLabel }: Props) {
           </div>
         )}
       </div>
+      {callout ? (
+        <p className="mt-2 text-xs font-medium text-[var(--bn-rh-danger)]">
+          {callout}
+        </p>
+      ) : null}
       {funnel.completed > 0 && funnel.paid === 0 ? (
-        <p className="mt-2 text-xs text-[var(--bn-status-danger)]">
+        <p className="mt-2 text-xs text-[var(--bn-rh-danger)]">
           Há concluídos sem pagamento — priorize o caixa a receber.
         </p>
       ) : null}
-    </div>
+    </>
+  );
+
+  if (compact) return body;
+
+  return (
+    <AdminRightHandChartShell
+      id="funil"
+      title="Funil de conversão"
+      subtitle={`Onde a operação perde dinheiro · ${periodLabel}`}
+      confidence={confidence}
+    >
+      {body}
+    </AdminRightHandChartShell>
   );
 }

@@ -113,7 +113,9 @@ Regras de horário iguais ao site (`booking-domain` + `assertPublicBookingSlot`)
 
 ## Templates Meta
 
-Fora da janela de 24h é obrigatório template aprovado. Crie na WABA textos em `pt_BR` com variáveis (nome, serviço, data/hora) e aponte os nomes nas env `META_WA_TEMPLATE_*`.
+Fora da janela de 24h é obrigatório template aprovado. Crie na WABA textos em `pt_BR` com variáveis (nome, serviço, data/hora) e aponte os nomes nas env `META_WA_TEMPLATE_*`. Reativação Plus+: `META_WA_TEMPLATE_WINBACK` (nome, dias, salão).
+
+Embedded Signup (botão Facebook no admin) continua como evolução — hoje a conexão é Phone number ID + token em `/admin/whatsapp`.
 
 ## Migração
 

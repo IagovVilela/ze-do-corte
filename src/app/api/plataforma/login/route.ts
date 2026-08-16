@@ -4,12 +4,15 @@ import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
 import {
+  appendSupportConsultantGateCookie,
+  getSupportConsultantGate,
+} from "@/lib/consultant-auth";
+import {
   appendPlatformOpsGateCookie,
   isPlatformAdminEmail,
   isValidPlatformOpsGate,
   PLATFORM_OPS_GATE_COOKIE,
 } from "@/lib/platform-auth";
-import { prisma } from "@/lib/prisma";
 import {
   DUMMY_PASSWORD_HASH,
   verifyPassword,
@@ -21,6 +24,7 @@ import {
 } from "@/lib/rate-limit";
 import { createDbSession } from "@/lib/session-cookie";
 import { staffEmailSchema } from "@/lib/staff-email";
+import { findStaffAuthByEmail } from "@/lib/staff-auth-lookup";
 
 export const dynamic = "force-dynamic";
 
@@ -88,18 +92,26 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!isPlatformAdminEmail(email)) {
-    await verifyPassword(parsed.data.password, DUMMY_PASSWORD_HASH);
+  const member = await findStaffAuthByEmail(email);
+  const hash = member?.passwordHash || DUMMY_PASSWORD_HASH;
+  const ok = await verifyPassword(parsed.data.password, hash);
+  if (!member?.passwordHash || !ok || member.isActive === false) {
     return NextResponse.json(
       { message: "E-mail ou senha incorretos." },
       { status: 401 },
     );
   }
 
-  const member = await prisma.staffMember.findUnique({ where: { email } });
-  const hash = member?.passwordHash || DUMMY_PASSWORD_HASH;
-  const ok = await verifyPassword(parsed.data.password, hash);
-  if (!member?.passwordHash || !ok) {
+  if (member.role === "SUPPORT_CONSULTANT") {
+    const raw = await createDbSession(member.id);
+    const res = NextResponse.json({ ok: true, redirect: "/consultores" });
+    appendSessionCookie(res, raw);
+    const supportGate = getSupportConsultantGate();
+    if (supportGate) appendSupportConsultantGateCookie(res, supportGate);
+    return res;
+  }
+
+  if (!isPlatformAdminEmail(email)) {
     return NextResponse.json(
       { message: "E-mail ou senha incorretos." },
       { status: 401 },

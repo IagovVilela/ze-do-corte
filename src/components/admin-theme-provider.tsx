@@ -122,6 +122,13 @@ export function useAdminChartColors() {
         ? "1px solid rgba(37, 99, 235, 0.28)"
         : "1px solid rgba(59, 130, 246, 0.28)",
     tooltipColor: theme === "light" ? "#10131a" : "#e1e2ec",
+    positive: theme === "light" ? "#16a34a" : "#4ade80",
+    danger: theme === "light" ? "#dc2626" : "#f87171",
+    info: theme === "light" ? "#2563eb" : "#adc6ff",
+    muted: theme === "light" ? "#94a3b8" : "#64748b",
+    previous: theme === "light" ? "#94a3b8" : "#64748b",
+    peak: theme === "light" ? "#16a34a" : "#4ade80",
+    valley: theme === "light" ? "#d97706" : "#f59e0b",
   });
 
   useEffect(() => {
@@ -133,6 +140,10 @@ export function useAdminChartColors() {
         : "rgba(255,255,255,0.08)";
     const fallbackTooltipBg = theme === "light" ? "#ffffff" : "#11131a";
     const fallbackOn = theme === "light" ? "#10131a" : "#e1e2ec";
+    const fallbackPositive = theme === "light" ? "#16a34a" : "#4ade80";
+    const fallbackDanger = theme === "light" ? "#dc2626" : "#f87171";
+    const fallbackInfo = theme === "light" ? "#2563eb" : "#adc6ff";
+    const fallbackMuted = theme === "light" ? "#94a3b8" : "#64748b";
     if (!root) {
       setColors({
         tick: fallbackTick,
@@ -143,6 +154,13 @@ export function useAdminChartColors() {
             ? "1px solid rgba(37, 99, 235, 0.28)"
             : "1px solid rgba(59, 130, 246, 0.28)",
         tooltipColor: fallbackOn,
+        positive: fallbackPositive,
+        danger: fallbackDanger,
+        info: fallbackInfo,
+        muted: fallbackMuted,
+        previous: fallbackMuted,
+        peak: fallbackPositive,
+        valley: theme === "light" ? "#d97706" : "#f59e0b",
       });
       return;
     }
@@ -151,6 +169,10 @@ export function useAdminChartColors() {
     const grid = styles.getPropertyValue("--bn-chart-grid").trim();
     const tooltipBg = styles.getPropertyValue("--bn-chart-tooltip-bg").trim();
     const on = styles.getPropertyValue("--bn-on").trim();
+    const positive = styles.getPropertyValue("--bn-rh-positive").trim();
+    const danger = styles.getPropertyValue("--bn-rh-danger").trim();
+    const info = styles.getPropertyValue("--bn-rh-info").trim();
+    const muted = styles.getPropertyValue("--bn-rh-muted").trim();
     setColors({
       tick: tick || fallbackTick,
       grid: grid || fallbackGrid,
@@ -160,6 +182,13 @@ export function useAdminChartColors() {
           ? "1px solid rgba(37, 99, 235, 0.28)"
           : "1px solid rgba(59, 130, 246, 0.28)",
       tooltipColor: on || fallbackOn,
+      positive: positive || fallbackPositive,
+      danger: danger || fallbackDanger,
+      info: info || fallbackInfo,
+      muted: muted || fallbackMuted,
+      previous: muted || fallbackMuted,
+      peak: positive || fallbackPositive,
+      valley: theme === "light" ? "#d97706" : "#f59e0b",
     });
   }, [theme]);
 

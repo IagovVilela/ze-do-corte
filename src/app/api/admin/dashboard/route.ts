@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getAdminDashboardSnapshot } from "@/lib/admin-dashboard";
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth } from "@/lib/admin-auth";
 import {
   parseAdminListFilters,
   parseTelemetryScope,
@@ -10,7 +10,7 @@ import {
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const authResult = await requireStaffApiAuth();
+  const authResult = await requireAssistReadApiAuth();
   if (!authResult.ok) {
     return authResult.response;
   }
@@ -31,7 +31,26 @@ export async function GET(request: Request) {
       listFilters,
       telemetryScope,
     );
-    return NextResponse.json(snapshot);
+    if (authResult.access.role !== "SUPPORT_ASSIST") {
+      return NextResponse.json(snapshot);
+    }
+    return NextResponse.json({
+      ...snapshot,
+      metrics: {
+        ...snapshot.metrics,
+        revenueMonth: 0,
+        receivedInPeriod: 0,
+        completedValueInPeriod: 0,
+        scheduledValueInPeriod: 0,
+      },
+      revenueSeries: snapshot.revenueSeries.map((p) => ({ ...p, amount: 0 })),
+      paymentStack: snapshot.paymentStack.map((p) => ({
+        ...p,
+        pagos: 0,
+        aReceber: 0,
+      })),
+      unitTelemetry: null,
+    });
   } catch (error) {
     console.error("Erro ao montar dashboard:", error);
     return NextResponse.json(

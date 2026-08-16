@@ -157,6 +157,23 @@ export function PaymentsAdminPanel() {
             : "Ainda sem conta ligada. Siga os 3 passos abaixo."}
       </div>
 
+      <p className="text-sm text-[var(--bn-muted)]">
+        Leia o informativo em PDF:{" "}
+        <a
+          href="/informativos/pagamentos-asaas.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-[var(--bn-primary)] underline-offset-2 hover:underline"
+        >
+          Como você recebe o dinheiro dos clientes
+        </a>
+        . Todos os documentos:{" "}
+        <Link href="/admin/condicoes" className="font-semibold text-[var(--bn-primary)] hover:underline">
+          Condições
+        </Link>
+        .
+      </p>
+
       {!platform?.readyForShops ? (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-[var(--bn-status-warn)]">
           A plataforma ainda está preparando os recebimentos. Se não conseguir

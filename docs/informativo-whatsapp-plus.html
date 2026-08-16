@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Como funciona o WhatsApp inteligente (Plus+) — Barbernegon</title>
+  <style>
+    @page { size: A4; margin: 14mm 14mm 16mm; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Calibri, Arial, sans-serif;
+      color: #10131a;
+      background: #fff;
+      font-size: 10.5pt;
+      line-height: 1.45;
+    }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+
+    header.hero {
+      background: #10131a;
+      color: #e1e2ec;
+      border-radius: 12px;
+      padding: 22px 24px 20px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      font-size: 11pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #adc6ff;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 8px 0 6px;
+      font-size: 20pt;
+      line-height: 1.2;
+      font-weight: 750;
+      color: #fff;
+    }
+    .lede { margin: 0; color: #c2c6d6; font-size: 11pt; max-width: 94%; }
+
+    h2 {
+      font-size: 13pt;
+      margin: 18px 0 8px;
+      color: #10131a;
+      border-bottom: 2px solid #3B82F6;
+      padding-bottom: 4px;
+    }
+    h3 { font-size: 11pt; margin: 12px 0 6px; color: #1d4ed8; }
+
+    p { margin: 0 0 8px; }
+    ul { margin: 0 0 10px; padding-left: 18px; }
+    li { margin-bottom: 4px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0 4px;
+    }
+    .step {
+      border: 1px solid #d5dbe7;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f4f6fa;
+    }
+    .step b { display: block; color: #2563eb; font-size: 9pt; margin-bottom: 4px; }
+
+    .callout {
+      background: #eef4ff;
+      border-left: 4px solid #3B82F6;
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0 12px;
+    }
+    .warn {
+      background: #fff8e8;
+      border-left: 4px solid #C5A059;
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin: 8px 0 12px;
+    }
+    th, td {
+      border: 1px solid #d5dbe7;
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #10131a; color: #fff; font-weight: 600; }
+    tr:nth-child(even) td { background: #f4f6fa; }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid #d5dbe7;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card h3 { margin-top: 0; }
+
+    ol.num { padding-left: 20px; margin: 6px 0 10px; }
+    ol.num li { margin-bottom: 6px; }
+
+    footer.note {
+      margin-top: 14px;
+      font-size: 8.5pt;
+      color: #667085;
+      border-top: 1px solid #d5dbe7;
+      padding-top: 8px;
+    }
+    code { font-size: 9.5pt; }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <header class="hero">
+      <div class="brand">Barbernegon</div>
+      <h1>Como funciona o WhatsApp inteligente</h1>
+      <p class="lede">Guia para o dono da barbearia: o que o cliente recebe no celular, o que é o plano Plus+, e o que você paga para a Meta (WhatsApp oficial).</p>
+    </header>
+
+    <p>Este material é para <strong>você, dono do salão</strong>. Não precisa ser técnico. A ideia é simples: o cliente manda mensagem no WhatsApp da loja e consegue <strong>agendar, remarcar ou cancelar</strong> — e o sistema ainda te avisa quem está atrasado para voltar a cortar.</p>
+
+    <div class="steps">
+      <div class="step">
+        <b>1. Cliente manda “oi”</b>
+        No WhatsApp comercial da barbearia (número oficial da Meta).
+      </div>
+      <div class="step">
+        <b>2. O assistente responde</b>
+        Mostra serviços, dias e horários <em>reais</em> da sua agenda.
+      </div>
+      <div class="step">
+        <b>3. Horário entra no painel</b>
+        Você vê o agendamento como se tivesse sido feito no site.
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Não é o WhatsApp “não oficial” nem o celular do barbeiro.</strong> Usamos a <strong>Cloud API oficial da Meta</strong> (WhatsApp Business). O número precisa ser comercial, com conta Business da sua barbearia. Colocar o telefone no site (botão verde) <em>não</em> liga o robô sozinho.
+    </div>
+
+    <h2>Três jeitos de usar o WhatsApp</h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Só o número no site</th>
+          <th>Assistente de botões</th>
+          <th>Plus+ (IA)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>O que o cliente vê</strong></td>
+          <td>Botão que abre conversa com você (ou com a equipe).</td>
+          <td>Menu: Agendar, Remarcar, Cancelar. Escolhe tocando nos botões.</td>
+          <td>Pode escrever como fala: “quero cortar amanhã de tarde”.</td>
+        </tr>
+        <tr>
+          <td><strong>Quem agenda</strong></td>
+          <td>Você, na mão.</td>
+          <td>O assistente, com horários da agenda.</td>
+          <td>O assistente inteligente + os mesmos botões, se o cliente preferir.</td>
+        </tr>
+        <tr>
+          <td><strong>Plano Barbernegon</strong></td>
+          <td>Free, Pro ou Plus+.</td>
+          <td>Disponível quando a Cloud API está ligada.</td>
+          <td><strong>Plus+ — R$ 199/mês</strong> (já inclui tudo do Pro).</td>
+        </tr>
+        <tr>
+          <td><strong>Reativar cliente atrasado</strong></td>
+          <td>Você manda mensagem na mão.</td>
+          <td>Não.</td>
+          <td>Sim: fila no painel, <strong>você aprova</strong> cada envio.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      <strong>São duas contas diferentes.</strong> A mensalidade Plus+ (R$ 199) é da <strong>Barbernegon</strong>. A conversa no WhatsApp oficial gera fatura da <strong>Meta</strong> (cartão no painel Business da sua loja). A plataforma não “presenteia” mensagem grátis da Meta — isso não existe na API oficial.
+    </div>
+  </section>
+
+  <section class="page">
+    <h2>Como o cliente agenda (na prática)</h2>
+    <ol class="num">
+      <li>Manda <strong>oi</strong>, <strong>menu</strong> ou <strong>ajuda</strong>.</li>
+      <li>Escolhe <strong>Agendar</strong> (e a unidade, se você tiver mais de uma loja).</li>
+      <li>Escolhe o <strong>serviço</strong>. O sistema pode oferecer <strong>um extra</strong> (ex.: barba) — ele pode recusar.</li>
+      <li>Escolhe <strong>dia</strong> e <strong>horário</strong> que realmente estão livres.</li>
+      <li>Informa o <strong>nome</strong>. Pronto: o horário aparece na sua agenda.</li>
+    </ol>
+    <p>Remarcar e cancelar usam o <strong>mesmo telefone</strong> do WhatsApp: o assistente lista os próximos horários daquela pessoa na sua barbearia.</p>
+
+    <h3>No Plus+: conversa em texto livre</h3>
+    <p>Se o cliente escrever “corte amanhã às 16h”, o assistente <strong>não inventa horário</strong>. Ele consulta a agenda, sugere <strong>2 ou 3 opções reais</strong> e pede para o cliente confirmar digitando <strong>1, 2 ou 3</strong>. Só então o agendamento é criado. Isso evita marcar horário ocupado ou “alucinação” da IA.</p>
+
+    <h2>Reativação: quem sumiu e deve voltar</h2>
+    <p>O Plus+ observa o ritmo de cada cliente (quem corta a cada 20 dias não é tratado igual a quem corta a cada 45). Entra na fila quem já veio <strong>pelo menos 3 vezes</strong> e está atrasado em relação ao próprio intervalo (no mínimo cerca de <strong>14 dias</strong> depois do último corte, ou mais se o intervalo dele for maior).</p>
+    <ol class="num">
+      <li>Você abre <strong>/admin/whatsapp</strong> e vê a lista (“Reativação inteligente”).</li>
+      <li>Confere o nome e há quantos dias ele não vem.</li>
+      <li>Clica para <strong>aprovar o envio</strong>. A mensagem sai pelo WhatsApp oficial (template aprovado na Meta).</li>
+    </ol>
+    <p>Há um <strong>teto mensal</strong> (padrão: 30 envios de reativação) para você controlar o gasto na fatura da Meta. O cliente pode responder <strong>PARE</strong>, <strong>sair</strong> ou <strong>stop</strong> — o salão para de chamá-lo para voltar. Quem nunca falou no WhatsApp da loja não recebe disparo frio.</p>
+
+    <h2>O que você precisa ligar (uma vez)</h2>
+    <ol class="num">
+      <li>Assinar o <strong>Plus+</strong> em <strong>/planos</strong> (ou pedir ao suporte Barbernegon para ativar o plano).</li>
+      <li>Ter uma conta <strong>WhatsApp Business / Meta Business</strong> da barbearia, com um <strong>número comercial</strong> (pode ser um número novo, só para o robô).</li>
+      <li>No painel Meta, gerar o <strong>código do número</strong> (Phone number ID) e o <strong>token de acesso</strong>.</li>
+      <li>Em <strong>/admin/whatsapp</strong>: colar esses códigos, marcar <strong>Bot ativo</strong> e salvar. O número de vitrine do site continua sendo o que o cliente vê no botão; o robô usa a Cloud API.</li>
+      <li>Combinar com o suporte Barbernegon os <strong>modelos de mensagem</strong> aprovados na Meta (confirmação, lembrete 24h e “sentimos sua falta”). Sem template, a Meta só deixa texto livre nas primeiras 24 horas depois que o cliente falou com você.</li>
+    </ol>
+    <div class="callout">
+      A conexão hoje é <strong>manual</strong> (colar códigos). Não é só “ligar o chip no celular”. O suporte Barbernegon pode fazer isso com você na primeira vez.
+    </div>
+  </section>
+
+  <section class="page">
+    <h2>Quanto custa, em duas linhas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Para quem você paga</th>
+          <th>O quê</th>
+          <th>Ordem de grandeza</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Barbernegon</strong></td>
+          <td>Plano Plus+ (inclui Pro: caixa, clube, várias lojas, equipe ilimitada + IA no WhatsApp)</td>
+          <td><strong>R$ 199 / mês</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Meta (WhatsApp)</strong></td>
+          <td>Conversas no número oficial: atendimento (quando o cliente escreve) e marketing (reativação que você aprovou)</td>
+          <td>Tabela da Meta no Brasil, cobrada no cartão da <em>sua</em> conta Business. Muda com o tipo de conversa e o volume.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>A inteligência (interpretação do texto) entra na mensalidade Plus+. Você <strong>não</strong> paga uma “IA à parte” para cada mensagem. O que varia mês a mês é sobretudo a <strong>fatura da Meta</strong>, por isso a reativação pede o seu clique e tem teto.</p>
+
+    <h2>O que o Plus+ não faz (de propósito)</h2>
+    <ul>
+      <li>Não marca horário sem o cliente confirmar a opção (1, 2 ou 3) ou os botões.</li>
+      <li>Não dispara “feliz aniversário / volta aqui” para quem pediu para parar.</li>
+      <li>Não usa API pirata, Baileys ou WhatsApp Web no celular da loja — isso cai e pode banir o número.</li>
+      <li>Não vende produto da prateleira na conversa (hoje o extra é <strong>um serviço</strong> a mais, se fizer sentido).</li>
+    </ul>
+
+    <h2>Perguntas rápidas</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Posso usar o mesmo número do dono?</h3>
+        <p>O ideal é um <strong>número comercial só da loja</strong>. Número pessoal misturado com conversa de família costuma dar problema na Meta.</p>
+      </div>
+      <div class="card">
+        <h3>O Pro já tem isso?</h3>
+        <p>Não. O Pro tem caixa, clube e multi-loja. A IA que agenda em texto livre e a fila de reativação são <strong>só Plus+</strong>.</p>
+      </div>
+      <div class="card">
+        <h3>E se o cliente preferir falar com gente?</h3>
+        <p>Ele manda oi e você (ou a recepção) pode assumir a conversa no WhatsApp Business. O robô não substitui atendimento humano quando a pessoa pede.</p>
+      </div>
+      <div class="card">
+        <h3>Lembrete do horário de amanhã</h3>
+        <p>Com a Cloud API ligada, o sistema pode enviar lembrete cerca de <strong>24 horas antes</strong> (template da Meta). Isso vale também fora do Plus+, se o assistente estiver configurado.</p>
+      </div>
+    </div>
+
+    <h2>Checklist para o dono</h2>
+    <ul>
+      <li>Plano Plus+ ativo (R$ 199/mês)</li>
+      <li>Conta Meta Business da barbearia + número comercial</li>
+      <li>Códigos colados em /admin/whatsapp e “Bot ativo” ligado</li>
+      <li>Teste: mandar “oi” do seu celular e agendar um horário de teste</li>
+      <li>Conferir a fila de reativação e o teto do mês</li>
+      <li>Cartão cadastrado no Billing da Meta (fatura das conversas)</li>
+    </ul>
+
+    <footer class="note">
+      Barbernegon — informativo para clientes da plataforma (agosto de 2026). Preço Plus+ R$ 199/mês conforme a oferta atual em /planos; pode mudar. Tarifas de conversa WhatsApp são da Meta e devem ser conferidas no gerenciador Business da sua conta. Este PDF não substitui os termos da Meta nem o contrato Barbernegon.
+    </footer>
+  </section>
+</body>
+</html>

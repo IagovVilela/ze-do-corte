@@ -23,6 +23,7 @@
     "demo:vitrine": "tsx scripts/apply-demo-vitrine.ts",
     "demo:day": "tsx scripts/seed-demo-day.ts",
     "whatsapp:reminders": "tsx scripts/whatsapp-reminders.ts",
+    "whatsapp:jobs": "tsx scripts/whatsapp-jobs.ts",
     "postinstall": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest"

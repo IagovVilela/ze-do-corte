@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { appendSessionCookie } from "@/lib/admin-auth";
 import { getPostHogClient } from "@/lib/posthog-server";
-import { prisma } from "@/lib/prisma";
 import {
   DUMMY_PASSWORD_HASH,
   verifyPassword,
@@ -15,6 +14,7 @@ import {
 } from "@/lib/rate-limit";
 import { createDbSession } from "@/lib/session-cookie";
 import { staffEmailSchema } from "@/lib/staff-email";
+import { findStaffAuthByEmail } from "@/lib/staff-auth-lookup";
 
 export const dynamic = "force-dynamic";
 
@@ -60,10 +60,27 @@ export async function POST(request: Request) {
     });
   }
 
-  const member = await prisma.staffMember.findUnique({ where: { email } });
+  const member = await findStaffAuthByEmail(email);
   const hash = member?.passwordHash || DUMMY_PASSWORD_HASH;
   const ok = await verifyPassword(parsed.data.password, hash);
   if (!member?.passwordHash || !ok) {
+    return NextResponse.json(
+      { message: "E-mail ou senha incorretos." },
+      { status: 401 },
+    );
+  }
+
+  if (member.isActive === false) {
+    return NextResponse.json(
+      { message: "Esta conta está desativada." },
+      { status: 403 },
+    );
+  }
+
+  if (
+    member.role === "SUPPORT_CONSULTANT" ||
+    member.role === "SUPPORT_ASSIST"
+  ) {
     return NextResponse.json(
       { message: "E-mail ou senha incorretos." },
       { status: 401 },
@@ -81,7 +98,11 @@ export async function POST(request: Request) {
   }
 
   const raw = await createDbSession(member.id);
-  const res = NextResponse.json({ ok: true, redirect: "/admin", userId: member.id });
+  const res = NextResponse.json({
+    ok: true,
+    redirect: "/admin",
+    userId: member.id,
+  });
   appendSessionCookie(res, raw);
 
   const posthog = getPostHogClient();

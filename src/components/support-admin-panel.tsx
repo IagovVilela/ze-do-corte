@@ -284,6 +284,21 @@ export function SupportAdminPanel({
 
       {tab === "ajuda" ? (
         <div className="space-y-4">
+          <div className="rounded-2xl border border-brand-500/25 bg-brand-500/5 p-5">
+            <h2 className="font-display text-lg text-[var(--bn-on)]">
+              Condições e informativos
+            </h2>
+            <p className="mt-1 text-sm text-[var(--bn-muted)]">
+              PDFs e páginas legais para você ter ciência de como funcionam
+              pagamentos, WhatsApp e o contrato da plataforma.
+            </p>
+            <a
+              href="/admin/condicoes"
+              className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-[var(--bn-primary)] underline-offset-2 hover:underline"
+            >
+              Abrir todos os documentos
+            </a>
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"

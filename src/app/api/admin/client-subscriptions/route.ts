@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import { createClubSubscription } from "@/lib/club-subscribe";
 import { hasProFeatures } from "@/lib/org-entitlements";
 import { prisma } from "@/lib/prisma";
+import { maskEmail, maskPhone } from "@/lib/pii-mask";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,12 @@ async function assertProClubAccess(organizationId: string) {
 }
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageSubscriptions) {
+  if (
+    auth.access.role !== "SUPPORT_ASSIST" &&
+    !auth.access.permissions.manageSubscriptions
+  ) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
   const denied = await assertProClubAccess(auth.access.organizationId);
@@ -61,7 +65,19 @@ export async function GET() {
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   });
 
-  return NextResponse.json({ subscriptions });
+  if (auth.access.role !== "SUPPORT_ASSIST") {
+    return NextResponse.json({ subscriptions });
+  }
+
+  return NextResponse.json({
+    subscriptions: subscriptions.map((s) => ({
+      ...s,
+      clientPhone: maskPhone(s.clientPhone),
+      clientEmail: maskEmail(s.clientEmail),
+      asaasCustomerId: null,
+      asaasSubscriptionId: null,
+    })),
+  });
 }
 
 export async function POST(request: Request) {

@@ -46,13 +46,17 @@ Descrição detalhada das variáveis: [README.md](../README.md) (tabela) e [.env
 URL de entrada (guarde só você): `/plataforma/login?k=SEU_PLATFORM_OPS_GATE`  
 O formulário abre direto com `?k=` válido (e remove o `k` da barra no cliente). O cookie `bn_ops_gate` (`path=/`) é gravado no login bem-sucedido; também existe `GET /api/plataforma/gate` para gravar o cookie via Route Handler.
 
+### Consultores de suporte
+
+Ambiente exclusivo `/consultores` (não é o Ops). Variável `SUPPORT_CONSULTANT_GATE`. Entrada: `/consultores/login?k=…`. O Ops cadastra contas em `/plataforma/consultores`. Detalhes: [suporte.md](./suporte.md).
+
 ### Domínios marketing vs marketplace
 
 Opcional. No **mesmo** serviço (ex. Railway), aponte dois domínios customizados HTTPS:
 
 | Variável | Exemplo | Público |
 |----------|---------|---------|
-| `NEXT_PUBLIC_MARKETING_HOST` | `barbernegon.com` | Landing, cadastro, planos, `/admin`, `/plataforma` |
+| `NEXT_PUBLIC_MARKETING_HOST` | `barbernegon.com` | Landing, cadastro, planos, `/admin`, `/plataforma`, `/consultores` |
 | `NEXT_PUBLIC_MARKETPLACE_HOST` | `explorar.barbernegon.com` | Marketplace (`/` → explorar), sites `/{slug}`, reservas |
 
 Sem as duas variáveis, a app continua com paths no mesmo host (adequado ao desenvolvimento local). Com ambas, o [`src/proxy.ts`](../src/proxy.ts) redireciona/reescreve para o consumidor **não** ver a página institucional B2B.
@@ -89,11 +93,15 @@ Opcional para o botão de contato rápido: `SUPPORT_WHATSAPP_E164` (DDI+número,
 
 No topo de **`/admin`** (OWNER/ADMIN): prioridades do dia e CTA **Abrir análise da operação** → `/admin/inteligencia`.
 
-Em **`/admin/inteligencia`**: KPIs alinhados ao período (**Receita** = pagos com `paidAt`; **Atendimentos** = `startsAt` no range, com subtítulo de pagos); LTV histórico; heatmap no topo; funil; coorte; tendência com pico/vale; chat consultivo (`POST /api/admin/ai/right-hand-chat`); reativação com **Aprovar e enviar** (`POST /api/admin/whatsapp/approve-send`). Snapshot `GET /api/admin/right-hand` / análise `POST /api/admin/ai/right-hand`.
+Em **`/admin/inteligencia`**: abas **Visão geral** (3 semáforos com bolinha verde/amarelo/vermelho + número do período + variação) e **Análise detalhada** (hero Faça agora + prova gráfica, 3 KPIs, to-do por impacto, funil, tendência com deltas vs período anterior, heatmap, chat). APIs `GET /api/admin/right-hand`, `POST /api/admin/ai/right-hand`, `POST /api/admin/ai/right-hand-chat`, `POST /api/admin/whatsapp/approve-send`.
 
-**Receita vs atendimentos:** receita zero com volume no período significa “ainda sem marcar como pago” (não misturar com total histórico).
+**Receita vs atendimentos:** receita = pagos (`paidAt`); atendimentos = `startsAt` no período. Funil conclusivo com ≥15 agendamentos; **selo “Poucos dados ainda”** (opacidade) quando **pagos &lt; 15** no período (heatmap, funil, tendência, cards de saúde). Coorte gráfico só com ≥10 elegíveis em 30d. Delta sem base mínima mostra “ainda sem base de comparação” / “sem base de comparação ainda”.
 
-A mesma flag/chave Gemini alimenta briefing legado, WhatsApp draft, relatórios e Braço Direito:
+**Heatmap:** escopo só da organização; em Inteligência/Relatórios a janela segue `chartRange`. Com &lt;15 agendamentos no mapa, % = intensidade relativa (não ocupação de agenda). Paleta de faixas igual ao legado (0–20% azul … 81–100% rosa).
+
+**Plus+ (IA WhatsApp):** plano `PLUS` (R$ 199, inclui Pro). Fila em `/admin/whatsapp` (`GET/POST /api/admin/whatsapp/winback`). Template `META_WA_TEMPLATE_WINBACK`. Opt-out: PARE. Texto livre (Gemini, mesma chave do briefing) só no Plus+: propõe 2–3 horários reais; o cliente confirma *1/2/3*. Botões FSM (agendar + 1 extra opcional) no Pro e no Plus+. Cron: `npm run whatsapp:jobs` (lembretes 24h) — criar Cron no Railway apontando para esse comando.
+
+A mesma flag/chave Gemini alimenta briefing legado, WhatsApp draft, relatórios, Braço Direito e o agente Plus+ no WhatsApp:
 
 | Variável | Uso |
 |----------|-----|

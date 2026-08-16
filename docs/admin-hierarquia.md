@@ -1,8 +1,10 @@
 # Painel administrativo — hierarquia e permissões
 
-O painel (`/admin` e `/api/admin/*`) distingue **três papéis**. O acesso vem só de um registo em **`StaffMember`** com **`passwordHash`** (login em `/admin/login`); a sessão fica na tabela **`Session`** e num cookie HTTP-only.
+O painel (`/admin` e `/api/admin/*`) distingue **cinco papéis**. O acesso vem só de um registo em **`StaffMember`** com **`passwordHash`** (login em `/admin/login`); a sessão fica na tabela **`Session`** e num cookie HTTP-only.
 
 Funcionários (**STAFF**) **precisam** de **`unitId`** obrigatório. Sem unidade, o login ao painel é negado.
+
+**SUPPORT_CONSULTANT** entra só em `/consultores` (não no painel do salão). **SUPPORT_ASSIST** é sessão temporária no painel do cliente: vê agenda/site/WhatsApp/clube em leitura, telefones mascarados; **não** vê caixa, Asaas, plano, senhas nem edita.
 
 ## Matriz de capacidades
 

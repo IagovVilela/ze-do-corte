@@ -23,6 +23,17 @@ import {
   type DashboardRange,
 } from "@/lib/dashboard-period";
 import { prisma } from "@/lib/prisma";
+import { buildRightHandActionQueue } from "@/lib/right-hand-actions";
+import {
+  cohortConfidence,
+  funnelConfidence,
+  predictionConfidence,
+  safePointsDelta,
+  safeRelativeDelta,
+  showStandaloneCohort,
+  volumeConfidence,
+} from "@/lib/right-hand-confidence";
+import { computeRightHandHealth } from "@/lib/right-hand-health";
 import {
   aggregatePeriodMetrics,
   appointmentsSubtitle,
@@ -52,7 +63,7 @@ type CacheEntry = {
 };
 
 /** Bump ao mudar fórmula de KPIs (invalida cache in-process). */
-const CACHE_VER = "v2";
+const CACHE_VER = "v4";
 
 const snapshotCache = new Map<string, CacheEntry>();
 
@@ -148,9 +159,14 @@ function weakHeatHint(heatmap: AppointmentFrequencyHeatmap): string | null {
     6: "Sábado",
     7: "Domingo",
   };
+  /** Em escala relativa, 0% = vazio — não serve como “buraco de demanda”. */
+  const pool =
+    heatmap.scaleMode === "relative"
+      ? heatmap.cells.filter((c) => c.count > 0)
+      : heatmap.cells;
   let weakest: { weekdayLabel: string; hour: number; percent: number } | null =
     null;
-  for (const cell of heatmap.cells) {
+  for (const cell of pool) {
     if (weakest == null || cell.percent < weakest.percent) {
       weakest = {
         weekdayLabel: weekdayLabels[cell.weekday] ?? `Dia ${cell.weekday}`,
@@ -161,7 +177,11 @@ function weakHeatHint(heatmap: AppointmentFrequencyHeatmap): string | null {
   }
   if (!weakest || heatmap.cells.every((c) => c.count === 0)) return null;
   if (weakest.percent >= 35) return null;
-  return `${weakest.weekdayLabel} às ${String(weakest.hour).padStart(2, "0")}h com ~${weakest.percent}% de carga estimada`;
+  const unit =
+    heatmap.scaleMode === "relative"
+      ? "intensidade relativa"
+      : "carga estimada";
+  return `${weakest.weekdayLabel} às ${String(weakest.hour).padStart(2, "0")}h com ~${weakest.percent}% de ${unit}`;
 }
 
 function buildPromo(
@@ -238,7 +258,12 @@ export async function getRightHandSnapshot(
       page: 1,
       pageSize: 8,
     }),
-    getAppointmentFrequencyHeatmap(access, {}),
+    getAppointmentFrequencyHeatmap(access, {
+      from: meta.from,
+      to: meta.to,
+      chartRange: range,
+      periodLabel: meta.periodLabel,
+    }),
     prisma.appointment.findMany({
       where: {
         AND: [
@@ -318,16 +343,36 @@ export async function getRightHandSnapshot(
   const avgTicket = currentAgg.avgTicketPaid;
   const cancelRate = currentAgg.cancelRate;
 
+  const revDelta = safeRelativeDelta(revenue, prevAgg.revenuePaid, {
+    kind: "money",
+    allowDelta,
+    pctFn: pctDelta,
+  });
+  const apptDelta = safeRelativeDelta(appointments, prevAgg.appointments, {
+    kind: "count",
+    allowDelta,
+    pctFn: pctDelta,
+  });
+  const ticketDelta = safeRelativeDelta(avgTicket, prevAgg.avgTicketPaid, {
+    kind: "money",
+    allowDelta,
+    pctFn: pctDelta,
+  });
+  const cancelDelta = safePointsDelta(cancelRate, prevAgg.cancelRate, {
+    allowDelta,
+    currentSample: appointments,
+    pointsFn: pointsDelta,
+  });
+
   const compare: RightHandCompareMetric[] = [
     {
       key: "revenue",
       label: "Receita",
       current: revenue,
       previous: prevAgg.revenuePaid,
-      deltaPercent: allowDelta
-        ? pctDelta(revenue, prevAgg.revenuePaid)
-        : null,
+      deltaPercent: revDelta.deltaPercent,
       deltaMode: "percent",
+      deltaReason: revDelta.deltaReason,
       format: "money",
     },
     {
@@ -335,10 +380,9 @@ export async function getRightHandSnapshot(
       label: "Atendimentos",
       current: appointments,
       previous: prevAgg.appointments,
-      deltaPercent: allowDelta
-        ? pctDelta(appointments, prevAgg.appointments)
-        : null,
+      deltaPercent: apptDelta.deltaPercent,
       deltaMode: "percent",
+      deltaReason: apptDelta.deltaReason,
       format: "number",
     },
     {
@@ -346,10 +390,9 @@ export async function getRightHandSnapshot(
       label: "Ticket médio (pagos)",
       current: avgTicket,
       previous: prevAgg.avgTicketPaid,
-      deltaPercent: allowDelta
-        ? pctDelta(avgTicket, prevAgg.avgTicketPaid)
-        : null,
+      deltaPercent: ticketDelta.deltaPercent,
       deltaMode: "percent",
+      deltaReason: ticketDelta.deltaReason,
       format: "money",
     },
     {
@@ -357,10 +400,9 @@ export async function getRightHandSnapshot(
       label: "Cancelamentos",
       current: cancelRate,
       previous: prevAgg.cancelRate,
-      deltaPercent: allowDelta
-        ? pointsDelta(cancelRate, prevAgg.cancelRate)
-        : null,
+      deltaPercent: cancelDelta.deltaPercent,
       deltaMode: "points",
+      deltaReason: cancelDelta.deltaReason,
       format: "percent",
     },
   ];
@@ -494,19 +536,42 @@ export async function getRightHandSnapshot(
     }
   }
   const demandPred = predictWeekdayDemand(byWeek);
+  const weekSampleCount = weekBuckets.size;
   let prediction: RightHandPrediction | null = null;
-  if (demandPred.length > 0 && demandPred[0]!.avg < (demandPred[demandPred.length - 1]?.avg ?? 0) * 0.7) {
+  if (
+    weekSampleCount >= 3 &&
+    demandPred.length > 0 &&
+    demandPred[0]!.avg < (demandPred[demandPred.length - 1]?.avg ?? 0) * 0.7
+  ) {
     const weak = demandPred[0]!;
     prediction = {
       weakWeekdayLabel: weak.label,
       weakAvg: weak.avg,
+      weekSampleCount,
       detail: `${weak.label} costuma ter ~${weak.avg} atendimentos (média das últimas semanas). Considere promoção antecipada.`,
+    };
+  } else if (weekSampleCount > 0 && weekSampleCount < 3) {
+    prediction = {
+      weakWeekdayLabel: demandPred[0]?.label ?? "—",
+      weakAvg: demandPred[0]?.avg ?? 0,
+      weekSampleCount,
+      detail:
+        "Ainda coletando semanas de histórico para prever demanda com confiança.",
     };
   }
 
   const peakValley = findPeakValley(
     currentReport.revenueSeries.map((p) => p.amount),
   );
+
+  const eligible30 = cohorts.find((c) => c.windowDays === 30)?.eligible ?? 0;
+  const confidence = {
+    funnel: funnelConfidence(appointments),
+    cohort: cohortConfidence(eligible30),
+    prediction: predictionConfidence(weekSampleCount),
+    volume: volumeConfidence(currentAgg.paidCount),
+    showCohortChart: showStandaloneCohort(cohorts),
+  };
 
   const kpis = {
     revenue,
@@ -524,7 +589,7 @@ export async function getRightHandSnapshot(
     estimatedLtv,
   };
 
-  const facts: RightHandFacts = {
+  const factsBase: Omit<RightHandFacts, "actionQueue"> = {
     generatedAt,
     organizationId: access.organizationId,
     range,
@@ -540,6 +605,7 @@ export async function getRightHandSnapshot(
       previous: c.previous,
       deltaPercent: c.deltaPercent,
       deltaMode: c.deltaMode,
+      deltaReason: c.deltaReason,
     })),
     funnel: currentAgg.funnel,
     cohorts,
@@ -562,7 +628,24 @@ export async function getRightHandSnapshot(
     weakHeatHint: heatHint,
     prediction,
     promoSuggestion,
+    confidence,
   };
+
+  const actionQueue = buildRightHandActionQueue({
+    facts: { ...factsBase, actionQueue: [] },
+    retentionQueue,
+  });
+  const facts: RightHandFacts = { ...factsBase, actionQueue };
+
+  const health = computeRightHandHealth({
+    kpis,
+    compare,
+    funnel: currentAgg.funnel,
+    prediction,
+    facts,
+    confidence,
+    periodLabel: meta.periodLabel,
+  });
 
   const snapshot: RightHandSnapshot = {
     generatedAt,
@@ -593,6 +676,9 @@ export async function getRightHandSnapshot(
     retentionQueue,
     prediction,
     promoSuggestion,
+    confidence,
+    actionQueue,
+    health,
     facts,
   };
 

@@ -16,6 +16,10 @@ enum StaffRole {
   OWNER
   ADMIN
   STAFF
+  /// Conta do console `/consultores` (org interna Barbernegon).
+  SUPPORT_CONSULTANT
+  /// Sessão temporária no painel do salão — só leitura, sem dados sensíveis.
+  SUPPORT_ASSIST
 }
 
 enum ServiceCategory {
@@ -47,6 +51,8 @@ enum OrganizationPlanTier {
   /// Free forever (após trial sem Pro, ou migração do Starter).
   FREE
   PRO
+  /// Plus+ — Pro + IA de agenda / reativação WhatsApp.
+  PLUS
 }
 
 enum AppointmentPaymentStatus {
@@ -120,6 +126,8 @@ model Organization {
   /// Enviar lembrete ~24h antes (script/cron).
   whatsappReminder24h   Boolean         @default(true)
   whatsappConnectedAt   DateTime?
+  /// Teto de templates de marketing (reativação) por mês civil.
+  whatsappWinbackMonthlyCap Int     @default(30)
   /// Checklist de onboarding (JSON booleans).
   onboardingJson Json?
   /// Configuração do site institucional (tema + secções/blocos). Ver `src/lib/site-page.ts`.
@@ -139,9 +147,12 @@ model Organization {
   clientSubscriptions ClientSubscription[]
   whatsappSessions   WhatsAppSession[]
   whatsappOutboundLogs WhatsAppOutboundLog[]
+  clientProfiles     ClientProfile[]
+  whatsappInboundDedups WhatsAppInboundDedup[]
   paymentEvents      PaymentEvent[]
   reviews            OrganizationReview[]
   supportTickets     SupportTicket[]
+  supportAccessLogs  SupportAccessLog[]
   products           Product[]
   productStockMovements ProductStockMovement[]
   financeCategories  FinanceCategory[]
@@ -192,6 +203,8 @@ model StaffMember {
   showOnWebsite         Boolean       @default(false)
   role                  StaffRole
   passwordHash          String?
+  /// Consultor desativado pelo Ops; salão permanece true.
+  isActive              Boolean       @default(true)
   unitId                String?
   unit                  BarbershopUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
   createdAt             DateTime      @default(now())
@@ -207,6 +220,7 @@ model StaffMember {
   financeAdjustments    StaffFinanceAdjustment[]
   financeEntriesCreated FinanceEntry[] @relation("FinanceEntryCreatedBy")
   monthlyGoals          StaffMonthlyGoal[]
+  supportAccessLogs     SupportAccessLog[]
 
   @@index([organizationId])
   @@index([unitId])
@@ -555,6 +569,46 @@ enum WhatsAppOutboundKind {
   CANCELLATION
   MANUAL
   BOT_REPLY
+  WINBACK
+  OPT_OUT_ACK
+}
+
+/// Perfil por telefone (reativação, opt-out, preferências).
+model ClientProfile {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// E.164 só dígitos (ex. 5511999999999)
+  phoneKey           String
+  displayName        String?
+  marketingOptIn     Boolean      @default(false)
+  marketingOptOutAt  DateTime?
+  usualGapDays       Int?
+  visitCount         Int          @default(0)
+  lastCompletedAt    DateTime?
+  lastWinbackAt      DateTime?
+  lastInboundAt      DateTime?
+  preferredStaffMemberId String?
+  preferredServiceId String?
+  preferredUnitId    String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([organizationId, phoneKey])
+  @@index([organizationId, marketingOptOutAt])
+  @@index([organizationId, lastCompletedAt])
+}
+
+/// Idempotência do webhook Meta (retries).
+model WhatsAppInboundDedup {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  metaMessageId  String
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, metaMessageId])
+  @@index([createdAt])
 }
 
 /// Log de mensagens enviadas via Cloud API (auditoria / debug).
@@ -613,6 +667,29 @@ model SupportTicket {
   @@index([organizationId, status, updatedAt])
   @@index([status, updatedAt])
   @@index([createdByStaffId])
+}
+
+enum SupportAccessAction {
+  VIEW_TICKET
+  VIEW_ORG
+  REPLY
+  ASSIST_LOGIN
+}
+
+/// Auditoria do console de consultores.
+model SupportAccessLog {
+  id                String              @id @default(cuid())
+  consultantStaffId String
+  consultantStaff   StaffMember         @relation(fields: [consultantStaffId], references: [id], onDelete: Cascade)
+  organizationId    String?
+  organization      Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  ticketId          String?
+  action            SupportAccessAction
+  createdAt         DateTime            @default(now())
+
+  @@index([consultantStaffId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([ticketId])
 }
 
 model SupportTicketMessage {

@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { AdminRightHandChartShell } from "@/components/admin-right-hand-chart-shell";
 import { useAdminChartColors } from "@/components/admin-theme-provider";
 import type { RightHandCompareMetric } from "@/lib/admin-right-hand-types";
 import {
@@ -40,6 +41,16 @@ function formatValue(m: RightHandCompareMetric, n: number): string {
   }
 }
 
+function deltaText(m: RightHandCompareMetric): string {
+  if (m.deltaReason === "no_baseline" || m.deltaReason === "insufficient_maturity") {
+    return "ainda sem base de comparação";
+  }
+  if (m.deltaPercent == null) return "—";
+  return m.deltaMode === "points"
+    ? formatDeltaPoints(m.deltaPercent)
+    : formatDeltaPercent(m.deltaPercent);
+}
+
 export function AdminRightHandCompareBars({
   metrics,
   currentLabel,
@@ -47,7 +58,6 @@ export function AdminRightHandCompareBars({
   showDelta,
 }: Props) {
   const chart = useAdminChartColors();
-  // Só métricas comparáveis no mesmo eixo (sem misturar % de cancelamento com R$).
   const chartMetrics = metrics.filter((m) => m.key !== "cancelRate");
   const data = chartMetrics.map((m) => ({
     name: m.label,
@@ -65,14 +75,11 @@ export function AdminRightHandCompareBars({
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface)] p-5">
-      <h3 className="text-sm font-semibold text-[var(--bn-on)]">
-        Comparativo vs período anterior
-      </h3>
-      <p className="mt-1 text-xs text-[var(--bn-muted)]">
-        {currentLabel} · vs {previousLabel}
-      </p>
-      <div className="mt-4 h-64">
+    <AdminRightHandChartShell
+      title="Comparativo vs período anterior"
+      subtitle={`${currentLabel} · vs ${previousLabel}`}
+    >
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
@@ -102,6 +109,7 @@ export function AdminRightHandCompareBars({
                   previous: 0,
                   deltaPercent: null,
                   deltaMode: "percent",
+                  deltaReason: "ok",
                   format: row?.format ?? "number",
                 };
                 return [formatValue(fake, n), label];
@@ -111,13 +119,13 @@ export function AdminRightHandCompareBars({
             <Bar
               dataKey="atual"
               name="Atual"
-              fill="var(--bn-primary)"
+              fill={chart.info}
               radius={[6, 6, 0, 0]}
             />
             <Bar
               dataKey="anterior"
               name="Anterior"
-              fill="#64748b"
+              fill={chart.previous}
               radius={[6, 6, 0, 0]}
             />
           </BarChart>
@@ -129,9 +137,7 @@ export function AdminRightHandCompareBars({
             <li key={m.key}>
               {m.label}:{" "}
               <span className="font-medium text-[var(--bn-on)]">
-                {m.deltaMode === "points"
-                  ? formatDeltaPoints(m.deltaPercent)
-                  : formatDeltaPercent(m.deltaPercent)}
+                {deltaText(m)}
               </span>
             </li>
           ))}
@@ -141,6 +147,6 @@ export function AdminRightHandCompareBars({
           Comparativo percentual oculto enquanto o histórico ainda é curto.
         </p>
       )}
-    </div>
+    </AdminRightHandChartShell>
   );
 }

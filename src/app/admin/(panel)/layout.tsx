@@ -10,6 +10,8 @@ import { AdminThemeProvider } from "@/components/admin-theme-provider";
 import { BillingAttentionBanner } from "@/components/billing-attention-banner";
 import { BarbernegonMark } from "@/components/brand/barbernegon-mark";
 import { OpsImpersonationBanner } from "@/components/ops-impersonation-banner";
+import { SupportAssistBanner } from "@/components/support-assist-banner";
+import { SupportAssistRouteGuard } from "@/components/support-assist-route-guard";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import {
   ADMIN_THEME_COOKIE,
@@ -23,6 +25,7 @@ import {
   settleOrgBillingState,
 } from "@/lib/org-entitlements";
 import { PLATFORM_OPS_IMPERSONATOR_COOKIE } from "@/lib/platform-auth";
+import { SUPPORT_ASSIST_RETURN_COOKIE } from "@/lib/consultant-auth";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -79,12 +82,19 @@ export default async function AdminPanelLayout({
     redirect("/admin/login");
   }
 
+  if (access.role === "SUPPORT_CONSULTANT") {
+    redirect("/consultores");
+  }
+
   await settleOrgBillingState(access.organizationId);
 
   const jar = await cookies();
   const isOpsImpersonating = Boolean(
     jar.get(PLATFORM_OPS_IMPERSONATOR_COOKIE)?.value?.trim(),
   );
+  const isSupportAssist =
+    access.role === "SUPPORT_ASSIST" ||
+    Boolean(jar.get(SUPPORT_ASSIST_RETURN_COOKIE)?.value?.trim());
 
   const [org, initialTheme] = await Promise.all([
     prisma.organization.findUnique({
@@ -119,6 +129,12 @@ export default async function AdminPanelLayout({
           shopLogoUrl={org?.logoUrl ?? null}
         />
         <div className="flex min-h-svh flex-col lg:pl-[17.5rem]">
+          {isSupportAssist && org ? (
+            <>
+              <SupportAssistRouteGuard />
+              <SupportAssistBanner shopName={org.name} />
+            </>
+          ) : null}
           {isOpsImpersonating && org ? (
             <OpsImpersonationBanner shopName={org.name} />
           ) : null}

@@ -36,7 +36,10 @@ export async function GET() {
   }
 
   const staff = await prisma.staffMember.findMany({
-    where: staffMemberScopeWhere(auth.access),
+    where: {
+      ...staffMemberScopeWhere(auth.access),
+      role: { notIn: ["SUPPORT_ASSIST", "SUPPORT_CONSULTANT"] },
+    },
     include: { unit: true },
     orderBy: [{ role: "asc" }, { email: "asc" }],
   });

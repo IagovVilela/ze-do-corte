@@ -240,6 +240,22 @@ export function WhatsAppAdminPanel() {
             </Link>{" "}
             a Barbernegon pode ajudar a ligar o assistente depois.
           </li>
+          <li>
+            Informativo em PDF:{" "}
+            <a
+              href="/informativos/whatsapp-plus.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--bn-primary)] hover:underline"
+            >
+              Como funciona o WhatsApp inteligente (Plus+)
+            </a>
+            . Lista completa em{" "}
+            <Link href="/admin/condicoes" className="text-[var(--bn-primary)] hover:underline">
+              Condições
+            </Link>
+            .
+          </li>
         </ul>
       </section>
 

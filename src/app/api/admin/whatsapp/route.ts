@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireStaffApiAuth } from "@/lib/admin-auth";
+import { requireAssistReadApiAuth, requireStaffApiAuth } from "@/lib/admin-auth";
 import { phoneToWhatsAppHref } from "@/lib/phone-to-whatsapp-link";
 import { prisma } from "@/lib/prisma";
+import { maskPhone } from "@/lib/pii-mask";
 import {
   encryptSecret,
   isWhatsAppTokenEncryptionConfigured,
@@ -25,9 +26,12 @@ const patchSchema = z.object({
 });
 
 export async function GET() {
-  const auth = await requireStaffApiAuth();
+  const auth = await requireAssistReadApiAuth();
   if (!auth.ok) return auth.response;
-  if (!auth.access.permissions.manageBranding) {
+  if (
+    auth.access.role !== "SUPPORT_ASSIST" &&
+    !auth.access.permissions.manageBranding
+  ) {
     return NextResponse.json({ message: "Sem permissão." }, { status: 403 });
   }
 
@@ -44,6 +48,29 @@ export async function GET() {
       whatsappAccessTokenEnc: true,
     },
   });
+
+  if (auth.access.role === "SUPPORT_ASSIST") {
+    return NextResponse.json({
+      platform: {
+        webhookConfigured: isMetaWhatsAppPlatformConfigured(),
+        encryptionConfigured: isWhatsAppTokenEncryptionConfigured(),
+      },
+      connection: {
+        whatsappBotEnabled: org?.whatsappBotEnabled ?? false,
+        whatsappConfirmBooking: org?.whatsappConfirmBooking ?? true,
+        whatsappReminder24h: org?.whatsappReminder24h ?? true,
+        connected: Boolean(org?.whatsappAccessTokenEnc),
+        whatsappConnectedAt: org?.whatsappConnectedAt?.toISOString() ?? null,
+        whatsappDisplayPhone: org?.whatsappDisplayPhone
+          ? maskPhone(org.whatsappDisplayPhone)
+          : null,
+        whatsappPhoneNumberId: null,
+        whatsappWabaId: null,
+        hasAccessToken: Boolean(org?.whatsappAccessTokenEnc),
+      },
+      logs: [],
+    });
+  }
 
   const logs = await prisma.whatsAppOutboundLog.findMany({
     where: { organizationId: auth.access.organizationId },

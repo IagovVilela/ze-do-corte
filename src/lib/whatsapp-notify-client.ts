@@ -61,7 +61,7 @@ async function logOutbound(options: {
   organizationId: string;
   appointmentId?: string;
   waUserPhone: string;
-  kind: "CONFIRMATION" | "REMINDER" | "CANCELLATION" | "BOT_REPLY";
+  kind: "CONFIRMATION" | "REMINDER" | "CANCELLATION" | "BOT_REPLY" | "WINBACK" | "OPT_OUT_ACK";
   result: { ok: true; messageId: string } | { ok: false; error: string };
 }) {
   await prisma.whatsAppOutboundLog.create({

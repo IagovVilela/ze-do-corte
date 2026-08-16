@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { WhatsAppAdminPanel } from "@/components/whatsapp-admin-panel";
+import { AdminWhatsAppWinbackQueue } from "@/components/admin-whatsapp-winback-queue";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export default async function AdminWhatsAppPage() {
         description="Cadastre o número da barbearia para o site. Se quiser, depois ligue o assistente que agenda sozinho."
       />
       <WhatsAppAdminPanel />
+      <AdminWhatsAppWinbackQueue />
     </div>
   );
 }

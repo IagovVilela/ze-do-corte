@@ -104,6 +104,24 @@ export async function POST(request: Request) {
             "";
 
           try {
+            if (msg.id) {
+              try {
+                await prisma.whatsAppInboundDedup.create({
+                  data: {
+                    organizationId: org.id,
+                    metaMessageId: msg.id,
+                  },
+                });
+              } catch (dup) {
+                const code =
+                  dup &&
+                  typeof dup === "object" &&
+                  "code" in dup &&
+                  (dup as { code?: string }).code;
+                if (code === "P2002") continue;
+                throw dup;
+              }
+            }
             await handleWhatsAppInbound({
               organizationId: org.id,
               incoming: {

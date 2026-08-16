@@ -17,6 +17,7 @@ const NAV = [
   { href: "/plataforma/marketplace", label: "Marketplace" },
   { href: "/plataforma/consumidores", label: "Consumidores" },
   { href: "/plataforma/suporte", label: "Suporte" },
+  { href: "/plataforma/consultores", label: "Consultores" },
 ] as const;
 
 const SEEN_TICKETS_KEY = "bn-ops-support-seen-ids";

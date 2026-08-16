@@ -41,6 +41,13 @@ export default function PlanosPage() {
           >
             Assine no painel
           </Link>
+          {" · "}
+          <Link
+            href="/condicoes"
+            className="font-medium text-[var(--bn-primary)] underline-offset-2 hover:underline"
+          >
+            Condições e informativos (PDF)
+          </Link>
         </p>
       </div>
     </div>
