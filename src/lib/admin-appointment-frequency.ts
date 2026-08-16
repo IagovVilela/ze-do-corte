@@ -44,15 +44,35 @@ function dayEndInShopTz(dateStr: string, tz: string): Date {
   return fromZonedTime(new Date(y!, m! - 1, d!, 23, 59, 59, 999), tz);
 }
 
-function defaultPeriodLabel(fromYmd: string, toYmd: string): string {
-  if (fromYmd === toYmd) return `Em ${toYmd}`;
-  return `${fromYmd} → ${toYmd}`;
+function defaultPeriodLabel(
+  fromYmd: string,
+  toYmd: string,
+  tz: string,
+): string {
+  const today = ymdInTz(new Date(), tz);
+  const startToday = dayStartInShopTz(today, tz);
+  if (fromYmd === toYmd) {
+    if (fromYmd === today) return "Hoje";
+    if (fromYmd === ymdInTz(subDays(startToday, 1), tz)) return "Ontem";
+    return formatInTimeZone(dayStartInShopTz(fromYmd, tz), tz, "dd/MM/yyyy");
+  }
+  if (toYmd === today) {
+    if (fromYmd === ymdInTz(subDays(startToday, 2), tz)) return "Últimos 3 dias";
+    if (fromYmd === ymdInTz(subDays(startToday, 6), tz)) return "Últimos 7 dias";
+    if (fromYmd === ymdInTz(subDays(startToday, 14), tz)) {
+      return "Últimos 15 dias";
+    }
+    if (fromYmd === ymdInTz(subDays(startToday, 29), tz)) {
+      return "Últimos 30 dias";
+    }
+  }
+  return `${formatInTimeZone(dayStartInShopTz(fromYmd, tz), tz, "dd/MM/yyyy")} – ${formatInTimeZone(dayStartInShopTz(toYmd, tz), tz, "dd/MM/yyyy")}`;
 }
 
 /**
  * Mapa de calor: frequência de cortes por dia da semana × hora.
  * Escopo: organização do `access` (via `appointmentListWhere`).
- * Janela: `filters.from`/`to` ou últimos 30 dias no fuso da org.
+ * Janela: `fromYmd`/`toYmd`, `from`/`to` ou últimos 30 dias no fuso da org.
  *
  * Com amostra &lt; limiar de volume, o % vira intensidade relativa (máx. da grade = 100%),
  * para não fingir “ocupação 81–100%” com 1–2 cortes no slot.
@@ -72,7 +92,12 @@ export async function getAppointmentFrequencyHeatmap(
   let fromYmd: string;
   let toYmd: string;
 
-  if (filters.from && filters.to) {
+  if (filters.fromYmd && filters.toYmd) {
+    fromYmd = filters.fromYmd <= filters.toYmd ? filters.fromYmd : filters.toYmd;
+    toYmd = filters.fromYmd <= filters.toYmd ? filters.toYmd : filters.fromYmd;
+    fromDate = dayStartInShopTz(fromYmd, tz);
+    toDate = dayEndInShopTz(toYmd, tz);
+  } else if (filters.from && filters.to) {
     fromDate = filters.from;
     toDate = filters.to;
     fromYmd = ymdInTz(fromDate, tz);
@@ -193,7 +218,7 @@ export async function getAppointmentFrequencyHeatmap(
     totalAppointments: rows.length,
     scaleMode,
     periodLabel:
-      filters.periodLabel?.trim() || defaultPeriodLabel(fromYmd, toYmd),
+      filters.periodLabel?.trim() || defaultPeriodLabel(fromYmd, toYmd, tz),
     confidence,
   };
 }

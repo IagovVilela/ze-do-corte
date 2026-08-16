@@ -41,7 +41,10 @@ export type FrequencyFilters = {
   /** Janela explícita (UTC/instantes). Sem isso: últimos 30 dias. */
   from?: Date;
   to?: Date;
-  /** Só para rótulo / API; a janela vem de `from`/`to` ou padrão 30d. */
+  /** Datas civis AAAA-MM-DD no fuso da org. Têm prioridade sobre `from`/`to`. */
+  fromYmd?: string;
+  toYmd?: string;
+  /** Só para rótulo / API; a janela vem de `from`/`to`, `fromYmd`/`toYmd` ou padrão 30d. */
   chartRange?: DashboardRange;
   periodLabel?: string;
 };

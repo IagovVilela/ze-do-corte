@@ -97,7 +97,7 @@ Em **`/admin/inteligencia`**: abas **Visão geral** (3 semáforos com bolinha ve
 
 **Receita vs atendimentos:** receita = pagos (`paidAt`); atendimentos = `startsAt` no período. Funil conclusivo com ≥15 agendamentos; **selo “Poucos dados ainda”** (opacidade) quando **pagos &lt; 15** no período (heatmap, funil, tendência, cards de saúde). Coorte gráfico só com ≥10 elegíveis em 30d. Delta sem base mínima mostra “ainda sem base de comparação” / “sem base de comparação ainda”.
 
-**Heatmap:** escopo só da organização; em Inteligência/Relatórios a janela segue `chartRange`. Com &lt;15 agendamentos no mapa, % = intensidade relativa (não ocupação de agenda). Paleta de faixas igual ao legado (0–20% azul … 81–100% rosa).
+**Heatmap:** escopo só da organização. Em Agendamentos o período é escolhido no próprio painel (padrão: últimos 30 dias). Em Inteligência/Relatórios a janela começa alinhada a `chartRange` e pode ser alterada no filtro de data. API aceita `from`/`to` (AAAA-MM-DD). Com &lt;15 agendamentos no mapa, % = intensidade relativa (não ocupação de agenda). Paleta de faixas igual ao legado (0–20% azul … 81–100% rosa).
 
 **Plus+ (IA WhatsApp):** plano `PLUS` (R$ 199, inclui Pro). Fila em `/admin/whatsapp` (`GET/POST /api/admin/whatsapp/winback`). Template `META_WA_TEMPLATE_WINBACK`. Opt-out: PARE. Texto livre (Gemini, mesma chave do briefing) só no Plus+: propõe 2–3 horários reais; o cliente confirma *1/2/3*. Botões FSM (agendar + 1 extra opcional) no Pro e no Plus+. Cron: `npm run whatsapp:jobs` (lembretes 24h) — criar Cron no Railway apontando para esse comando.
 

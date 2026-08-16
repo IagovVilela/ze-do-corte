@@ -127,7 +127,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` (corpo com `unitId`; unicidade por par **unidade + nome**) |
 | Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH` (opcional `unitId`), `DELETE` |
 | Agendamentos (lista por intervalo) | `src/app/api/admin/appointments/route.ts` — `GET ?from=&to=` (AAAA-MM-DD) |
-| Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=&chartRange=` (sem `chartRange`: últimos 30 dias; com: janela do dashboard) |
+| Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=&from=&to=&chartRange=` (`from`/`to` AAAA-MM-DD têm prioridade; senão `chartRange`; senão últimos 30 dias; intervalo máx. 366 dias) |
 | Comanda | `src/app/api/admin/appointments/[id]/comanda/route.ts` — `GET`/`PATCH` (serviços, produtos, pago) |
 | Produtos | `src/app/api/admin/products/route.ts` + `[id]` |
 | Relatórios | `src/app/api/admin/reports/route.ts` |
@@ -205,7 +205,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `service-category.ts` | Tipos e rótulos pt-BR do enum `ServiceCategory` (Prisma) |
 | `admin-dashboard.ts` | **`getAdminDashboardSnapshot`** com **`appointmentListWhere`** (filtros URL) + lista paginada; **`unitTelemetry`** (OWNER/ADMIN); resumo com valor **confirmados + concluídos** no período |
 | `admin-appointments.ts` | **`listAdminAppointmentsInRange`** para o calendário (máx. 31 dias) |
-| `admin-appointment-frequency.ts` | Heatmap de ocupação por weekday×hora (últimos 30 dias) |
+| `admin-appointment-frequency.ts` | Heatmap de ocupação por weekday×hora (`fromYmd`/`toYmd`, `from`/`to` ou últimos 30 dias) |
 | `admin-appointment-comanda.ts` | Detalhe da comanda + histórico/recompra |
 | `admin-reports.ts` | Snapshot completo de Relatórios |
 | `admin-finance.ts` | Lançamentos, categorias, balanço do salão |

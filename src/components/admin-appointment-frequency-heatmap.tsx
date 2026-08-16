@@ -1,14 +1,24 @@
 "use client";
 
+import { formatInTimeZone } from "date-fns-tz";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  AdminDateRangePicker,
+  rangeFromPreset,
+  type DateRangeYmd,
+} from "@/components/admin-date-range-picker";
 import { AdminRightHandChartShell } from "@/components/admin-right-hand-chart-shell";
 import type {
   AppointmentFrequencyHeatmap,
   FrequencyCell,
   IsoWeekday,
 } from "@/lib/admin-appointment-frequency-types";
-import type { DashboardRange } from "@/lib/dashboard-period";
+import { BARBER_TIMEZONE } from "@/lib/constants";
+import {
+  getDashboardPeriodMeta,
+  type DashboardRange,
+} from "@/lib/dashboard-period";
 import type { ConfidenceLevel } from "@/lib/right-hand-confidence";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +66,19 @@ function cellKey(weekday: IsoWeekday, hour: number): string {
 
 const COLS = "2.75rem repeat(7, minmax(3.5rem, 1fr))";
 
+function rangeFromChartRange(chartRange: DashboardRange): DateRangeYmd {
+  const meta = getDashboardPeriodMeta(chartRange, new Date());
+  return {
+    from: formatInTimeZone(meta.from, BARBER_TIMEZONE, "yyyy-MM-dd"),
+    to: formatInTimeZone(meta.to, BARBER_TIMEZONE, "yyyy-MM-dd"),
+  };
+}
+
+function initialRange(chartRange?: DashboardRange): DateRangeYmd {
+  if (chartRange) return rangeFromChartRange(chartRange);
+  return rangeFromPreset("last30");
+}
+
 export function AdminAppointmentFrequencyHeatmap({
   units,
   staffOptions,
@@ -66,20 +89,43 @@ export function AdminAppointmentFrequencyHeatmap({
   const [staffDraft, setStaffDraft] = useState("");
   const [unitApplied, setUnitApplied] = useState("");
   const [staffApplied, setStaffApplied] = useState("");
+  const [range, setRange] = useState<DateRangeYmd>(() =>
+    initialRange(chartRange),
+  );
   const [data, setData] = useState<AppointmentFrequencyHeatmap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hover, setHover] = useState<FrequencyCell | null>(null);
 
+  useEffect(() => {
+    if (!chartRange) return;
+    const next = rangeFromChartRange(chartRange);
+    setRange((prev) =>
+      prev.from === next.from && prev.to === next.to ? prev : next,
+    );
+  }, [chartRange]);
+
   const load = useCallback(
-    async (unit: string, staff: string) => {
+    async (unit: string, staff: string, period: DateRangeYmd) => {
       setLoading(true);
       setError(null);
       try {
         const qs = new URLSearchParams();
         if (unit) qs.set("unit", unit);
         if (staff) qs.set("staff", staff);
-        if (chartRange) qs.set("chartRange", chartRange);
+        const dashboardRange = chartRange
+          ? rangeFromChartRange(chartRange)
+          : null;
+        const matchesDashboard =
+          dashboardRange != null &&
+          period.from === dashboardRange.from &&
+          period.to === dashboardRange.to;
+        if (matchesDashboard && chartRange) {
+          qs.set("chartRange", chartRange);
+        } else {
+          qs.set("from", period.from);
+          qs.set("to", period.to);
+        }
         const res = await fetch(
           `/api/admin/appointments/frequency?${qs.toString()}`,
           { credentials: "same-origin" },
@@ -108,8 +154,8 @@ export function AdminAppointmentFrequencyHeatmap({
   );
 
   useEffect(() => {
-    void load(unitApplied, staffApplied);
-  }, [load, unitApplied, staffApplied]);
+    void load(unitApplied, staffApplied, range);
+  }, [load, unitApplied, staffApplied, range]);
 
   const byKey = useMemo(() => {
     const map = new Map<string, FrequencyCell>();
@@ -126,7 +172,6 @@ export function AdminAppointmentFrequencyHeatmap({
 
   const showUnitFilter = units.length > 1;
   const showStaffFilter = staffOptions.length > 0;
-  const showFilters = showUnitFilter || showStaffFilter;
   const weekdays = data?.weekdays ?? ([1, 2, 3, 4, 5, 6, 7] as IsoWeekday[]);
   const hours = data?.hours ?? [];
   const confidence: ConfidenceLevel =
@@ -149,47 +194,55 @@ export function AdminAppointmentFrequencyHeatmap({
       confidence={confidence}
       className="bg-[var(--bn-surface-elevated)]"
     >
-      {showFilters ? (
-        <div className="mb-4 flex flex-col gap-4 border-b border-[var(--bn-border)] pb-4">
-          <div>
-            <h2 className="text-sm font-bold tracking-wide text-[var(--bn-muted)] uppercase">
-              Filtros
-            </h2>
-            <div className="mt-3 grid gap-3 sm:flex sm:flex-wrap sm:items-end">
-              {showUnitFilter ? (
-                <label className="flex w-full min-w-0 flex-col gap-1 text-xs text-[var(--bn-muted)] sm:w-auto sm:min-w-[10rem]">
-                  Filial
-                  <select
-                    className="min-h-11 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-base text-[var(--bn-on)] sm:min-h-0 sm:text-sm"
-                    value={unitDraft}
-                    onChange={(e) => setUnitDraft(e.target.value)}
-                  >
-                    <option value="">Todas</option>
-                    {units.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-              {showStaffFilter ? (
-                <label className="flex w-full min-w-0 flex-col gap-1 text-xs text-[var(--bn-muted)] sm:w-auto sm:min-w-[10rem]">
-                  Profissional
-                  <select
-                    className="min-h-11 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-base text-[var(--bn-on)] sm:min-h-0 sm:text-sm"
-                    value={staffDraft}
-                    onChange={(e) => setStaffDraft(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    {staffOptions.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
+      <div className="mb-4 flex flex-col gap-4 border-b border-[var(--bn-border)] pb-4">
+        <div>
+          <h2 className="text-sm font-bold tracking-wide text-[var(--bn-muted)] uppercase">
+            Filtros
+          </h2>
+          <div className="mt-3 grid gap-3 sm:flex sm:flex-wrap sm:items-end">
+            <div className="flex w-full min-w-0 flex-col gap-1 text-xs text-[var(--bn-muted)] sm:w-auto">
+              <span>Período</span>
+              <AdminDateRangePicker
+                value={range}
+                onChange={setRange}
+                className="w-full sm:w-auto"
+              />
+            </div>
+            {showUnitFilter ? (
+              <label className="flex w-full min-w-0 flex-col gap-1 text-xs text-[var(--bn-muted)] sm:w-auto sm:min-w-[10rem]">
+                Filial
+                <select
+                  className="min-h-11 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-base text-[var(--bn-on)] sm:min-h-0 sm:text-sm"
+                  value={unitDraft}
+                  onChange={(e) => setUnitDraft(e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {units.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {showStaffFilter ? (
+              <label className="flex w-full min-w-0 flex-col gap-1 text-xs text-[var(--bn-muted)] sm:w-auto sm:min-w-[10rem]">
+                Profissional
+                <select
+                  className="min-h-11 w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-base text-[var(--bn-on)] sm:min-h-0 sm:text-sm"
+                  value={staffDraft}
+                  onChange={(e) => setStaffDraft(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {staffOptions.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {showUnitFilter || showStaffFilter ? (
               <button
                 type="button"
                 onClick={applyFilters}
@@ -197,10 +250,10 @@ export function AdminAppointmentFrequencyHeatmap({
               >
                 Aplicar
               </button>
-            </div>
+            ) : null}
           </div>
         </div>
-      ) : null}
+      </div>
 
       <ul className="mb-3 flex flex-wrap gap-2" aria-label="Legenda de ocupação">
         {LEGEND.map((item) => (

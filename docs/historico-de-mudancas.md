@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-16
 
+- **Frequência de cortes**: filtro de período (hoje, últimos 3/7/15/30 dias ou intervalo no calendário) no heatmap; API `GET /api/admin/appointments/frequency` aceita `from` e `to` (AAAA-MM-DD, máx. 366 dias).
 - **Login Ops**: e-mail de consultor com senha correta vai para `/consultores` (o formulário “Entrar no Ops” deixava 401 porque `suporte1@…` não é admin da plataforma).
 - **Login do salão**: conta de consultor/assistência recebe o mesmo “E-mail ou senha incorretos.” (sem apontar `/consultores` nem o gate).
 - **Login staff**: lookup de e-mail saiu de `support-org.ts` (módulo com parse quebrado no cache do Turbopack) para `src/lib/staff-auth-lookup.ts`; helpers de consultor em `src/lib/support-consultant.ts`.
