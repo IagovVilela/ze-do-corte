@@ -152,6 +152,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Foto de perfil | `src/app/api/auth/profile/avatar/route.ts` — JPEG/PNG/WebP até 30 MB |
 | WhatsApp admin | `src/app/api/admin/whatsapp/route.ts` — `GET`/`PATCH` (token cifrado, toggle bot, confirmação e lembrete 24h) |
 | WhatsApp webhook | `src/app/api/webhooks/whatsapp/route.ts` — verify Meta + inbound bot (idempotência `WhatsAppInboundDedup`) |
+| Cron lembretes WhatsApp | `src/app/api/cron/whatsapp-jobs/route.ts` — ~24h e ~2h (`CRON_SECRET`); lógica em `whatsapp-reminders.ts` |
 | WhatsApp reativação Plus+ | `src/app/api/admin/whatsapp/winback/route.ts` — `GET` fila / `POST` aprovar template |
 | Suporte admin | `src/app/api/admin/support/contact`, `…/tickets`, `…/tickets/[id]/messages` |
 | Suporte plataforma | `src/app/api/platform/support/tickets`, `…/[id]`, `…/[id]/messages` |
@@ -222,7 +223,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `booking-availability.ts` | Motor de disponibilidade: duração multi-serviço, capacidade da equipe, slots que cabem inteiros |
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos, auto-atribuição) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
-| `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, outbound, cron de lembretes |
+| `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, comanda/confirmação com link `/minha-reserva`, lembretes ~24h e ~2h |
 | `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano |
 | `support.ts` / `support-articles.ts` | Contato (env), labels de ticket, artigos da central de ajuda |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |

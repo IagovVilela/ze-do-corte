@@ -278,13 +278,13 @@ export function WhatsAppAdminPanel() {
           />
           <CheckItem
             ok={botReady && confirmBooking}
-            label="Confirmação de agendamento"
-            hint="Mensagem ao criar horário (site/bot)"
+            label="Comanda no WhatsApp"
+            hint="Ao agendar: detalhes + link /minha-reserva para o cliente"
           />
           <CheckItem
             ok={botReady && reminder24h}
-            label="Lembrete ~24h antes"
-            hint="Cron/script de lembretes"
+            label="Lembretes automáticos"
+            hint="~24h e ~2h antes (cron Railway)"
           />
         </ul>
       </section>
@@ -381,7 +381,7 @@ export function WhatsAppAdminPanel() {
                   checked={confirmBooking}
                   onChange={(e) => setConfirmBooking(e.target.checked)}
                 />
-                Enviar confirmação no WhatsApp ao agendar
+                Enviar comanda no WhatsApp ao agendar (detalhes + link para gerenciar)
               </label>
 
               <label className="flex items-center gap-2 text-sm text-[var(--bn-on-variant)]">
@@ -390,7 +390,7 @@ export function WhatsAppAdminPanel() {
                   checked={reminder24h}
                   onChange={(e) => setReminder24h(e.target.checked)}
                 />
-                Enviar lembrete ~24h antes do horário
+                Enviar lembretes automáticos (~24h e ~2h antes do horário)
               </label>
 
               <label className="block space-y-1.5 text-sm">

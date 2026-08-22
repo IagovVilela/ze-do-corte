@@ -107,9 +107,15 @@ Regras de horário iguais ao site (`booking-domain` + `assertPublicBookingSlot`)
 
 ## Confirmação e lembretes
 
-- Após criar no site ou no bot: tenta template de confirmação; se falhar / ausente, envia texto (válido dentro da janela de 24h).  
-- Cancelamento pelo link de gestão também notifica no WhatsApp se o bot estiver ligado.  
-- Lembretes: `npm run whatsapp:reminders` (cron Railway a cada hora, por exemplo). Marca `whatsappReminderSentAt`.
+- Após criar no site, no bot ou no agente Plus+: envia **comanda WhatsApp** com serviços, horários, profissional (se houver), total e link `/minha-reserva/{token}` para o cliente gerenciar.
+- Preferência: texto livre na janela de 24h; se falhar (cliente ainda não falou no WhatsApp), tenta template `META_WA_TEMPLATE_CONFIRMATION` (idealmente com 4 variáveis: nome, serviços, data/hora, link).
+- Cancelamento pelo link de gestão também notifica no WhatsApp se o bot estiver ligado.
+- Lembretes automáticos (toggle em `/admin/whatsapp`):
+  - **~24h antes** (janela +20h…+26h) → marca `whatsappReminderSentAt`
+  - **~2h antes** (janela +90…+150 min) → marca `whatsappNearReminderSentAt`
+  - No texto entra o link da comanda (`/minha-reserva`), quando houver.
+  - Preferência: texto livre; se falhar, template `META_WA_TEMPLATE_REMINDER` ou `META_WA_TEMPLATE_REMINDER_NEAR`.
+  - Rodar a cada **15–30 min**: `npm run whatsapp:jobs` **ou** HTTP `GET|POST /api/cron/whatsapp-jobs` com `Authorization: Bearer $CRON_SECRET` (ou `?secret=`). Sem `CRON_SECRET` o endpoint HTTP responde 401.
 
 ## Templates Meta
 

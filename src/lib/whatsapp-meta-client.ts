@@ -84,11 +84,16 @@ export async function sendWhatsAppText(options: {
   accessToken: string;
   toE164Digits: string;
   text: string;
+  /** true = Meta pode gerar prévia do link (útil na comanda /minha-reserva). */
+  previewUrl?: boolean;
 }): Promise<WhatsAppSendResult> {
   return graphPost(options.phoneNumberId, options.accessToken, {
     to: options.toE164Digits,
     type: "text",
-    text: { preview_url: false, body: options.text.slice(0, 4096) },
+    text: {
+      preview_url: Boolean(options.previewUrl),
+      body: options.text.slice(0, 4096),
+    },
   });
 }
 

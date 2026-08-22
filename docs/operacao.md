@@ -79,7 +79,7 @@ Sem essas variáveis, o agendamento continua normal; no reset de senha o link s�
 
 ### WhatsApp Cloud API (Meta)
 
-Opcional. Configure `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_TOKEN_ENCRYPTION_KEY` (e templates se precisar fora da janela 24h). Webhook: `/api/webhooks/whatsapp`. Cada org liga o número em **`/admin/whatsapp`**. Lembretes: `npm run whatsapp:reminders` (agendar no cron do host). Guia completo: [whatsapp-meta.md](./whatsapp-meta.md).
+Opcional. Configure `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_TOKEN_ENCRYPTION_KEY` (e templates se precisar fora da janela 24h). Webhook: `/api/webhooks/whatsapp`. Cada org liga o número em **`/admin/whatsapp`**. Lembretes (~24h e ~2h): defina `CRON_SECRET` e agende no Railway Cron **`GET/POST /api/cron/whatsapp-jobs`** (Bearer) a cada 15–30 min, ou `npm run whatsapp:jobs`. Guia: [whatsapp-meta.md](./whatsapp-meta.md).
 
 ### Asaas (pagamentos)
 
@@ -99,7 +99,7 @@ Em **`/admin/inteligencia`**: abas **Visão geral** (3 semáforos com bolinha ve
 
 **Heatmap:** escopo só da organização. Em Agendamentos o período é escolhido no próprio painel (padrão: últimos 30 dias). Em Inteligência/Relatórios a janela começa alinhada a `chartRange` e pode ser alterada no filtro de data. API aceita `from`/`to` (AAAA-MM-DD). Com &lt;15 agendamentos no mapa, % = intensidade relativa (não ocupação de agenda). Paleta de faixas igual ao legado (0–20% azul … 81–100% rosa).
 
-**Plus+ (IA WhatsApp):** plano `PLUS` (R$ 199, inclui Pro). Fila em `/admin/whatsapp` (`GET/POST /api/admin/whatsapp/winback`). Template `META_WA_TEMPLATE_WINBACK`. Opt-out: PARE. Texto livre (Gemini, mesma chave do briefing) só no Plus+: propõe 2–3 horários reais; o cliente confirma *1/2/3*. Botões FSM (agendar + 1 extra opcional) no Pro e no Plus+. Cron: `npm run whatsapp:jobs` (lembretes 24h) — criar Cron no Railway apontando para esse comando.
+**Plus+ (IA WhatsApp):** plano `PLUS` (R$ 199, inclui Pro). Fila em `/admin/whatsapp` (`GET/POST /api/admin/whatsapp/winback`). Template `META_WA_TEMPLATE_WINBACK`. Opt-out: PARE. Texto livre (Gemini, mesma chave do briefing) só no Plus+: propõe 2–3 horários reais; o cliente confirma *1/2/3*. Botões FSM (agendar + 1 extra opcional) no Pro e no Plus+. Cron de lembretes (~24h e ~2h): preferir HTTP `/api/cron/whatsapp-jobs` + `CRON_SECRET`, ou `npm run whatsapp:jobs`.
 
 A mesma flag/chave Gemini alimenta briefing legado, WhatsApp draft, relatórios, Braço Direito e o agente Plus+ no WhatsApp:
 

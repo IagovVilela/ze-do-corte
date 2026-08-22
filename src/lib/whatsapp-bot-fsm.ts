@@ -561,16 +561,11 @@ export async function handleWhatsAppInbound(options: {
       organizationId: org.id,
       appointment: created.appointment,
     });
-    const when = formatInTimeZone(
-      created.appointment.startsAt,
-      BARBER_TIMEZONE,
-      "dd/MM/yyyy HH:mm",
-    );
     await upsertSession(org.id, to, "idle", {});
     await sendText(
       org,
       to,
-      `Pronto, ${name}! ✅\n\n*${created.appointment.service.name}*\n${when}\n\nDigite *menu* para remarcar ou cancelar.`,
+      `Pronto, ${name}! ✅\nAcabei de te enviar a *comanda* com os detalhes e o link para remarcar ou cancelar.`,
     );
     return;
   }

@@ -14,6 +14,7 @@ import { BARBER_TIMEZONE } from "@/lib/constants";
 import { formatInTimeZone } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppText } from "@/lib/whatsapp-meta-client";
+import { notifyClientWhatsAppConfirmation } from "@/lib/whatsapp-notify-client";
 
 type AgentJson = {
   tool?: string;
@@ -115,8 +116,12 @@ export async function tryWhatsAppAgentTurn(opts: {
       await send(`${created.message}\nDigite *menu* ou descreva outro horário.`);
       return true;
     }
+    void notifyClientWhatsAppConfirmation({
+      organizationId: opts.organizationId,
+      appointment: created.appointment,
+    });
     await send(
-      `Pronto! ✅\n*${created.appointment.service.name}*\n${formatInTimeZone(created.appointment.startsAt, BARBER_TIMEZONE, "dd/MM/yyyy HH:mm")}\n\nResponda *1*, *2* ou *3* só quando eu listar horários. Digite *menu* para o teclado.`,
+      `Pronto! ✅ Acabei de te enviar a *comanda* com os detalhes e o link para gerenciar.\nDigite *menu* para o teclado.`,
     );
     return true;
   }

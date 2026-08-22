@@ -3,7 +3,7 @@ import { runWhatsAppReminders } from "../src/lib/whatsapp-reminders";
 async function main() {
   const result = await runWhatsAppReminders();
   console.log(
-    `[whatsapp:reminders] checked=${result.checked} sent=${result.sent}`,
+    `[whatsapp:reminders] checked=${result.checked} sent=${result.sent} day=${result.sentDay} near=${result.sentNear}`,
   );
 }
 

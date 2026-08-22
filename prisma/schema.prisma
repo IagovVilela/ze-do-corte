@@ -123,7 +123,7 @@ model Organization {
   whatsappBotEnabled    Boolean         @default(false)
   /// Enviar confirmação WhatsApp ao criar agendamento (quando conectado).
   whatsappConfirmBooking Boolean        @default(true)
-  /// Enviar lembrete ~24h antes (script/cron).
+  /// Enviar lembretes WhatsApp (~24h e ~2h antes) via cron.
   whatsappReminder24h   Boolean         @default(true)
   whatsappConnectedAt   DateTime?
   /// Teto de templates de marketing (reativação) por mês civil.
@@ -347,8 +347,10 @@ model Appointment {
   bookingSource     String?           @db.VarChar(32)
   /// Cliente agendou sem escolher profissional (“qualquer barbeiro”).
   bookedWithoutStaffPreference Boolean @default(false)
-  /// Lembrete WhatsApp já enviado (evita duplicar no cron).
+  /// Lembrete WhatsApp ~24h já enviado (evita duplicar no cron).
   whatsappReminderSentAt DateTime?
+  /// Lembrete WhatsApp ~2h antes já enviado.
+  whatsappNearReminderSentAt DateTime?
   review            OrganizationReview?
   items             AppointmentItem[]
   products          AppointmentProduct[]
@@ -362,6 +364,7 @@ model Appointment {
   @@index([usedSubscriptionId])
   @@index([clientPhone])
   @@index([whatsappReminderSentAt, startsAt])
+  @@index([whatsappNearReminderSentAt, startsAt])
   @@index([asaasPaymentId])
   @@index([paymentStatus])
   @@index([bookedWithoutStaffPreference, startsAt])
