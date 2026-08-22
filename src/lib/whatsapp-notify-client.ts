@@ -276,28 +276,41 @@ export async function notifyClientWhatsAppConfirmation(options: {
 
   const templateName =
     process.env.META_WA_TEMPLATE_CONFIRMATION?.trim() || "";
+  const templateParams = [
+    details?.clientName ?? options.appointment.clientName,
+    serviceSummary,
+    when,
+    ...(manageUrl ? [manageUrl] : []),
+  ];
 
-  // Preferir comanda completa em texto (janela 24h). Template só se o texto falhar.
-  let result = await sendWhatsAppText({
-    phoneNumberId: creds.phoneNumberId,
-    accessToken: creds.accessToken,
-    toE164Digits: to,
-    text: comandaText,
-    previewUrl: Boolean(manageUrl),
-  });
-
-  if (!result.ok && templateName.length > 0) {
+  // Fora da janela 24h a Meta só entrega template. Preferir template quando
+  // configurado (agendamento no site quase nunca tem janela aberta). Texto
+  // livre fica como complemento/fallback quando o cliente já conversou.
+  let result: Awaited<ReturnType<typeof sendWhatsAppTemplate>>;
+  if (templateName.length > 0) {
     result = await sendWhatsAppTemplate({
       phoneNumberId: creds.phoneNumberId,
       accessToken: creds.accessToken,
       toE164Digits: to,
       templateName,
-      bodyParameters: [
-        details?.clientName ?? options.appointment.clientName,
-        serviceSummary,
-        when,
-        ...(manageUrl ? [manageUrl] : []),
-      ],
+      bodyParameters: templateParams,
+    });
+    if (!result.ok) {
+      result = await sendWhatsAppText({
+        phoneNumberId: creds.phoneNumberId,
+        accessToken: creds.accessToken,
+        toE164Digits: to,
+        text: comandaText,
+        previewUrl: Boolean(manageUrl),
+      });
+    }
+  } else {
+    result = await sendWhatsAppText({
+      phoneNumberId: creds.phoneNumberId,
+      accessToken: creds.accessToken,
+      toE164Digits: to,
+      text: comandaText,
+      previewUrl: Boolean(manageUrl),
     });
   }
 
@@ -372,27 +385,39 @@ export async function sendClientWhatsAppReminder(options: {
       : "\nTe esperamos!",
   ].join("\n");
 
-  // Preferir texto na janela 24h; template se o texto falhar (fora da janela).
-  let result = await sendWhatsAppText({
-    phoneNumberId: creds.phoneNumberId,
-    accessToken: creds.accessToken,
-    toE164Digits: to,
-    previewUrl: Boolean(manageUrl),
-    text: reminderText,
-  });
+  const templateParams = [
+    options.appointment.clientName,
+    options.appointment.service.name,
+    when,
+    ...(manageUrl ? [manageUrl] : []),
+  ];
 
-  if (!result.ok && templateName.length > 0) {
+  // Lembretes costumam cair fora da janela 24h → template primeiro.
+  let result: Awaited<ReturnType<typeof sendWhatsAppTemplate>>;
+  if (templateName.length > 0) {
     result = await sendWhatsAppTemplate({
       phoneNumberId: creds.phoneNumberId,
       accessToken: creds.accessToken,
       toE164Digits: to,
       templateName,
-      bodyParameters: [
-        options.appointment.clientName,
-        options.appointment.service.name,
-        when,
-        ...(manageUrl ? [manageUrl] : []),
-      ],
+      bodyParameters: templateParams,
+    });
+    if (!result.ok) {
+      result = await sendWhatsAppText({
+        phoneNumberId: creds.phoneNumberId,
+        accessToken: creds.accessToken,
+        toE164Digits: to,
+        previewUrl: Boolean(manageUrl),
+        text: reminderText,
+      });
+    }
+  } else {
+    result = await sendWhatsAppText({
+      phoneNumberId: creds.phoneNumberId,
+      accessToken: creds.accessToken,
+      toE164Digits: to,
+      previewUrl: Boolean(manageUrl),
+      text: reminderText,
     });
   }
 

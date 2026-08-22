@@ -4,10 +4,20 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { formatWhatsAppDisplayInput } from "@/lib/phone-to-whatsapp-link";
+import {
+  formatWhatsAppLogPhone,
+  whatsappLogErrorFriendly,
+  whatsappLogKindLabel,
+  whatsappLogStatusInfo,
+} from "@/lib/whatsapp-log-labels";
 
 type PlatformInfo = {
   webhookConfigured: boolean;
   encryptionConfigured: boolean;
+  templateConfirmation?: string | null;
+  templateReminder?: string | null;
+  templateReminderNear?: string | null;
+  templateWinback?: string | null;
 };
 
 type Connection = {
@@ -286,7 +296,37 @@ export function WhatsAppAdminPanel() {
             label="Lembretes automáticos"
             hint="~24h e ~2h antes (cron Railway)"
           />
+          <CheckItem
+            ok={Boolean(platform?.templateConfirmation)}
+            label="Modelo de confirmação (Meta)"
+            hint={
+              platform?.templateConfirmation
+                ? `Ativo: ${platform.templateConfirmation} — permite avisar quem ainda não falou no WhatsApp`
+                : "Sem template a comanda só chega se o cliente falou nas últimas 24h. Configure META_WA_TEMPLATE_CONFIRMATION na Railway"
+            }
+          />
+          <CheckItem
+            ok={Boolean(platform?.templateReminder)}
+            label="Modelo de lembrete (Meta)"
+            hint={
+              platform?.templateReminder
+                ? `Ativo: ${platform.templateReminder}`
+                : "Sem template, lembretes ~24h/~2h falham fora da janela de 24h (META_WA_TEMPLATE_REMINDER)"
+            }
+          />
         </ul>
+        {!platform?.templateConfirmation ? (
+          <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+            <strong className="font-medium text-[var(--bn-on)]">Importante:</strong>{" "}
+            a Meta proíbe a barbearia de iniciar conversa com texto livre. Para
+            comanda, lembrete e IA chegarem sem o cliente ter mandado “oi”
+            antes, é obrigatório criar{" "}
+            <strong className="font-medium text-[var(--bn-on)]">modelos aprovados</strong>{" "}
+            no Gerenciador do WhatsApp e apontá-los nas variáveis da Railway.
+            Depois que o cliente responde o modelo, o assistente/IA funcionam
+            normalmente por 24 horas.
+          </p>
+        ) : null}
       </section>
 
       <div
@@ -450,23 +490,54 @@ export function WhatsAppAdminPanel() {
 
       <section className="rounded-2xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)]/40 p-5">
         <h2 className="font-display text-lg text-[var(--bn-on)]">Mensagens recentes</h2>
+        <p className="mt-1 text-xs text-[var(--bn-muted)]">
+          Histórico em linguagem simples. Se algo falhar, mostramos o que fazer.
+        </p>
         {logs.length === 0 ? (
           <p className="mt-2 text-sm text-[var(--bn-muted)]">Nenhum envio ainda.</p>
         ) : (
-          <ul className="mt-3 space-y-2 text-xs text-[var(--bn-muted)]">
-            {logs.map((l) => (
-              <li
-                key={l.id}
-                className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2"
-              >
-                <span className="text-[var(--bn-on-variant)]">{l.kind}</span> · {l.status} ·{" "}
-                {l.waUserPhone} ·{" "}
-                {new Date(l.createdAt).toLocaleString("pt-BR")}
-                {l.errorMessage ? (
-                  <span className="mt-1 block text-rose-700">{l.errorMessage}</span>
-                ) : null}
-              </li>
-            ))}
+          <ul className="mt-3 space-y-2">
+            {logs.map((l) => {
+              const statusInfo = whatsappLogStatusInfo(l.status);
+              const friendlyError = whatsappLogErrorFriendly(l.errorMessage);
+              const statusClass =
+                statusInfo.tone === "ok"
+                  ? "text-emerald-600"
+                  : statusInfo.tone === "error"
+                    ? "text-rose-700"
+                    : statusInfo.tone === "warn"
+                      ? "text-amber-700"
+                      : "text-[var(--bn-muted)]";
+              return (
+                <li
+                  key={l.id}
+                  className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-hover)] px-3 py-2.5 text-sm"
+                >
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="font-medium text-[var(--bn-on)]">
+                      {whatsappLogKindLabel(l.kind)}
+                    </span>
+                    <span className={statusClass}>· {statusInfo.label}</span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-[var(--bn-muted)]">
+                    Para {formatWhatsAppLogPhone(l.waUserPhone)} ·{" "}
+                    {new Date(l.createdAt).toLocaleString("pt-BR")}
+                  </p>
+                  {friendlyError ? (
+                    <div className="mt-2 rounded-md border border-rose-500/25 bg-rose-500/10 px-2.5 py-2 text-xs text-rose-800 dark:text-rose-200">
+                      <p className="font-medium">{friendlyError.title}</p>
+                      {friendlyError.howToFix ? (
+                        <p className="mt-1 opacity-90">{friendlyError.howToFix}</p>
+                      ) : null}
+                    </div>
+                  ) : statusInfo.hint && statusInfo.tone === "ok" ? (
+                    <p className="mt-1.5 text-xs text-[var(--bn-muted)]">
+                      {statusInfo.hint}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

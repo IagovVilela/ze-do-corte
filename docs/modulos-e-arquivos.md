@@ -223,7 +223,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `booking-availability.ts` | Motor de disponibilidade: duração multi-serviço, capacidade da equipe, slots que cabem inteiros |
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos, auto-atribuição) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
-| `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` | Cloud API Meta, criptografia de token, FSM do bot, comanda/confirmação com link `/minha-reserva`, lembretes ~24h e ~2h |
+| `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` / `whatsapp-log-labels.ts` | Cloud API Meta, criptografia de token, FSM do bot, comanda/confirmação com link `/minha-reserva`, lembretes ~24h e ~2h, textos amigáveis do histórico no admin |
 | `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano |
 | `support.ts` / `support-articles.ts` | Contato (env), labels de ticket, artigos da central de ajuda |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |
@@ -245,7 +245,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Plataforma Ops | `plataforma/platform-sidebar.tsx`, `platform-login-form.tsx`, `platform-org-editor.tsx`, `platform-org-actions.tsx`, `ops-impersonation-banner.tsx`, `platform-review-actions.tsx` |
 | Editor canvas | `site-canvas/site-canvas-editor.tsx`, `canvas-studio-parts.tsx`, `canvas-confirm-modal.tsx`, `canvas-layers-panel.tsx`, `canvas-onboarding.tsx`, `canvas-phone-preview.tsx` (chrome BN; desktop 3 colunas + abas Biblioteca/Camadas; mobile dock + folhas; preview celular; onboarding por modelos) |
 | Editor de identidade | `brand-editor-form.tsx` |
-| WhatsApp admin | `whatsapp-admin-panel.tsx` (checklist + toggles confirmação/lembrete) |
+| WhatsApp admin | `whatsapp-admin-panel.tsx` (checklist + toggles + histórico com textos leigos) |
 | Clube admin | `club-admin-panel.tsx` (sugerir preço + saúde do clube) |
 | Metas / regras comissão | `admin-goals-panel.tsx`, `admin-commission-rules-panel.tsx` |
 | PWA (painel + site/agendar) | `pwa-install-button.tsx`, `pwa-client-install-bar.tsx`, `pwa-agendar-install-card.tsx`, `pwa-register.tsx`, `admin-pwa-install-button.tsx`, hook `use-pwa-install.ts`; manifests `public/admin-manifest.webmanifest` + API tenant; SW `public/sw.js` |

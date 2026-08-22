@@ -95,6 +95,9 @@ export async function GET() {
       templateConfirmation:
         process.env.META_WA_TEMPLATE_CONFIRMATION?.trim() || null,
       templateReminder: process.env.META_WA_TEMPLATE_REMINDER?.trim() || null,
+      templateReminderNear:
+        process.env.META_WA_TEMPLATE_REMINDER_NEAR?.trim() || null,
+      templateWinback: process.env.META_WA_TEMPLATE_WINBACK?.trim() || null,
     },
     connection: {
       whatsappBotEnabled: org?.whatsappBotEnabled ?? false,

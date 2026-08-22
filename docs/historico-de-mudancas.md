@@ -8,8 +8,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-22
 
-- **Lembrete WhatsApp quando o horário está próximo**: além do aviso ~24h, envia lembrete ~2h antes (`whatsappNearReminderSentAt`). Mesmo toggle em `/admin/whatsapp`. Cron: `GET|POST /api/cron/whatsapp-jobs` com `CRON_SECRET`, ou `npm run whatsapp:jobs` a cada 15–30 min. Template opcional `META_WA_TEMPLATE_REMINDER_NEAR`.
-- **Comanda no WhatsApp após agendar**: confirmação envia detalhes (serviços, horário, unidade, profissional, total) + link `/minha-reserva/{token}` para o cliente gerenciar. Vale para site, bot de botões e agente Plus+. Texto livre primeiro; template Meta só se o texto falhar fora da janela de 24h.
+- **Templates Meta para iniciar conversa**: comanda e lembretes passam a enviar **modelo aprovado primeiro** (quando `META_WA_TEMPLATE_*` estiver na Railway). Sem isso, a Meta bloqueia quem ainda não falou no WhatsApp (erro 131047). Painel `/admin/whatsapp` mostra se os modelos estão configurados e explica a regra das 24h. Docs em [whatsapp-meta.md](./whatsapp-meta.md).
+- **Histórico WhatsApp em linguagem simples**: em `/admin/whatsapp`, tipos (`CONFIRMATION`, `BOT_REPLY`…) e erros Meta passam a título + orientação (`src/lib/whatsapp-log-labels.ts`).
+- **Lembrete WhatsApp quando o horário está próximo**: além do aviso ~24h, envia lembrete ~2h antes. Cron HTTP `/api/cron/whatsapp-jobs` + `CRON_SECRET`.
+- **Comanda no WhatsApp após agendar**: detalhes + link `/minha-reserva/{token}` (site, bot e agente Plus+).
 
 ## 2026-08-16
 
