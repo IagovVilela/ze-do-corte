@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 }
 
 type WaChangeValue = {
-  metadata?: { phone_number_id?: string };
+  metadata?: { phone_number_id?: string; display_phone_number?: string };
   messages?: Array<{
     from?: string;
     id?: string;
@@ -46,13 +46,27 @@ type WaChangeValue = {
  */
 export async function POST(request: Request) {
   const rawBody = await request.text();
+  const sig = request.headers.get("x-hub-signature-256");
 
-  // META_APP_SECRET é opcional: se existir, valida assinatura; se não, aceita (dev/teste).
-  if (isMetaAppSecretConfigured()) {
-    const sig = request.headers.get("x-hub-signature-256");
+  console.info("[whatsapp webhook] POST", {
+    bodyLen: rawBody.length,
+    hasSignature: Boolean(sig),
+    secretConfigured: isMetaAppSecretConfigured(),
+  });
+
+  // META_APP_SECRET opcional. Se existir e a assinatura falhar → 401.
+  // Escape: WHATSAPP_WEBHOOK_SKIP_SIGNATURE=1 (só diagnóstico).
+  const skipSignature =
+    process.env.WHATSAPP_WEBHOOK_SKIP_SIGNATURE?.trim() === "1";
+  if (isMetaAppSecretConfigured() && !skipSignature) {
     if (!verifyMetaWebhookSignature(rawBody, sig)) {
-      console.warn("[whatsapp webhook] assinatura inválida");
-      return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
+      console.warn(
+        "[whatsapp webhook] assinatura inválida — confira META_APP_SECRET na Railway (Chave secreta do App Meta). Temporário: WHATSAPP_WEBHOOK_SKIP_SIGNATURE=1",
+      );
+      return NextResponse.json(
+        { message: "Invalid signature" },
+        { status: 401 },
+      );
     }
   }
 
@@ -68,14 +82,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
   }
 
-  // Ack imediato — Meta exige resposta rápida
   const work = (async () => {
-    if (payload.object !== "whatsapp_business_account") return;
+    if (payload.object !== "whatsapp_business_account") {
+      console.warn("[whatsapp webhook] object inesperado", payload.object);
+      return;
+    }
     for (const entry of payload.entry ?? []) {
       for (const change of entry.changes ?? []) {
         const value = change.value;
         if (!value?.messages?.length) continue;
-        const phoneNumberId = value.metadata?.phone_number_id;
+        const phoneNumberId = value.metadata?.phone_number_id?.trim();
         if (!phoneNumberId) {
           console.warn("[whatsapp webhook] sem phone_number_id no payload");
           continue;
@@ -83,12 +99,17 @@ export async function POST(request: Request) {
 
         const org = await prisma.organization.findFirst({
           where: { whatsappPhoneNumberId: phoneNumberId },
-          select: { id: true, whatsappBotEnabled: true, name: true },
+          select: {
+            id: true,
+            whatsappBotEnabled: true,
+            name: true,
+          },
         });
         if (!org) {
           console.warn(
             "[whatsapp webhook] nenhum salão com Phone number ID",
             phoneNumberId,
+            "(cole esse ID em /admin/whatsapp)",
           );
           continue;
         }
@@ -130,7 +151,13 @@ export async function POST(request: Request) {
                   typeof dup === "object" &&
                   "code" in dup &&
                   (dup as { code?: string }).code;
-                if (code === "P2002") continue;
+                if (code === "P2002") {
+                  console.info(
+                    "[whatsapp webhook] duplicata ignorada",
+                    msg.id,
+                  );
+                  continue;
+                }
                 throw dup;
               }
             }
