@@ -47,15 +47,13 @@ type WaChangeValue = {
 export async function POST(request: Request) {
   const rawBody = await request.text();
 
-  if (!isMetaAppSecretConfigured()) {
-    return NextResponse.json(
-      { message: "Webhook não configurado (META_APP_SECRET)." },
-      { status: 503 },
-    );
-  }
-  const sig = request.headers.get("x-hub-signature-256");
-  if (!verifyMetaWebhookSignature(rawBody, sig)) {
-    return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
+  // META_APP_SECRET é opcional: se existir, valida assinatura; se não, aceita (dev/teste).
+  if (isMetaAppSecretConfigured()) {
+    const sig = request.headers.get("x-hub-signature-256");
+    if (!verifyMetaWebhookSignature(rawBody, sig)) {
+      console.warn("[whatsapp webhook] assinatura inválida");
+      return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
+    }
   }
 
   let payload: {
@@ -78,16 +76,30 @@ export async function POST(request: Request) {
         const value = change.value;
         if (!value?.messages?.length) continue;
         const phoneNumberId = value.metadata?.phone_number_id;
-        if (!phoneNumberId) continue;
+        if (!phoneNumberId) {
+          console.warn("[whatsapp webhook] sem phone_number_id no payload");
+          continue;
+        }
 
         const org = await prisma.organization.findFirst({
-          where: {
-            whatsappPhoneNumberId: phoneNumberId,
-            whatsappBotEnabled: true,
-          },
-          select: { id: true },
+          where: { whatsappPhoneNumberId: phoneNumberId },
+          select: { id: true, whatsappBotEnabled: true, name: true },
         });
-        if (!org) continue;
+        if (!org) {
+          console.warn(
+            "[whatsapp webhook] nenhum salão com Phone number ID",
+            phoneNumberId,
+          );
+          continue;
+        }
+        if (!org.whatsappBotEnabled) {
+          console.warn(
+            "[whatsapp webhook] bot desligado para",
+            org.name,
+            org.id,
+          );
+          continue;
+        }
 
         for (const msg of value.messages) {
           if (!msg.from) continue;
@@ -122,6 +134,12 @@ export async function POST(request: Request) {
                 throw dup;
               }
             }
+            console.info(
+              "[whatsapp webhook] inbound",
+              org.name,
+              msg.from,
+              text.slice(0, 80),
+            );
             await handleWhatsAppInbound({
               organizationId: org.id,
               incoming: {

@@ -84,7 +84,7 @@ async function sendText(org: OrgCreds, to: string, text: string) {
 }
 
 async function sendMenu(org: OrgCreds, to: string) {
-  return sendWhatsAppButtons({
+  const result = await sendWhatsAppButtons({
     phoneNumberId: org.phoneNumberId,
     accessToken: org.accessToken,
     toE164Digits: to,
@@ -95,6 +95,16 @@ async function sendMenu(org: OrgCreds, to: string) {
       { id: "menu_cancel", title: "Cancelar" },
     ],
   });
+  if (!result.ok) {
+    console.error("[whatsapp inbound] sendMenu falhou", result.error);
+    // Fallback: texto livre se botões falharem (ex. restrição do número de teste).
+    await sendText(
+      org,
+      to,
+      `Olá! Sou o assistente da *${org.name}*.\nResponda:\n1 — Agendar\n2 — Remarcar\n3 — Cancelar\n\nOu descreva o que precisa (ex.: "quero cortar amanhã").`,
+    );
+  }
+  return result;
 }
 
 async function upsertSession(
@@ -221,13 +231,22 @@ export async function handleWhatsAppInbound(options: {
     !orgRow.whatsappPhoneNumberId ||
     !orgRow.whatsappAccessTokenEnc
   ) {
+    console.warn(
+      "[whatsapp inbound] org sem bot/token/phoneNumberId",
+      options.organizationId,
+    );
     return;
   }
 
   let accessToken: string;
   try {
     accessToken = decryptSecret(orgRow.whatsappAccessTokenEnc);
-  } catch {
+  } catch (err) {
+    console.error(
+      "[whatsapp inbound] falha ao descriptografar token",
+      options.organizationId,
+      err,
+    );
     return;
   }
 
