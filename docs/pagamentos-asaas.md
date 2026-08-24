@@ -54,6 +54,8 @@ Idempotência: tabela `PaymentEvent` (`asaasEventId` unique).
 2. Salvar key (+ toggle receber online). Exige `ASAAS_TOKEN_ENCRYPTION_KEY`.
 3. Configurar webhook do **salão** para a mesma URL/token.
 
+Lista “Últimos avisos”: códigos Asaas (`PAYMENT_OVERDUE` etc.) traduzidos em `asaas-event-labels.ts`.
+
 ### PIX no agendamento
 
 Após reservar no site: “Pagar agora com PIX” → `POST /api/appointments/[id]/pay-pix` (com `manageToken`). Balcão manual continua em `/admin`.

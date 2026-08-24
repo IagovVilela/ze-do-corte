@@ -274,57 +274,62 @@ export function WhatsAppAdminPanel() {
         <ul className="mt-3 space-y-2">
           <CheckItem
             ok={connected}
-            label="Conectado à Meta Cloud API"
+            label="WhatsApp da barbearia conectado"
             hint={
               connected
-                ? "Token e Phone number ID configurados"
+                ? "Conta ligada e pronta para enviar"
                 : "Preencha as opções do assistente abaixo"
             }
           />
           <CheckItem
             ok={botReady}
-            label="Bot ligado"
+            label="Assistente ligado"
             hint="Responde e agenda automaticamente no chat"
           />
           <CheckItem
             ok={botReady && confirmBooking}
             label="Comanda no WhatsApp"
-            hint="Ao agendar: detalhes + link /minha-reserva para o cliente"
+            hint="Ao agendar: envia detalhes e link para o cliente gerenciar"
           />
           <CheckItem
             ok={botReady && reminder24h}
             label="Lembretes automáticos"
-            hint="~24h e ~2h antes (cron Railway)"
+            hint="Avisa o cliente cerca de 1 dia e cerca de 2 horas antes"
           />
           <CheckItem
             ok={Boolean(platform?.templateConfirmation)}
-            label="Modelo de confirmação (Meta)"
+            label="Aviso de confirmação liberado"
             hint={
               platform?.templateConfirmation
-                ? `Ativo: ${platform.templateConfirmation} — permite avisar quem ainda não falou no WhatsApp`
-                : "Sem template a comanda só chega se o cliente falou nas últimas 24h. Configure META_WA_TEMPLATE_CONFIRMATION na Railway"
+                ? "Pode avisar o cliente mesmo se ele ainda não tiver falado no WhatsApp"
+                : "Ainda não liberado — a confirmação só chega se o cliente já falou com a barbearia no WhatsApp"
             }
           />
           <CheckItem
             ok={Boolean(platform?.templateReminder)}
-            label="Modelo de lembrete (Meta)"
+            label="Aviso de lembrete liberado"
             hint={
               platform?.templateReminder
-                ? `Ativo: ${platform.templateReminder}`
-                : "Sem template, lembretes ~24h/~2h falham fora da janela de 24h (META_WA_TEMPLATE_REMINDER)"
+                ? "Lembretes podem sair mesmo sem conversa recente"
+                : "Ainda não liberado — lembretes podem falhar se o cliente não falou recentemente"
             }
           />
         </ul>
         {!platform?.templateConfirmation ? (
           <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
             <strong className="font-medium text-[var(--bn-on)]">Importante:</strong>{" "}
-            a Meta proíbe a barbearia de iniciar conversa com texto livre. Para
-            comanda, lembrete e IA chegarem sem o cliente ter mandado “oi”
-            antes, é obrigatório criar{" "}
-            <strong className="font-medium text-[var(--bn-on)]">modelos aprovados</strong>{" "}
-            no Gerenciador do WhatsApp e apontá-los nas variáveis da Railway.
-            Depois que o cliente responde o modelo, o assistente/IA funcionam
-            normalmente por 24 horas.
+            o WhatsApp só deixa a barbearia{" "}
+            <strong className="font-medium text-[var(--bn-on)]">iniciar</strong>{" "}
+            conversa com modelos de mensagem aprovados. Sem isso, o cliente precisa
+            mandar um “oi” antes (ou responder alguma mensagem). Se quiser liberar
+            confirmação e lembretes automaticamente, fale com o{" "}
+            <Link
+              href="/admin/suporte#contato"
+              className="font-medium text-[var(--bn-on)] underline"
+            >
+              suporte
+            </Link>
+            .
           </p>
         ) : null}
       </section>
@@ -430,20 +435,20 @@ export function WhatsAppAdminPanel() {
                   checked={reminder24h}
                   onChange={(e) => setReminder24h(e.target.checked)}
                 />
-                Enviar lembretes automáticos (~24h e ~2h antes do horário)
+                Enviar lembretes automáticos (cerca de 1 dia e 2 horas antes)
               </label>
 
               <label className="block space-y-1.5 text-sm">
-                <span className="text-[var(--bn-on-variant)]">Código do número (Phone number ID)</span>
+                <span className="text-[var(--bn-on-variant)]">Código do número</span>
                 <input
                   className={inputClass}
                   value={phoneNumberId}
                   onChange={(e) => setPhoneNumberId(e.target.value)}
-                  placeholder="Número longo que a Meta mostra"
+                  placeholder="Código longo do número da barbearia"
                 />
               </label>
               <label className="block space-y-1.5 text-sm">
-                <span className="text-[var(--bn-on-variant)]">Senha de acesso (Access token)</span>
+                <span className="text-[var(--bn-on-variant)]">Chave de acesso</span>
                 <input
                   type="password"
                   className={inputClass}
@@ -452,10 +457,13 @@ export function WhatsAppAdminPanel() {
                   placeholder={
                     connection?.hasAccessToken
                       ? "Já salva — cole outra só se for trocar"
-                      : "Cole a senha longa que a Meta gerou"
+                      : "Cole a chave gerada no painel do WhatsApp"
                   }
                   autoComplete="off"
                 />
+                <span className="block text-xs text-[var(--bn-muted)]">
+                  Na dúvida, peça ao suporte para ajudar a colar esses códigos.
+                </span>
               </label>
               <label className="block space-y-1.5 text-sm">
                 <span className="text-[var(--bn-muted)]">ID da conta Business (opcional)</span>

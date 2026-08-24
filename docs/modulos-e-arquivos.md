@@ -224,7 +224,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos, auto-atribuição) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
 | `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` / `whatsapp-log-labels.ts` | Cloud API Meta, criptografia de token, FSM do bot, comanda/confirmação com link `/minha-reserva`, lembretes ~24h e ~2h, textos amigáveis do histórico no admin |
-| `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano |
+| `asaas-client.ts` / `asaas-crypto.ts` / `asaas-webhook.ts` / `asaas-plans.ts` / `asaas-org.ts` / `asaas-event-labels.ts` / `org-entitlements.ts` / `club-subscribe.ts` / `club-subscription-actions.ts` / `club-notify-client.ts` | Gateway Asaas, billing SaaS, PIX/clube (adesão, pausar/reativar/postergar/cancelar + aviso WhatsApp/e-mail), gates de plano; textos leigos do histórico em `/admin/pagamentos` |
 | `support.ts` / `support-articles.ts` | Contato (env), labels de ticket, artigos da central de ajuda |
 | `client-manage-token.ts` | Formato UUID do token de gestão da reserva (`/minha-reserva/...`) |
 | `notify-barber-booking.ts` | Envio de e-mail via Resend ao barbeiro atribuído (`RESEND_*`) |

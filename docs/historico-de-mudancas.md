@@ -6,6 +6,11 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-08-23
+
+- **Painel WhatsApp sem jargão técnico**: checklist e histórico em `/admin/whatsapp` sem nomes de variáveis, Railway, “Phone number ID” ou códigos Meta; textos para o dono do salão e orientação via suporte.
+- **Histórico Asaas em linguagem simples**: em `/admin/pagamentos`, códigos como `PAYMENT_OVERDUE` viram título + explicação (`src/lib/asaas-event-labels.ts`).
+
 ## 2026-08-22
 
 - **Templates Meta para iniciar conversa**: comanda e lembretes passam a enviar **modelo aprovado primeiro** (quando `META_WA_TEMPLATE_*` estiver na Railway). Sem isso, a Meta bloqueia quem ainda não falou no WhatsApp (erro 131047). Painel `/admin/whatsapp` mostra se os modelos estão configurados e explica a regra das 24h. Docs em [whatsapp-meta.md](./whatsapp-meta.md).

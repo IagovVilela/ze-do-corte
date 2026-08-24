@@ -1,6 +1,6 @@
 /**
  * Textos amigáveis para o histórico de WhatsApp no painel do salão.
- * Esconde códigos da Meta e jargão técnico.
+ * Sem códigos Meta, variáveis de ambiente ou jargão técnico.
  */
 
 export type WhatsAppLogTone = "ok" | "warn" | "error" | "neutral";
@@ -20,9 +20,9 @@ const STATUS_LABELS: Record<
   { label: string; tone: WhatsAppLogTone; hint?: string }
 > = {
   sent: {
-    label: "Aceita pela Meta",
+    label: "Enviada",
     tone: "ok",
-    hint: "Isso não garante que chegou no celular. Se o cliente não recebeu, peça para mandar um “oi” no WhatsApp da barbearia (janela de 24h) ou use um modelo aprovado na Meta.",
+    hint: "O envio foi aceito. Se o cliente não recebeu, peça para ele mandar um “oi” no WhatsApp da barbearia e tente de novo — ou fale com o suporte para liberar avisos automáticos.",
   },
   delivered: {
     label: "Entregue no celular",
@@ -57,9 +57,9 @@ function matchFriendlyError(raw: string): FriendlyError | null {
     t.includes("more than 24 hours")
   ) {
     return {
-      title: "O cliente está fora da janela de 24 horas do WhatsApp",
+      title: "O cliente precisa falar no WhatsApp antes",
       howToFix:
-        "Peça para ele enviar uma mensagem (ex.: “oi”) para o número da barbearia e tente de novo. Ou use um modelo de mensagem aprovado na Meta.",
+        "Peça para ele enviar um “oi” para o número da barbearia e tente de novo. Se quiser avisar sem isso, fale com o suporte para liberar os avisos automáticos.",
     };
   }
 
@@ -71,7 +71,7 @@ function matchFriendlyError(raw: string): FriendlyError | null {
     return {
       title: "Este número ainda não está liberado para teste",
       howToFix:
-        "No painel da Meta (WhatsApp → API), adicione o celular do cliente na lista de números de teste. Com número oficial já verificado, isso deixa de ser necessário.",
+        "No período de testes, só alguns celulares recebem mensagem. Peça ao suporte para liberar o número do cliente.",
     };
   }
 
@@ -83,9 +83,9 @@ function matchFriendlyError(raw: string): FriendlyError | null {
     t.includes("session has expired")
   ) {
     return {
-      title: "A conexão com o WhatsApp expirou ou está inválida",
+      title: "A conexão com o WhatsApp expirou",
       howToFix:
-        "Abra WhatsApp no painel, cole um token novo da Meta e salve. Depois teste de novo.",
+        "Abra WhatsApp no painel, atualize a chave de acesso e salve. Se não souber como, chame o suporte.",
     };
   }
 
@@ -93,15 +93,15 @@ function matchFriendlyError(raw: string): FriendlyError | null {
     return {
       title: "Não foi possível entregar neste número",
       howToFix:
-        "Confira se o telefone está certo (DDI 55 + DDD + número) e se a pessoa tem WhatsApp ativo.",
+        "Confira se o telefone está certo (com DDD) e se a pessoa tem WhatsApp ativo.",
     };
   }
 
   if (t.includes("131048") || t.includes("spam rate")) {
     return {
-      title: "A Meta limitou envios por suspeita de spam",
+      title: "Muitos envios em pouco tempo",
       howToFix:
-        "Espere um pouco e evite disparos em massa. Prefira mensagens só para quem realmente agendou.",
+        "Espere um pouco e evite disparar mensagem em massa. Prefira avisar só quem realmente agendou.",
     };
   }
 
@@ -114,25 +114,25 @@ function matchFriendlyError(raw: string): FriendlyError | null {
 
   if (t.includes("132001") || t.includes("template name does not exist")) {
     return {
-      title: "O modelo de mensagem não foi encontrado",
+      title: "O aviso automático ainda não está configurado",
       howToFix:
-        "Confira o nome do template aprovado na Meta e se ele está configurado no servidor.",
+        "Fale com o suporte para liberar os avisos de confirmação e lembrete da barbearia.",
     };
   }
 
   if (t.includes("132000") || t.includes("parameter count")) {
     return {
-      title: "O modelo de mensagem está com campos errados",
+      title: "O aviso automático está incompleto",
       howToFix:
-        "O texto aprovado na Meta precisa ter a mesma quantidade de variáveis que o sistema envia.",
+        "Fale com o suporte — o texto do aviso precisa ser ajustado.",
     };
   }
 
   if (t.includes("131031") || t.includes("business eligibility")) {
     return {
-      title: "A conta WhatsApp Business ainda não pode enviar este tipo de mensagem",
+      title: "A conta WhatsApp ainda não pode enviar este tipo de mensagem",
       howToFix:
-        "Verifique no Gerenciador da Meta se a conta está aprovada e sem restrições.",
+        "A conta pode estar em análise ou com restrição. Fale com o suporte para verificar.",
     };
   }
 
@@ -150,13 +150,13 @@ export function whatsappLogStatusInfo(status: string): {
 } {
   return (
     STATUS_LABELS[status] ?? {
-      label: status || "Desconhecido",
+      label: "Status desconhecido",
       tone: "neutral",
     }
   );
 }
 
-/** Explicação curta do erro Meta, para leigo. */
+/** Explicação curta do erro, para leigo. */
 export function whatsappLogErrorFriendly(errorMessage: string | null): {
   title: string;
   howToFix?: string;
@@ -165,9 +165,9 @@ export function whatsappLogErrorFriendly(errorMessage: string | null): {
   const mapped = matchFriendlyError(errorMessage);
   if (mapped) return mapped;
   return {
-    title: "A Meta recusou o envio",
+    title: "O WhatsApp recusou o envio",
     howToFix:
-      "Tente de novo em alguns minutos. Se repetir, confira o token, o número do cliente e se o assistente está ligado.",
+      "Tente de novo em alguns minutos. Se repetir, confira o número do cliente, se o assistente está ligado, ou fale com o suporte.",
   };
 }
 

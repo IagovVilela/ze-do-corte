@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
+import { describeAsaasPaymentEvent } from "@/lib/asaas-event-labels";
+
 type PlatformInfo = {
   encryptionConfigured: boolean;
   webhookTokenConfigured?: boolean;
@@ -286,17 +288,42 @@ export function PaymentsAdminPanel() {
 
       {events.length > 0 ? (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-[var(--bn-on-variant)]">Últimos pagamentos avisados</h3>
-          <ul className="space-y-2 text-xs text-[var(--bn-muted)]">
-            {events.map((ev) => (
-              <li
-                key={ev.id}
-                className="rounded-xl border border-[var(--bn-border)] px-3 py-2"
-              >
-                {ev.event.replace(/_/g, " ")} ·{" "}
-                {new Date(ev.processedAt).toLocaleString("pt-BR")}
-              </li>
-            ))}
+          <h3 className="text-sm font-medium text-[var(--bn-on-variant)]">
+            Últimos avisos de pagamento
+          </h3>
+          <p className="text-xs text-[var(--bn-muted)]">
+            O Asaas avisa sozinho o que aconteceu com cada cobrança. Cobrança
+            vencida não é erro do sistema: o cliente não pagou até o prazo.
+          </p>
+          <ul className="space-y-2">
+            {events.map((ev) => {
+              const copy = describeAsaasPaymentEvent(ev.event, ev.externalReference);
+              const toneClass =
+                copy.tone === "ok"
+                  ? "text-[var(--bn-status-ok)]"
+                  : copy.tone === "warn"
+                    ? "text-[var(--bn-status-warn)]"
+                    : copy.tone === "error"
+                      ? "text-red-400"
+                      : "text-[var(--bn-on)]";
+              return (
+                <li
+                  key={ev.id}
+                  className="rounded-xl border border-[var(--bn-border)] px-3 py-2"
+                >
+                  <p className={`text-sm font-medium ${toneClass}`}>{copy.title}</p>
+                  {copy.context ? (
+                    <p className="mt-0.5 text-xs text-[var(--bn-on-variant)]">
+                      Referente a {copy.context}
+                    </p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-[var(--bn-muted)]">{copy.hint}</p>
+                  <p className="mt-1 text-[11px] text-[var(--bn-muted)]">
+                    {new Date(ev.processedAt).toLocaleString("pt-BR")}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
