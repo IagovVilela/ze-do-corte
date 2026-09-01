@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-31
 
+- **Contato da plataforma**: WhatsApp padrão atualizado para `(12) 98700-2929` (`5512987002929`) em suporte, links institucionais e org demo `ze-do-corte`.
 - **Financeiro gerencial (Pro)**: configuração, precificação CSV/PV, DRE, ponto de equilíbrio, fluxo de caixa analítico; lançamento automático de pró-labore opcional; migrations aplicadas. Ver [financeiro-gerencial.md](./financeiro-gerencial.md).
 
 ## 2026-08-30

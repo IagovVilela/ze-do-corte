@@ -56,11 +56,10 @@ export const BARBER_CONTACT_LINKS: {
   instagramHref: string;
   instagramUser: string;
 } = {
-  telHref: "",
-  telLabel: "",
-  whatsappHref:
-    "https://api.whatsapp.com/message/PG2CKBFY6OYDP1?autoload=1&app_absent=0&utm_source=ig",
-  whatsappDigits: "",
+  telHref: "tel:+5512987002929",
+  telLabel: "(12) 98700-2929",
+  whatsappHref: "",
+  whatsappDigits: "5512987002929",
   instagramHref: "https://www.instagram.com/barbeariazedocorte.sjc/",
   instagramUser: "barbeariazedocorte.sjc",
 };

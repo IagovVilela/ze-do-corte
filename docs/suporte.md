@@ -59,7 +59,7 @@ Identidade na sidebar: **Suporte Barbernegon** (`PLATFORM_SUPPORT_DISPLAY_NAME`)
 
 | Variável | Uso |
 |----------|-----|
-| `SUPPORT_WHATSAPP_E164` | Dígitos com DDI (ex. `5512996373335`) → botão wa.me. Sem env, usa o padrão da plataforma. |
+| `SUPPORT_WHATSAPP_E164` | Dígitos com DDI (ex. `5512987002929`) → botão wa.me. Sem env, usa o padrão da plataforma. |
 | `SUPPORT_EMAIL` | E-mail exibido / `mailto:` e destino do aviso de chamado novo. Sem env, usa o padrão da plataforma. |
 | `SUPPORT_CONSULTANT_GATE` | Segredo da entrada `/consultores/login?k=` |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Envio do e-mail de novo chamado ao Ops |

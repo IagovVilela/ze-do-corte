@@ -27,7 +27,7 @@ export const SUPPORT_TICKET_CATEGORY_LABEL: Record<
 export const PLATFORM_SUPPORT_DISPLAY_NAME = "Suporte Barbernegon";
 
 /** Contato padrão Barbernegon (sobrescreve com SUPPORT_* no env). */
-const DEFAULT_SUPPORT_WHATSAPP_E164 = "5512996373335";
+const DEFAULT_SUPPORT_WHATSAPP_E164 = "5512987002929";
 const DEFAULT_SUPPORT_EMAIL = "iagovventura@gmail.com";
 
 export function getSupportContact() {

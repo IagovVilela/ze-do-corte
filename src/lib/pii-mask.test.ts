@@ -4,7 +4,7 @@ import { maskCpfCnpj, maskEmail, maskPhone } from "./pii-mask";
 
 describe("pii-mask", () => {
   it("mascara telefone mostrando só os 4 últimos", () => {
-    expect(maskPhone("12996373335")).toBe("••• ••• 3335");
+    expect(maskPhone("12987002929")).toBe("••• ••• 2929");
   });
 
   it("mascara e-mail", () => {
