@@ -35,6 +35,7 @@ type CashFlowData = {
   closingBalance: number;
   buckets: Bucket[];
   byCategory: {
+    categoryId: string | null;
     categoryName: string;
     inflow: number;
     outflow: number;
@@ -150,7 +151,7 @@ export function FinanceCashflowPanel({ units }: Props) {
                   .slice(-14)
                   .map((b) => (
                     <tr
-                      key={b.label}
+                      key={b.date}
                       className={`border-b border-[var(--bn-outline)]/50 ${
                         b.isProjected ? "opacity-70 italic" : ""
                       }`}
@@ -176,7 +177,7 @@ export function FinanceCashflowPanel({ units }: Props) {
             <div className="space-y-1 text-sm">
               {data.byCategory.map((c) => (
                 <div
-                  key={c.categoryName}
+                  key={c.categoryId ?? `name:${c.categoryName}`}
                   className="flex justify-between rounded-lg border border-[var(--bn-outline)]/60 px-3 py-2"
                 >
                   <span>{c.categoryName}</span>

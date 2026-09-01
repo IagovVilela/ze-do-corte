@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-08-31
 
+- **Fluxo de caixa**: corrige aviso React de chaves duplicadas na listagem por categoria (ex.: duas categorias “Pró-labore”).
 - **Seed demo ampliado (`npm run demo:day`)**: ~90 dias de agenda (~1000+ atendimentos), financeiro gerencial (settings, CSV/PV, 6 meses de lançamentos, conta bancária), produtos com custo, contato `(12) 98700-2929`.
 - **Contato da plataforma**: WhatsApp padrão atualizado para `(12) 98700-2929` (`5512987002929`) em suporte, links institucionais e org demo `ze-do-corte`.
 - **Financeiro gerencial (Pro)**: configuração, precificação CSV/PV, DRE, ponto de equilíbrio, fluxo de caixa analítico; lançamento automático de pró-labore opcional; migrations aplicadas. Ver [financeiro-gerencial.md](./financeiro-gerencial.md).
