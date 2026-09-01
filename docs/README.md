@@ -15,6 +15,7 @@
 | [pitch-investidor-barbernegon.md](./pitch-investidor-barbernegon.md) | Explicativo / one-pager para conversa com investidor |
 | [whatsapp-meta.md](./whatsapp-meta.md) | WhatsApp Cloud API: webhook, tokens, bot, templates, lembretes |
 | [pagamentos-asaas.md](./pagamentos-asaas.md) | Asaas: SaaS Free + Pro, PIX do salão, clube, webhooks |
+| [financeiro-gerencial.md](./financeiro-gerencial.md) | DRE, CSV/PV, ponto de equilíbrio, fluxo de caixa (Pro) |
 | [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md) | Passo a passo prático: configurar WhatsApp + Asaas (plataforma e salão) |
 | [informativo-pagamentos-asaas.pdf](./informativo-pagamentos-asaas.pdf) | Fonte interna do PDF Asaas (cópia pública em `/informativos/pagamentos-asaas.pdf`) |
 | [informativo-whatsapp-plus.pdf](./informativo-whatsapp-plus.pdf) | Fonte interna do PDF Plus+ (cópia pública em `/informativos/whatsapp-plus.pdf`) |

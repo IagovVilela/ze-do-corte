@@ -5,6 +5,8 @@ import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 
 import { buildClubHealthBuckets } from "@/lib/club-health";
+import { buildDreSnapshot } from "@/lib/finance-dre";
+import { buildCashFlowSnapshot } from "@/lib/finance-cashflow";
 import { BARBER_TIMEZONE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import type { StaffAccess } from "@/lib/staff-access";
@@ -214,6 +216,32 @@ export async function buildMonthlyExportPack(options: {
     },
   ];
 
+  let dreSheet: Record<string, string | number>[] = [];
+  let fluxoSheet: Record<string, string | number>[] = [];
+  try {
+    const dre = await buildDreSnapshot({ organizationId: orgId, yearMonth });
+    dreSheet = dre.lines.map((l) => ({
+      Linha: l.label,
+      Valor: Math.round(l.amount * 100) / 100,
+    }));
+    const cashflow = await buildCashFlowSnapshot({
+      organizationId: orgId,
+      from: start,
+      to: end,
+    });
+    fluxoSheet = cashflow.buckets
+      .filter((b) => b.inflow > 0 || b.outflow > 0)
+      .map((b) => ({
+        Dia: b.label,
+        Entrada: b.inflow,
+        Saida: b.outflow,
+        Saldo: b.runningBalance,
+        Projetado: b.isProjected ? "Sim" : "Não",
+      }));
+  } catch {
+    // export parcial se gerencial indisponível
+  }
+
   return {
     filename: `barbernegon-mes-${yearMonth}.xlsx`,
     sheets: {
@@ -222,6 +250,8 @@ export async function buildMonthlyExportPack(options: {
       "Top serviços": topServicos,
       Retencao: retencao,
       Clube: clube,
+      DRE: dreSheet,
+      "Fluxo de caixa": fluxoSheet,
     },
   };
 }

@@ -6,6 +6,14 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-08-31
+
+- **Financeiro gerencial (Pro)**: configuração, precificação CSV/PV, DRE, ponto de equilíbrio, fluxo de caixa analítico; lançamento automático de pró-labore opcional; migrations aplicadas. Ver [financeiro-gerencial.md](./financeiro-gerencial.md).
+
+## 2026-08-30
+
+- **Seed demo para vídeos (`npm run demo:day`)**: org `ze-do-corte` (Barbergon) com plano **PLUS**, clube (planos + assinantes inadimplentes/subuso), CRM (clientes em risco e perdidos), metas mensais, estoque baixo, logs WhatsApp, chamados de suporte, caixa a receber, agenda de hoje roteirizada e perfis de clientes para winback.
+
 ## 2026-08-23
 
 - **Painel WhatsApp sem jargão técnico**: checklist e histórico em `/admin/whatsapp` sem nomes de variáveis, Railway, “Phone number ID” ou códigos Meta; textos para o dono do salão e orientação via suporte.

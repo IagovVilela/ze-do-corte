@@ -28,6 +28,11 @@ import {
   Clock,
   ArrowDownCircle,
   ArrowUpCircle,
+  Calculator,
+  FileSpreadsheet,
+  Target,
+  SlidersHorizontal,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import type { StaffAccess } from "@/lib/staff-access";
@@ -298,7 +303,7 @@ function buildAdminNavGroupsForRoles(
       id: "finance-analysis",
       label: "Financeiro · análise",
       filter: "finance",
-      hint: "Comissões e balanço",
+      hint: "Comissões, balanço e gerencial",
       defaultOpen: false,
       items: [
         {
@@ -314,6 +319,46 @@ function buildAdminNavGroupsForRoles(
           show: access.permissions.viewRevenue,
           icon: LineChart,
           keywords: ["saldo", "resultado", "lucro"],
+        },
+        {
+          href: "/admin/financeiro/configuracao",
+          label: "Configuração",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+          icon: SlidersHorizontal,
+          keywords: ["pró-labore", "pro-labore", "margem", "horas", "fixa", "variável"],
+        },
+        {
+          href: "/admin/financeiro/precificacao",
+          label: "Precificação",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+          icon: Calculator,
+          keywords: ["csv", "custo", "preço", "pv", "markup"],
+        },
+        {
+          href: "/admin/financeiro/dre",
+          label: "DRE",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+          icon: FileSpreadsheet,
+          keywords: ["demonstrativo", "resultado", "lucro", "receita"],
+        },
+        {
+          href: "/admin/financeiro/ponto-equilibrio",
+          label: "Ponto de equilíbrio",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+          icon: Target,
+          keywords: ["break-even", "equilibrio", "meta", "atendimentos"],
+        },
+        {
+          href: "/admin/financeiro/fluxo-caixa",
+          label: "Fluxo de caixa",
+          show: access.permissions.viewRevenue,
+          badge: proUnlocked ? null : "Pro",
+          icon: ArrowLeftRight,
+          keywords: ["projeção", "projecao", "entrada", "saída", "saldo"],
         },
       ],
     },

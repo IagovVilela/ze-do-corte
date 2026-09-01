@@ -79,6 +79,13 @@ enum FinancePaymentCondition {
   INSTALLMENT
 }
 
+/// Classificação gerencial de categorias (DRE, ponto de equilíbrio).
+enum FinanceCategoryCostType {
+  NONE
+  FIXED
+  VARIABLE
+}
+
 /// Ajuste na folha de comissão (bônus ou vale).
 enum StaffFinanceAdjustmentKind {
   BONUS
@@ -160,6 +167,9 @@ model Organization {
   staffCommissionRules StaffCommissionRule[]
   staffFinanceAdjustments StaffFinanceAdjustment[]
   staffMonthlyGoals  StaffMonthlyGoal[]
+  financeSettings    FinanceSettings?
+  bankAccounts       BankAccount[]
+  serviceCostProfiles ServiceCostProfile[]
 
   @@index([planStatus])
   @@index([asaasSubscriptionId])
@@ -293,6 +303,7 @@ model Service {
   appointmentItems AppointmentItem[]
   unitOverrides   BarbershopUnitService[]
   planItems       SubscriptionPlanService[]
+  costProfile     ServiceCostProfile?
 
   @@unique([unitId, name])
   @@index([category])
@@ -393,6 +404,8 @@ model Product {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name           String
   price          Decimal      @db.Decimal(10, 2)
+  /// Custo unitário (DRE / margem de produtos).
+  costPrice      Decimal?     @db.Decimal(10, 2)
   isActive       Boolean      @default(true)
   /// Estoque opcional; null = sem controle.
   stockQty       Int?
@@ -737,13 +750,65 @@ model FinanceCategory {
   parent         FinanceCategory? @relation("FinanceCategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
   children       FinanceCategory[] @relation("FinanceCategoryTree")
   isActive       Boolean          @default(true)
+  costType       FinanceCategoryCostType @default(NONE)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   entries        FinanceEntry[]
 
   @@index([organizationId, kind, name])
   @@index([organizationId, kind, isActive])
+  @@index([organizationId, kind, costType])
   @@index([parentId])
+}
+
+/// Parâmetros gerenciais do financeiro (pró-labore, margens, horas produtivas).
+model FinanceSettings {
+  id                            String       @id @default(cuid())
+  organizationId                String       @unique
+  organization                  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proLaboreMonthly              Decimal      @default(0) @db.Decimal(12, 2)
+  productiveHoursPerMonth       Int          @default(156)
+  defaultVariableExpensePercent Decimal      @default(10) @db.Decimal(6, 2)
+  defaultProfitMarginPercent    Decimal      @default(20) @db.Decimal(6, 2)
+  /// Se preenchido, substitui a soma de despesas fixas das categorias.
+  monthlyFixedCostsOverride     Decimal?     @db.Decimal(12, 2)
+  autoSettleReceivablesOnDueDate Boolean     @default(false)
+  /// Gera despesa mensal de pró-labore em contas a pagar.
+  autoCreateProLaboreExpense    Boolean     @default(false)
+  /// Taxas % por forma de pagamento, ex.: {"PIX":0,"CREDIT":3.5}
+  paymentMethodFeesJson         Json?
+  createdAt                     DateTime     @default(now())
+  updatedAt                     DateTime     @updatedAt
+}
+
+/// Conta bancária do estabelecimento (conciliação / export contábil).
+model BankAccount {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String       @db.VarChar(120)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, isActive])
+}
+
+/// Custo do serviço vendido (MOD + MAT + rateio DF) por serviço.
+model ServiceCostProfile {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  serviceId               String   @unique
+  service                 Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  directLaborCost         Decimal  @default(0) @db.Decimal(10, 2)
+  materialCost            Decimal  @default(0) @db.Decimal(10, 2)
+  durationMinutesOverride Int?
+  notes                   String?  @db.Text
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 /// Despesa ou receita manual (contas a pagar / a receber / balanço).

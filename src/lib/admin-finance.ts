@@ -89,6 +89,7 @@ export async function listFinanceCategories(
       kind: true,
       name: true,
       parentId: true,
+      costType: true,
     },
   });
 }

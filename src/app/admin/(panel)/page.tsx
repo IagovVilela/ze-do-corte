@@ -22,6 +22,7 @@ import {
 } from "@/components/onboarding-checklist";
 import { AdminMorningBriefingPanel } from "@/components/admin-morning-briefing";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { FinanceGerencialAlerts } from "@/components/finance-gerencial-alerts";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { getAdminMorningBriefing } from "@/lib/admin-morning-briefing";
 import { cn } from "@/lib/utils";
@@ -184,6 +185,12 @@ export default async function AdminPage({
         {morningBriefing ? (
           <AnimatedSection>
             <AdminMorningBriefingPanel briefing={morningBriefing} />
+          </AnimatedSection>
+        ) : null}
+
+        {showRevenue ? (
+          <AnimatedSection>
+            <FinanceGerencialAlerts />
           </AnimatedSection>
         ) : null}
 

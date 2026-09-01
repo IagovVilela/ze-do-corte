@@ -43,6 +43,25 @@ export async function GET(request: Request) {
         access: authResult.access,
         yearMonth,
       });
+      const format = searchParams.get("format");
+      if (format === "csv") {
+        const dre = packData.sheets.DRE ?? [];
+        const header = dre.length > 0 ? Object.keys(dre[0]!) : ["Linha", "Valor"];
+        const lines = [
+          header.join(";"),
+          ...dre.map((row) =>
+            header.map((h) => String(row[h] ?? "")).join(";"),
+          ),
+        ];
+        const csv = `\uFEFF${lines.join("\n")}`;
+        return new NextResponse(csv, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": `attachment; filename="dre-${yearMonth}.csv"`,
+          },
+        });
+      }
       const workbook = XLSX.utils.book_new();
       for (const [name, rows] of Object.entries(packData.sheets)) {
         const sheet = XLSX.utils.json_to_sheet(

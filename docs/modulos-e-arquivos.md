@@ -88,6 +88,11 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/admin/financeiro/contas-a-receber` | `…/financeiro/contas-a-receber/page.tsx` | Receitas em aberto |
 | `/admin/financeiro/criar-despesa` | `…/financeiro/criar-despesa/page.tsx` | Formulário de despesa |
 | `/admin/financeiro/criar-receita` | `…/financeiro/criar-receita/page.tsx` | Formulário de receita |
+| `/admin/financeiro/configuracao` | `…/financeiro/configuracao/page.tsx` | Pró-labore, margens, categorias fixa/variável (Pro) |
+| `/admin/financeiro/precificacao` | `…/financeiro/precificacao/page.tsx` | CSV e preço de venda por serviço (Pro) |
+| `/admin/financeiro/dre` | `…/financeiro/dre/page.tsx` | DRE gerencial mensal (Pro) |
+| `/admin/financeiro/ponto-equilibrio` | `…/financeiro/ponto-equilibrio/page.tsx` | Ponto de equilíbrio operacional (Pro) |
+| `/admin/financeiro/fluxo-caixa` | `…/financeiro/fluxo-caixa/page.tsx` | Fluxo de caixa analítico (Pro) |
 | `/admin/plano` | `src/app/admin/(panel)/plano/page.tsx` | Assinatura SaaS Barbernegon |
 | `/admin/condicoes` | `src/app/admin/(panel)/condicoes/page.tsx` | Informativos e páginas legais para o dono |
 | `/admin/unidades` | `src/app/admin/(panel)/unidades/page.tsx` | CRUD unidades (exclusão só proprietário) |
@@ -120,7 +125,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Braço Direito | `src/app/api/admin/right-hand/route.ts` — `GET` snapshot; `src/app/api/admin/ai/right-hand/route.ts` — `POST` análise; `src/app/api/admin/ai/right-hand-chat/route.ts` — chat; `src/app/api/admin/whatsapp/approve-send/route.ts` — envio aprovado |
 | Export Excel | `src/app/api/admin/export/route.ts` — agenda completa; `?pack=month&yearMonth=AAAA-MM` pacote mensal (XLSX multi-aba) |
 | Metas mensais | `src/app/api/admin/goals/route.ts` — `GET`/`PUT` (`StaffMonthlyGoal`) |
-| Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions`, `commission-rules` (`tiersJson`) |
+| Financeiro | `src/app/api/admin/finance/entries`, `categories`, `balance`, `commissions`, `commission-rules`, `settings`, `service-costs`, `dre`, `break-even`, `cashflow`, `alerts` |
 | Evolução | `src/app/api/admin/evolution/route.ts` |
 | Unidades | `src/app/api/admin/units/route.ts`, `units/[id]/route.ts` |
 | Equipe | `src/app/api/admin/staff/route.ts`, `staff/[id]/route.ts`, `staff/[id]/work-schedule/route.ts` — `GET`, `PATCH` (expediente de **STAFF**; `manageStaff` + `canModifyStaffMember`) |
@@ -210,6 +215,14 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `admin-appointment-comanda.ts` | Detalhe da comanda + histórico/recompra |
 | `admin-reports.ts` | Snapshot completo de Relatórios |
 | `admin-finance.ts` | Lançamentos, categorias, balanço do salão |
+| `finance-settings.ts` | Configuração gerencial, pró-labore, categorias fixa/variável |
+| `service-costing.ts` | Fórmulas CSV/PV (puras, testadas) |
+| `service-costing-admin.ts` | Perfis de custo por serviço |
+| `finance-dre.ts` | DRE gerencial mensal |
+| `finance-break-even.ts` | Ponto de equilíbrio |
+| `finance-cashflow.ts` | Fluxo de caixa analítico |
+| `finance-alerts.ts` | Alertas para dashboard e inteligência |
+| `finance-access.ts` | Gate Pro nas páginas gerenciais |
 | `admin-commissions.ts` | Cálculo de comissões (faixas `tiersJson`) + gerar contas a pagar |
 | `commission-tiers.ts` | Parse/resolve de faixas escalonadas de % serviço |
 | `admin-export-month.ts` | Pacote XLSX mensal (faturamento, ranking, serviços, CRM, clube) |

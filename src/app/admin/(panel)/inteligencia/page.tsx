@@ -9,6 +9,7 @@ import { AdminRightHandCohort } from "@/components/admin-right-hand-cohort";
 import { AdminRightHandFunnel } from "@/components/admin-right-hand-funnel";
 import { AdminRightHandHealthOverview } from "@/components/admin-right-hand-health-overview";
 import { AdminRightHandHero } from "@/components/admin-right-hand-hero";
+import { FinanceGerencialAlerts } from "@/components/finance-gerencial-alerts";
 import { AdminRightHandInsights } from "@/components/admin-right-hand-insights";
 import { AdminRightHandRetention } from "@/components/admin-right-hand-retention";
 import { AdminRightHandServicesPie } from "@/components/admin-right-hand-services-pie";
@@ -206,6 +207,12 @@ export default async function AdminInteligenciaPage({
                   topAction={topAction}
                 />
               </div>
+
+              {access.permissions.viewRevenue ? (
+                <div className="mt-6">
+                  <FinanceGerencialAlerts />
+                </div>
+              ) : null}
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {[
