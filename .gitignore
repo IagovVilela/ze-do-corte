@@ -43,3 +43,10 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 .env.local
+
+# marketing / gravação (artefatos locais, não entram no deploy)
+/marketing-reels/
+/marketing-seedance/
+/scripts/capture-reel-assets.ts
+/scripts/build-gravacao-pdf.py
+/scripts/generate_reel_videos.py

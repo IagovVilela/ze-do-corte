@@ -2,6 +2,10 @@ node_modules
 .next
 .next-broken*
 marketing-seedance
+marketing-reels
+scripts/capture-reel-assets.ts
+scripts/build-gravacao-pdf.py
+scripts/generate_reel_videos.py
 .git
 .gitignore
 .cursor
