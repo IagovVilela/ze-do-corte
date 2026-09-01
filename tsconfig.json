@@ -34,6 +34,7 @@
     "node_modules",
     "marketing-reels",
     "marketing-seedance",
-    "scripts/capture-reel-assets.ts"
+    "scripts/capture-reel-assets.ts",
+    "scripts/seed-demo-day.ts"
   ]
 }
