@@ -21,6 +21,7 @@ import {
 import { formatMoney } from "@/lib/utils";
 
 type Bucket = {
+  date: string;
   label: string;
   inflow: number;
   outflow: number;
