@@ -63,6 +63,8 @@ export function DashboardPaymentStack({ data, periodLabel }: Props) {
                   background: chart.tooltipBg,
                   color: chart.tooltipColor,
                 }}
+                labelStyle={{ color: chart.tooltipColor }}
+                itemStyle={{ color: chart.tooltipColor }}
               />
               <Legend
                 formatter={(v) => (

@@ -78,6 +78,8 @@ export function DashboardServicesBarChart({ data, periodLabel }: Props) {
                   background: chart.tooltipBg,
                   color: chart.tooltipColor,
                 }}
+                labelStyle={{ color: chart.tooltipColor }}
+                itemStyle={{ color: chart.tooltipColor }}
                 formatter={(value) => [`${value ?? 0} agend.`, "Total"]}
               />
               <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={24}>

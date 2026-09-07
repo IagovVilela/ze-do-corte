@@ -96,6 +96,8 @@ export function AdminRightHandCompareBars({
                 background: chart.tooltipBg,
                 color: chart.tooltipColor,
               }}
+              labelStyle={{ color: chart.tooltipColor }}
+              itemStyle={{ color: chart.tooltipColor }}
               formatter={(value, name, item) => {
                 const row = item?.payload as {
                   format: RightHandCompareMetric["format"];

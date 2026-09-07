@@ -76,6 +76,8 @@ export function DashboardStatusPie({ data, periodLabel }: Props) {
                   background: chart.tooltipBg,
                   color: chart.tooltipColor,
                 }}
+                labelStyle={{ color: chart.tooltipColor }}
+                itemStyle={{ color: chart.tooltipColor }}
                 formatter={(value, name) => {
                   const n = Number(value ?? 0);
                   return [
