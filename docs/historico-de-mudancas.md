@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-09-13
 
+- **Remarcação `/minha-reserva`**: `staffMemberId` deixa de exigir UUID (IDs da equipe são `cuid`) — corrige erro "Invalid UUID" ao trocar barbeiro.
 - **Checklist de onboarding por salão (completo)**: [`docs/checklist-onboarding-salao.md`](./checklist-onboarding-salao.md) — mapa 100% por plano, links Meta/Asaas/Railway, cadastros do painel, textos prontos dos 4 templates WhatsApp + envs, Cloud API, cron e Plus+.
 - **Bot WhatsApp — escolher barbeiro**: no fluxo **Agendar** (e na **Remarcar**), o bot pergunta o profissional (lista com “Qualquer” + equipe da unidade) antes do dia/horário. Estados `pick_staff` / `reschedule_staff` em `whatsapp-bot-fsm.ts`.
 - **Remarcação com troca de barbeiro**: em `/minha-reserva/[token]`, o cliente pode escolher outro profissional (ou “Qualquer”) ao remarcar — mesmo padrão de `/agendar`. `PATCH /api/appointments/manage/[token]` aceita `staffMemberId`; o `GET` devolve a lista `barbers` da unidade.
