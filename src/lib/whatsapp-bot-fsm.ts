@@ -828,17 +828,18 @@ export async function handleWhatsAppInbound(options: {
       await sendText(org, to, result.message);
       return;
     }
-    const staffLabel =
-      result.appointment.staffMemberId &&
-      (await prisma.staffMember.findUnique({
+    let staffName: string | null = null;
+    if (result.appointment.staffMemberId) {
+      const staffLabel = await prisma.staffMember.findUnique({
         where: { id: result.appointment.staffMemberId },
         select: { displayName: true, email: true },
-      }));
-    const staffName =
-      staffLabel?.displayName?.trim() ||
-      (staffLabel?.email?.includes("@")
-        ? staffLabel.email.split("@")[0]
-        : null);
+      });
+      staffName =
+        staffLabel?.displayName?.trim() ||
+        (staffLabel?.email?.includes("@")
+          ? staffLabel.email.split("@")[0] ?? null
+          : null);
+    }
     await sendText(
       org,
       to,
