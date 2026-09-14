@@ -6,6 +6,11 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-09-13
+
+- **Bot WhatsApp — escolher barbeiro**: no fluxo **Agendar** (e na **Remarcar**), o bot pergunta o profissional (lista com “Qualquer” + equipe da unidade) antes do dia/horário. Estados `pick_staff` / `reschedule_staff` em `whatsapp-bot-fsm.ts`.
+- **Remarcação com troca de barbeiro**: em `/minha-reserva/[token]`, o cliente pode escolher outro profissional (ou “Qualquer”) ao remarcar — mesmo padrão de `/agendar`. `PATCH /api/appointments/manage/[token]` aceita `staffMemberId`; o `GET` devolve a lista `barbers` da unidade.
+
 ## 2026-08-31
 
 - **Fluxo de caixa**: corrige aviso React de chaves duplicadas na listagem por categoria (ex.: duas categorias “Pró-labore”).

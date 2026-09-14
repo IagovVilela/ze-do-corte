@@ -21,7 +21,7 @@ export default async function MinhaReservaPage({ params }: PageProps) {
           <SectionTitle
             eyebrow="Reserva"
             title="Gerir agendamento"
-            subtitle="Altere o horário ou cancele sem criar conta — o link que você recebeu após reservar é a sua chave de acesso."
+            subtitle="Troque o barbeiro, altere o horário ou cancele sem criar conta — o link que você recebeu após reservar é a sua chave de acesso."
           />
         </AnimatedSection>
       </section>

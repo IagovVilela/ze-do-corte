@@ -49,7 +49,7 @@ Se der verde/ok, o challenge GET passou.
 
 1. No WhatsApp, envie mensagem para o número de teste (na Meta, adicione seu celular como destinatário de teste se pedido)
 2. Escreva `oi` ou `menu`
-3. Siga: Agendar → serviço → dia → horário → nome
+3. Siga: Agendar → serviço → profissional → dia → horário → nome
 4. Confira o agendamento no painel admin (`bookingSource=whatsapp`)
 
 Templates (`META_WA_TEMPLATE_*`) **não são necessários** enquanto o cliente escreveu nas últimas 24h.
@@ -100,8 +100,8 @@ Embedded Signup (Tech Provider) fica como evolução — hoje a conexão é manu
 
 Palavras `menu` / `oi` / `ajuda` reabrem o menu.
 
-- **Agendar** → unidade (se >1) → serviço → dia → horário → nome → cria `Appointment` (`bookingSource=whatsapp`)  
-- **Remarcar** / **Cancelar** → lista próximos do mesmo telefone na org  
+- **Agendar** → unidade (se >1) → serviço → (addon opcional) → **profissional** (ou “Qualquer”) → dia → horário → nome → cria `Appointment` (`bookingSource=whatsapp`)
+- **Remarcar** / **Cancelar** → lista próximos do mesmo telefone na org; na remarcação o bot também pede o profissional antes do dia/horário
 
 Regras de horário iguais ao site (`booking-domain` + `assertPublicBookingSlot`).
 

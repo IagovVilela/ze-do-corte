@@ -9,6 +9,12 @@ import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
+type ManageBarber = {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+};
+
 type ManageAppointmentPayload = {
   id: string;
   status: string;
@@ -29,6 +35,7 @@ type ManageAppointmentPayload = {
   organizationName: string | null;
   staffMemberId: string | null;
   staffDisplayName: string | null;
+  barbers: ManageBarber[];
   canManage: boolean;
   manageBlockedReason: string | null;
   canReview: boolean;
@@ -52,6 +59,8 @@ export function ManageReservationClient({ token }: Props) {
   const [rescheduleDate, setRescheduleDate] = useState(
     format(dateRange[0], "yyyy-MM-dd"),
   );
+  /** "" = qualquer disponível; UUID = barbeiro escolhido. */
+  const [selectedStaffId, setSelectedStaffId] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
@@ -86,6 +95,7 @@ export function ManageReservationClient({ token }: Props) {
       setRescheduleDate(
         format(parseISO(payload.appointment.startsAt), "yyyy-MM-dd"),
       );
+      setSelectedStaffId(payload.appointment.staffMemberId ?? "");
     } catch {
       setError("Erro de rede.");
       setData(null);
@@ -102,8 +112,8 @@ export function ManageReservationClient({ token }: Props) {
     if (!data?.canManage || !data.service.id) return;
 
     const staffQ =
-      data.staffMemberId && data.staffMemberId.length > 0
-        ? `&staffMemberId=${encodeURIComponent(data.staffMemberId)}`
+      selectedStaffId.length > 0
+        ? `&staffMemberId=${encodeURIComponent(selectedStaffId)}`
         : "";
     const unitQ = data.unitId
       ? `&unitId=${encodeURIComponent(data.unitId)}`
@@ -138,10 +148,10 @@ export function ManageReservationClient({ token }: Props) {
     data?.canManage,
     data?.service.id,
     data?.service.durationMinutes,
-    data?.staffMemberId,
     data?.unitId,
     data?.organizationSlug,
     rescheduleDate,
+    selectedStaffId,
   ]);
 
   const [origin, setOrigin] = useState("");
@@ -191,6 +201,7 @@ export function ManageReservationClient({ token }: Props) {
           action: "reschedule",
           date: rescheduleDate,
           time: selectedTime,
+          staffMemberId: selectedStaffId.length > 0 ? selectedStaffId : null,
         }),
       });
       const payload = (await res.json()) as { message?: string };
@@ -262,6 +273,13 @@ export function ManageReservationClient({ token }: Props) {
     );
   }
 
+  const barbers = data.barbers ?? [];
+  const selectedBarberName =
+    selectedStaffId.length > 0
+      ? (barbers.find((b) => b.id === selectedStaffId)?.name ??
+        data.staffDisplayName)
+      : null;
+
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <motion.div
@@ -323,9 +341,152 @@ export function ManageReservationClient({ token }: Props) {
             <div>
               <h2 className="font-display text-lg font-normal text-white">Remarcar</h2>
               <p className="mt-1 text-sm text-zinc-500">
-                Escolha outra data e horário livres para o mesmo serviço
-                {data.staffDisplayName ? ` com ${data.staffDisplayName}` : ""}.
+                Escolha profissional, data e horário livres para o mesmo serviço.
               </p>
+
+              {barbers.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-zinc-200">
+                      Profissional
+                    </span>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Toque para trocar o barbeiro. A agenda será filtrada para ele.
+                    </p>
+                  </div>
+                  <div
+                    className="flex flex-wrap gap-2.5"
+                    role="radiogroup"
+                    aria-label="Escolher profissional"
+                  >
+                    <motion.button
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedStaffId === ""}
+                      onClick={() => setSelectedStaffId("")}
+                      whileTap={{ scale: 0.96 }}
+                      className={cn(
+                        "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
+                        selectedStaffId === ""
+                          ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(59,130,246,0.35)]"
+                          : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex size-14 items-center justify-center rounded-full border-2 transition-colors",
+                          selectedStaffId === ""
+                            ? "border-brand-500/60 bg-brand-surface-20 text-brand-300"
+                            : "border-zinc-700 bg-zinc-800 text-zinc-500 group-hover:border-zinc-600",
+                        )}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="22"
+                          height="22"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                      </div>
+                      <span
+                        className={cn(
+                          "text-center text-[11px] font-medium leading-tight transition-colors",
+                          selectedStaffId === "" ? "text-brand-200" : "text-zinc-400",
+                        )}
+                      >
+                        Qualquer
+                      </span>
+                      {selectedStaffId === "" ? (
+                        <motion.div
+                          layoutId="manage-barber-check"
+                          className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-brand-500 text-zinc-950 shadow-md"
+                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </motion.div>
+                      ) : null}
+                    </motion.button>
+
+                    {barbers.map((b) => {
+                      const isSelected = selectedStaffId === b.id;
+                      return (
+                        <motion.button
+                          key={b.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          onClick={() => setSelectedStaffId(b.id)}
+                          whileTap={{ scale: 0.96 }}
+                          className={cn(
+                            "group relative flex w-[5.5rem] flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-200",
+                            isSelected
+                              ? "border-brand-500 bg-brand-surface-15 shadow-[0_0_24px_-6px_rgba(59,130,246,0.35)]"
+                              : "border-white/10 bg-zinc-950/40 hover:border-zinc-500 hover:bg-zinc-900/50",
+                          )}
+                        >
+                          {b.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- URLs externas de perfil
+                            <img
+                              src={b.imageUrl}
+                              alt={b.name}
+                              className={cn(
+                                "size-14 rounded-full border-2 object-cover transition-all",
+                                isSelected
+                                  ? "border-brand-500/60 shadow-md shadow-brand-500/20"
+                                  : "border-zinc-700 group-hover:border-zinc-600",
+                              )}
+                            />
+                          ) : (
+                            <div
+                              className={cn(
+                                "flex size-14 items-center justify-center rounded-full border-2 text-lg font-bold transition-colors",
+                                isSelected
+                                  ? "border-brand-500/60 bg-brand-surface-20 text-brand-300"
+                                  : "border-zinc-700 bg-zinc-800 text-zinc-500 group-hover:border-zinc-600",
+                              )}
+                            >
+                              {b.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span
+                            className={cn(
+                              "w-full truncate text-center text-[11px] font-medium leading-tight transition-colors",
+                              isSelected ? "text-brand-200" : "text-zinc-400",
+                            )}
+                            title={b.name}
+                          >
+                            {b.name.split(" ")[0]}
+                          </span>
+                          {isSelected ? (
+                            <motion.div
+                              layoutId="manage-barber-check"
+                              className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-brand-500 text-zinc-950 shadow-md"
+                              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </motion.div>
+                          ) : null}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mt-4 flex flex-wrap gap-2">
                 {dateRange.map((d) => {
                   const ymd = format(d, "yyyy-MM-dd");
@@ -352,7 +513,8 @@ export function ManageReservationClient({ token }: Props) {
                   <p className="text-sm text-zinc-500">Carregando horários…</p>
                 ) : slots.length === 0 ? (
                   <p className="text-sm text-zinc-500">
-                    Nenhum horário disponível nesta data.
+                    Nenhum horário disponível nesta data
+                    {selectedBarberName ? ` com ${selectedBarberName}` : ""}.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">

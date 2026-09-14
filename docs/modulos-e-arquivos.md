@@ -68,7 +68,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/[slug]` | `src/app/[slug]/page.tsx` + `layout.tsx` | Site institucional via canvas + PWA (**Instalar app**) |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org (+ PWA do tenant) |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
-| `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente altera/cancela sem login (`manage-reservation-client.tsx`) |
+| `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente troca profissional / remarca / cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Briefing matinal (OWNER/ADMIN) + dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
 | `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda |
 | `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview + leitura IA do período (`AdminReportsPeriodAi`) |
@@ -117,7 +117,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Serviços mais pedidos | `src/app/api/appointments/popular-services/route.ts` — ranking público por org/unidade |
 | Agenda inteligente | `src/lib/booking-availability.ts` — soma duração, bloco contínuo, auto-sugestão de profissional |
 | Criar agendamento | `src/app/api/appointments/route.ts` — body opcional `staffMemberId`; `clientManageToken`; notificação Resend se configurada |
-| Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` + `PATCH` (`cancel` / `reschedule`) |
+| Gestão pública da reserva | `src/app/api/appointments/manage/[token]/route.ts` — `GET` (inclui `barbers`) + `PATCH` (`cancel` / `reschedule` com `staffMemberId` opcional) |
 | Dashboard JSON | `src/app/api/admin/dashboard/route.ts` — `chartRange`, `telemetryScope=chart`, filtros `status` / `staff` / `unit` / `q` |
 | Briefing narrativa | `src/app/api/admin/morning-briefing/narrative/route.ts` — `POST` gera resumo (IA ou regras); `GET` status `aiConfigured` |
 | WhatsApp draft IA | `src/app/api/admin/ai/whatsapp-draft/route.ts` — `POST` mensagem curta (winback/clube); sem telefone no payload |

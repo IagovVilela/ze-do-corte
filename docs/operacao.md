@@ -190,7 +190,7 @@ Se **`db push`** recusar adicionar **`unitId`** em **`Service`** porque já há 
 | `npm run db:push` | Sincroniza schema com o banco |
 | `npm run db:seed` | Serviços de exemplo, unidade matriz, proprietário e **vitrine Barbergon** (`siteJson`) |
 | `npm run demo:vitrine` | Atualiza a org `ze-do-corte` com nome Barbergon + template `vitrine` (local ou `railway run npm run demo:vitrine`) |
-| `npm run demo:day` | Popula a demo com agenda, produtos, financeiro e equipe fictícios (idempotente; `railway run npm run demo:day`) |
+| `npm run demo:day` | Popula a org **Barbergon** (`ze-do-corte`) com volume realista para pitch e **gravação de vídeos**: ~60 dias de agenda, agenda de hoje roteirizada, clube (18+ assinantes), CRM (clientes em risco/perdidos), metas dos barbeiros, estoque baixo, logs WhatsApp, chamados de suporte, financeiro e avaliações. Plano **PLUS** ativo. Idempotente (marca `[demo-dia]`). **Produção:** no Postgres Railway, ative TCP público, copie a URL para `DATABASE_PUBLIC_URL` no `.env` local e rode `npm run demo:day` (o host `postgres.railway.internal` só funciona dentro da cloud). |
 | `npm run setup:admin` | `db:generate` + `db:push` + `db:seed` (preparar painel / BD) |
 | `npm run create-owner` | Cria ou atualiza proprietário (`CREATE_OWNER_*` ou `SEED_OWNER_*` no `.env`) — ver [configurar-admin.md](./configurar-admin.md) |
 | `npm run db:studio` | Prisma Studio |

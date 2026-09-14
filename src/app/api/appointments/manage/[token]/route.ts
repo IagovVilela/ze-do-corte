@@ -3,9 +3,12 @@ import { z } from "zod";
 
 import {
   notifyClientAppointmentChange,
+  notifyStaffAppointmentChange,
   notifyStaffForAppointmentId,
 } from "@/lib/appointment-change-notify";
 import { isClientManageTokenFormat } from "@/lib/client-manage-token";
+import { getBarbersForBooking } from "@/lib/data";
+import { notifyBarberNewAssignment } from "@/lib/notify-barber-booking";
 import { assertPublicBookingSlot } from "@/lib/public-booking-slot";
 import { prisma } from "@/lib/prisma";
 
@@ -17,6 +20,8 @@ const patchSchema = z.discriminatedUnion("action", [
     action: z.literal("reschedule"),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido."),
+    /** UUID = barbeiro escolhido; `null` = qualquer disponível; omitido = mantém o atual. */
+    staffMemberId: z.union([z.string().uuid(), z.null()]).optional(),
   }),
 ]);
 
@@ -71,7 +76,7 @@ export async function GET(_request: Request, context: RouteContext) {
         include: {
           unit: {
             select: {
-              organization: { select: { slug: true, name: true } },
+              organization: { select: { id: true, slug: true, name: true } },
             },
           },
         },
@@ -79,7 +84,7 @@ export async function GET(_request: Request, context: RouteContext) {
       unit: {
         select: {
           name: true,
-          organization: { select: { slug: true, name: true } },
+          organization: { select: { id: true, slug: true, name: true } },
         },
       },
       staffMember: { select: { displayName: true } },
@@ -103,6 +108,22 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const org =
     appointment.unit?.organization ?? appointment.service.unit.organization;
+
+  const barbersForUnit =
+    org?.id && blocked === null
+      ? (await getBarbersForBooking(org.id))
+          .filter(
+            (b) =>
+              !appointment.unitId ||
+              !b.unitId ||
+              b.unitId === appointment.unitId,
+          )
+          .map((b) => ({
+            id: b.id,
+            name: b.name,
+            imageUrl: b.imageUrl,
+          }))
+      : [];
 
   return NextResponse.json({
     appointment: {
@@ -131,6 +152,7 @@ export async function GET(_request: Request, context: RouteContext) {
       organizationName: org?.name ?? null,
       staffMemberId: appointment.staffMemberId,
       staffDisplayName: appointment.staffMember?.displayName?.trim() || null,
+      barbers: barbersForUnit,
       canManage: blocked === null,
       manageBlockedReason: blocked,
       canReview,
@@ -207,12 +229,20 @@ export async function PATCH(request: Request, context: RouteContext) {
     ),
   );
 
+  const requestedStaffId =
+    parsed.data.staffMemberId === undefined
+      ? (appointment.staffMemberId ?? undefined)
+      : parsed.data.staffMemberId === null
+        ? undefined
+        : parsed.data.staffMemberId;
+  const withoutStaffPreference = parsed.data.staffMemberId === null;
+
   const slot = await assertPublicBookingSlot({
     service: { durationMinutes: bookedDurationMinutes },
     dateStr: parsed.data.date,
     timeStr: parsed.data.time,
     unitId: appointment.unitId,
-    staffMemberId: appointment.staffMemberId ?? undefined,
+    staffMemberId: requestedStaffId,
     excludeAppointmentId: appointment.id,
     organizationId,
   });
@@ -225,11 +255,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const previousStartsAt = appointment.startsAt;
+  const previousStaffId = appointment.staffMemberId;
+  const nextStaffId = slot.assignedStaff?.id ?? null;
+
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
     data: {
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
+      staffMemberId: nextStaffId,
+      ...(parsed.data.staffMemberId !== undefined
+        ? { bookedWithoutStaffPreference: withoutStaffPreference }
+        : {}),
     },
     include: { service: true },
   });
@@ -241,16 +278,58 @@ export async function PATCH(request: Request, context: RouteContext) {
     actor: "client",
     previousStartsAt,
   });
-  void notifyStaffForAppointmentId(
-    updated.id,
-    "rescheduled",
-    "client",
-    previousStartsAt,
-  );
+
+  const staffChanged = previousStaffId !== nextStaffId;
+
+  if (staffChanged && previousStaffId) {
+    const previousStaff = await prisma.staffMember.findUnique({
+      where: { id: previousStaffId },
+      select: { id: true, email: true, displayName: true },
+    });
+    if (previousStaff) {
+      void notifyStaffAppointmentChange({
+        staffMemberId: previousStaff.id,
+        barberEmail: previousStaff.email,
+        barberDisplayName: previousStaff.displayName,
+        clientName: appointment.clientName,
+        clientPhone: appointment.clientPhone,
+        clientEmail: appointment.clientEmail,
+        serviceName: appointment.service.name,
+        startsAt: previousStartsAt,
+        kind: "cancelled",
+        actor: "client",
+      });
+    }
+  }
+
+  if (
+    slot.assignedStaff &&
+    slot.assignedStaff.id !== previousStaffId
+  ) {
+    void notifyBarberNewAssignment({
+      staffMemberId: slot.assignedStaff.id,
+      barberEmail: slot.assignedStaff.email,
+      barberDisplayName: slot.assignedStaff.displayName,
+      clientName: appointment.clientName,
+      clientPhone: appointment.clientPhone,
+      clientEmail: appointment.clientEmail,
+      serviceName: appointment.service.name,
+      startsAt: slot.startsAt,
+      notes: appointment.notes,
+    });
+  } else if (!staffChanged) {
+    void notifyStaffForAppointmentId(
+      updated.id,
+      "rescheduled",
+      "client",
+      previousStartsAt,
+    );
+  }
 
   return NextResponse.json({
     ok: true,
     startsAt: slot.startsAt.toISOString(),
     endsAt: slot.endsAt.toISOString(),
+    staffMemberId: nextStaffId,
   });
 }

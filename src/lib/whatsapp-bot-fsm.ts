@@ -36,11 +36,13 @@ export type BotState =
   | "pick_unit"
   | "pick_service"
   | "pick_addon"
+  | "pick_staff"
   | "pick_day"
   | "pick_slot"
   | "ask_name"
   | "list_upcoming_cancel"
   | "list_upcoming_reschedule"
+  | "reschedule_staff"
   | "reschedule_day"
   | "reschedule_slot"
   | "agent_slots";
@@ -49,6 +51,10 @@ type SessionContext = {
   unitId?: string;
   serviceId?: string;
   extraServiceId?: string;
+  /** UUID do barbeiro; omitido com `staffAny` = qualquer disponível. */
+  staffMemberId?: string;
+  /** true = cliente pediu “qualquer profissional”. */
+  staffAny?: boolean;
   date?: string;
   time?: string;
   appointmentId?: string;
@@ -147,6 +153,8 @@ async function freeSlotTimes(
   serviceId: string,
   dateStr: string,
   extraServiceId?: string,
+  staffMemberId?: string | null,
+  excludeAppointmentId?: string,
 ): Promise<string[]> {
   const ids = extraServiceId ? [serviceId, extraServiceId] : [serviceId];
   const dur = await resolveBookingDurationMinutes({
@@ -164,8 +172,103 @@ async function freeSlotTimes(
     unitId,
     day,
     durationMinutes: dur.durationMinutes,
+    staffMemberId: staffMemberId ?? null,
+    excludeAppointmentId,
   });
   return result.availableSlots.slice(0, 10);
+}
+
+function staffFilterFromCtx(ctx: SessionContext): string | null {
+  if (ctx.staffAny) return null;
+  return ctx.staffMemberId ?? null;
+}
+
+async function loadUnitStaff(
+  organizationId: string,
+  unitId: string,
+): Promise<{ id: string; name: string }[]> {
+  const rows = await prisma.staffMember.findMany({
+    where: {
+      organizationId,
+      role: "STAFF",
+      OR: [{ unitId }, { unitId: null }],
+    },
+    select: { id: true, displayName: true, email: true, unitId: true },
+    orderBy: [{ displayName: "asc" }, { email: "asc" }],
+    take: 20,
+  });
+  return rows
+    .filter((r) => !r.unitId || r.unitId === unitId)
+    .slice(0, 9)
+    .map((r) => ({
+      id: r.id,
+      name:
+        r.displayName?.trim() ||
+        (r.email.includes("@") ? r.email.split("@")[0]! : r.email) ||
+        "Profissional",
+    }));
+}
+
+async function sendStaffPicker(org: OrgCreds, to: string, unitId: string) {
+  const staff = await loadUnitStaff(org.id, unitId);
+  if (!staff.length) {
+    return { ok: true as const, skipped: true as const };
+  }
+  const rows = [
+    {
+      id: "staff:any",
+      title: "Qualquer",
+      description: "Primeiro disponível",
+    },
+    ...staff.map((s) => ({
+      id: `staff:${s.id}`,
+      title: s.name.slice(0, 24),
+      description: "Profissional",
+    })),
+  ];
+  const result = await sendWhatsAppList({
+    phoneNumberId: org.phoneNumberId,
+    accessToken: org.accessToken,
+    toE164Digits: to,
+    body: "Com qual profissional você prefere?",
+    buttonLabel: "Profissionais",
+    sectionTitle: "Equipe",
+    rows,
+  });
+  if (!result.ok) {
+    await sendText(
+      org,
+      to,
+      `Com qual profissional?\n0 — Qualquer\n${staff
+        .map((s, i) => `${i + 1} — ${s.name}`)
+        .join("\n")}`,
+    );
+  }
+  return { ok: true as const, skipped: false as const, staff };
+}
+
+async function advanceToStaffOrDay(
+  org: OrgCreds,
+  to: string,
+  ctx: SessionContext,
+  nextAfterStaff: "pick_day" | "reschedule_day",
+) {
+  const unitId = ctx.unitId;
+  if (!unitId) {
+    await upsertSession(org.id, to, "idle", {});
+    await sendMenu(org, to);
+    return;
+  }
+  const sent = await sendStaffPicker(org, to, unitId);
+  if (sent.skipped) {
+    ctx = { ...ctx, staffAny: true, staffMemberId: undefined };
+    await upsertSession(org.id, to, nextAfterStaff, ctx);
+    await sendDays(org, to);
+    return;
+  }
+  const staffState: BotState =
+    nextAfterStaff === "reschedule_day" ? "reschedule_staff" : "pick_staff";
+  await upsertSession(org.id, to, staffState, ctx);
 }
 
 async function suggestAddon(
@@ -441,8 +544,7 @@ export async function handleWhatsAppInbound(options: {
       });
       return;
     }
-    await upsertSession(org.id, to, "pick_day", ctx);
-    await sendDays(org, to);
+    await advanceToStaffOrDay(org, to, ctx, "pick_day");
     return;
   }
 
@@ -457,7 +559,75 @@ export async function handleWhatsAppInbound(options: {
     } else if (choice.startsWith("addon:")) {
       ctx = { ...ctx, extraServiceId: choice.slice(6) };
     }
-    await upsertSession(org.id, to, "pick_day", ctx);
+    await advanceToStaffOrDay(org, to, ctx, "pick_day");
+    return;
+  }
+
+  if (state === "pick_staff" || state === "reschedule_staff") {
+    const unitId = ctx.unitId;
+    if (!unitId) {
+      await upsertSession(org.id, to, "idle", {});
+      await sendMenu(org, to);
+      return;
+    }
+
+    let staffId: string | null = null;
+    let staffAny = false;
+    if (
+      choice === "staff:any" ||
+      choice === "0" ||
+      choice === "qualquer" ||
+      choice.includes("qualquer")
+    ) {
+      staffAny = true;
+    } else if (choice.startsWith("staff:")) {
+      staffId = choice.slice(6);
+    } else if (/^\d+$/.test(choice)) {
+      const n = Number(choice);
+      const staff = await loadUnitStaff(org.id, unitId);
+      const picked = staff[n - 1];
+      if (!picked) {
+        await sendText(org, to, "Opção inválida. Escolha um profissional da lista.");
+        await sendStaffPicker(org, to, unitId);
+        return;
+      }
+      staffId = picked.id;
+    } else {
+      const staff = await loadUnitStaff(org.id, unitId);
+      const byName = staff.find(
+        (s) => s.name.toLowerCase() === choice || s.name.toLowerCase().startsWith(choice),
+      );
+      if (!byName) {
+        await sendText(org, to, "Profissional inválido. Escolha da lista.");
+        await sendStaffPicker(org, to, unitId);
+        return;
+      }
+      staffId = byName.id;
+    }
+
+    if (!staffAny && staffId) {
+      const ok = await prisma.staffMember.findFirst({
+        where: {
+          id: staffId,
+          organizationId: org.id,
+          role: "STAFF",
+          OR: [{ unitId }, { unitId: null }],
+        },
+        select: { id: true },
+      });
+      if (!ok) {
+        await sendText(org, to, "Profissional inválido. Escolha da lista.");
+        await sendStaffPicker(org, to, unitId);
+        return;
+      }
+      ctx = { ...ctx, staffMemberId: ok.id, staffAny: false };
+    } else {
+      ctx = { ...ctx, staffMemberId: undefined, staffAny: true };
+    }
+
+    const nextDay: BotState =
+      state === "reschedule_staff" ? "reschedule_day" : "pick_day";
+    await upsertSession(org.id, to, nextDay, ctx);
     await sendDays(org, to);
     return;
   }
@@ -490,6 +660,9 @@ export async function handleWhatsAppInbound(options: {
         ap.unitId,
         ap.serviceId,
         dateStr,
+        undefined,
+        staffFilterFromCtx(ctx),
+        ap.id,
       );
       await sendSlots(org, to, times);
       return;
@@ -502,6 +675,7 @@ export async function handleWhatsAppInbound(options: {
         ctx.serviceId,
         dateStr,
         ctx.extraServiceId,
+        staffFilterFromCtx(ctx),
       );
       await sendSlots(org, to, times);
     }
@@ -545,7 +719,11 @@ export async function handleWhatsAppInbound(options: {
       select: { preferredStaffMemberId: true },
     });
     let staffMemberId: string | undefined;
-    if (pref?.preferredStaffMemberId) {
+    if (ctx.staffAny) {
+      staffMemberId = undefined;
+    } else if (ctx.staffMemberId) {
+      staffMemberId = ctx.staffMemberId;
+    } else if (pref?.preferredStaffMemberId) {
       const st = await prisma.staffMember.findFirst({
         where: {
           id: pref.preferredStaffMemberId,
@@ -617,9 +795,14 @@ export async function handleWhatsAppInbound(options: {
       );
       return;
     }
-    ctx = { appointmentId: ap.id };
-    await upsertSession(org.id, to, "reschedule_day", ctx);
-    await sendDays(org, to);
+    ctx = {
+      appointmentId: ap.id,
+      unitId: ap.unitId ?? undefined,
+      serviceId: ap.serviceId,
+      staffMemberId: ap.staffMemberId ?? undefined,
+      staffAny: !ap.staffMemberId,
+    };
+    await advanceToStaffOrDay(org, to, ctx, "reschedule_day");
     return;
   }
 
@@ -634,16 +817,32 @@ export async function handleWhatsAppInbound(options: {
       organizationId: org.id,
       date: ctx.date,
       time: timeStr,
+      staffMemberId: ctx.staffAny
+        ? null
+        : ctx.staffMemberId !== undefined
+          ? ctx.staffMemberId
+          : undefined,
     });
     await upsertSession(org.id, to, "idle", {});
     if (!result.ok) {
       await sendText(org, to, result.message);
       return;
     }
+    const staffLabel =
+      result.appointment.staffMemberId &&
+      (await prisma.staffMember.findUnique({
+        where: { id: result.appointment.staffMemberId },
+        select: { displayName: true, email: true },
+      }));
+    const staffName =
+      staffLabel?.displayName?.trim() ||
+      (staffLabel?.email?.includes("@")
+        ? staffLabel.email.split("@")[0]
+        : null);
     await sendText(
       org,
       to,
-      `Remarcado! ✅\n*${result.appointment.service.name}*\n${formatInTimeZone(result.appointment.startsAt, BARBER_TIMEZONE, "dd/MM/yyyy HH:mm")}`,
+      `Remarcado! ✅\n*${result.appointment.service.name}*\n${formatInTimeZone(result.appointment.startsAt, BARBER_TIMEZONE, "dd/MM/yyyy HH:mm")}${staffName ? `\nProfissional: *${staffName}*` : ""}`,
     );
     return;
   }

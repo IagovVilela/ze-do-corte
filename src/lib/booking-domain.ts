@@ -294,6 +294,12 @@ export async function rescheduleAppointmentById(options: {
   organizationId: string;
   date: string;
   time: string;
+  /**
+   * `undefined` = mantém o profissional atual;
+   * `null` = qualquer disponível (autoatribui);
+   * UUID = barbeiro escolhido.
+   */
+  staffMemberId?: string | null;
 }): Promise<CreateBookingResult> {
   const appointment = await prisma.appointment.findFirst({
     where: {
@@ -324,12 +330,20 @@ export async function rescheduleAppointmentById(options: {
     ),
   );
 
+  const requestedStaffId =
+    options.staffMemberId === undefined
+      ? (appointment.staffMemberId ?? undefined)
+      : options.staffMemberId === null
+        ? undefined
+        : options.staffMemberId;
+  const withoutStaffPreference = options.staffMemberId === null;
+
   const slot = await assertPublicBookingSlot({
     service: { durationMinutes: bookedDurationMinutes },
     dateStr: options.date,
     timeStr: options.time,
     unitId: appointment.unitId,
-    staffMemberId: appointment.staffMemberId ?? undefined,
+    staffMemberId: requestedStaffId,
     excludeAppointmentId: appointment.id,
     organizationId: options.organizationId,
   });
@@ -338,12 +352,16 @@ export async function rescheduleAppointmentById(options: {
   }
 
   const previousStartsAt = appointment.startsAt;
+  const nextStaffId = slot.assignedStaff?.id ?? null;
   const updated = await prisma.appointment.update({
     where: { id: appointment.id },
     data: {
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
-      staffMemberId: slot.assignedStaff?.id ?? appointment.staffMemberId,
+      staffMemberId: nextStaffId,
+      ...(options.staffMemberId !== undefined
+        ? { bookedWithoutStaffPreference: withoutStaffPreference }
+        : {}),
     },
     include: { service: true },
   });

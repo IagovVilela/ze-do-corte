@@ -21,9 +21,9 @@ Monólito **Next.js 16** (App Router) com UI em React 19, estilos com **Tailwind
   - `GET /api/appointments/available` — calcula duração total via `serviceIds` (ou `serviceId` + `durationMinutes` na remarcação); só libera horários em que o **bloco contínuo** cabe no expediente; com equipe, “qualquer barbeiro” exige **pelo menos um** profissional livre (e a criação autoatribui); com `staffMemberId`, valida só aquele profissional;
   - motor compartilhado em `src/lib/booking-availability.ts` + `public-booking-slot.ts`;
   - `POST /api/appointments` — cria via `booking-domain` (`createPublicBooking`); aviso ao profissional (Web Push / Resend); se WhatsApp do tenant ativo, confirmação ao cliente (`whatsapp-notify-client`).
-- **WhatsApp (Meta Cloud API)** — webhook `GET|POST /api/webhooks/whatsapp`; bot FSM (`whatsapp-bot-fsm`) agenda/remarca/cancela; admin `/admin/whatsapp`. Detalhes: [whatsapp-meta.md](./whatsapp-meta.md).
+- **WhatsApp (Meta Cloud API)** — webhook `GET|POST /api/webhooks/whatsapp`; bot FSM (`whatsapp-bot-fsm`) agenda/remarca/cancela **com escolha de profissional**; admin `/admin/whatsapp`. Detalhes: [whatsapp-meta.md](./whatsapp-meta.md).
 - **`/agendar`** — legado mono-marca: redireciona para o tenant seed (`/ze-do-corte/agendar`).
-- **`/minha-reserva/[token]`** — Cliente consulta, **remarca** ou **cancela** (`CONFIRMED` e horário futuro) sem conta; **`GET`/`PATCH /api/appointments/manage/[token]`**. O token é equivalente a uma senha — não partilhar em canais públicos.
+- **`/minha-reserva/[token]`** — Cliente consulta, **remarca** (pode **trocar o profissional**, data e horário) ou **cancela** (`CONFIRMED` e horário futuro) sem conta; **`GET`/`PATCH /api/appointments/manage/[token]`** (`GET` devolve `barbers` da unidade; `PATCH` `reschedule` aceita `staffMemberId` UUID ou `null` = qualquer disponível). O token é equivalente a uma senha — não partilhar em canais públicos.
 
 ### Site editável (`Organization.siteJson`)
 
