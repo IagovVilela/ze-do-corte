@@ -20,8 +20,8 @@ const patchSchema = z.discriminatedUnion("action", [
     action: z.literal("reschedule"),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido."),
-    /** UUID = barbeiro escolhido; `null` = qualquer disponível; omitido = mantém o atual. */
-    staffMemberId: z.union([z.string().uuid(), z.null()]).optional(),
+    /** ID do barbeiro; `null` = qualquer disponível; omitido = mantém o atual. */
+    staffMemberId: z.union([z.string().min(1), z.null()]).optional(),
   }),
 ]);
 
