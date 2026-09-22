@@ -1,24 +1,32 @@
-# Modelo do produto — Vaga Perdida
+# Modelo do produto — Vaga Perdida (revisão crítica)
 
-## Alinhamento
+## Opinião formada (não “concordar por concordar”)
 
-O produto **é um PDF** — workbook visual bem construído, não “texto longo para folhear”.
+### O que estava errado no workbook anterior
+Transformar o PDF num **caderno de atividade** (muitos campos em branco, “sua casa”, checkboxes como peça central) errou o público.
 
-O que o mercado (e o conselho do seu amigo) pede:
+Dono de barbearia compra **solução rápida**, não lição de casa. Workbook com blanks converte bem em coaching/desenvolvimento pessoal; no nicho barbearia + funil para SaaS, vira fricção: o cara paga R$ 19,90 querendo “me mostra o que fazer e onde clicar”, não “preencha o nome da sua cidade”.
 
-| Pilar | Como aparece no PDF |
-|--------|---------------------|
-| **Ferramenta, não ensaio** | Calculadora com campos, checkboxes, scripts prontos |
-| **Visual primeiro** | Gráfico na capa, diagramas, prints reais emoldurados |
-| **Fácil de entender** | Frases curtas, 1 job por página |
-| **Interessante de usar** | Preencher → marcar → executar 7 dias → medir de novo |
-| **Sensação de produto** | Capa com resultado em R$, etapas 01–04, prova com prints |
+O conselho do amigo (“é produto, não festa de PDF”) **não** significa “encher de exercício”. Significa: bem feito, útil, que entrega transformação. Qualidade ≠ formulário escolar.
 
-## Arquivo canônico
+### O que costuma converter melhor neste caso
+Para low ticket de entrada + ponte para software:
 
-`docs/infoprodutos/vaga-perdida-barbernegon.pdf`  
-Gerar: `python3 scripts/build-vaga-perdida-produto-pdf.py`
+1. **Problema claro** (cadeira vazia / WhatsApp / dinheiro perdido)  
+2. **Número simples** (uma conta, um exemplo)  
+3. **O que fazer** (poucos movimentos, linguagem de salão)  
+4. **Como fazer no sistema** (links + prints de cadastro, login, painel, agenda)  
+5. **Prova** (piloto ao vivo)
 
-## Opcional (não é a entrega principal)
+Isso é guia-solução, não atividade.
 
-Experiência web em `/produtos/vaga-perdida` — mesma lógica interativa, se quiser demo online. O produto vendido continua sendo o **PDF workbook**.
+### O que NÃO afirmamos
+Não existe um único “modelo que mais converte” universal. Hotmart vende checklist, ebook, mini-curso, planilha. O que importa é **encaixe com a promessa e o próximo passo**. Aqui o próximo passo é **abrir o Barbernegon** — então o PDF precisa mostrar o acesso, não só descrever o produto.
+
+## Entrega atual
+PDF guia-solução em `vaga-perdida-barbernegon.pdf`, com:
+- linguagem simples
+- calculadora (exemplo + fórmula em português claro)
+- 5 buracos + soluções
+- **passos e links reais** de cadastro / login / piloto
+- prints das telas de acesso

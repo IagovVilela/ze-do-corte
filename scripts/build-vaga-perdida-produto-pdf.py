@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Vaga Perdida — PDF workbook (layout corrigido).
-Campos com label acima do box, gráfico sem sobreposição, contraste legível.
+Vaga Perdida — guia-solução (PDF produto).
+
+Modelo: problema → número → o que fazer → como abrir o Barbernegon e fazer.
+NÃO é caderno de atividade escolar. Linguagem simples (dono de barbearia).
 """
 
 from __future__ import annotations
@@ -21,8 +23,14 @@ from reportlab.pdfgen import canvas
 ROOT = Path("/workspace")
 SHOTS = ROOT / "docs/infoprodutos/screenshots"
 OUT = ROOT / "docs/infoprodutos/vaga-perdida-barbernegon.pdf"
-OUT_ALT = ROOT / "docs/infoprodutos/vaga-perdida-produto.pdf"
+OUT2 = ROOT / "docs/infoprodutos/vaga-perdida-produto.pdf"
 ARTIFACT = Path("/opt/cursor/artifacts/infoprodutos/vaga-perdida-barbernegon.pdf")
+
+# URLs reais (produção Railway — trocar pelo domínio final quando estiver no ar)
+URL_HOME = "https://barbernegon-production.up.railway.app/"
+URL_CADASTRO = "https://barbernegon-production.up.railway.app/cadastro"
+URL_LOGIN = "https://barbernegon-production.up.railway.app/admin/login"
+URL_PILOTO = "https://barbernegon-production.up.railway.app/ze-do-corte"
 
 BG = (0x0A / 255, 0x0E / 255, 0x13 / 255)
 SURF = (0x12 / 255, 0x18 / 255, 0x22 / 255)
@@ -66,12 +74,9 @@ class Book:
         c = self.c
         c.setFillColorRGB(*BG)
         c.rect(0, 0, W, H, fill=1, stroke=0)
-        # faixa superior limpa (sem diagonal que invade conteúdo)
         c.setFillColorRGB(*BLUE)
         c.rect(0, H - 2.4 * mm, W, 2.4 * mm, fill=1, stroke=0)
-        c.setFillColorRGB(*SURF)
-        c.rect(0, H - 18 * mm, W, 15.6 * mm, fill=1, stroke=0)
-        return H - 26 * mm
+        return H - 18 * mm
 
     def save(self):
         self.c.save()
@@ -93,7 +98,7 @@ class Book:
         data = BytesIO()
         writer.write(data)
         raw = data.getvalue()
-        for path in (OUT, OUT_ALT, ARTIFACT):
+        for path in (OUT, OUT2, ARTIFACT):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(raw)
         print(f"PDF OK pages={total} bytes={len(raw)} → {OUT}")
@@ -123,18 +128,17 @@ def wrap(c, text, x, y, max_w, font, size, leading, color=MUTED, center=False):
     return y
 
 
-def kicker(c, text, y):
+def topbar(c, text):
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 8)
-    c.drawString(M, y, text.upper())
-    return y - 8 * mm
+    c.drawString(M, H - 12 * mm, text.upper())
 
 
-def heading(c, text, y, size=20):
+def h1(c, text, y, size=22):
     return wrap(c, text, M, y, W - 2 * M, FB, size, size + 4, FG)
 
 
-def para(c, text, y, size=10):
+def p(c, text, y, size=10.5):
     return wrap(c, text, M, y, W - 2 * M, F, size, size + 4.5, MUTED)
 
 
@@ -145,56 +149,27 @@ def card(c, x, y, w, h, fill=ELEV, stroke=LINE, sw=1):
     c.roundRect(x, y, w, h, 4, fill=1, stroke=1)
 
 
-def field(c, x, y, w, box_h, label_txt):
-    """
-    Label claramente ACIMA do retângulo.
-    y = baseline da label. Retorna y abaixo do campo (com margem).
-    """
-    c.setFillColorRGB(*MUTED)
-    c.setFont(F, 8)
-    c.drawString(x, y, label_txt)
-    box_top = y - 4 * mm  # folga entre label e box
-    box_bottom = box_top - box_h
-    c.setFillColorRGB(*FIELD)
-    c.setStrokeColorRGB(*SOFT)
-    c.setLineWidth(1.1)
-    c.roundRect(x, box_bottom, w, box_h, 3, fill=1, stroke=1)
-    # linha guia para escrita
-    c.setStrokeColorRGB(*LINE)
-    c.setLineWidth(0.7)
-    c.line(x + 3 * mm, box_bottom + 4.5 * mm, x + w - 3 * mm, box_bottom + 4.5 * mm)
-    return box_bottom - 5 * mm
+def bullet(c, y, text):
+    c.setFillColorRGB(*BLUE)
+    c.circle(M + 1.8 * mm, y + 1.2 * mm, 1.4 * mm, fill=1, stroke=0)
+    return wrap(c, text, M + 6 * mm, y, W - 2 * M - 6 * mm, F, 10, 13, FG)
 
 
-def fields_row(c, y, specs):
-    """specs: list of (label, width_frac) summing ~1.0. Same baseline y."""
-    gap = 4 * mm
-    usable = W - 2 * M - gap * (len(specs) - 1)
-    x = M
-    bottoms = []
-    for label_txt, frac in specs:
-        w = usable * frac
-        bottoms.append(field(c, x, y, w, 11 * mm, label_txt))
-        x += w + gap
-    return min(bottoms)
-
-
-def check(c, x, y, text):
-    s = 4.2 * mm
-    c.setStrokeColorRGB(*SOFT)
-    c.setFillColorRGB(*FIELD)
-    c.setLineWidth(1.1)
-    c.roundRect(x, y - s + 1 * mm, s, s, 1.2, fill=1, stroke=1)
+def num_step(c, y, n, title, body):
+    c.setFillColorRGB(*BLUE)
+    c.setFont(FB, 14)
+    c.drawString(M, y, n)
     c.setFillColorRGB(*FG)
-    c.setFont(F, 9.5)
-    c.drawString(x + s + 3 * mm, y - 1 * mm, text)
-    return y - 8.5 * mm
+    c.setFont(FB, 12)
+    c.drawString(M + 12 * mm, y, title)
+    y -= 5 * mm
+    return wrap(c, body, M + 12 * mm, y, W - 2 * M - 12 * mm, F, 9.5, 12.5, MUTED)
 
 
-def shot(c, name, y_top, caption, max_h=70 * mm):
+def shot(c, name, y_top, caption, max_h=68 * mm):
     path = SHOTS / name
     if not path.exists():
-        return y_top - 6 * mm
+        return wrap(c, f"[print ausente: {name}]", M, y_top, W - 2 * M, F, 9, 11, MUTED)
     im = PILImage.open(path)
     iw, ih = im.size
     max_w = W - 2 * M
@@ -202,531 +177,421 @@ def shot(c, name, y_top, caption, max_h=70 * mm):
     dw, dh = iw * scale, ih * scale
     x = M + (max_w - dw) / 2
     y = y_top - dh
-    pad = 1.8 * mm
+    pad = 1.6 * mm
     c.setFillColorRGB(*LINE)
     c.roundRect(x - pad, y - pad, dw + 2 * pad, dh + 2 * pad, 3, fill=1, stroke=0)
     c.setStrokeColorRGB(*BLUE)
     c.setLineWidth(1)
     c.roundRect(x - pad, y - pad, dw + 2 * pad, dh + 2 * pad, 3, fill=0, stroke=1)
     c.drawImage(ImageReader(path), x, y, width=dw, height=dh, mask="auto")
-    return wrap(c, caption, M, y - 4.5 * mm, max_w, F, 7.5, 9.5, MUTED, True)
+    return wrap(c, caption, M, y - 4.5 * mm, max_w, F, 8, 10, MUTED, True)
 
 
-def chart_cover(c, x, y, w, h):
-    """
-    Layout em duas colunas sem sobreposição:
-    esquerda = número + barras + legendas
-    direita = fórmula em bloco próprio
-    """
-    a, t, ticket = 40, 31, 75
-    lost = a - t
-    money = lost * ticket
-
-    card(c, x, y, w, h, SURF, LINE, 1)
-
-    # esquerda (~58%)
-    left_w = w * 0.55
-    pad = 5 * mm
+def url_box(c, y, label, url):
+    h = 14 * mm
+    card(c, M, y - h, W - 2 * M, h, FIELD, BLUE, 1.2)
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 7.5)
-    c.drawString(x + pad, y + h - 6 * mm, "RESULTADO DA SEMANA (EXEMPLO)")
-
+    c.drawString(M + 3.5 * mm, y - 4.5 * mm, label)
     c.setFillColorRGB(*FG)
-    c.setFont(FB, 28)
-    c.drawString(x + pad, y + h - 18 * mm, f"R$ {money}".replace(",", "."))
-
-    c.setFillColorRGB(*MUTED)
     c.setFont(F, 8.5)
-    c.drawString(
-        x + pad,
-        y + h - 24 * mm,
-        f"{lost} vagas perdidas  ·  ocupação {round(100 * t / a)}%",
-    )
+    # URLs longas: quebrar se preciso
+    wrap(c, url, M + 3.5 * mm, y - 9.5 * mm, W - 2 * M - 7 * mm, F, 8, 10, FG)
+    return y - h - 4 * mm
 
-    # barras — área dedicada, labels FORA das barras
-    bar_bottom = y + 14 * mm
-    bar_max = y + h - 32 * mm - bar_bottom
-    bw = left_w * 0.28
-    gap = 8 * mm
-    bx1 = x + pad + 4 * mm
-    bx2 = bx1 + bw + gap
-    h1 = bar_max * (t / a)
-    h2 = bar_max * (lost / a)
 
+def calc_box(c, x, y, w, h):
+    a, t, ticket = 40, 31, 75
+    lost, money = a - t, (a - t) * ticket
+    card(c, x, y, w, h, SURF, LINE, 1)
+
+    c.setFillColorRGB(*SOFT)
+    c.setFont(FB, 7.5)
+    c.drawString(x + 4 * mm, y + h - 6 * mm, "EXEMPLO RÁPIDO")
+
+    c.setFillColorRGB(*FG)
+    c.setFont(FB, 26)
+    c.drawString(x + 4 * mm, y + h - 17 * mm, f"R$ {money}")
+
+    c.setFillColorRGB(*MUTED)
+    c.setFont(F, 9)
+    c.drawString(x + 4 * mm, y + h - 23 * mm, f"{lost} horários vazios numa semana")
+
+    # barras simples
+    bar_b = y + 12 * mm
+    max_h = y + h - 30 * mm - bar_b
+    bw = 18 * mm
     c.setFillColorRGB(*OK)
-    c.roundRect(bx1, bar_bottom, bw, h1, 3, fill=1, stroke=0)
+    c.roundRect(x + 8 * mm, bar_b, bw, max_h * (t / a), 3, fill=1, stroke=0)
     c.setFillColorRGB(*BLUE)
-    c.roundRect(bx2, bar_bottom, bw, h2, 3, fill=1, stroke=0)
-
+    c.roundRect(x + 8 * mm + bw + 8 * mm, bar_b, bw, max_h * (lost / a), 3, fill=1, stroke=0)
     c.setFillColorRGB(*MUTED)
-    c.setFont(F, 7.5)
-    c.drawCentredString(bx1 + bw / 2, y + 6 * mm, "Atendidos")
-    c.drawCentredString(bx2 + bw / 2, y + 6 * mm, "Perdidas")
+    c.setFont(F, 7)
+    c.drawCentredString(x + 8 * mm + bw / 2, y + 5 * mm, "Atendeu")
+    c.drawCentredString(x + 8 * mm + bw + 8 * mm + bw / 2, y + 5 * mm, "Perdeu")
 
-    # valores acima das barras
-    c.setFillColorRGB(*FG)
-    c.setFont(FB, 8)
-    c.drawCentredString(bx1 + bw / 2, bar_bottom + h1 + 2 * mm, str(t))
-    c.drawCentredString(bx2 + bw / 2, bar_bottom + h2 + 2 * mm, str(lost))
-
-    # direita: card da fórmula (sem sobrepor barras)
-    rx = x + left_w + 2 * mm
-    rw = w - left_w - pad - 2 * mm
-    ry = y + 8 * mm
-    rh = h - 16 * mm
-    card(c, rx, ry, rw, rh, ELEV, BLUE, 1.2)
-
+    # fórmula à direita
+    rx = x + w * 0.52
+    card(c, rx, y + 8 * mm, w * 0.42, h - 16 * mm, ELEV, BLUE, 1.1)
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 8)
-    c.drawString(rx + 3.5 * mm, ry + rh - 7 * mm, "FÓRMULA")
-
+    c.drawString(rx + 3 * mm, y + h - 14 * mm, "COMO CALCULAR")
     c.setFillColorRGB(*FG)
-    c.setFont(FB, 10)
-    c.drawString(rx + 3.5 * mm, ry + rh - 16 * mm, "Vagas = A − T")
-    c.drawString(rx + 3.5 * mm, ry + rh - 23 * mm, "R$ = vagas × Ticket")
-
-    c.setFillColorRGB(*MUTED)
-    c.setFont(F, 8)
-    c.drawString(rx + 3.5 * mm, ry + rh - 32 * mm, "Exemplo:")
-    c.setFillColorRGB(*SOFT)
-    c.setFont(F, 8)
-    c.drawString(rx + 3.5 * mm, ry + rh - 38 * mm, f"A = {a}")
-    c.drawString(rx + 3.5 * mm, ry + rh - 43 * mm, f"T = {t}")
-    c.drawString(rx + 3.5 * mm, ry + rh - 48 * mm, f"Ticket = {ticket}")
-
-
-def step_card(c, x, y, w, h, num, title, blurb):
-    card(c, x, y, w, h, ELEV)
-    c.setFillColorRGB(*BLUE)
-    c.setFont(FB, 11)
-    c.drawString(x + 4 * mm, y + h - 8 * mm, num)
-    c.setFillColorRGB(*FG)
-    c.setFont(FB, 11)
-    c.drawString(x + 4 * mm, y + h - 15 * mm, title)
-    wrap(c, blurb, x + 4 * mm, y + h - 21 * mm, w - 8 * mm, F, 8, 10, MUTED)
+    c.setFont(F, 9)
+    lines = [
+        "1. Conte os horários abertos",
+        "2. Conte quantos atendeu",
+        "3. Subtraia (abertos − feitos)",
+        "4. Multiplique pelo preço",
+        "   do seu corte mais comum",
+    ]
+    yy = y + h - 22 * mm
+    for line in lines:
+        c.drawString(rx + 3 * mm, yy, line)
+        yy -= 5 * mm
 
 
 def build():
     b = Book()
     c = b.c
 
-    # —— 1 CAPA ——
+    # ========== 1 CAPA ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "PRODUTO BARBERNEGON  ·  R$ 19,90  ·  WORKBOOK")
-    y = H - 32 * mm
+    topbar(c, "Guia prático Barbernegon · R$ 19,90")
+    y = H - 30 * mm
     c.setFillColorRGB(*FG)
-    c.setFont(FB, 36)
+    c.setFont(FB, 34)
     c.drawString(M, y, "Vaga Perdida")
-    y -= 12 * mm
-    y = para(
+    y -= 11 * mm
+    y = p(
         c,
-        "Pare de deixar dinheiro na mesa na agenda — e coloque a marcação sob o controle da sua marca.",
+        "Se a cadeira fica vazia e o WhatsApp não para, você está perdendo dinheiro. Este guia mostra onde some — e como recuperar usando o Barbernegon.",
         y,
         11,
     )
-    y -= 5 * mm
-    c.setFillColorRGB(*BLUE)
-    c.rect(M, y, 24 * mm, 1.2 * mm, fill=1, stroke=0)
-    y -= 8 * mm
-    y = wrap(
-        c,
-        "Produto para usar: calcular, marcar vazadouros, copiar scripts e executar em 7 dias.",
-        M,
-        y,
-        W - 2 * M,
-        FB,
-        10,
-        13,
-        FG,
-    )
-    y -= 5 * mm
-    chart_bottom = FOOTER + 6 * mm
-    chart_h = y - chart_bottom - 3 * mm
-    if chart_h < 70 * mm:
-        chart_h = 70 * mm
-        chart_bottom = y - chart_h
-    chart_cover(c, M, chart_bottom, W - 2 * M, chart_h)
-
-    # —— 2 COMO USAR ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "COMO USAR")
-    y = kicker(c, "Comece aqui", y)
-    y = heading(c, "4 movimentos. 7 dias.", y)
-    y -= 3 * mm
-    y = para(c, "Cada página pede uma ação. Preencha. No fim da semana, volte ao cálculo e compare.", y)
     y -= 6 * mm
-    tw = (W - 2 * M - 6 * mm) / 2
-    th = 26 * mm
-    steps = [
-        ("01", "Diagnosticar", "Calcule A, T e o R$ na mesa"),
-        ("02", "Marcar", "Assinale os vazadouros da casa"),
-        ("03", "Aplicar", "Método + scripts prontos"),
-        ("04", "Executar", "Checklist de 7 dias"),
-    ]
-    for i, (n, t, d) in enumerate(steps):
-        col, row = i % 2, i // 2
-        step_card(
-            c,
-            M + col * (tw + 6 * mm),
-            y - (row + 1) * (th + 4 * mm) + 4 * mm,
-            tw,
-            th,
-            n,
-            t,
-            d,
-        )
-    y -= 2 * (th + 4 * mm) + 4 * mm
-    y = kicker(c, "Sua casa", y)
-    y = field(c, M, y, W - 2 * M, 11 * mm, "Nome da barbearia")
-    y = fields_row(c, y, [("Cidade", 0.55), ("Nº de barbeiros", 0.45)])
-    y -= 4 * mm
-    card(c, M, y - 28 * mm, W - 2 * M, 28 * mm, ELEV, BLUE, 1.1)
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M + 4 * mm, y - 7 * mm, "PROMESSA")
-    wrap(
-        c,
-        "Em 7 dias você tem o número, os vazadouros mapeados e a agenda com presença própria (site + marcação online).",
-        M + 4 * mm,
-        y - 13 * mm,
-        W - 2 * M - 8 * mm,
-        F,
-        10,
-        13,
-        FG,
-    )
+    c.setFillColorRGB(*BLUE)
+    c.rect(M, y, 22 * mm, 1.2 * mm, fill=1, stroke=0)
+    y -= 8 * mm
+    calc_h = min(78 * mm, y - FOOTER - 8 * mm)
+    calc_box(c, M, y - calc_h, W - 2 * M, calc_h)
 
-    # —— 3 CONCEITO ——
+    # ========== 2 PARA QUEM / PROBLEMA ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "CONCEITO")
-    y = kicker(c, "Definição", y)
-    y = heading(c, "O que é uma vaga perdida", y)
-    y -= 3 * mm
-    y = para(
-        c,
-        "Horário que poderia ter gerado atendimento e não gerou — mesmo com gente pedindo horário.",
-        y,
-    )
-    y -= 5 * mm
-    # 5 tiles
-    items = [
-        ("01", "No-show", "Confirmou e sumiu"),
-        ("02", "Horário morto", "Buraco sem encaixe"),
-        ("03", "Só WhatsApp", "Demora = perde"),
-        ("04", "Marketplace", "Hábito fora da marca"),
-        ("05", "Sem cara", "Compromisso fraco"),
-    ]
-    tw = (W - 2 * M - 8 * mm) / 3
-    th = 28 * mm
-    for i, (n, t, d) in enumerate(items[:3]):
-        x = M + i * (tw + 4 * mm)
-        card(c, x, y - th, tw, th)
-        c.setStrokeColorRGB(*SOFT)
-        c.setLineWidth(1)
-        c.roundRect(x + 3 * mm, y - 8 * mm, 4 * mm, 4 * mm, 1, fill=0, stroke=1)
-        c.setFillColorRGB(*BLUE)
-        c.setFont(FB, 8)
-        c.drawString(x + 9 * mm, y - 7 * mm, n)
-        c.setFillColorRGB(*FG)
-        c.setFont(FB, 10)
-        c.drawString(x + 3 * mm, y - 14 * mm, t)
-        wrap(c, d, x + 3 * mm, y - 20 * mm, tw - 6 * mm, F, 7.5, 9.5, MUTED)
-    y -= th + 5 * mm
-    tw2 = (W - 2 * M - 4 * mm) / 2
-    for i, (n, t, d) in enumerate(items[3:]):
-        x = M + i * (tw2 + 4 * mm)
-        card(c, x, y - th, tw2, th)
-        c.setStrokeColorRGB(*SOFT)
-        c.setLineWidth(1)
-        c.roundRect(x + 3 * mm, y - 8 * mm, 4 * mm, 4 * mm, 1, fill=0, stroke=1)
-        c.setFillColorRGB(*BLUE)
-        c.setFont(FB, 8)
-        c.drawString(x + 9 * mm, y - 7 * mm, n)
-        c.setFillColorRGB(*FG)
-        c.setFont(FB, 10)
-        c.drawString(x + 3 * mm, y - 14 * mm, t)
-        wrap(c, d, x + 3 * mm, y - 20 * mm, tw2 - 6 * mm, F, 7.5, 9.5, MUTED)
-    y -= th + 8 * mm
-    y = wrap(
-        c,
-        "Regra de ouro: cadeira vazia com demanda possível não é “dia fraco”. É vazão de operação.",
-        M,
-        y,
-        W - 2 * M,
-        FB,
-        10,
-        13,
-        FG,
-    )
-
-    # —— 4 CALCULADORA ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "FERRAMENTA · DIAGNÓSTICO 15 MIN")
-    y = kicker(c, "Passo 1", y)
-    y = heading(c, "Calcule o estrago", y)
-    y -= 3 * mm
-    y = para(c, "Use a última semana real. Preencha os três campos e complete o resultado.", y)
-    y -= 5 * mm
-    y = field(c, M, y, W - 2 * M, 12 * mm, "A — Horários abertos no expediente")
-    y = field(c, M, y, W - 2 * M, 12 * mm, "T — Atendimentos realizados de fato")
-    y = field(c, M, y, W - 2 * M, 12 * mm, "Ticket — preço do serviço mais vendido (R$)")
-    y -= 2 * mm
-    rh = 34 * mm
-    card(c, M, y - rh, W - 2 * M, rh, ELEV, BLUE, 1.4)
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M + 4 * mm, y - 6 * mm, "SEU RESULTADO")
-    c.setFillColorRGB(*FG)
-    c.setFont(FB, 12)
-    c.drawString(M + 4 * mm, y - 15 * mm, "Vagas perdidas (A − T)  =  ____________")
-    c.drawString(M + 4 * mm, y - 24 * mm, "R$ deixado na mesa      =  R$ ____________")
-    y -= rh + 4 * mm
-    y = shot(
-        c,
-        "S01-dashboard.png",
-        y,
-        "Painel real — o número que você calcular aqui é o que a operação precisa enxergar.",
-        max(48 * mm, y - FOOTER - 12 * mm),
-    )
-
-    # —— 5 VAZADOUROS CHECK ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "DIAGNÓSTICO")
-    y = kicker(c, "Passo 2", y)
-    y = heading(c, "Marque o que acontece na sua casa", y)
+    topbar(c, "O problema")
+    y = h1(c, "Para quem é este guia", y)
     y -= 4 * mm
     for t in [
-        "No-show — confirmação fraca",
-        "Horário morto — buraco sem reposição",
-        "Só WhatsApp — canal único",
-        "Marketplace — cliente compara e some",
-        "Sem cara digital — parece “mais uma”",
+        "Você tem uma barbearia (ou poucas cadeiras).",
+        "Marca horário no WhatsApp o dia inteiro.",
+        "Ainda assim sobra cadeira vazia na semana.",
+        "Quer parar de improvisar e ter a agenda na sua marca.",
     ]:
-        y = check(c, M, y, t)
+        y = bullet(c, y, t)
+        y -= 2 * mm
+    y -= 4 * mm
+    y = h1(c, "O que é uma vaga perdida?", y, 18)
     y -= 3 * mm
-    y = field(c, M, y, W - 2 * M, 14 * mm, "O vazadouro nº 1 da minha casa é…")
+    y = p(
+        c,
+        "É um horário que poderia ter sido preenchido e não foi. O cliente confirmou e não veio. Alguém cancelou e ninguém entrou no lugar. Ou o buraco ficou o dia todo porque a marcação depende só do chat.",
+        y,
+    )
+    y -= 5 * mm
+    y = p(
+        c,
+        "Isso não é “dia fraco”. É falha de organização. E tem solução.",
+        y,
+        11,
+    )
+    y -= 6 * mm
+    card(c, M, y - 32 * mm, W - 2 * M, 32 * mm, ELEV, BLUE, 1.1)
+    c.setFillColorRGB(*SOFT)
+    c.setFont(FB, 8)
+    c.drawString(M + 4 * mm, y - 7 * mm, "O QUE VOCÊ LEVA DESTE GUIA")
+    wrap(
+        c,
+        "1) Um jeito simples de calcular o prejuízo.  2) Os 5 buracos que mais derrubam a agenda.  3) O que fazer em cada um.  4) Como abrir o Barbernegon e colocar site + agenda no ar.",
+        M + 4 * mm,
+        y - 14 * mm,
+        W - 2 * M - 8 * mm,
+        F,
+        9.5,
+        12.5,
+        FG,
+    )
+
+    # ========== 3 CALCULAR ==========
+    y = b.page()
+    topbar(c, "Passo 1 · veja o número")
+    y = h1(c, "Quanto você deixou de ganhar?", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "Pegue a última semana. Não precisa de planilha complicada — só três números.",
+        y,
+    )
+    y -= 5 * mm
+    steps = [
+        ("1", "Horários abertos", "Quantos horários você tinha disponíveis no expediente?"),
+        ("2", "Atendimentos feitos", "Quantos clientes você atendeu de verdade?"),
+        ("3", "Preço do corte", "Quanto custa o serviço que você mais vende?"),
+    ]
+    for n, t, d in steps:
+        y = num_step(c, y, n, t, d)
+        y -= 5 * mm
     y -= 2 * mm
+    card(c, M, y - 36 * mm, W - 2 * M, 36 * mm, ELEV, BLUE, 1.3)
+    c.setFillColorRGB(*SOFT)
+    c.setFont(FB, 8)
+    c.drawString(M + 4 * mm, y - 6 * mm, "CONTA FINAL")
+    c.setFillColorRGB(*FG)
+    c.setFont(FB, 11)
+    c.drawString(M + 4 * mm, y - 14 * mm, "Horários vazios = abertos − feitos")
+    c.drawString(M + 4 * mm, y - 22 * mm, "Dinheiro perdido = horários vazios × preço do corte")
+    c.setFillColorRGB(*MUTED)
+    c.setFont(F, 8.5)
+    c.drawString(M + 4 * mm, y - 30 * mm, "Ex.: 40 abertos − 31 feitos = 9 vazios × R$ 75 = R$ 675 na semana")
+    y -= 42 * mm
+    y = p(
+        c,
+        "Guarde esse número. É ele que justifica arrumar a agenda — não achismo.",
+        y,
+        10,
+    )
+
+    # ========== 4 CINCO BURACOS ==========
+    y = b.page()
+    topbar(c, "Passo 2 · onde a vaga some")
+    y = h1(c, "Os 5 buracos da agenda", y)
+    y -= 3 * mm
+    y = p(c, "Quase toda barbearia perde cadeira por um (ou mais) destes motivos:", y)
+    y -= 5 * mm
+    leaks = [
+        ("Cliente não aparece", "Marcou e sumiu. Sem lembrete claro, vira rotina."),
+        ("Buraco no meio do dia", "Cancelou cedo e ninguém entrou no lugar."),
+        ("Só WhatsApp", "Você vira secretária. Demora = cliente marca em outro."),
+        ("Só app de busca", "O cliente compara você com o vizinho e some."),
+        ("Sem site da casa", "Parece “mais uma”. Menos compromisso, mais falta."),
+    ]
+    for title, desc in leaks:
+        card(c, M, y - 18 * mm, W - 2 * M, 17 * mm, ELEV)
+        c.setFillColorRGB(*FG)
+        c.setFont(FB, 10)
+        c.drawString(M + 4 * mm, y - 6 * mm, title)
+        c.setFillColorRGB(*MUTED)
+        c.setFont(F, 8.5)
+        c.drawString(M + 4 * mm, y - 12 * mm, desc)
+        y -= 20 * mm
+
+    # ========== 5 SOLUÇÕES + PRINTS ==========
+    y = b.page()
+    topbar(c, "A solução · no Barbernegon")
+    y = h1(c, "Como o sistema fecha esses buracos", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "Não basta “organizar melhor no papel”. Você precisa de agenda online na sua marca + painel para ver o dia.",
+        y,
+    )
+    y -= 4 * mm
     y = shot(
         c,
         "S02-admin-reservas.png",
         y,
-        "Grade de agendamentos: onde a ocupação cai, a vaga some.",
-        62 * mm,
+        "No painel você vê onde a ocupação cai — horário por horário.",
+        72 * mm,
+    )
+    y -= 3 * mm
+    y = p(
+        c,
+        "Com a grade na mão, fica fácil: confirmar quem vem, encaixar quem cancelou, e parar de descobrir buraco só no fim do dia.",
+        y,
+        10,
     )
 
-    # —— 6 CANAL ——
+    # ========== 6 AGENDA ONLINE ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "VAZADOURO · CANAL ÚNICO")
-    y = kicker(c, "Solução", y)
-    y = heading(c, "Tire a agenda do chat solto", y)
+    topbar(c, "Solução · cliente marca sozinho")
+    y = h1(c, "Agenda online da sua barbearia", y)
     y -= 3 * mm
-    y = para(
+    y = p(
         c,
-        "WhatsApp é relacionamento. Marcação precisa de fluxo próprio — o cliente escolhe horário sem esperar sua resposta.",
+        "O cliente escolhe serviço e horário no celular. Você não precisa responder cada “tem horário amanhã?”.",
         y,
     )
     y -= 4 * mm
-    y = shot(c, "S03-agendar.png", y, "Agenda online do piloto — serviço, horário e resumo.", 78 * mm)
+    y = shot(c, "S03-agendar.png", y, "Tela de agendar — o cliente faz a reserva sem depender do chat.", 80 * mm)
     y -= 3 * mm
-    y = field(c, M, y, W - 2 * M, 12 * mm, "Hoje eu marco horário principalmente em…")
+    y = p(
+        c,
+        "WhatsApp continua para conversar. A marcação sai do improviso e vai para um fluxo limpo.",
+        y,
+        10,
+    )
 
-    # —— 7 REPOSIÇÃO ——
+    # ========== 7 SITE DA MARCA ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "VAZADOURO · REPOSIÇÃO")
-    y = kicker(c, "Solução", y)
-    y = heading(c, "Cancelou de manhã. E agora?", y)
+    topbar(c, "Solução · sua marca, não a do app")
+    y = h1(c, "Site com a cara da sua casa", y)
     y -= 3 * mm
-    y = para(c, "Sem lista de encaixe, a vaga morre. Veja o buraco cedo e dispare a lista.", y)
+    y = p(
+        c,
+        "Em vez de alugar atenção em marketplace, você tem presença própria: foto, serviços e botão de agendar.",
+        y,
+    )
     y -= 4 * mm
-    y = shot(c, "S04-admin-dia.png", y, "Operacional do dia — buracos e a receber visíveis.", 70 * mm)
-    y -= 3 * mm
-    y = field(c, M, y, W - 2 * M, 12 * mm, "Lista de encaixe (10 nomes flexíveis)")
-    y = field(c, M, y, W - 2 * M, 11 * mm, "…")
+    y = shot(c, "S05-site-home.png", y, "Exemplo real do site do piloto no Barbernegon.", 85 * mm)
 
-    # —— 8 MARCA ——
+    # ========== 8 COMO ACESSAR ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "VAZADOURO · MARKETPLACE / CARA")
-    y = kicker(c, "Solução", y)
-    y = heading(c, "Presença própria", y)
+    topbar(c, "Como usar o Barbernegon")
+    y = h1(c, "Abra o sistema em 3 passos", y)
     y -= 3 * mm
-    y = para(c, "No marketplace o hábito fica com a plataforma. Com site + agenda na sua URL, a marca é sua.", y)
+    y = p(
+        c,
+        "Não adianta só saber a teoria. Abaixo está o caminho real para entrar e criar sua barbearia.",
+        y,
+    )
+    y -= 5 * mm
+    y = num_step(
+        c,
+        y,
+        "1",
+        "Entre no site",
+        "Abra o link da plataforma no celular ou no computador.",
+    )
     y -= 3 * mm
-    y = shot(c, "S05-site-home.png", y, "Site white-label do piloto /ze-do-corte.", 72 * mm)
+    y = url_box(c, y, "LINK DA PLATAFORMA", URL_HOME)
     y -= 2 * mm
-    y = shot(c, "S06-site-servicos.png", y, "Identidade no canvas — não template genérico.", 48 * mm)
+    y = num_step(
+        c,
+        y,
+        "2",
+        "Crie sua conta",
+        "Toque em cadastro, preencha os dados da barbearia e confirme. Em poucos minutos você já tem painel.",
+    )
+    y -= 3 * mm
+    y = url_box(c, y, "CRIAR CONTA (CADASTRO)", URL_CADASTRO)
+    y -= 2 * mm
+    y = num_step(
+        c,
+        y,
+        "3",
+        "Entre no painel",
+        "Depois de criar, use o login do admin para configurar site, serviços e agenda.",
+    )
+    y -= 3 * mm
+    y = url_box(c, y, "LOGIN DO PAINEL", URL_LOGIN)
 
-    # —— 9 MÉTODO ——
+    # ========== 9 PRINT CADASTRO ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "MÉTODO")
-    y = kicker(c, "Passo 3", y)
-    y = heading(c, "4 passos · seu plano", y)
+    topbar(c, "Passo a passo · cadastro")
+    y = h1(c, "Tela de criar sua barbearia", y)
+    y -= 3 * mm
+    y = p(c, "É assim que aparece a tela de cadastro. Preencha e avance — o sistema cria o site e a agenda da sua marca.", y)
     y -= 4 * mm
-    blocks = [
-        ("A · Padronize", "Expediente real, bloqueios, serviços longos vs curtos, janelas de encaixe."),
-        ("B · Confirme", "Marcação + lembrete na véspera."),
-        ("C · Reponha", "Lista de 10–20 flexíveis. Cancelou → dispara."),
-        ("D · Canal próprio", "Site da marca + agenda online."),
+    y = shot(c, "S13-cadastro.png", y, "Print real: página de cadastro do Barbernegon.", 95 * mm)
+    y -= 3 * mm
+    y = p(c, "Dica: use o e-mail que você realmente acessa. É com ele que você entra no painel depois.", y, 10)
+
+    # ========== 10 PRINT LOGIN + PAINEL ==========
+    y = b.page()
+    topbar(c, "Passo a passo · painel")
+    y = h1(c, "Login e visão da operação", y)
+    y -= 3 * mm
+    y = p(c, "Depois do cadastro, entre com e-mail e senha. O painel mostra o que precisa de atenção no dia.", y)
+    y -= 3 * mm
+    y = shot(c, "S14-login.png", y, "Print real: tela de login do painel.", 48 * mm)
+    y -= 3 * mm
+    y = shot(c, "S01-dashboard.png", y, "Print real: painel depois de entrar — prioridades do dia.", 55 * mm)
+
+    # ========== 11 O QUE FAZER NOS PRIMEIROS DIAS ==========
+    y = b.page()
+    topbar(c, "Coloque no ar")
+    y = h1(c, "Primeiros dias no sistema", y)
+    y -= 3 * mm
+    y = p(c, "Não precisa configurar o mundo no dia 1. Faça nesta ordem:", y)
+    y -= 5 * mm
+    ordem = [
+        ("1", "Serviços e preços", "Cadastre o que você vende (corte, barba, combo)."),
+        ("2", "Expediente", "Defina os horários reais de atendimento."),
+        ("3", "Site da marca", "Coloque foto, nome e cores da casa."),
+        ("4", "Link de agendar", "Copie o link e mande no WhatsApp / Instagram."),
+        ("5", "Confirmação", "Combine com o cliente: 1 confirma, 2 remarca."),
     ]
-    for t, d in blocks:
-        c.setFillColorRGB(*SOFT)
-        c.setFont(FB, 10)
-        c.drawString(M, y, t)
+    for n, t, d in ordem:
+        y = num_step(c, y, n, t, d)
         y -= 4 * mm
-        y = wrap(c, d, M, y, W - 2 * M, F, 8.5, 11, MUTED)
-        y -= 1 * mm
-        y = field(c, M, y, W - 2 * M, 10 * mm, "Como vou aplicar")
-        y -= 2 * mm
+    y -= 2 * mm
+    y = url_box(c, y, "VER UM EXEMPLO AO VIVO (PILOTO)", URL_PILOTO)
+    y -= 2 * mm
+    y = shot(c, "S07-agendar-form.png", y, "É isso que o cliente vê ao agendar — limpo e direto.", 42 * mm)
 
-    # —— 10 SCRIPTS ——
+    # ========== 12 MENSAGENS PRONTAS ==========
     y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "SCRIPTS")
-    y = kicker(c, "Copie e personalize", y)
-    y = heading(c, "3 mensagens prontas", y)
-    y -= 4 * mm
+    topbar(c, "Textos prontos")
+    y = h1(c, "3 mensagens para copiar", y)
+    y -= 3 * mm
+    y = p(c, "Use no WhatsApp. Troque o que está entre colchetes.", y)
+    y -= 5 * mm
     scripts = [
         (
-            "MARCAÇÃO",
+            "QUANDO MARCAR",
             "Fala, [Nome]! Seu horário na [Barbearia] está marcado para [dia] às [hora] — [serviço]. Responde 1 para confirmar ou 2 para remarcar.",
         ),
         (
-            "VÉSPERA",
-            "[Nome], amanhã às [hora] te esperamos. Se não puder, avisa até [limite] que eu encaixo outra pessoa.",
+            "NO DIA ANTERIOR",
+            "[Nome], amanhã às [hora] te esperamos. Se não puder vir, avisa até [horário limite] que eu chamo outra pessoa.",
         ),
         (
-            "ENCAIXE",
-            "Abriu vaga hoje às [hora] para [serviço]. Quer encaixar? Responde AGORA.",
+            "QUANDO ABRIR VAGA",
+            "Abriu horário hoje às [hora] para [serviço]. Quer encaixar? Responde AGORA.",
         ),
     ]
     for lab, txt in scripts:
-        bh = 24 * mm
-        card(c, M, y - bh, W - 2 * M, bh, ELEV)
+        h = 26 * mm
+        card(c, M, y - h, W - 2 * M, h, ELEV)
         c.setFillColorRGB(*BLUE)
         c.setFont(FB, 8)
         c.drawString(M + 4 * mm, y - 6 * mm, lab)
-        wrap(c, txt, M + 4 * mm, y - 12 * mm, W - 2 * M - 8 * mm, F, 8, 10.5, FG)
-        y -= bh + 4 * mm
-    y -= 1 * mm
-    y = shot(c, "S07-agendar-form.png", y, "Cliente marca no navegador — você opera o painel.", 52 * mm)
-
-    # —— 11 CHECKLIST ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "EXECUÇÃO")
-    y = kicker(c, "Passo 4", y)
-    y = heading(c, "Anti no-show + 7 dias", y)
-    y -= 4 * mm
-    for t in [
-        "Confirmação até ___ horas antes",
-        "Atraso acima de ___ min → reduz ou remarca",
-        "2 no-shows seguidos → horário menos nobre",
-        "Comunico na marcação — não depois da briga",
-    ]:
-        y = check(c, M, y, t)
-    y -= 5 * mm
-    y = kicker(c, "Checklist · 7 dias", y)
-    for d in [
-        "Dia 1 — Calculei A, T e R$ na mesa",
-        "Dia 2 — Ajustei expediente e bloqueios",
-        "Dia 3 — Salvei os 3 scripts",
-        "Dia 4 — Montei lista de espera (10)",
-        "Dia 5 — Publiquei regra anti no-show",
-        "Dia 6 — Publiquei agenda com a cara da casa",
-        "Dia 7 — Medi de novo e comparei",
-    ]:
-        y = check(c, M, y, d)
-    y -= 3 * mm
-    y = field(c, M, y, W - 2 * M, 12 * mm, "Semana 2 — R$ deixado na mesa (novo cálculo)")
-
-    # —— 12 PROVA ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "PROVA · BARBERNEGON")
-    y = kicker(c, "Prints reais", y)
-    y = heading(c, "Tire a agenda do improviso", y)
-    y -= 3 * mm
-    y = para(c, "Site com a sua cara, agenda em segundos, painel limpo.", y)
-    y -= 4 * mm
-    cell_w = (W - 2 * M - 4 * mm) / 2
-    cell_h = 52 * mm
-    grid = [
-        ("S08-dashboard.png", "Painel"),
-        ("S09-admin-lista.png", "Grade de vagas"),
-        ("S12-piloto.png", "Site da marca"),
-        ("S11c-marca.png", "Identidade"),
-    ]
-    for i, (fn, cap) in enumerate(grid):
-        col, row = i % 2, i // 2
-        x = M + col * (cell_w + 4 * mm)
-        yy = y - row * (cell_h + 8 * mm) - cell_h
-        path = SHOTS / fn
-        card(c, x, yy, cell_w, cell_h, SURF)
-        if path.exists():
-            im = PILImage.open(path)
-            iw, ih = im.size
-            inner = 2.5 * mm
-            scale = min((cell_w - 2 * inner) / iw, (cell_h - 9 * mm) / ih)
-            dw, dh = iw * scale, ih * scale
-            ix = x + (cell_w - dw) / 2
-            iy = yy + 7 * mm + ((cell_h - 9 * mm) - dh) / 2
-            c.drawImage(ImageReader(path), ix, iy, width=dw, height=dh, mask="auto")
-        c.setFillColorRGB(*MUTED)
-        c.setFont(F, 7.5)
-        c.drawCentredString(x + cell_w / 2, yy + 2.5 * mm, cap)
-
-    # —— 13 FECHO ——
-    y = b.page()
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(M, H - 12 * mm, "FECHAMENTO")
-    y = kicker(c, "Próximo passo", y)
-    y = heading(c, "Você já sabe onde a vaga some", y, 22)
-    y -= 5 * mm
-    y = para(
+        wrap(c, txt, M + 4 * mm, y - 12 * mm, W - 2 * M - 8 * mm, F, 8.5, 11, FG)
+        y -= h + 4 * mm
+    y -= 2 * mm
+    y = p(
         c,
-        "Execute o checklist. Compare a semana 2 com a semana 1. Publique sua marca.",
+        "Regra simples anti falta: quem não confirma, perde a preferência no horário nobre. Avise isso na marcação — não depois da briga.",
+        y,
+        10,
+    )
+
+    # ========== 13 FECHO ==========
+    y = b.page()
+    topbar(c, "Comece agora")
+    y = h1(c, "Você já sabe o problema. Agora abre o sistema.", y, 20)
+    y -= 4 * mm
+    y = p(
+        c,
+        "Calcule o número da sua semana. Crie a conta. Publique o link de agendar. Em sete dias você compara de novo — e vê se a cadeira vazia diminuiu.",
         y,
         11,
     )
-    y -= 8 * mm
-    bh = 38 * mm
-    card(c, M, y - bh, W - 2 * M, bh, ELEV, BLUE, 1.2)
+    y -= 6 * mm
+    y = url_box(c, y, "CRIAR MINHA BARBEARIA", URL_CADASTRO)
+    y = url_box(c, y, "ENTRAR NO PAINEL", URL_LOGIN)
+    y = url_box(c, y, "VER PILOTO AO VIVO", URL_PILOTO)
+    y -= 4 * mm
+    card(c, M, y - 28 * mm, W - 2 * M, 28 * mm, ELEV, BLUE, 1.2)
     c.setFillColorRGB(*FG)
-    c.setFont(FB, 14)
-    c.drawString(M + 5 * mm, y - 12 * mm, "Sua barbearia, sua cara,")
-    c.drawString(M + 5 * mm, y - 19 * mm, "sem burocracia.")
+    c.setFont(FB, 13)
+    c.drawString(M + 4 * mm, y - 10 * mm, "Sua barbearia, sua cara — sem burocracia.")
     c.setFillColorRGB(*MUTED)
     c.setFont(F, 9)
-    c.drawString(M + 5 * mm, y - 28 * mm, "Crie no Barbernegon · publique o link · rode os 7 dias")
-    y -= bh + 8 * mm
-    y = field(c, M, y, W - 2 * M, 14 * mm, "Meu compromisso desta semana (1 frase)")
-    y -= 8 * mm
+    c.drawString(M + 4 * mm, y - 18 * mm, "Barbernegon · Vaga Perdida · guia prático")
+    y -= 36 * mm
     c.setFillColorRGB(*MUTED)
     c.setFont(F, 8)
-    c.drawString(M, y, "Barbernegon · Vaga Perdida · material educativo (R$ 19,90)")
-    y -= 4 * mm
-    c.drawString(M, y, "Adapte as regras à sua operação. © Barbernegon")
+    c.drawString(M, y, "Adapte as regras à sua casa. © Barbernegon")
 
     b.save()
 

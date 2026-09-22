@@ -1,19 +1,11 @@
-# Vaga Perdida — entregáveis
+# Vaga Perdida
 
 ## Produto (PDF)
 
 **Arquivo:** [`vaga-perdida-barbernegon.pdf`](./vaga-perdida-barbernegon.pdf)
 
-Workbook visual (13 páginas): capa com gráfico, calculadora preenchível, vazadouros com checkboxes, método, scripts, checklist 7 dias e prints reais de produção.
+Guia-solução (não caderno de atividade): problema → número → o que fazer → **como abrir o Barbernegon** (links + prints de cadastro/login/painel).
 
-Gerar de novo: `python3 scripts/build-vaga-perdida-produto-pdf.py`
+Gerar: `python3 scripts/build-vaga-perdida-produto-pdf.py`
 
-Modelo: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)
-
-## Apoio
-
-| Item | Onde |
-|------|------|
-| Prints | `screenshots/` |
-| Rascunho de texto | `vaga-perdida-v2-rascunho.md` |
-| Demo web (opcional) | `/produtos/vaga-perdida` |
+Modelo e opinião crítica: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)
