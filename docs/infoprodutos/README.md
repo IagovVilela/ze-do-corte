@@ -1,20 +1,19 @@
-# Vaga Perdida — entregáveis do produto
+# Vaga Perdida — entregáveis
 
-## Ideia (resumo)
-Não vender “um PDF”. Vender uma **ferramenta** que o dono usa: calcular perda, marcar vazadouros, copiar scripts, cumprir 7 dias.
+## Produto (PDF)
 
-Detalhe do modelo: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)
+**Arquivo:** [`vaga-perdida-barbernegon.pdf`](./vaga-perdida-barbernegon.pdf)
 
-## O que existe agora
+Workbook visual (13 páginas): capa com gráfico, calculadora preenchível, vazadouros com checkboxes, método, scripts, checklist 7 dias e prints reais de produção.
 
-| Entrega | Onde | Papel |
-|---------|------|--------|
-| **Produto interativo (principal)** | `/produtos/vaga-perdida` | Calculadora + gráfico, vazadouros, scripts, checklist (salva no aparelho) |
-| **Workbook PDF** | `vaga-perdida-workbook.pdf` | Versão para imprimir / preencher à mão |
-| **PDF v2 leitura** | `vaga-perdida-barbernegon-v2.pdf` | Guia diagramado com prints (legado da v2 textual) |
-| **Prints** | `screenshots/` + `public/infoprodutos/vaga-perdida/` | Evidência real de produção |
+Gerar de novo: `python3 scripts/build-vaga-perdida-produto-pdf.py`
 
-## Scripts
-- `CAPTURE_PASSWORD=… node scripts/capture-vaga-perdida-shots.cjs`
-- `python3 scripts/build-vaga-perdida-workbook.py`
-- `python3 scripts/build-vaga-perdida-pdf-v2.py`
+Modelo: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)
+
+## Apoio
+
+| Item | Onde |
+|------|------|
+| Prints | `screenshots/` |
+| Rascunho de texto | `vaga-perdida-v2-rascunho.md` |
+| Demo web (opcional) | `/produtos/vaga-perdida` |

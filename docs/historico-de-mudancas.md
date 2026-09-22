@@ -8,8 +8,9 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-09-22
 
-- **Infoproduto Vaga Perdida (produto)**: experiência interativa em `/produtos/vaga-perdida` (calculadora + gráfico, vazadouros marcáveis, scripts copiáveis, checklist com progresso no aparelho); workbook PDF preenchível; modelo em `docs/infoprodutos/modelo-produto-vaga-perdida.md`; slug `produtos` reservado.
-- **Infoproduto Vaga Perdida v2**: PDF diagramado (19 páginas) com prints reais de produção; scripts `scripts/capture-vaga-perdida-shots.cjs` e `scripts/build-vaga-perdida-pdf-v2.py`; material em `docs/infoprodutos/`.
+- **Infoproduto Vaga Perdida (PDF produto)**: workbook visual em `docs/infoprodutos/vaga-perdida-barbernegon.pdf` (gráfico, campos, checkboxes, prints); script `scripts/build-vaga-perdida-produto-pdf.py`; modelo em `docs/infoprodutos/modelo-produto-vaga-perdida.md`.
+- **Infoproduto Vaga Perdida (demo web opcional)**: `/produtos/vaga-perdida` — mesma lógica interativa; o produto vendido é o PDF.
+- **Infoproduto Vaga Perdida v2**: PDF diagramado anterior + scripts de captura; material em `docs/infoprodutos/`.
 
 ## 2026-07-15
 
