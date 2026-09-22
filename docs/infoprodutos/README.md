@@ -2,10 +2,9 @@
 
 ## Produto (PDF)
 
-**Arquivo:** [`vaga-perdida-barbernegon.pdf`](./vaga-perdida-barbernegon.pdf)
+[`vaga-perdida-barbernegon.pdf`](./vaga-perdida-barbernegon.pdf)
 
-Guia-solução (não caderno de atividade): problema → número → o que fazer → **como abrir o Barbernegon** (links + prints de cadastro/login/painel).
+Estrutura: **Pilar 1** (método no braço) → **virada** → **Pilar 2** (Barbernegon + como acessar).
 
-Gerar: `python3 scripts/build-vaga-perdida-produto-pdf.py`
-
-Modelo e opinião crítica: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)
+Gerar: `python3 scripts/build-vaga-perdida-produto-pdf.py`  
+Modelo: [modelo-produto-vaga-perdida.md](./modelo-produto-vaga-perdida.md)

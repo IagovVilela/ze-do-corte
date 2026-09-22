@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Vaga Perdida — guia-solução (PDF produto).
+Vaga Perdida — PDF em 2 pilares + virada.
 
-Modelo: problema → número → o que fazer → como abrir o Barbernegon e fazer.
-NÃO é caderno de atividade escolar. Linguagem simples (dono de barbearia).
+Pilar 1: solução convencional (método no braço).
+Virada: "funciona, mas é pesado fazer todo dia".
+Pilar 2: Barbernegon resolve na prática (acesso, prints, vantagens).
+Linguagem simples para dono de barbearia.
 """
 
 from __future__ import annotations
@@ -26,7 +28,6 @@ OUT = ROOT / "docs/infoprodutos/vaga-perdida-barbernegon.pdf"
 OUT2 = ROOT / "docs/infoprodutos/vaga-perdida-produto.pdf"
 ARTIFACT = Path("/opt/cursor/artifacts/infoprodutos/vaga-perdida-barbernegon.pdf")
 
-# URLs reais (produção Railway — trocar pelo domínio final quando estiver no ar)
 URL_HOME = "https://barbernegon-production.up.railway.app/"
 URL_CADASTRO = "https://barbernegon-production.up.railway.app/cadastro"
 URL_LOGIN = "https://barbernegon-production.up.railway.app/admin/login"
@@ -42,6 +43,7 @@ MUTED = (0xB0 / 255, 0xBC / 255, 0xCE / 255)
 BLUE = (0x3B / 255, 0x82 / 255, 0xF6 / 255)
 SOFT = (0x8E / 255, 0xB6 / 255, 0xFF / 255)
 OK = (0x34 / 255, 0xD3 / 255, 0x99 / 255)
+WARN = (0xF5 / 255, 0x9E / 255, 0x0B / 255)
 
 W, H = A4
 M = 16 * mm
@@ -193,62 +195,17 @@ def url_box(c, y, label, url):
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 7.5)
     c.drawString(M + 3.5 * mm, y - 4.5 * mm, label)
-    c.setFillColorRGB(*FG)
-    c.setFont(F, 8.5)
-    # URLs longas: quebrar se preciso
     wrap(c, url, M + 3.5 * mm, y - 9.5 * mm, W - 2 * M - 7 * mm, F, 8, 10, FG)
     return y - h - 4 * mm
 
 
-def calc_box(c, x, y, w, h):
-    a, t, ticket = 40, 31, 75
-    lost, money = a - t, (a - t) * ticket
-    card(c, x, y, w, h, SURF, LINE, 1)
-
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 7.5)
-    c.drawString(x + 4 * mm, y + h - 6 * mm, "EXEMPLO RÁPIDO")
-
-    c.setFillColorRGB(*FG)
-    c.setFont(FB, 26)
-    c.drawString(x + 4 * mm, y + h - 17 * mm, f"R$ {money}")
-
-    c.setFillColorRGB(*MUTED)
-    c.setFont(F, 9)
-    c.drawString(x + 4 * mm, y + h - 23 * mm, f"{lost} horários vazios numa semana")
-
-    # barras simples
-    bar_b = y + 12 * mm
-    max_h = y + h - 30 * mm - bar_b
-    bw = 18 * mm
-    c.setFillColorRGB(*OK)
-    c.roundRect(x + 8 * mm, bar_b, bw, max_h * (t / a), 3, fill=1, stroke=0)
-    c.setFillColorRGB(*BLUE)
-    c.roundRect(x + 8 * mm + bw + 8 * mm, bar_b, bw, max_h * (lost / a), 3, fill=1, stroke=0)
-    c.setFillColorRGB(*MUTED)
-    c.setFont(F, 7)
-    c.drawCentredString(x + 8 * mm + bw / 2, y + 5 * mm, "Atendeu")
-    c.drawCentredString(x + 8 * mm + bw + 8 * mm + bw / 2, y + 5 * mm, "Perdeu")
-
-    # fórmula à direita
-    rx = x + w * 0.52
-    card(c, rx, y + 8 * mm, w * 0.42, h - 16 * mm, ELEV, BLUE, 1.1)
-    c.setFillColorRGB(*SOFT)
-    c.setFont(FB, 8)
-    c.drawString(rx + 3 * mm, y + h - 14 * mm, "COMO CALCULAR")
-    c.setFillColorRGB(*FG)
-    c.setFont(F, 9)
-    lines = [
-        "1. Conte os horários abertos",
-        "2. Conte quantos atendeu",
-        "3. Subtraia (abertos − feitos)",
-        "4. Multiplique pelo preço",
-        "   do seu corte mais comum",
-    ]
-    yy = y + h - 22 * mm
-    for line in lines:
-        c.drawString(rx + 3 * mm, yy, line)
-        yy -= 5 * mm
+def pillar_badge(c, y, text, color=BLUE):
+    """Faixa de pilar no topo do conteúdo."""
+    card(c, M, y - 10 * mm, W - 2 * M, 10 * mm, ELEV, color, 1.2)
+    c.setFillColorRGB(*color)
+    c.setFont(FB, 9)
+    c.drawCentredString(W / 2, y - 6.5 * mm, text)
+    return y - 14 * mm
 
 
 def build():
@@ -258,121 +215,127 @@ def build():
     # ========== 1 CAPA ==========
     y = b.page()
     topbar(c, "Guia prático Barbernegon · R$ 19,90")
-    y = H - 30 * mm
+    y = H - 32 * mm
     c.setFillColorRGB(*FG)
     c.setFont(FB, 34)
     c.drawString(M, y, "Vaga Perdida")
-    y -= 11 * mm
+    y -= 12 * mm
     y = p(
         c,
-        "Se a cadeira fica vazia e o WhatsApp não para, você está perdendo dinheiro. Este guia mostra onde some — e como recuperar usando o Barbernegon.",
+        "A cadeira vazia que você nem conta — e o dinheiro que some na semana.",
         y,
-        11,
+        12,
     )
     y -= 6 * mm
     c.setFillColorRGB(*BLUE)
     c.rect(M, y, 22 * mm, 1.2 * mm, fill=1, stroke=0)
-    y -= 8 * mm
-    calc_h = min(78 * mm, y - FOOTER - 8 * mm)
-    calc_box(c, M, y - calc_h, W - 2 * M, calc_h)
-
-    # ========== 2 PARA QUEM / PROBLEMA ==========
-    y = b.page()
-    topbar(c, "O problema")
-    y = h1(c, "Para quem é este guia", y)
-    y -= 4 * mm
-    for t in [
-        "Você tem uma barbearia (ou poucas cadeiras).",
-        "Marca horário no WhatsApp o dia inteiro.",
-        "Ainda assim sobra cadeira vazia na semana.",
-        "Quer parar de improvisar e ter a agenda na sua marca.",
-    ]:
-        y = bullet(c, y, t)
-        y -= 2 * mm
-    y -= 4 * mm
-    y = h1(c, "O que é uma vaga perdida?", y, 18)
-    y -= 3 * mm
+    y -= 10 * mm
     y = p(
         c,
-        "É um horário que poderia ter sido preenchido e não foi. O cliente confirmou e não veio. Alguém cancelou e ninguém entrou no lugar. Ou o buraco ficou o dia todo porque a marcação depende só do chat.",
-        y,
-    )
-    y -= 5 * mm
-    y = p(
-        c,
-        "Isso não é “dia fraco”. É falha de organização. E tem solução.",
+        "Este guia tem duas partes:",
         y,
         11,
     )
-    y -= 6 * mm
-    card(c, M, y - 32 * mm, W - 2 * M, 32 * mm, ELEV, BLUE, 1.1)
+    y -= 4 * mm
+    for t in [
+        "Pilar 1 — Como resolver o problema no dia a dia (método simples).",
+        "Virada — Por que fazer tudo na mão cansa.",
+        "Pilar 2 — Como o Barbernegon cuida disso por você (e como acessar).",
+    ]:
+        y = bullet(c, y, t)
+        y -= 2 * mm
+    y -= 8 * mm
+    card(c, M, y - 36 * mm, W - 2 * M, 36 * mm, ELEV, BLUE, 1.2)
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 8)
-    c.drawString(M + 4 * mm, y - 7 * mm, "O QUE VOCÊ LEVA DESTE GUIA")
+    c.drawString(M + 4 * mm, y - 7 * mm, "PROMESSA")
     wrap(
         c,
-        "1) Um jeito simples de calcular o prejuízo.  2) Os 5 buracos que mais derrubam a agenda.  3) O que fazer em cada um.  4) Como abrir o Barbernegon e colocar site + agenda no ar.",
+        "Em pouco tempo você entende quanto está perdendo, o que fazer — e como colocar site + agenda da sua marca no ar, sem virar secretária do WhatsApp.",
         M + 4 * mm,
         y - 14 * mm,
         W - 2 * M - 8 * mm,
         F,
-        9.5,
-        12.5,
+        10,
+        13,
         FG,
     )
 
-    # ========== 3 CALCULAR ==========
+    # ========== 2 PARA QUEM ==========
     y = b.page()
-    topbar(c, "Passo 1 · veja o número")
-    y = h1(c, "Quanto você deixou de ganhar?", y)
+    topbar(c, "Antes de começar")
+    y = h1(c, "Este guia é para você se…", y)
+    y -= 4 * mm
+    for t in [
+        "Tem uma barbearia (ou poucas cadeiras).",
+        "Marca horário no WhatsApp o dia inteiro.",
+        "Ainda assim sobra cadeira vazia na semana.",
+        "Quer a agenda sob o controle da sua marca — não só do chat.",
+    ]:
+        y = bullet(c, y, t)
+        y -= 2 * mm
+    y -= 6 * mm
+    y = h1(c, "O que é uma vaga perdida?", y, 18)
     y -= 3 * mm
     y = p(
         c,
-        "Pegue a última semana. Não precisa de planilha complicada — só três números.",
+        "É um horário que poderia ter sido preenchido e não foi. O cliente confirmou e não veio. Alguém cancelou e ninguém entrou no lugar. Ou o buraco ficou o dia todo porque a marcação depende só do WhatsApp.",
         y,
     )
     y -= 5 * mm
-    steps = [
-        ("1", "Horários abertos", "Quantos horários você tinha disponíveis no expediente?"),
+    y = p(
+        c,
+        "Isso não é “dia fraco”. É falta de método. Abaixo você vê como resolver — primeiro no braço, depois com o sistema.",
+        y,
+        11,
+    )
+
+    # ========== 3 PILAR 1 — CALCULAR ==========
+    y = b.page()
+    topbar(c, "Pilar 1 · método convencional")
+    y = pillar_badge(c, y, "PILAR 1 — RESOLVA O PROBLEMA NO DIA A DIA")
+    y = h1(c, "Primeiro: veja o dinheiro que some", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "Pegue a última semana. Só três números. Sem planilha complicada.",
+        y,
+    )
+    y -= 5 * mm
+    for n, t, d in [
+        ("1", "Horários abertos", "Quantos horários você tinha no expediente?"),
         ("2", "Atendimentos feitos", "Quantos clientes você atendeu de verdade?"),
         ("3", "Preço do corte", "Quanto custa o serviço que você mais vende?"),
-    ]
-    for n, t, d in steps:
+    ]:
         y = num_step(c, y, n, t, d)
-        y -= 5 * mm
+        y -= 4 * mm
     y -= 2 * mm
-    card(c, M, y - 36 * mm, W - 2 * M, 36 * mm, ELEV, BLUE, 1.3)
+    card(c, M, y - 40 * mm, W - 2 * M, 40 * mm, ELEV, BLUE, 1.3)
     c.setFillColorRGB(*SOFT)
     c.setFont(FB, 8)
-    c.drawString(M + 4 * mm, y - 6 * mm, "CONTA FINAL")
+    c.drawString(M + 4 * mm, y - 6 * mm, "A CONTA")
     c.setFillColorRGB(*FG)
     c.setFont(FB, 11)
     c.drawString(M + 4 * mm, y - 14 * mm, "Horários vazios = abertos − feitos")
     c.drawString(M + 4 * mm, y - 22 * mm, "Dinheiro perdido = horários vazios × preço do corte")
     c.setFillColorRGB(*MUTED)
-    c.setFont(F, 8.5)
-    c.drawString(M + 4 * mm, y - 30 * mm, "Ex.: 40 abertos − 31 feitos = 9 vazios × R$ 75 = R$ 675 na semana")
-    y -= 42 * mm
-    y = p(
-        c,
-        "Guarde esse número. É ele que justifica arrumar a agenda — não achismo.",
-        y,
-        10,
-    )
+    c.setFont(F, 9)
+    c.drawString(M + 4 * mm, y - 31 * mm, "Exemplo: 40 abertos − 31 feitos = 9 vazios × R$ 75 = R$ 675 na semana")
+    y -= 46 * mm
+    y = p(c, "Esse número é o motivo de arrumar a agenda. Não é achismo.", y, 10)
 
-    # ========== 4 CINCO BURACOS ==========
+    # ========== 4 PILAR 1 — 5 BURACOS ==========
     y = b.page()
-    topbar(c, "Passo 2 · onde a vaga some")
-    y = h1(c, "Os 5 buracos da agenda", y)
-    y -= 3 * mm
-    y = p(c, "Quase toda barbearia perde cadeira por um (ou mais) destes motivos:", y)
-    y -= 5 * mm
+    topbar(c, "Pilar 1 · onde a vaga some")
+    y = pillar_badge(c, y, "PILAR 1 — OS 5 BURACOS DA AGENDA")
+    y = h1(c, "Quase toda casa perde cadeira por isto", y)
+    y -= 4 * mm
     leaks = [
-        ("Cliente não aparece", "Marcou e sumiu. Sem lembrete claro, vira rotina."),
-        ("Buraco no meio do dia", "Cancelou cedo e ninguém entrou no lugar."),
-        ("Só WhatsApp", "Você vira secretária. Demora = cliente marca em outro."),
-        ("Só app de busca", "O cliente compara você com o vizinho e some."),
-        ("Sem site da casa", "Parece “mais uma”. Menos compromisso, mais falta."),
+        ("1. Cliente não aparece", "Marcou e sumiu. Sem lembrete, vira rotina."),
+        ("2. Buraco no meio do dia", "Cancelou cedo e ninguém entrou no lugar."),
+        ("3. Só WhatsApp", "Você vira secretária. Demora = cliente marca em outro."),
+        ("4. Só app de busca", "O cliente compara você com o vizinho e some."),
+        ("5. Sem site da casa", "Parece “mais uma”. Menos compromisso, mais falta."),
     ]
     for title, desc in leaks:
         card(c, M, y - 18 * mm, W - 2 * M, 17 * mm, ELEV)
@@ -383,155 +346,56 @@ def build():
         c.setFont(F, 8.5)
         c.drawString(M + 4 * mm, y - 12 * mm, desc)
         y -= 20 * mm
-
-    # ========== 5 SOLUÇÕES + PRINTS ==========
-    y = b.page()
-    topbar(c, "A solução · no Barbernegon")
-    y = h1(c, "Como o sistema fecha esses buracos", y)
-    y -= 3 * mm
+    y -= 2 * mm
     y = p(
         c,
-        "Não basta “organizar melhor no papel”. Você precisa de agenda online na sua marca + painel para ver o dia.",
-        y,
-    )
-    y -= 4 * mm
-    y = shot(
-        c,
-        "S02-admin-reservas.png",
-        y,
-        "No painel você vê onde a ocupação cai — horário por horário.",
-        72 * mm,
-    )
-    y -= 3 * mm
-    y = p(
-        c,
-        "Com a grade na mão, fica fácil: confirmar quem vem, encaixar quem cancelou, e parar de descobrir buraco só no fim do dia.",
+        "No Pilar 1 você fecha esses buracos com hábitos simples. No Pilar 2 o Barbernegon automatiza boa parte disso.",
         y,
         10,
     )
 
-    # ========== 6 AGENDA ONLINE ==========
+    # ========== 5 PILAR 1 — O QUE FAZER ==========
     y = b.page()
-    topbar(c, "Solução · cliente marca sozinho")
-    y = h1(c, "Agenda online da sua barbearia", y)
+    topbar(c, "Pilar 1 · o que fazer")
+    y = pillar_badge(c, y, "PILAR 1 — MÉTODO NO BRAÇO (4 PASSOS)")
+    y = h1(c, "Como resolver sem sistema (ainda)", y)
     y -= 3 * mm
     y = p(
         c,
-        "O cliente escolhe serviço e horário no celular. Você não precisa responder cada “tem horário amanhã?”.",
-        y,
-    )
-    y -= 4 * mm
-    y = shot(c, "S03-agendar.png", y, "Tela de agendar — o cliente faz a reserva sem depender do chat.", 80 * mm)
-    y -= 3 * mm
-    y = p(
-        c,
-        "WhatsApp continua para conversar. A marcação sai do improviso e vai para um fluxo limpo.",
-        y,
-        10,
-    )
-
-    # ========== 7 SITE DA MARCA ==========
-    y = b.page()
-    topbar(c, "Solução · sua marca, não a do app")
-    y = h1(c, "Site com a cara da sua casa", y)
-    y -= 3 * mm
-    y = p(
-        c,
-        "Em vez de alugar atenção em marketplace, você tem presença própria: foto, serviços e botão de agendar.",
-        y,
-    )
-    y -= 4 * mm
-    y = shot(c, "S05-site-home.png", y, "Exemplo real do site do piloto no Barbernegon.", 85 * mm)
-
-    # ========== 8 COMO ACESSAR ==========
-    y = b.page()
-    topbar(c, "Como usar o Barbernegon")
-    y = h1(c, "Abra o sistema em 3 passos", y)
-    y -= 3 * mm
-    y = p(
-        c,
-        "Não adianta só saber a teoria. Abaixo está o caminho real para entrar e criar sua barbearia.",
+        "Isso funciona. Muita barbearia boa vive assim. O ponto é: exige disciplina todo dia.",
         y,
     )
     y -= 5 * mm
-    y = num_step(
-        c,
-        y,
-        "1",
-        "Entre no site",
-        "Abra o link da plataforma no celular ou no computador.",
-    )
-    y -= 3 * mm
-    y = url_box(c, y, "LINK DA PLATAFORMA", URL_HOME)
-    y -= 2 * mm
-    y = num_step(
-        c,
-        y,
-        "2",
-        "Crie sua conta",
-        "Toque em cadastro, preencha os dados da barbearia e confirme. Em poucos minutos você já tem painel.",
-    )
-    y -= 3 * mm
-    y = url_box(c, y, "CRIAR CONTA (CADASTRO)", URL_CADASTRO)
-    y -= 2 * mm
-    y = num_step(
-        c,
-        y,
-        "3",
-        "Entre no painel",
-        "Depois de criar, use o login do admin para configurar site, serviços e agenda.",
-    )
-    y -= 3 * mm
-    y = url_box(c, y, "LOGIN DO PAINEL", URL_LOGIN)
-
-    # ========== 9 PRINT CADASTRO ==========
-    y = b.page()
-    topbar(c, "Passo a passo · cadastro")
-    y = h1(c, "Tela de criar sua barbearia", y)
-    y -= 3 * mm
-    y = p(c, "É assim que aparece a tela de cadastro. Preencha e avance — o sistema cria o site e a agenda da sua marca.", y)
-    y -= 4 * mm
-    y = shot(c, "S13-cadastro.png", y, "Print real: página de cadastro do Barbernegon.", 95 * mm)
-    y -= 3 * mm
-    y = p(c, "Dica: use o e-mail que você realmente acessa. É com ele que você entra no painel depois.", y, 10)
-
-    # ========== 10 PRINT LOGIN + PAINEL ==========
-    y = b.page()
-    topbar(c, "Passo a passo · painel")
-    y = h1(c, "Login e visão da operação", y)
-    y -= 3 * mm
-    y = p(c, "Depois do cadastro, entre com e-mail e senha. O painel mostra o que precisa de atenção no dia.", y)
-    y -= 3 * mm
-    y = shot(c, "S14-login.png", y, "Print real: tela de login do painel.", 48 * mm)
-    y -= 3 * mm
-    y = shot(c, "S01-dashboard.png", y, "Print real: painel depois de entrar — prioridades do dia.", 55 * mm)
-
-    # ========== 11 O QUE FAZER NOS PRIMEIROS DIAS ==========
-    y = b.page()
-    topbar(c, "Coloque no ar")
-    y = h1(c, "Primeiros dias no sistema", y)
-    y -= 3 * mm
-    y = p(c, "Não precisa configurar o mundo no dia 1. Faça nesta ordem:", y)
-    y -= 5 * mm
-    ordem = [
-        ("1", "Serviços e preços", "Cadastre o que você vende (corte, barba, combo)."),
-        ("2", "Expediente", "Defina os horários reais de atendimento."),
-        ("3", "Site da marca", "Coloque foto, nome e cores da casa."),
-        ("4", "Link de agendar", "Copie o link e mande no WhatsApp / Instagram."),
-        ("5", "Confirmação", "Combine com o cliente: 1 confirma, 2 remarca."),
-    ]
-    for n, t, d in ordem:
+    for n, t, d in [
+        (
+            "A",
+            "Organize os horários",
+            "Publique só o expediente real. Bloqueie almoço e folga. Deixe 1 ou 2 janelas por dia para encaixe.",
+        ),
+        (
+            "B",
+            "Confirme em 2 toques",
+            "Todo horário: confirmação na marcação + lembrete no dia anterior. Sem isso, falta vira normal.",
+        ),
+        (
+            "C",
+            "Reponha na hora",
+            "Tenha uma lista de 10 a 20 clientes flexíveis. Cancelou → mande mensagem em sequência.",
+        ),
+        (
+            "D",
+            "Tire a marcação do chat solto",
+            "WhatsApp é para conversar. Marcação precisa de um lugar fixo (link, página, agenda).",
+        ),
+    ]:
         y = num_step(c, y, n, t, d)
-        y -= 4 * mm
-    y -= 2 * mm
-    y = url_box(c, y, "VER UM EXEMPLO AO VIVO (PILOTO)", URL_PILOTO)
-    y -= 2 * mm
-    y = shot(c, "S07-agendar-form.png", y, "É isso que o cliente vê ao agendar — limpo e direto.", 42 * mm)
+        y -= 5 * mm
 
-    # ========== 12 MENSAGENS PRONTAS ==========
+    # ========== 6 PILAR 1 — SCRIPTS ==========
     y = b.page()
-    topbar(c, "Textos prontos")
-    y = h1(c, "3 mensagens para copiar", y)
+    topbar(c, "Pilar 1 · textos prontos")
+    y = pillar_badge(c, y, "PILAR 1 — MENSAGENS PARA COPIAR")
+    y = h1(c, "3 textos que já resolvem muita coisa", y)
     y -= 3 * mm
     y = p(c, "Use no WhatsApp. Troque o que está entre colchetes.", y)
     y -= 5 * mm
@@ -542,7 +406,7 @@ def build():
         ),
         (
             "NO DIA ANTERIOR",
-            "[Nome], amanhã às [hora] te esperamos. Se não puder vir, avisa até [horário limite] que eu chamo outra pessoa.",
+            "[Nome], amanhã às [hora] te esperamos. Se não puder, avisa até [horário] que eu chamo outra pessoa.",
         ),
         (
             "QUANDO ABRIR VAGA",
@@ -560,7 +424,166 @@ def build():
     y -= 2 * mm
     y = p(
         c,
-        "Regra simples anti falta: quem não confirma, perde a preferência no horário nobre. Avise isso na marcação — não depois da briga.",
+        "Regra simples: quem não confirma, perde preferência no horário nobre. Avise isso na marcação — não depois da briga.",
+        y,
+        10,
+    )
+
+    # ========== 7 VIRADA ==========
+    y = b.page()
+    topbar(c, "A virada")
+    y = pillar_badge(c, y, "VIRADA — FALA SÉRIA COM VOCÊ", WARN)
+    y = h1(c, "Tudo isso funciona…", y)
+    y -= 4 * mm
+    y = p(
+        c,
+        "Calcular a perda. Confirmar cliente. Ter lista de encaixe. Tirar a agenda do improviso. Sim: funciona.",
+        y,
+        11,
+    )
+    y -= 5 * mm
+    y = h1(c, "Mas e se parecer pesado demais?", y, 18)
+    y -= 4 * mm
+    y = p(
+        c,
+        "Porque é. Fazer isso na mão, todo dia, enquanto você corta cabelo, responde WhatsApp e cuida da casa… vira um segundo expediente.",
+        y,
+        11,
+    )
+    y -= 6 * mm
+    card(c, M, y - 48 * mm, W - 2 * M, 48 * mm, ELEV, WARN, 1.4)
+    c.setFillColorRGB(*WARN)
+    c.setFont(FB, 9)
+    c.drawString(M + 4 * mm, y - 8 * mm, "A PERGUNTA QUE MUDA O JOGO")
+    wrap(
+        c,
+        "E se existisse um serviço digital que cuidasse disso por você? Site com a cara da sua barbearia. Cliente marca sozinho. Você vê o dia no painel — sem caçar mensagem no chat.",
+        M + 4 * mm,
+        y - 16 * mm,
+        W - 2 * M - 8 * mm,
+        F,
+        11,
+        14,
+        FG,
+    )
+    wrap(
+        c,
+        "É exatamente para isso que existe o Barbernegon. O Pilar 2 mostra como na prática.",
+        M + 4 * mm,
+        y - 38 * mm,
+        W - 2 * M - 8 * mm,
+        FB,
+        10,
+        13,
+        SOFT,
+    )
+
+    # ========== 8 PILAR 2 — INTRO ==========
+    y = b.page()
+    topbar(c, "Pilar 2 · o sistema")
+    y = pillar_badge(c, y, "PILAR 2 — O BARBERNEGON CUIDA DISSO POR VOCÊ")
+    y = h1(c, "O mesmo problema. Automático.", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "No Pilar 1 você viu o método. Aqui o sistema faz o trabalho pesado: agenda online, painel do dia e site da sua marca.",
+        y,
+    )
+    y -= 5 * mm
+    bridges = [
+        ("Cliente não aparece", "Reserva fica registrada. Fácil confirmar e acompanhar."),
+        ("Buraco no dia", "Painel mostra o que está livre e o que precisa de atenção."),
+        ("Só WhatsApp", "Cliente marca sozinho no link da sua casa."),
+        ("App de busca", "Você tem site próprio — a marca é sua."),
+        ("Sem cara digital", "Foto, serviços e agendar no mesmo lugar."),
+    ]
+    for a, btxt in bridges:
+        card(c, M, y - 16 * mm, W - 2 * M, 15 * mm, ELEV)
+        c.setFillColorRGB(*SOFT)
+        c.setFont(FB, 8)
+        c.drawString(M + 3.5 * mm, y - 5 * mm, a.upper())
+        c.setFillColorRGB(*FG)
+        c.setFont(F, 9)
+        c.drawString(M + 3.5 * mm, y - 11 * mm, btxt)
+        y -= 18 * mm
+
+    # ========== 9 PILAR 2 — PRINTS SOLUÇÃO ==========
+    y = b.page()
+    topbar(c, "Pilar 2 · na prática")
+    y = pillar_badge(c, y, "PILAR 2 — PAINEL E AGENDA")
+    y = h1(c, "Você enxerga a operação", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "Lembra do buraco no meio do dia? Aqui você vê ocupação e prioridades — sem caçar no WhatsApp.",
+        y,
+    )
+    y -= 3 * mm
+    y = shot(c, "S02-admin-reservas.png", y, "Print real: grade de agendamentos no painel.", 58 * mm)
+    y -= 2 * mm
+    y = shot(c, "S01-dashboard.png", y, "Print real: visão do dia — o que precisa de ação agora.", 48 * mm)
+
+    # ========== 10 PILAR 2 — CLIENTE MARCA ==========
+    y = b.page()
+    topbar(c, "Pilar 2 · cliente marca sozinho")
+    y = pillar_badge(c, y, "PILAR 2 — FORA DO CHAT SOLTO")
+    y = h1(c, "Agenda online da sua marca", y)
+    y -= 3 * mm
+    y = p(
+        c,
+        "Lembra do “só WhatsApp”? Aqui o cliente escolhe serviço e horário. Você opera o painel — não responde “tem vaga?” o dia todo.",
+        y,
+    )
+    y -= 3 * mm
+    y = shot(c, "S03-agendar.png", y, "Print real: tela de agendar do piloto.", 75 * mm)
+    y -= 2 * mm
+    y = shot(c, "S05-site-home.png", y, "Print real: site com a cara da casa + botão de agendar.", 48 * mm)
+
+    # ========== 11 PILAR 2 — COMO ACESSAR ==========
+    y = b.page()
+    topbar(c, "Pilar 2 · como acessar")
+    y = pillar_badge(c, y, "PILAR 2 — ONDE ENTRAR E COMO COMEÇAR")
+    y = h1(c, "Abra o Barbernegon em 3 passos", y)
+    y -= 3 * mm
+    y = p(c, "Não fica só na teoria. Links reais abaixo.", y)
+    y -= 5 * mm
+    y = num_step(c, y, "1", "Entre no site", "Abra no celular ou no computador.")
+    y -= 2 * mm
+    y = url_box(c, y, "PLATAFORMA", URL_HOME)
+    y = num_step(
+        c,
+        y,
+        "2",
+        "Crie sua conta",
+        "Cadastre a barbearia. Em poucos minutos você já tem painel.",
+    )
+    y -= 2 * mm
+    y = url_box(c, y, "CADASTRO", URL_CADASTRO)
+    y = num_step(
+        c,
+        y,
+        "3",
+        "Entre no painel",
+        "Login com o e-mail da conta. Configure serviços, expediente e site.",
+    )
+    y -= 2 * mm
+    y = url_box(c, y, "LOGIN DO PAINEL", URL_LOGIN)
+    y -= 2 * mm
+    y = url_box(c, y, "VER EXEMPLO AO VIVO (PILOTO)", URL_PILOTO)
+
+    # ========== 12 PILAR 2 — PRINTS ACESSO ==========
+    y = b.page()
+    topbar(c, "Pilar 2 · telas reais")
+    y = pillar_badge(c, y, "PILAR 2 — CADASTRO E LOGIN")
+    y = h1(c, "É assim que aparece na tela", y)
+    y -= 3 * mm
+    y = shot(c, "S13-cadastro.png", y, "Print real: criar sua barbearia (cadastro).", 72 * mm)
+    y -= 2 * mm
+    y = shot(c, "S14-login.png", y, "Print real: entrar no painel.", 48 * mm)
+    y -= 2 * mm
+    y = p(
+        c,
+        "Depois de entrar: cadastre serviços e preços → ajuste o expediente → publique o site → mande o link de agendar no WhatsApp e no Instagram.",
         y,
         10,
     )
@@ -568,11 +591,11 @@ def build():
     # ========== 13 FECHO ==========
     y = b.page()
     topbar(c, "Comece agora")
-    y = h1(c, "Você já sabe o problema. Agora abre o sistema.", y, 20)
+    y = h1(c, "Você já tem o método. Agora escolha o caminho.", y, 18)
     y -= 4 * mm
     y = p(
         c,
-        "Calcule o número da sua semana. Crie a conta. Publique o link de agendar. Em sete dias você compara de novo — e vê se a cadeira vazia diminuiu.",
+        "Pode seguir só o Pilar 1 no braço. Funciona — se você aguentar a disciplina. Ou deixa o Barbernegon carregar a parte pesada: site, agenda e visão do dia.",
         y,
         11,
     )
@@ -581,14 +604,14 @@ def build():
     y = url_box(c, y, "ENTRAR NO PAINEL", URL_LOGIN)
     y = url_box(c, y, "VER PILOTO AO VIVO", URL_PILOTO)
     y -= 4 * mm
-    card(c, M, y - 28 * mm, W - 2 * M, 28 * mm, ELEV, BLUE, 1.2)
+    card(c, M, y - 30 * mm, W - 2 * M, 30 * mm, ELEV, BLUE, 1.2)
     c.setFillColorRGB(*FG)
     c.setFont(FB, 13)
     c.drawString(M + 4 * mm, y - 10 * mm, "Sua barbearia, sua cara — sem burocracia.")
     c.setFillColorRGB(*MUTED)
     c.setFont(F, 9)
-    c.drawString(M + 4 * mm, y - 18 * mm, "Barbernegon · Vaga Perdida · guia prático")
-    y -= 36 * mm
+    c.drawString(M + 4 * mm, y - 18 * mm, "Barbernegon · Vaga Perdida · guia em 2 pilares")
+    y -= 38 * mm
     c.setFillColorRGB(*MUTED)
     c.setFont(F, 8)
     c.drawString(M, y, "Adapte as regras à sua casa. © Barbernegon")

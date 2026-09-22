@@ -8,6 +8,7 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ## 2026-09-22
 
+- **Vaga Perdida PDF (2 pilares)**: Pilar 1 método convencional → virada → Pilar 2 Barbernegon na prática com acesso (cadastro/login/piloto).
 - **Vaga Perdida PDF (revisão)**: modelo guia-solução com linguagem simples e walkthrough de acesso (cadastro/login/piloto); abandona formato “atividade escolar”.
 - **Infoproduto Vaga Perdida (PDF produto)**: workbook visual em `docs/infoprodutos/vaga-perdida-barbernegon.pdf` (gráfico, campos, checkboxes, prints); script `scripts/build-vaga-perdida-produto-pdf.py`; modelo em `docs/infoprodutos/modelo-produto-vaga-perdida.md`.
 - **Infoproduto Vaga Perdida (demo web opcional)**: `/produtos/vaga-perdida` — mesma lógica interativa; o produto vendido é o PDF.
