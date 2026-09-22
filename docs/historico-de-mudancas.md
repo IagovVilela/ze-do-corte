@@ -6,6 +6,16 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-09-22
+
+- **Vaga Perdida PDF**: layout sem corte badge/título (ascent + folga); conteúdo mais denso (assimetria de compromisso, janela 60–90 min, teste rápido, limiar 20% de vazão).
+- **Vaga Perdida PDF**: corrige cortes de layout (badge/título) e aprofunda conteúdo (menos óbvio, mais operacional).
+- **Vaga Perdida PDF (2 pilares)**: Pilar 1 método convencional → virada → Pilar 2 Barbernegon na prática com acesso (cadastro/login/piloto).
+- **Vaga Perdida PDF (revisão)**: modelo guia-solução com linguagem simples e walkthrough de acesso (cadastro/login/piloto); abandona formato “atividade escolar”.
+- **Infoproduto Vaga Perdida (PDF produto)**: workbook visual em `docs/infoprodutos/vaga-perdida-barbernegon.pdf` (gráfico, campos, checkboxes, prints); script `scripts/build-vaga-perdida-produto-pdf.py`; modelo em `docs/infoprodutos/modelo-produto-vaga-perdida.md`.
+- **Infoproduto Vaga Perdida (demo web opcional)**: `/produtos/vaga-perdida` — mesma lógica interativa; o produto vendido é o PDF.
+- **Infoproduto Vaga Perdida v2**: PDF diagramado anterior + scripts de captura; material em `docs/infoprodutos/`.
+
 ## 2026-07-15
 
 - **Admin — link da reserva do cliente**: na tabela de agendamentos, **Copiar link** e **WhatsApp** reenviam `/minha-reserva/[token]`. O token **não expira por data**; remarcar/cancelar só com status Confirmado e horário futuro; ver/avaliar continua depois.

@@ -37,6 +37,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/plataforma/consumidores` | `src/app/plataforma/(ops)/consumidores/page.tsx` | Agendamentos cross-tenant |
 | `/cadastro` | `src/app/cadastro/page.tsx` | Cria org + OWNER + unidade + `siteJson` template classic |
 | `/planos` | `src/app/planos/page.tsx` | Planos da plataforma (Starter/Pro) |
+| `/produtos/vaga-perdida` | `src/app/produtos/vaga-perdida/page.tsx` | Infoproduto interativo Vaga Perdida (calculadora, checklist) |
 | `/[slug]` | `src/app/[slug]/page.tsx` | Site institucional via `TenantSiteRenderer` + `siteJson` |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
