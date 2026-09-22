@@ -233,8 +233,8 @@ def pillar_badge(c, y_top, text, color=BLUE):
     c.setFont(FB, 8)
     # texto verticalmente centrado no box
     c.drawCentredString(W / 2, y_top - bh / 2 - 1.4 * mm, text)
-    # 10mm box + 10mm folga visual antes do próximo topo (ascent do h1)
-    return y_top - bh - 10 * mm
+    # 10mm box + 14mm folga (ascent do h1 ~6mm + respiro visual)
+    return y_top - bh - 14 * mm
 
 
 def callout(c, y_top, label, body, color=BLUE):
