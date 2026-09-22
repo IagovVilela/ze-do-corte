@@ -342,8 +342,12 @@ def build():
         FG,
     )
     y -= 5 * mm
-    chart_h = 95 * mm
-    chart_cover(c, M, max(FOOTER + 4 * mm, y - chart_h), W - 2 * M, chart_h)
+    chart_bottom = FOOTER + 6 * mm
+    chart_h = y - chart_bottom - 3 * mm
+    if chart_h < 70 * mm:
+        chart_h = 70 * mm
+        chart_bottom = y - chart_h
+    chart_cover(c, M, chart_bottom, W - 2 * M, chart_h)
 
     # —— 2 COMO USAR ——
     y = b.page()
@@ -484,13 +488,13 @@ def build():
     c.setFont(FB, 12)
     c.drawString(M + 4 * mm, y - 15 * mm, "Vagas perdidas (A − T)  =  ____________")
     c.drawString(M + 4 * mm, y - 24 * mm, "R$ deixado na mesa      =  R$ ____________")
-    y -= rh + 5 * mm
+    y -= rh + 4 * mm
     y = shot(
         c,
         "S01-dashboard.png",
         y,
         "Painel real — o número que você calcular aqui é o que a operação precisa enxergar.",
-        52 * mm,
+        max(48 * mm, y - FOOTER - 12 * mm),
     )
 
     # —— 5 VAZADOUROS CHECK ——
