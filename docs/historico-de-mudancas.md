@@ -6,6 +6,10 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-09-22
+
+- **Infoproduto Vaga Perdida v2**: PDF diagramado (19 páginas) com prints reais de produção; scripts `scripts/capture-vaga-perdida-shots.cjs` e `scripts/build-vaga-perdida-pdf-v2.py`; material em `docs/infoprodutos/`.
+
 ## 2026-07-15
 
 - **Admin — link da reserva do cliente**: na tabela de agendamentos, **Copiar link** e **WhatsApp** reenviam `/minha-reserva/[token]`. O token **não expira por data**; remarcar/cancelar só com status Confirmado e horário futuro; ver/avaliar continua depois.
