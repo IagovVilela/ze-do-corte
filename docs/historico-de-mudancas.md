@@ -6,6 +6,19 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-09-23
+
+- **Info-produto Vaga Perdida**: LP standalone `/vaga-perdida` (noindex, CTA checkout externo via `VAGA_PERDIDA_CHECKOUT_URL`); slug reservado + prefixo marketing. Fonte do e-book em `Marketing/info/vaga-perdida.md` + HTML A4 imprimível `Marketing/info/vaga-perdida.html`.
+
+## 2026-09-20
+
+- **Esqueci minha senha**: se o token for criado mas o Resend não enviar (domínio/`RESEND_FROM_EMAIL` inválido), a API responde **503** em vez de sucesso falso. Docs de operação reforçam: `onboarding@resend.dev` só entrega ao e-mail da conta Resend.
+- **Admin PWA**: `themeColor` movido de `metadata` para `viewport` em `admin/(panel)/layout.tsx` (aviso Next.js).
+
+## 2026-09-15
+
+- **Guia onboarding cliente novo**: [`docs/guia-onboarding-novo-cliente.md`](./guia-onboarding-novo-cliente.md) — passos, links, templates e critérios de pronto por salão.
+
 ## 2026-09-13
 
 - **Remarcação `/minha-reserva`**: `staffMemberId` deixa de exigir UUID (IDs da equipe são `cuid`) — corrige erro "Invalid UUID" ao trocar barbeiro.

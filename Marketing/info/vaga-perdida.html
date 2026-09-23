@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vaga Perdida · Barbernegon</title>
+  <!--
+    ============================================================
+    CONFIG — troque só estes hrefs quando o domínio oficial estiver pronto
+    ============================================================
+  -->
+  <script>
+    window.VAGA_PERDIDA_LINKS = {
+      cadastro: "https://barbernegon-production.up.railway.app/cadastro",
+      login: "https://barbernegon-production.up.railway.app/admin/login",
+      piloto: "https://barbernegon-production.up.railway.app/ze-do-corte",
+    };
+  </script>
+  <style>
+    :root {
+      --ink: #10131a;
+      --muted: #4b5563;
+      --line: #e5e7eb;
+      --soft: #f3f4f6;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --gold: #a8893e;
+      --page-w: 210mm;
+      --page-h: 297mm;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      background: #d1d5db;
+    }
+
+    @page {
+      size: A4;
+      margin: 14mm 16mm;
+    }
+
+    .page {
+      width: var(--page-w);
+      min-height: var(--page-h);
+      margin: 12px auto;
+      padding: 18mm 16mm;
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      position: relative;
+      page-break-after: always;
+      break-after: page;
+    }
+    .page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    .eyebrow {
+      font-size: 9pt;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    h1 {
+      font-size: 28pt;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-size: 16pt;
+      margin: 0 0 10px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      font-size: 12pt;
+      margin: 16px 0 6px;
+      font-weight: 700;
+    }
+    p { margin: 0 0 10px; }
+    .lead { font-size: 12.5pt; color: var(--muted); }
+    .muted { color: var(--muted); font-size: 9.5pt; }
+    .section-num {
+      font-size: 9pt;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--blue);
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    ul.stack {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0;
+    }
+    ul.stack li {
+      padding: 8px 0 8px 28px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    ul.stack li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--blue);
+      font-weight: 800;
+    }
+    .tagline {
+      margin-top: 28px;
+      font-size: 9pt;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .callout {
+      background: var(--soft);
+      border-left: 4px solid var(--blue);
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .pain {
+      font-size: 14pt;
+      font-weight: 800;
+      text-align: center;
+      margin: 18px 0 8px;
+      letter-spacing: 0.02em;
+    }
+    table.diag {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: 10pt;
+    }
+    table.diag th, table.diag td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    table.diag th { background: var(--soft); width: 28%; }
+    .script {
+      background: #fafafa;
+      border: 1px dashed #cbd5e1;
+      padding: 10px 12px;
+      margin: 8px 0 12px;
+      font-size: 10pt;
+      white-space: pre-wrap;
+    }
+    .note {
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin-top: -4px;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+    .cta {
+      display: inline-block;
+      margin: 12px 0 6px;
+      padding: 12px 18px;
+      background: var(--blue);
+      color: #fff !important;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 11pt;
+      border-radius: 6px;
+    }
+    .cta:hover { background: var(--blue-dark); }
+    .cta-wrap { text-align: center; margin: 16px 0; }
+    .footer-links {
+      text-align: center;
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+    .footer-links a { color: var(--blue); }
+    .print-shot {
+      margin: 10px 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .print-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      object-fit: contain;
+      object-position: top center;
+    }
+    .print-shot.tall img {
+      /* viewport already framed — keep natural aspect */
+    }
+    .print-shot figcaption {
+      padding: 6px 10px;
+      font-size: 8.5pt;
+      color: var(--muted);
+      background: var(--soft);
+      border-top: 1px solid var(--line);
+    }
+    .page-foot {
+      position: absolute;
+      bottom: 12mm;
+      left: 16mm;
+      right: 16mm;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 6px;
+    }
+    .cover .page-foot { display: none; }
+    ol.compact { margin: 8px 0 12px; padding-left: 18px; }
+    ol.compact li { margin-bottom: 4px; }
+    ul.plain { margin: 8px 0 12px; padding-left: 18px; }
+    ul.plain li { margin-bottom: 4px; }
+    .checklist td { padding: 7px 10px; border-bottom: 1px solid var(--line); }
+    .checklist { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10.5pt; }
+    .checklist .day { font-weight: 700; width: 52px; color: var(--blue); }
+
+    @media print {
+      html, body { background: #fff; }
+      .page {
+        width: auto;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .cta { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      a[href]::after { content: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <section class="page cover">
+    <p class="eyebrow">Barbernegon</p>
+    <h1>Vaga Perdida</h1>
+    <p class="lead">A casa parece cheia no WhatsApp e a semana ainda fecha fraca. Aqui está o motivo — e o caminho mais curto para parar de perder dinheiro em horário vazio.</p>
+    <ul class="stack">
+      <li>Diagnóstico rápido: descubra em minutos quanto você perdeu essa semana</li>
+      <li>Os 5 motivos pelos quais a vaga some (e qual atacar primeiro)</li>
+      <li>3 mensagens prontas para confirmar, proteger e repor horário</li>
+      <li>Checklist de 7 dias para aplicar tudo, passo a passo</li>
+      <li>O caminho direto para fazer isso rodar sozinho, todo dia</li>
+    </ul>
+    <p class="tagline">Sua barbearia. Sua cara. Sem burocracia.</p>
+  </section>
+
+  <!-- 01 -->
+  <section class="page">
+    <p class="section-num">01 — Comece por aqui</p>
+    <h2>Para quem é este guia</h2>
+    <p>Você sente a casa “andando” — mensagem o dia todo no WhatsApp — mas o caixa da semana não fecha do jeito que o movimento sugere. Esse buraco tem nome: <strong>vaga perdida</strong>. Horário que podia ter virado dinheiro e evaporou sem ninguém contar.</p>
+    <p>Este guia é curto de propósito. Primeiro você mede o problema em poucos minutos. Depois aplica 4 correções simples. No final, mostro como isso passa a acontecer sozinho.</p>
+
+    <h3>Teste expresso (2 minutos, olhando hoje)</h3>
+    <p>Não precisa contar a semana inteira agora — só olhar o dia de hoje.</p>
+    <ol class="compact">
+      <li>Quantos horários abertos hoje ainda não foram preenchidos?</li>
+      <li>Alguém cancelou hoje e a vaga ficou parada?</li>
+      <li>Multiplique isso pelo preço do seu serviço mais vendido.</li>
+    </ol>
+    <p class="pain">Esse número já dói?</p>
+    <p>Multiplique por 6 dias de semana. É isso que este guia existe para reverter. Na seção 03 você refaz esse cálculo com mais precisão, usando uma semana fechada.</p>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>02</span></div>
+  </section>
+
+  <!-- 02 -->
+  <section class="page">
+    <p class="section-num">02 — O problema de verdade</p>
+    <h2>WhatsApp cheio não é o mesmo que casa cheia</h2>
+    <p>Mensagem o dia inteiro parece demanda. Na prática, muita coisa ali é gente perguntando “tem horário?”, remarcando em cima da hora, ou só olhando preço. Enquanto você digita resposta, a cadeira do lado esfria — e o chat não te mostra isso.</p>
+    <p><strong>Vaga perdida</strong> = horário que podia virar atendimento pago e não virou. Não é só falta — é cancelamento sem reposição, é horário “guardado” ontem que hoje ficou vazio, é vaga que nunca foi oferecida com clareza porque a resposta demorou.</p>
+
+    <div class="callout">
+      <strong>Por que a falta custa em dobro</strong>
+      Quando você reserva um horário, já recusou outra pessoa que perguntou antes. Se quem reservou falta e não tinha ninguém pronto pra entrar no lugar, você perde as duas vendas — não só uma.
+    </div>
+
+    <h3>Para quem este guia serve</h3>
+    <ul class="plain">
+      <li>1 unidade, poucos barbeiros, agenda ainda misturada no WhatsApp</li>
+      <li>Casa “andando”, mas o caixa da semana não fecha como o movimento sugere</li>
+      <li>Já tentou organizar, e em poucos dias voltou ao improviso</li>
+    </ul>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>03</span></div>
+  </section>
+
+  <!-- 03 + CTA #1 -->
+  <section class="page">
+    <p class="section-num">03 — Meça direito</p>
+    <h2>Diagnóstico completo (uma semana já fechada)</h2>
+    <p>Opcional, mas mais preciso. Pegue uma semana que já passou. Conte só o que de fato aconteceu — sem achismo.</p>
+
+    <table class="diag">
+      <tr>
+        <th>Campo</th>
+        <th>O que contar</th>
+        <th>Sua semana</th>
+      </tr>
+      <tr>
+        <td>Horários abertos</td>
+        <td>Slots vendáveis do expediente (tire almoço, folga, bloqueio)</td>
+        <td>______</td>
+      </tr>
+      <tr>
+        <td>Horários atendidos</td>
+        <td>Só quem sentou e concluiu de verdade</td>
+        <td>______</td>
+      </tr>
+      <tr>
+        <td>Ticket âncora</td>
+        <td>Preço do serviço que mais vende (não a média sonhada)</td>
+        <td>R$ ______</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>Conta</strong>
+      Vagas perdidas = abertos − atendidos. Dinheiro na mesa = vagas perdidas × ticket âncora.<br /><br />
+      Exemplo: 48 abertos, 37 atendidos, ticket R$ 70 → <strong>11 vagas → R$ 770 na semana</strong>. Em 4 semanas, quase um aluguel — sem nenhum alarme tocar no seu caixa.
+    </div>
+
+    <h3>Enquanto o número ainda está fresco</h3>
+    <p>Esse cálculo, o Barbernegon faz sozinho — todo dia, sem você preencher tabela nenhuma. Se quiser ver isso rodando com os números da sua própria barbearia, o cadastro é gratuito e leva menos tempo do que você levou pra preencher essa tabela.</p>
+    <div class="cta-wrap">
+      <a class="cta" data-link="cadastro" href="https://barbernegon-production.up.railway.app/cadastro">Ver meu número automático →</a>
+    </div>
+    <p class="muted" style="text-align:center">Sem compromisso — o restante do guia continua valendo mesmo se você seguir só no papel por enquanto.</p>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>04</span></div>
+  </section>
+
+  <!-- 04 motivos -->
+  <section class="page">
+    <p class="section-num">04 — Por que a vaga some</p>
+    <h2>Os 5 motivos, em português simples</h2>
+
+    <h3>1. Você acha que combinou, o cliente acha que talvez</h3>
+    <p>No chat, o “ok, marcado” vira reserva firme pra você e “vou tentar ir” pra ele. Sem prazo claro, a falta é previsível — não é má vontade do cliente, é o combinado que ficou frouxo.</p>
+    <p class="note">O termo técnico é “assimetria de compromisso”.</p>
+
+    <h3>2. Você demora pra repor e a vaga esfria</h3>
+    <p>Cancelou de manhã sem ninguém de prontidão pra entrar? Depois de umas 2 horas, a chance de preencher despenca. O problema não é o cancelamento em si — é a demora pra avisar quem topa entrar na hora.</p>
+    <p class="note">A “janela de reposição” é a primeira hora depois do cancelamento.</p>
+
+    <h3>3. Só você sabe o que está livre</h3>
+    <p>Enquanto você responde um por um no WhatsApp, quem perguntou já marcou no salão ao lado. A demanda não sumiu — foi pra quem respondeu mais rápido e mais claro.</p>
+    <p class="note">Inventário invisível.</p>
+
+    <h3>4. Você paga pra alugar cliente de outro app</h3>
+    <p>Marketplace traz visita, não hábito. O cliente compara seu preço com o da barbearia ao lado, na mesma tela. E o histórico de quem marcou fica com o app — não com você.</p>
+    <p class="note">Demanda alugada.</p>
+
+    <h3>5. Marcar no chat não parece compromisso de verdade</h3>
+    <p>Uma reserva que vive só numa mensagem de WhatsApp é fácil de esquecer ou remarcar sem culpa. Uma reserva que vive numa página com a cara da sua marca pesa mais na cabeça do cliente.</p>
+    <p class="note">Âncora de compromisso fraca.</p>
+
+    <div class="callout">
+      <strong>Se só puder mudar uma coisa</strong>
+      Nessa ordem: 1) prazo claro na confirmação, 2) uma lista pronta de 10 pessoas flexíveis pra encaixe, 3) um link único pra marcar. A confirmação sozinha já reduz falta; sem lista, o cancelamento ainda vira buraco.
+    </div>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>05</span></div>
+  </section>
+
+  <!-- 05 correções -->
+  <section class="page">
+    <p class="section-num">05 — Correção prática</p>
+    <h2>4 ajustes que seguram a cadeira</h2>
+
+    <h3>A. Mostre só o horário que existe de verdade</h3>
+    <p>Publique o expediente real, não o ideal no papel. Separe serviço longo de curto pra não sobrar buraco impossível de encaixar. Deixe 1–2 janelas por dia livres só pra encaixe.</p>
+
+    <h3>B. Confirme com prazo — não com “ok, te espero”</h3>
+    <p>Toda marcação precisa de um prazo pra confirmar e um lembrete na véspera. Sem resposta até o prazo, a vaga libera pra fila.</p>
+
+    <h3>C. Tenha uma lista pronta pra encaixe</h3>
+    <p>10 a 20 nomes de clientes flexíveis, separados por manhã/tarde. Cancelou? Dispara em ordem, um a um.</p>
+
+    <h3>D. Separe “marcar” de “conversar”</h3>
+    <p>WhatsApp continua sendo o canal de relacionamento. A marcação em si funciona melhor fora do chat, num link único que mostra o horário certo, sem ida e volta.</p>
+
+    <h3>3 scripts prontos</h3>
+    <p><strong>Confirmação com prazo</strong></p>
+    <div class="script">Fala, [Nome]! Seu horário: [dia] às [hora] — [serviço]. Responde 1 pra confirmar ou 2 pra remarcar até [prazo]. Sem resposta, libero a vaga.</div>
+    <p><strong>Lembrete na véspera</strong></p>
+    <div class="script">[Nome], amanhã às [hora] te esperamos. Não vai poder? Avisa até [limite] — tenho fila de encaixe.</div>
+    <p><strong>Encaixe rápido</strong></p>
+    <div class="script">Abriu horário hoje às [hora] pra [serviço]. Quer encaixar? Responde AGORA.</div>
+
+    <h3>Política simples contra falta</h3>
+    <p>2 faltas seguidas sem avisar → próximo horário só em horário menos concorrido, ou com sinal. Avise a regra já na primeira marcação.</p>
+
+    <div class="callout">
+      <strong>Erros que anulam o método</strong>
+      Continuar marcando só no chat sem prazo. Regra complexa demais que você abandona em 2 dias. Achar que “ter um app” resolve sem aplicar nenhuma das regras acima.
+    </div>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>06</span></div>
+  </section>
+
+  <!-- 06 checklist + 07 virada -->
+  <section class="page">
+    <p class="section-num">06 — Aplicação</p>
+    <h2>Checklist — 7 dias</h2>
+    <table class="checklist">
+      <tr><td class="day">Dia 1</td><td>Calcule sua vaga perdida da semana passada (seção 03) e o R$ que ficou na mesa</td></tr>
+      <tr><td class="day">Dia 2</td><td>Ajuste o expediente publicado pro que você realmente cumpre</td></tr>
+      <tr><td class="day">Dia 3</td><td>Salve os 3 scripts prontos no seu celular</td></tr>
+      <tr><td class="day">Dia 4</td><td>Monte sua lista de 10 clientes flexíveis pra encaixe</td></tr>
+      <tr><td class="day">Dia 5</td><td>Avise sua política de falta pros próximos agendamentos</td></tr>
+      <tr><td class="day">Dia 6</td><td>Tire a marcação do meio da conversa solta — use um link único</td></tr>
+      <tr><td class="day">Dia 7</td><td>Meça de novo e compare com o Dia 1</td></tr>
+    </table>
+
+    <p class="section-num" style="margin-top:28px">07 — A virada</p>
+    <h2>O método funciona. O gargalo é você ter que lembrar de tudo</h2>
+    <p>Confirmar, remarcar, disparar lista, lembrar prazo, saber quem tá livre — isso é gestão. E quem está com a máquina na mão vive outra fila: atraso, cliente sem hora marcada, barbeiro faltando.</p>
+    <p>Padrão comum: o método dura 3 ou 4 dias. Depois volta o improviso — e a vaga perdida volta também, só que sem alarme nenhum tocando.</p>
+    <div class="callout">
+      <strong>A pergunta que muda o jogo</strong>
+      E se a confirmação, o lembrete, a fila de encaixe e a agenda vivessem num sistema — enquanto você corta o cabelo, sem depender da sua memória no meio do rush?
+    </div>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>07</span></div>
+  </section>
+
+  <!-- 08 intro + grade -->
+  <section class="page">
+    <p class="section-num">08 — Onde cada correção mora no sistema</p>
+    <h2>O que muda quando isso é automático</h2>
+    <p>Você acabou de aplicar cada correção na mão. Veja onde ela vive sozinha dentro do painel do Barbernegon.</p>
+
+    <p><strong>Grade de ocupação</strong> — resolve o motivo 3: você vê onde a ocupação cai, sem contar nada na mão.</p>
+    <figure class="print-shot">
+      <img src="prints/03-grade-ocupacao.png" alt="Grade de ocupação no painel Barbernegon" />
+      <figcaption>Painel — grade de ocupação (frequência por dia e horário)</figcaption>
+    </figure>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>08</span></div>
+  </section>
+
+  <!-- painel -->
+  <section class="page">
+    <p class="section-num">08 — Continuação</p>
+    <p><strong>Painel administrativo</strong> — resolve o motivo 2: mostra o que precisa de ação agora, não um feed de WhatsApp pra garimpar.</p>
+    <figure class="print-shot">
+      <img src="prints/02-painel-acoes.png" alt="Painel administrativo com ritual do dia" />
+      <figcaption>Painel administrativo — ações do dia</figcaption>
+    </figure>
+    <div class="callout">
+      <strong>Importante</strong>
+      O sistema não inventa sua lista de encaixe nem escreve o texto da véspera por você. As seções 05 e 06 continuam sendo a regra — o sistema é onde a regra para de depender só da sua memória.
+    </div>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>09</span></div>
+  </section>
+
+  <!-- fluxo agendar -->
+  <section class="page">
+    <p class="section-num">08 — Continuação</p>
+    <p><strong>Fluxo de agendar</strong> — resolve o motivo 1: a reserva vira uma tela com resumo, não um “ok” solto no meio da conversa.</p>
+    <figure class="print-shot">
+      <img src="prints/05-fluxo-agendar.png" alt="Fluxo de agendar online" />
+      <figcaption>Fluxo de agendar — serviço, horário e confirmação fora do chat</figcaption>
+    </figure>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>10</span></div>
+  </section>
+
+  <!-- site -->
+  <section class="page">
+    <p class="section-num">08 — Continuação</p>
+    <p><strong>Site com a marca da barbearia</strong> — resolve os motivos 4 e 5: link próprio, sem concorrente do lado, sem depender de app de terceiro.</p>
+    <figure class="print-shot">
+      <img src="prints/04-site-marca.png" alt="Site da barbearia com a marca" />
+      <figcaption>Site próprio com a cara da barbearia</figcaption>
+    </figure>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>11</span></div>
+  </section>
+
+  <!-- 09 acesso -->
+  <section class="page">
+    <p class="section-num">09 — Caminho de acesso</p>
+    <h2>O que você vê ao criar sua conta</h2>
+    <p>Sem mistério: você cria a barbearia, configura serviços e expediente, e já sai com site e agenda no ar.</p>
+
+    <p><strong>Cadastro</strong> — cria sua barbearia e já define o endereço do seu site próprio.</p>
+    <figure class="print-shot">
+      <img src="prints/06-cadastro.png" alt="Tela de cadastro Barbernegon" />
+      <figcaption>Cadastro — nome da barbearia e endereço do site</figcaption>
+    </figure>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>12</span></div>
+  </section>
+
+  <section class="page">
+    <p class="section-num">09 — Continuação</p>
+    <p><strong>Login do painel</strong> — depois do cadastro, é por aqui que você volta todo dia.</p>
+    <figure class="print-shot">
+      <img src="prints/01-login.png" alt="Tela de login do painel" />
+      <figcaption>Login do painel administrativo</figcaption>
+    </figure>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>13</span></div>
+  </section>
+
+  <!-- fechamento -->
+  <section class="page">
+    <p class="section-num">10 — Próximo passo</p>
+    <h2>Tire a agenda do improviso</h2>
+    <p class="lead">Você já sabe onde a vaga some e já tem os scripts pra corrigir na mão. Agora é decidir se quer continuar repetindo isso todo dia — ou deixar o sistema fazer por você.</p>
+
+    <h3>Comece grátis no Barbernegon</h3>
+    <p>Cadastro leva poucos minutos. Sem cartão. Os números que você calculou neste guia podem ser conferidos direto no seu painel assim que você entrar.</p>
+
+    <div class="cta-wrap">
+      <a class="cta" data-link="cadastro" href="https://barbernegon-production.up.railway.app/cadastro">Criar minha barbearia agora →</a>
+    </div>
+    <p class="footer-links">
+      Já tem cadastro? <a data-link="login" href="https://barbernegon-production.up.railway.app/admin/login">Entrar no painel →</a>
+      ·
+      Quer ver funcionando antes? <a data-link="piloto" href="https://barbernegon-production.up.railway.app/ze-do-corte">Ver piloto ao vivo →</a>
+    </p>
+
+    <p class="tagline" style="text-align:center;margin-top:40px">Sua barbearia, sua cara, sem burocracia.</p>
+    <p class="muted" style="text-align:center;margin-top:24px">© Barbernegon — material educativo. Adapte as regras à sua operação.</p>
+    <div class="page-foot"><span>BARBERNEGON · VAGA PERDIDA</span><span>14</span></div>
+  </section>
+
+  <script>
+    (function () {
+      var links = window.VAGA_PERDIDA_LINKS || {};
+      document.querySelectorAll("[data-link]").forEach(function (el) {
+        var key = el.getAttribute("data-link");
+        if (links[key]) el.setAttribute("href", links[key]);
+      });
+    })();
+  </script>
+</body>
+</html>

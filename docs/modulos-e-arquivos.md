@@ -65,6 +65,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/termos` | `src/app/(public)/termos/page.tsx` | Termos de Uso da plataforma |
 | `/privacidade` | `src/app/(public)/privacidade/page.tsx` | Política de Privacidade (LGPD) |
 | `/lista-espera` | `src/app/lista-espera/page.tsx` | Lead B2B só por link (noindex); form `lista-espera-form.tsx` |
+| `/vaga-perdida` | `src/app/vaga-perdida/page.tsx` | LP do info-produto tripwire “Vaga Perdida” (noindex); CTA checkout externo (`VAGA_PERDIDA_CHECKOUT_URL`); UI `vaga-perdida-landing.tsx` |
 | `/[slug]` | `src/app/[slug]/page.tsx` + `layout.tsx` | Site institucional via canvas + PWA (**Instalar app**) |
 | `/[slug]/agendar` | `src/app/[slug]/agendar/page.tsx` | Agendamento scoped à org (+ PWA do tenant) |
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |

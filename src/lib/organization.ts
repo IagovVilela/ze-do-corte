@@ -84,6 +84,7 @@ export const RESERVED_SLUGS = new Set([
   "plataforma",
   "consultores",
   "lista-espera",
+  "vaga-perdida",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

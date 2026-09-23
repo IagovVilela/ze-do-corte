@@ -12,6 +12,7 @@ export const MARKETING_ONLY_PATH_PREFIXES = [
   "/admin",
   "/plataforma",
   "/consultores",
+  "/vaga-perdida",
   "/api/admin",
   "/api/plataforma",
   "/api/consultores",

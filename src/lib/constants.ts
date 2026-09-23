@@ -86,3 +86,9 @@ export const BUSINESS_HOURS = [
   "18:30",
   "19:00",
 ];
+
+/**
+ * Checkout externo do info-produto tripwire "Vaga Perdida" (LP `/vaga-perdida`).
+ * Troque pelo link Hotmart/Kiwify/Eduzz quando o checkout estiver pronto.
+ */
+export const VAGA_PERDIDA_CHECKOUT_URL = "#checkout";
