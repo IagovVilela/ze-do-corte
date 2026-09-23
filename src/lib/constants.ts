@@ -89,6 +89,7 @@ export const BUSINESS_HOURS = [
 
 /**
  * Checkout externo do info-produto tripwire "Vaga Perdida" (LP `/vaga-perdida`).
- * Troque pelo link Hotmart/Kiwify/Eduzz quando o checkout estiver pronto.
+ * Caktu — oferta R$ 19,90.
  */
-export const VAGA_PERDIDA_CHECKOUT_URL = "#checkout";
+export const VAGA_PERDIDA_CHECKOUT_URL =
+  "https://pay.cakto.com.br/o3rty9c_1133113";
