@@ -21,6 +21,7 @@ import {
 } from "@/lib/right-hand-metrics";
 import type { DashboardRevenuePoint } from "@/lib/types";
 import { findPeakValley } from "@/lib/right-hand-metrics";
+import { formatMoney } from "@/lib/utils";
 
 type Props = {
   data: DashboardRevenuePoint[];
@@ -115,7 +116,7 @@ export function DashboardRevenueLine({
               labelStyle={{ color: chart.tooltipColor }}
               itemStyle={{ color: chart.tooltipColor }}
               formatter={(value) => [
-                `R$ ${Number(value ?? 0).toFixed(2)}`,
+                formatMoney(Number(value ?? 0)),
                 "Recebido",
               ]}
             />

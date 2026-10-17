@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import {
+  formatBrMoneyInput,
+  formatIntegerDigits,
+  parseBrMoneyInput,
+  parseIntegerDigits,
+} from "@/lib/br-input-masks";
+import { formatMoney } from "@/lib/utils";
+
 type ProductRow = {
   id: string;
   name: string;
@@ -68,9 +76,9 @@ export function AdminProductsManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          price: Number(price.replace(",", ".")),
-          stockQty: stock.trim() === "" ? null : Number(stock),
-          stockMin: stockMin.trim() === "" ? null : Number(stockMin),
+          price: parseBrMoneyInput(price),
+          stockQty: stock.trim() === "" ? null : parseIntegerDigits(stock),
+          stockMin: stockMin.trim() === "" ? null : parseIntegerDigits(stockMin),
         }),
       });
       const data = (await res.json()) as { message?: string };
@@ -169,16 +177,19 @@ export function AdminProductsManager() {
           Preço
           <input
             required
+            inputMode="decimal"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => setPrice(formatBrMoneyInput(e.target.value))}
+            placeholder="0,00"
             className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)]"
           />
         </label>
         <label className="flex w-28 flex-col gap-1 text-xs text-[var(--bn-muted)]">
           Estoque
           <input
+            inputMode="numeric"
             value={stock}
-            onChange={(e) => setStock(e.target.value)}
+            onChange={(e) => setStock(formatIntegerDigits(e.target.value, 6))}
             placeholder="opcional"
             className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)]"
           />
@@ -186,8 +197,9 @@ export function AdminProductsManager() {
         <label className="flex w-28 flex-col gap-1 text-xs text-[var(--bn-muted)]">
           Mínimo
           <input
+            inputMode="numeric"
             value={stockMin}
-            onChange={(e) => setStockMin(e.target.value)}
+            onChange={(e) => setStockMin(formatIntegerDigits(e.target.value, 6))}
             placeholder="alerta"
             className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-3 py-2 text-sm text-[var(--bn-on)]"
           />
@@ -230,7 +242,7 @@ export function AdminProductsManager() {
                       ) : null}
                     </p>
                     <p className="text-xs text-[var(--bn-muted)]">
-                      R$ {row.price.toFixed(2)}
+                      {formatMoney(row.price)}
                       {row.stockQty != null
                         ? ` · estoque ${row.stockQty}`
                         : " · sem controle"}
@@ -282,8 +294,11 @@ export function AdminProductsManager() {
                     <label className="flex w-24 flex-col gap-1 text-[11px] text-[var(--bn-muted)]">
                       Qtd
                       <input
+                        inputMode="numeric"
                         value={stockQtyInput}
-                        onChange={(e) => setStockQtyInput(e.target.value)}
+                        onChange={(e) =>
+                          setStockQtyInput(formatIntegerDigits(e.target.value, 6))
+                        }
                         className="rounded-lg border border-[var(--bn-border)] bg-[var(--bn-surface)] px-2 py-1.5 text-sm text-[var(--bn-on)]"
                       />
                     </label>

@@ -361,7 +361,7 @@ export async function getAppointmentComanda(
   return {
     id: appt.id,
     clientName: appt.clientName,
-    clientPhone: appt.clientPhone,
+    clientPhone: phone || appt.clientPhone,
     clientEmail: appt.clientEmail,
     startsAt: appt.startsAt.toISOString(),
     endsAt: appt.endsAt.toISOString(),

@@ -14,7 +14,7 @@ import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
 import { BUSINESS_HOURS } from "@/lib/constants";
 import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import type { ServiceSummary } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 type AvailableApiResponse = {
   date: string;
@@ -661,7 +661,7 @@ export function BookingForm({
                 </div>
                 {selectedServices.length > 0 ? (
                   <p className="shrink-0 text-xs tabular-nums text-brand-300">
-                    {selectedServices.length} · R$ {totalPrice.toFixed(2)}
+                    {selectedServices.length} · {formatMoney(totalPrice)}
                   </p>
                 ) : null}
               </div>
@@ -1199,7 +1199,7 @@ export function BookingForm({
             <dt className="text-zinc-500">Valor</dt>
             <dd className="text-lg font-semibold text-brand-300">
               {selectedServices.length > 0
-                ? `R$ ${totalPrice.toFixed(2)}`
+                ? formatMoney(totalPrice)
                 : "—"}
             </dd>
           </div>
@@ -1325,7 +1325,7 @@ function ServicePickRow({
           ) : null}
         </span>
         <span className="mt-0.5 block text-sm text-zinc-400">
-          R$ {service.price.toFixed(2)}
+          {formatMoney(service.price)}
           <span className="text-zinc-600"> · </span>
           {service.durationMinutes} min
         </span>

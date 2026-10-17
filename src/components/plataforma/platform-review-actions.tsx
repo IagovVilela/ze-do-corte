@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
+
 type ReviewRow = {
   id: string;
   rating: number;
@@ -74,7 +76,9 @@ export function PlatformReviewActions({ reviews }: { reviews: ReviewRow[] }) {
                   {r.rating}★
                 </td>
                 <td className="px-4 py-3 text-zinc-400">
-                  {r.clientName || r.clientPhone}
+                  {r.clientName ||
+                    formatBrPhoneNational(r.clientPhone) ||
+                    r.clientPhone}
                 </td>
                 <td className="max-w-xs truncate px-4 py-3 text-zinc-400">
                   {r.comment || "—"}

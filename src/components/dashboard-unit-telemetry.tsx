@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { TelemetryScope } from "@/lib/admin-list-url";
 import type { DashboardUnitTelemetryRow } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 
 type Props = {
   rows: DashboardUnitTelemetryRow[];
@@ -85,7 +85,7 @@ export function DashboardUnitTelemetry({
                       {scope === "todayWeek" ? "Recebido hoje" : "Recebido no período"}
                     </dt>
                     <dd className="font-medium tabular-nums text-emerald-700/90">
-                      R$ {(u.receivedToday ?? 0).toFixed(2)}
+                      {formatMoney(u.receivedToday ?? 0)}
                     </dd>
                   </div>
                   <p className="text-[11px] leading-snug text-[var(--bn-muted)]">
@@ -108,7 +108,7 @@ export function DashboardUnitTelemetry({
                         : "Concluídos no período (valor)"}
                     </dt>
                     <dd className="font-medium tabular-nums text-[var(--bn-primary)]">
-                      R$ {(u.completedValueToday ?? 0).toFixed(2)}
+                      {formatMoney(u.completedValueToday ?? 0)}
                     </dd>
                   </div>
                 </>

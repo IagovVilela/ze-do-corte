@@ -203,14 +203,21 @@ export function ClubPublicJoin({
           onChange={(e) => setEmail(e.target.value)}
           className={inputClass}
         />
-        <input
-          required
-          inputMode="numeric"
-          placeholder="CPF ou CNPJ"
-          value={cpf}
-          onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
-          className={inputClass}
-        />
+        <label className="block space-y-1">
+          <span className="text-xs font-medium text-zinc-400">CPF/CNPJ</span>
+          <input
+            required
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={18}
+            placeholder="000.000.000-00"
+            value={cpf}
+            onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
+            onBlur={(e) => setCpf(formatCpfCnpj(e.target.value))}
+            className={inputClass}
+          />
+        </label>
 
         <fieldset className="space-y-2">
           <legend className="text-xs font-medium text-zinc-400">

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { LoaderCircle, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { cn } from "@/lib/utils";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
+import { cn, formatMoney } from "@/lib/utils";
 
 type ManageBarber = {
   id: string;
@@ -308,7 +309,9 @@ export function ManageReservationClient({ token }: Props) {
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-zinc-500">Telefone</dt>
-            <dd className="text-right text-zinc-200">{data.clientPhone}</dd>
+            <dd className="text-right text-zinc-200">
+              {formatBrPhoneNational(data.clientPhone) || data.clientPhone}
+            </dd>
           </div>
           {data.unitName ? (
             <div className="flex justify-between gap-4">
@@ -325,7 +328,7 @@ export function ManageReservationClient({ token }: Props) {
           <div className="flex justify-between gap-4">
             <dt className="text-zinc-500">Valor</dt>
             <dd className="text-right font-semibold text-brand-300">
-              R$ {data.service.price.toFixed(2)}
+              {formatMoney(data.service.price)}
             </dd>
           </div>
         </dl>

@@ -699,13 +699,22 @@ export function ClubAdminPanel({
               className={inputClass}
             />
           </label>
-          <input
-            inputMode="numeric"
-            placeholder="CPF/CNPJ (obrigatório com cobrança online)"
-            value={clientCpf}
-            onChange={(e) => setClientCpf(formatCpfCnpj(e.target.value))}
-            className={inputClass}
-          />
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-[var(--bn-muted)]">
+              CPF/CNPJ
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={18}
+              placeholder="000.000.000-00"
+              value={clientCpf}
+              onChange={(e) => setClientCpf(formatCpfCnpj(e.target.value))}
+              onBlur={(e) => setClientCpf(formatCpfCnpj(e.target.value))}
+              className={inputClass}
+            />
+          </label>
 
           <fieldset className="space-y-2">
             <legend className="text-xs font-medium text-[var(--bn-muted)]">

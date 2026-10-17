@@ -80,14 +80,20 @@ export function AppointmentPixPay({
       <p className="text-xs text-zinc-500">
         Opcional. Você também pode pagar no balcão. CPF pode ser exigido pelo Asaas.
       </p>
-      <input
-        value={cpf}
-        onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
-        placeholder="000.000.000-00"
-        inputMode="numeric"
-        autoComplete="off"
-        className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
-      />
+      <label className="block space-y-1">
+        <span className="text-xs font-medium text-zinc-400">CPF/CNPJ</span>
+        <input
+          type="text"
+          value={cpf}
+          onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
+          onBlur={(e) => setCpf(formatCpfCnpj(e.target.value))}
+          placeholder="000.000.000-00"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={18}
+          className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
+        />
+      </label>
       <button
         type="button"
         disabled={loading}

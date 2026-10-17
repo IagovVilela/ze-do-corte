@@ -7,6 +7,11 @@ import {
   AdminFinanceUnitFilter,
   type FinanceUnitOption,
 } from "@/components/admin-finance-unit-filter";
+import {
+  formatBrMoneyFromNumber,
+  formatBrMoneyInput,
+  parseBrMoneyInput,
+} from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
 
 type CostRow = {
@@ -69,8 +74,8 @@ export function ServicePricingPanel({ units }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         serviceId,
-        directLaborCost: Number(mod) || 0,
-        materialCost: Number(mat) || 0,
+        directLaborCost: parseBrMoneyInput(mod),
+        materialCost: parseBrMoneyInput(mat),
       }),
     });
     setEditingId(null);
@@ -158,17 +163,17 @@ export function ServicePricingPanel({ units }: Props) {
               {editingId === row.serviceId ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <input
-                    type="number"
+                    inputMode="decimal"
                     placeholder="MOD (R$)"
                     value={mod}
-                    onChange={(e) => setMod(e.target.value)}
+                    onChange={(e) => setMod(formatBrMoneyInput(e.target.value))}
                     className="rounded-lg border border-[var(--bn-outline)] px-2 py-1 text-sm"
                   />
                   <input
-                    type="number"
+                    inputMode="decimal"
                     placeholder="MAT (R$)"
                     value={mat}
-                    onChange={(e) => setMat(e.target.value)}
+                    onChange={(e) => setMat(formatBrMoneyInput(e.target.value))}
                     className="rounded-lg border border-[var(--bn-outline)] px-2 py-1 text-sm"
                   />
                   <button
@@ -185,8 +190,8 @@ export function ServicePricingPanel({ units }: Props) {
                     type="button"
                     onClick={() => {
                       setEditingId(row.serviceId);
-                      setMod(String(row.directLaborCost));
-                      setMat(String(row.materialCost));
+                      setMod(formatBrMoneyFromNumber(row.directLaborCost));
+                      setMat(formatBrMoneyFromNumber(row.materialCost));
                     }}
                     className="rounded-lg border border-[var(--bn-outline)] px-3 py-1 text-sm"
                   >

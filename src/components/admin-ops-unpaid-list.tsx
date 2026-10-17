@@ -5,6 +5,8 @@ import { ptBR } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
+
 export type OpsUnpaidRow = {
   id: string;
   clientName: string;
@@ -83,7 +85,7 @@ export function AdminOpsUnpaidList({ unpaid, canManagePayment }: Props) {
             <div className="min-w-0">
               <p className="font-medium text-[var(--bn-on)]">{u.clientName}</p>
               <p className="text-xs text-[var(--bn-muted)]">
-                {u.clientPhone} ·{" "}
+                {formatBrPhoneNational(u.clientPhone) || u.clientPhone} ·{" "}
                 {format(new Date(u.startsAt), "dd/MM", { locale: ptBR })} ·{" "}
                 {money(u.amount)}
               </p>

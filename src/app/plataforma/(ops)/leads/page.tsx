@@ -10,6 +10,7 @@ import {
   shopCalendarDayKey,
   type DashboardPeriodMeta,
 } from "@/lib/dashboard-period";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import { phoneToWhatsAppHref } from "@/lib/phone-to-whatsapp-link";
 import { prisma } from "@/lib/prisma";
 import type { DashboardPoint } from "@/lib/types";
@@ -290,10 +291,10 @@ export default async function PlataformaLeadsPage({
                           rel="noreferrer"
                           className="text-brand-300 underline-offset-2 hover:underline"
                         >
-                          {lead.phone}
+                          {formatBrPhoneNational(lead.phone) || lead.phone}
                         </Link>
                       ) : (
-                        lead.phone
+                        formatBrPhoneNational(lead.phone) || lead.phone
                       )}
                     </td>
                     <td className="px-4 py-3">{lead.shopName}</td>

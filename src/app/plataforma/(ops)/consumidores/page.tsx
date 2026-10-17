@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ClearableSearchInput } from "@/components/ui/clearable-search-input";
+import { formatBrPhoneNational } from "@/lib/br-input-masks";
 import { listPlatformConsumers } from "@/lib/platform-ops";
 import { prisma } from "@/lib/prisma";
 
@@ -130,7 +131,7 @@ export default async function PlataformaConsumidoresPage({
                   {a.clientName}
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-zinc-400">
-                  {a.clientPhone}
+                  {formatBrPhoneNational(a.clientPhone) || a.clientPhone}
                 </td>
                 <td className="px-4 py-3">
                   {a.organization ? (

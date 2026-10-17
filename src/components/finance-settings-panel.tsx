@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 
+import {
+  formatBrMoneyFromNumber,
+  formatBrMoneyInput,
+  parseBrMoneyInput,
+} from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
 
 type Settings = {
@@ -39,6 +44,8 @@ export function FinanceSettingsPanel() {
   const [newBank, setNewBank] = useState("");
   const [feesPix, setFeesPix] = useState("");
   const [feesCredit, setFeesCredit] = useState("");
+  const [proLaboreLabel, setProLaboreLabel] = useState("");
+  const [fixedOverrideLabel, setFixedOverrideLabel] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +60,12 @@ export function FinanceSettingsPanel() {
       setSettings(data.settings);
       setCategories(data.categories);
       setBankAccounts(data.bankAccounts);
+      setProLaboreLabel(formatBrMoneyFromNumber(data.settings.proLaboreMonthly));
+      setFixedOverrideLabel(
+        data.settings.monthlyFixedCostsOverride == null
+          ? ""
+          : formatBrMoneyFromNumber(data.settings.monthlyFixedCostsOverride),
+      );
       const fees = data.settings.paymentMethodFeesJson ?? {};
       setFeesPix(String(fees.PIX ?? fees.pix ?? 0));
       setFeesCredit(String(fees.CREDIT ?? fees.CREDIT_CARD ?? 3.5));
@@ -75,6 +88,11 @@ export function FinanceSettingsPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...settings,
+          proLaboreMonthly: parseBrMoneyInput(proLaboreLabel),
+          monthlyFixedCostsOverride:
+            fixedOverrideLabel.trim() === ""
+              ? null
+              : parseBrMoneyInput(fixedOverrideLabel),
           paymentMethodFeesJson: {
             PIX: Number(feesPix) || 0,
             CREDIT: Number(feesCredit) || 0,
@@ -92,6 +110,12 @@ export function FinanceSettingsPanel() {
       setSettings(data.settings);
       setCategories(data.categories);
       setBankAccounts(data.bankAccounts);
+      setProLaboreLabel(formatBrMoneyFromNumber(data.settings.proLaboreMonthly));
+      setFixedOverrideLabel(
+        data.settings.monthlyFixedCostsOverride == null
+          ? ""
+          : formatBrMoneyFromNumber(data.settings.monthlyFixedCostsOverride),
+      );
       setMessage("Configurações salvas.");
     } finally {
       setSaving(false);
@@ -133,13 +157,10 @@ export function FinanceSettingsPanel() {
         <label className="flex flex-col gap-1">
           <span className="text-xs text-[var(--bn-on-variant)]">Pró-labore mensal (R$)</span>
           <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={settings.proLaboreMonthly}
-            onChange={(e) =>
-              setSettings({ ...settings, proLaboreMonthly: Number(e.target.value) })
-            }
+            inputMode="decimal"
+            value={proLaboreLabel}
+            onChange={(e) => setProLaboreLabel(formatBrMoneyInput(e.target.value))}
+            placeholder="0,00"
             className={field}
           />
         </label>
@@ -197,19 +218,13 @@ export function FinanceSettingsPanel() {
             Override despesas fixas mensais (opcional — deixe vazio para somar categorias)
           </span>
           <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={settings.monthlyFixedCostsOverride ?? ""}
+            inputMode="decimal"
+            value={fixedOverrideLabel}
             onChange={(e) =>
-              setSettings({
-                ...settings,
-                monthlyFixedCostsOverride:
-                  e.target.value === "" ? null : Number(e.target.value),
-              })
+              setFixedOverrideLabel(formatBrMoneyInput(e.target.value))
             }
             className={field}
-            placeholder="Ex.: 4000"
+            placeholder="0,00"
           />
         </label>
       </div>

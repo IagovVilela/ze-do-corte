@@ -147,11 +147,14 @@ export function PlatformUpgradeButton() {
       <label className="block space-y-1.5 text-sm">
         <span className="text-[var(--bn-muted)]">CPF/CNPJ do responsável (Asaas)</span>
         <input
+          type="text"
           value={cpfCnpj}
           onChange={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
+          onBlur={(e) => setCpfCnpj(formatCpfCnpj(e.target.value))}
           placeholder="000.000.000-00"
           inputMode="numeric"
           autoComplete="off"
+          maxLength={18}
           className="w-full rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface-lowest)] px-4 py-2.5 text-sm text-[var(--bn-on)] outline-none focus:border-brand-500/60"
         />
       </label>

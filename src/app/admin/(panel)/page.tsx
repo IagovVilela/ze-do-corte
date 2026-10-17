@@ -25,7 +25,7 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { FinanceGerencialAlerts } from "@/components/finance-gerencial-alerts";
 import { getStaffAccessOrNull } from "@/lib/admin-auth";
 import { getAdminMorningBriefing } from "@/lib/admin-morning-briefing";
-import { cn } from "@/lib/utils";
+import { cn, formatMoney } from "@/lib/utils";
 import {
   getAdminAppointmentsPaginated,
   getAdminDashboardSnapshot,
@@ -232,7 +232,7 @@ export default async function AdminPage({
                     Faturamento (mês, concluídos)
                   </p>
                   <p className="mt-2 text-3xl font-semibold text-[var(--bn-primary)]">
-                    R$ {metrics.revenueMonth.toFixed(2)}
+                    {formatMoney(metrics.revenueMonth)}
                   </p>
                 </div>
                 <div className={kpiSurface}>
@@ -249,7 +249,7 @@ export default async function AdminPage({
                     Recebido (período gráficos)
                   </p>
                   <p className="mt-2 text-xl font-semibold text-emerald-700">
-                    R$ {metrics.receivedInPeriod.toFixed(2)}
+                    {formatMoney(metrics.receivedInPeriod)}
                   </p>
                   <p className="mt-1 text-xs text-[var(--bn-muted)]">{periodLabel}</p>
                 </div>
