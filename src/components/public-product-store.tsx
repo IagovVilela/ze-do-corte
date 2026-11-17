@@ -3,8 +3,28 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { cpfCnpjDigits, formatCpfCnpj } from "@/lib/br-input-masks";
+import {
+  cpfCnpjDigits,
+  formatBrPhoneNational,
+  formatCpfCnpj,
+} from "@/lib/br-input-masks";
 import { formatMoney } from "@/lib/utils";
+
+/** Nome próprio: capitaliza palavras (exceto conectores curtos). */
+function formatPersonName(value: string): string {
+  const connectors = new Set(["da", "de", "do", "das", "dos", "e"]);
+  return value
+    .replace(/\s+/g, " ")
+    .trimStart()
+    .split(" ")
+    .map((part, i) => {
+      if (!part) return part;
+      const lower = part.toLocaleLowerCase("pt-BR");
+      if (i > 0 && connectors.has(lower)) return lower;
+      return lower.charAt(0).toLocaleUpperCase("pt-BR") + lower.slice(1);
+    })
+    .join(" ");
+}
 
 type CatalogProduct = {
   id: string;
@@ -85,9 +105,9 @@ export function PublicProductStore({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            clientName: clientName.trim(),
-            clientPhone: clientPhone.trim(),
-            clientEmail: clientEmail.trim() || undefined,
+            clientName: formatPersonName(clientName),
+            clientPhone: formatBrPhoneNational(clientPhone),
+            clientEmail: clientEmail.trim().toLowerCase() || undefined,
             ...(cpf.trim() ? { cpfCnpj: cpfCnpjDigits(cpf) } : {}),
             lines: cartLines.map((l) => ({
               productId: l.product.id,
@@ -204,6 +224,9 @@ export function PublicProductStore({
               required
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
+              onBlur={(e) => setClientName(formatPersonName(e.target.value))}
+              autoComplete="name"
+              placeholder="Nome completo"
               className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
             />
           </label>
@@ -212,7 +235,16 @@ export function PublicProductStore({
             <input
               required
               value={clientPhone}
-              onChange={(e) => setClientPhone(e.target.value)}
+              onChange={(e) =>
+                setClientPhone(formatBrPhoneNational(e.target.value))
+              }
+              onBlur={(e) =>
+                setClientPhone(formatBrPhoneNational(e.target.value))
+              }
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(11) 99999-9999"
+              maxLength={16}
               className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
             />
           </label>
@@ -223,7 +255,12 @@ export function PublicProductStore({
             <input
               type="email"
               value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
+              onChange={(e) => setClientEmail(e.target.value.trim())}
+              onBlur={(e) =>
+                setClientEmail(e.target.value.trim().toLowerCase())
+              }
+              autoComplete="email"
+              placeholder="seu@email.com"
               className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
             />
           </label>
@@ -234,7 +271,10 @@ export function PublicProductStore({
             <input
               value={cpf}
               onChange={(e) => setCpf(formatCpfCnpj(e.target.value))}
+              onBlur={(e) => setCpf(formatCpfCnpj(e.target.value))}
               inputMode="numeric"
+              autoComplete="off"
+              placeholder="000.000.000-00"
               maxLength={18}
               className="w-full rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500/60"
             />
