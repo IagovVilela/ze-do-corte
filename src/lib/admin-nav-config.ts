@@ -241,9 +241,9 @@ function buildAdminNavGroupsForRoles(
         {
           href: "/admin/produtos",
           label: "Produtos",
-          show: ownerOrAdmin,
+          show: true,
           icon: Package,
-          keywords: ["estoque", "venda", "pomada", "loja"],
+          keywords: ["estoque", "venda", "pomada", "loja", "balcão"],
         },
         {
           href: "/admin/expediente",

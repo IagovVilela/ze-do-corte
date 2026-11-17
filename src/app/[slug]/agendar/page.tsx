@@ -61,6 +61,7 @@ export default async function TenantBookingPage({ params }: Props) {
         logoUrl={org.logoUrl}
         homeHref={homeHref}
         bookHref={bookHref}
+        shopHref={`/${org.slug}/loja`}
         whatsappHref={org.whatsappHref}
         instagramHref={org.instagramHref}
       />

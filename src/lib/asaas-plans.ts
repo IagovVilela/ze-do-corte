@@ -137,8 +137,12 @@ export function clubExternalRef(subscriptionId: string): string {
   return `club_sub:${subscriptionId}`;
 }
 
+export function productSaleExternalRef(saleId: string): string {
+  return `psale:${saleId}`;
+}
+
 export function parseExternalRef(ref: string | null | undefined): {
-  kind: "saas" | "appt" | "club";
+  kind: "saas" | "appt" | "club" | "psale";
   id: string;
   planId?: SaasPlanId;
 } | null {
@@ -157,5 +161,7 @@ export function parseExternalRef(ref: string | null | undefined): {
   if (appt) return { kind: "appt", id: appt[1]! };
   const club = /^club_sub:(.+)$/i.exec(ref);
   if (club) return { kind: "club", id: club[1]! };
+  const psale = /^psale:(.+)$/i.exec(ref);
+  if (psale) return { kind: "psale", id: psale[1]! };
   return null;
 }

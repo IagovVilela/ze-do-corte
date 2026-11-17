@@ -30,6 +30,11 @@ Ao salvar, o sistema **liga sozinho** o aviso de pagamento confirmado. Não prec
 
 ---
 
+## Onboarding (quem instala por salão)
+
+- Guia passo a passo: [`guia-onboarding-novo-cliente.md`](./guia-onboarding-novo-cliente.md)
+- Checklist imprimível: [`checklist-onboarding-salao.md`](./checklist-onboarding-salao.md)
+
 ## WhatsApp — número no site e assistente
 
 ### O essencial (quase todo mundo)

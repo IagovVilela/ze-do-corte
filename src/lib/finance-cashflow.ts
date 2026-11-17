@@ -150,6 +150,27 @@ export async function buildCashFlowSnapshot(options: {
     });
   }
 
+  const productSales = await prisma.productSale.findMany({
+    where: {
+      organizationId: options.organizationId,
+      paymentStatus: "PAID",
+      paidAt: { gte: from, lte: to },
+    },
+    select: { paidAt: true, amountTotal: true },
+  });
+  for (const sale of productSales) {
+    if (!sale.paidAt) continue;
+    movements.push({
+      date: sale.paidAt,
+      inflow: Number(sale.amountTotal),
+      outflow: 0,
+      isProjected: false,
+      categoryId: null,
+      categoryName: "Produtos",
+      costType: "NONE",
+    });
+  }
+
   const recurring = await prisma.financeEntry.findMany({
     where: {
       organizationId: options.organizationId,

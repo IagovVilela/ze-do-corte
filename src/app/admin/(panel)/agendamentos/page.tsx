@@ -53,11 +53,17 @@ export default async function AdminAgendamentosPage() {
       select: { id: true, name: true },
     }),
     access.role === "STAFF"
-      ? Promise.resolve([])
+      ? prisma.staffMember.findMany({
+          where: {
+            id: access.userId,
+            organizationId: access.organizationId,
+          },
+          select: { id: true, displayName: true, email: true },
+        })
       : prisma.staffMember.findMany({
           where: {
             organizationId: access.organizationId,
-            role: { in: ["STAFF", "ADMIN", "OWNER"] },
+            role: "STAFF",
           },
           orderBy: [{ displayName: "asc" }, { email: "asc" }],
           select: { id: true, displayName: true, email: true },
@@ -68,7 +74,13 @@ export default async function AdminAgendamentosPage() {
         unit: { organizationId: access.organizationId },
       },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, price: true },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        durationMinutes: true,
+        unitId: true,
+      },
     }),
     productsPromise,
   ]);
@@ -88,7 +100,7 @@ export default async function AdminAgendamentosPage() {
           <AdminPageHeader
             eyebrow="Operação"
             title="Agendamentos"
-            description="Frequência de cortes, grade por período e comanda ao clicar no horário."
+            description="Frequência de cortes, grade por período, encaixe no balcão e comanda ao clicar no horário."
           />
           <div className="mt-8 space-y-8">
             <AdminAppointmentFrequencyHeatmap
@@ -98,12 +110,18 @@ export default async function AdminAgendamentosPage() {
             <AdminAppointmentsCalendar
               timezone={timezone}
               canManageStatus={canManageStatus}
+              canCreateEncaixe
+              lockedStaffId={
+                access.role === "STAFF" ? access.userId : null
+              }
               units={units}
               staffOptions={staffOptions}
               catalogServices={services.map((s) => ({
                 id: s.id,
                 name: s.name,
                 price: Number(s.price),
+                durationMinutes: s.durationMinutes,
+                unitId: s.unitId,
               }))}
               catalogProducts={products.map((p) => ({
                 id: p.id,

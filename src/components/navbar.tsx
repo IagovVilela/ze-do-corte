@@ -5,6 +5,7 @@ export type NavbarBrandProps = {
   logoUrl?: string | null;
   homeHref?: string;
   bookHref?: string;
+  shopHref?: string | null;
   whatsappHref?: string | null;
   instagramHref?: string | null;
   phoneLabel?: string | null;
@@ -17,6 +18,7 @@ export function Navbar(props: NavbarBrandProps = {}) {
       logoUrl={props.logoUrl}
       homeHref={props.homeHref}
       bookHref={props.bookHref}
+      shopHref={props.shopHref}
       whatsappHref={props.whatsappHref}
       instagramHref={props.instagramHref}
       phoneLabel={props.phoneLabel}

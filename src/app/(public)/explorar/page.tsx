@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
+import { DatabaseUnavailableNotice } from "@/components/database-unavailable-notice";
 import { ExploreMarketplaceClient } from "@/components/marketplace/explore-marketplace-client";
+import { isDatabaseConnectionError } from "@/lib/data";
 import { searchMarketplaceShops } from "@/lib/marketplace";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +30,25 @@ export default async function ExplorarPage({
   const city = one(sp, "city");
   const category = one(sp, "category");
 
-  const shops = await searchMarketplaceShops({ q, city, category });
+  let shops: Awaited<ReturnType<typeof searchMarketplaceShops>> = [];
+  let dbDown = false;
+  try {
+    shops = await searchMarketplaceShops({ q, city, category });
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      dbDown = true;
+    } else {
+      throw error;
+    }
+  }
+
+  if (dbDown) {
+    return (
+      <main className="container-max py-16">
+        <DatabaseUnavailableNotice />
+      </main>
+    );
+  }
 
   return (
     <ExploreMarketplaceClient

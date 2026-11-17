@@ -162,6 +162,7 @@ model Organization {
   supportAccessLogs  SupportAccessLog[]
   products           Product[]
   productStockMovements ProductStockMovement[]
+  productSales       ProductSale[]
   financeCategories  FinanceCategory[]
   financeEntries     FinanceEntry[]
   staffCommissionRules StaffCommissionRule[]
@@ -397,7 +398,7 @@ model AppointmentItem {
   @@index([serviceId])
 }
 
-/// Produto do catálogo do salão (venda no balcão / comanda).
+/// Produto do catálogo do salão (venda no balcão / comanda / loja).
 model Product {
   id             String       @id @default(cuid())
   organizationId String
@@ -414,10 +415,60 @@ model Product {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   sales          AppointmentProduct[]
+  saleItems      ProductSaleItem[]
   stockMovements ProductStockMovement[]
 
   @@index([organizationId, isActive])
   @@unique([organizationId, name])
+}
+
+enum ProductSaleChannel {
+  COUNTER
+  ONLINE
+}
+
+/// Venda de produto avulsa (balcão sem horário ou loja no site).
+model ProductSale {
+  id             String                    @id @default(cuid())
+  organizationId String
+  organization   Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  channel        ProductSaleChannel
+  clientName     String?
+  clientPhone    String?
+  clientEmail    String?
+  paymentMethod  String?                   @db.VarChar(32)
+  paymentStatus  AppointmentPaymentStatus  @default(UNPAID)
+  paidAt         DateTime?
+  amountTotal    Decimal                   @db.Decimal(10, 2)
+  asaasPaymentId String?
+  /// Token para o cliente acompanhar o pedido / PIX online.
+  manageToken    String?                   @unique @db.VarChar(36)
+  note           String?                   @db.VarChar(200)
+  createdById    String?
+  /// Estoque já foi baixado (reserva no PIX ou venda no balcão).
+  stockDeducted  Boolean                   @default(false)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  items          ProductSaleItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, paymentStatus, paidAt])
+  @@index([asaasPaymentId])
+}
+
+model ProductSaleItem {
+  id          String      @id @default(cuid())
+  saleId      String
+  sale        ProductSale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  /// Snapshot do nome no momento da venda.
+  productName String
+  quantity    Int         @default(1)
+  unitPrice   Decimal     @db.Decimal(10, 2)
+
+  @@index([saleId])
+  @@index([productId])
 }
 
 enum ProductStockMovementKind {

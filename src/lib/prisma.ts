@@ -6,7 +6,7 @@ import { Pool } from "pg";
  * Incrementar quando modelos novos forem adicionados ao schema (força trocar
  * o singleton em hot-reload).
  */
-const PRISMA_CLIENT_GENERATION = 20;
+const PRISMA_CLIENT_GENERATION = 21;
 
 type PrismaBundle = {
   generation: number;

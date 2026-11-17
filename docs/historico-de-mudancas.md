@@ -6,6 +6,15 @@ Instruções: ao concluir uma funcionalidade ou refactor que mude contratos (API
 
 ---
 
+## 2026-11-17
+
+- **Venda de produtos avulsa + loja**: além da comanda, `/admin/produtos` registra venda no balcão (baixa estoque). Loja pública `/{slug}/loja` com checkout PIX (Asaas); webhook `psale:` confirma pagamento. Modelos `ProductSale` / `ProductSaleItem`; APIs admin `product-sales` e públicas `org/[slug]/products` + `product-sales/checkout`.
+- **Encaixe no balcão**: em `/admin/agendamentos`, botão **Encaixe** cria atendimento com `bookingSource=encaixe`. API `GET/POST /api/admin/appointments/encaixe` sugere buracos livres e permite `force` com aviso se houver conflito. Libs `encaixe-gaps.ts` / `encaixe-booking.ts`; UI `admin-encaixe-sheet.tsx`.
+
+## 2026-10-16
+
+- **Brief de replicação do Studio de Site**: [`docs/brief-replicacao-studio-site.md`](./brief-replicacao-studio-site.md) — mapa de arquivos, contrato `siteJson` v2, fluxos Marca/Site, checklist MVP e prompt para outro agente portar o canvas white-label.
+
 ## 2026-09-23
 
 - **Info-produto Vaga Perdida**: LP standalone `/vaga-perdida` (noindex, CTA checkout externo via `VAGA_PERDIDA_CHECKOUT_URL`); slug reservado + prefixo marketing. Fonte do e-book em `Marketing/info/vaga-perdida.md` + HTML A4 imprimível `Marketing/info/vaga-perdida.html`.

@@ -7,6 +7,7 @@ import { DollarSign, Monitor } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AdminAppointmentComandaSheet } from "@/components/admin-appointment-comanda-sheet";
+import { AdminEncaixeSheet } from "@/components/admin-encaixe-sheet";
 import {
   AdminDateRangePicker,
   eachYmdInRange,
@@ -18,7 +19,13 @@ import { cn } from "@/lib/utils";
 
 type UnitOption = { id: string; name: string };
 type StaffOption = { id: string; label: string };
-type CatalogService = { id: string; name: string; price: number };
+type CatalogService = {
+  id: string;
+  name: string;
+  price: number;
+  durationMinutes: number;
+  unitId: string;
+};
 type CatalogProduct = {
   id: string;
   name: string;
@@ -29,6 +36,10 @@ type CatalogProduct = {
 type Props = {
   timezone: string;
   canManageStatus: boolean;
+  /** Quem pode abrir o fluxo de encaixe no balcão. */
+  canCreateEncaixe?: boolean;
+  /** STAFF: fixa o profissional no encaixe. */
+  lockedStaffId?: string | null;
   units: UnitOption[];
   staffOptions: StaffOption[];
   catalogServices: CatalogService[];
@@ -49,12 +60,21 @@ function minutesFromDayStart(iso: string, tz: string): number {
   return h * 60 + m;
 }
 
-function blockColor(status: AppointmentRow["status"], paid: boolean): string {
+function blockColor(
+  status: AppointmentRow["status"],
+  paid: boolean,
+  bookingSource?: string | null,
+): string {
   if (status === "CANCELLED") return "bg-zinc-700/80 text-zinc-300 line-through";
   if (status === "COMPLETED") {
     return paid
       ? "bg-teal-800 text-teal-50"
       : "bg-amber-800/90 text-amber-50";
+  }
+  if (bookingSource === "encaixe") {
+    return paid
+      ? "bg-orange-900 text-orange-50"
+      : "bg-orange-800/90 text-orange-50";
   }
   return paid ? "bg-sky-900 text-sky-50" : "bg-indigo-900 text-indigo-50";
 }
@@ -62,13 +82,15 @@ function blockColor(status: AppointmentRow["status"], paid: boolean): string {
 export function AdminAppointmentsCalendar({
   timezone,
   canManageStatus,
+  canCreateEncaixe = false,
+  lockedStaffId = null,
   units,
   staffOptions,
   catalogServices,
   catalogProducts,
 }: Props) {
   const [range, setRange] = useState<DateRangeYmd>(() =>
-    rangeFromPreset("last7"),
+    rangeFromPreset("today"),
   );
   const [rows, setRows] = useState<AppointmentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +98,7 @@ export function AdminAppointmentsCalendar({
   const [unitFilter, setUnitFilter] = useState("");
   const [staffFilter, setStaffFilter] = useState("");
   const [comandaId, setComandaId] = useState<string | null>(null);
+  const [encaixeOpen, setEncaixeOpen] = useState(false);
 
   const dayKeys = useMemo(() => eachYmdInRange(range), [range]);
   const from = range.from;
@@ -149,6 +172,15 @@ export function AdminAppointmentsCalendar({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <AdminDateRangePicker value={range} onChange={setRange} />
         <div className="flex flex-wrap gap-2">
+          {canCreateEncaixe ? (
+            <button
+              type="button"
+              onClick={() => setEncaixeOpen(true)}
+              className="rounded-xl bg-[var(--bn-primary)] px-3 py-1.5 text-sm font-semibold text-[var(--bn-on-primary)] shadow-sm hover:brightness-110"
+            >
+              Encaixe
+            </button>
+          ) : null}
           {units.length > 1 ? (
             <select
               className="rounded-xl border border-[var(--bn-border)] bg-[var(--bn-surface)] px-3 py-1.5 text-sm text-[var(--bn-on)]"
@@ -284,11 +316,11 @@ export function AdminAppointmentsCalendar({
                     onClick={() => setComandaId(row.id)}
                     className={cn(
                       "absolute inset-x-0.5 z-10 overflow-hidden rounded-md px-1.5 py-1 text-left shadow-sm transition hover:brightness-110",
-                      blockColor(row.status, paid),
+                      blockColor(row.status, paid, row.bookingSource),
                       comandaId === row.id && "ring-2 ring-[var(--bn-primary)]",
                     )}
                     style={{ top, height }}
-                    title={`${row.clientName} · ${names.join(", ")}`}
+                    title={`${row.clientName} · ${names.join(", ")}${row.bookingSource === "encaixe" ? " · Encaixe" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-[10px] font-semibold leading-tight">
@@ -302,6 +334,11 @@ export function AdminAppointmentsCalendar({
                         ) : null}
                       </span>
                     </div>
+                    {row.bookingSource === "encaixe" ? (
+                      <span className="text-[9px] font-bold uppercase tracking-wide opacity-90">
+                        Encaixe
+                      </span>
+                    ) : null}
                     <p className="truncate text-[11px] font-medium leading-tight">
                       {row.clientName}
                     </p>
@@ -335,6 +372,17 @@ export function AdminAppointmentsCalendar({
         products={catalogProducts}
         onClose={() => setComandaId(null)}
         onChanged={() => void load()}
+      />
+
+      <AdminEncaixeSheet
+        open={encaixeOpen}
+        onClose={() => setEncaixeOpen(false)}
+        onCreated={() => void load()}
+        timezone={timezone}
+        units={units}
+        staffOptions={staffOptions}
+        services={catalogServices}
+        lockedStaffId={lockedStaffId}
       />
     </div>
   );

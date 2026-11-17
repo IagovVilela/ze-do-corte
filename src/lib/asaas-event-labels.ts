@@ -77,6 +77,8 @@ function targetLabel(externalReference: string | null | undefined): string | nul
       return parsed.planId === "plus"
         ? "plano Plus da Barbernegon"
         : "plano Pro da Barbernegon";
+    case "psale":
+      return "Venda de produto (loja)";
     default: {
       const _exhaustive: never = parsed.kind;
       return _exhaustive;

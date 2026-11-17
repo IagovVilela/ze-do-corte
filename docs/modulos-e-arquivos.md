@@ -71,14 +71,16 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `/agendar` | `src/app/agendar/page.tsx` | Legado → redirect tenant seed |
 | `/minha-reserva/[token]` | `src/app/minha-reserva/[token]/page.tsx` | Cliente troca profissional / remarca / cancela sem login (`manage-reservation-client.tsx`) |
 | `/admin` | `src/app/admin/(panel)/page.tsx` | Briefing matinal (OWNER/ADMIN) + dashboard + métricas + gráficos + **Resumo operacional** (filtros GET) + tabela + paginação `?page=` |
-| `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda |
+| `/admin/agendamentos` | `src/app/admin/(panel)/agendamentos/page.tsx` | Frequência (heatmap) + calendário com blocos/comanda + **Encaixe** no balcão |
 | `/admin/relatorios` | `src/app/admin/(panel)/relatorios/page.tsx` | Overview + leitura IA do período (`AdminReportsPeriodAi`) |
 | `/admin/inteligencia` | `src/app/admin/(panel)/inteligencia/page.tsx` | **Braço Direito**: KPIs do período, funil, coorte, heatmap, chat, retenção WhatsApp |
 | `/admin/evolucao` | `src/app/admin/(panel)/evolucao/page.tsx` | Monitoramento de evolução (faturamento, retorno, crescimento) |
 | `/admin/operacional` | `src/app/admin/(panel)/operacional/page.tsx` | Filas do dia; `#a-receber` com registrar pagamento |
 | `/admin/avaliacoes` | `src/app/admin/(panel)/avaliacoes/page.tsx` | Feedback dos clientes (`OrganizationReview`) |
 | `/admin/clientes` | `src/app/admin/(panel)/clientes/page.tsx` | CRM: clientes únicos (agenda + clube) |
-| `/admin/produtos` | `src/app/admin/(panel)/produtos/page.tsx` | Catálogo de produtos (comanda) |
+| `/admin/produtos` | `src/app/admin/(panel)/produtos/page.tsx` | Catálogo, estoque e **venda avulsa** no balcão |
+| `/{slug}/loja` | `src/app/[slug]/loja/page.tsx` | Loja pública + PIX |
+| `/{slug}/loja/pedido/[token]` | `src/app/[slug]/loja/pedido/[token]/page.tsx` | Status do pedido / PIX |
 | `/admin/marca` | `src/app/admin/(panel)/marca/page.tsx` | Identidade (logo, slug, redes) |
 | `/admin/site` | `src/app/admin/(panel)/site/page.tsx` | Canvas Canva (`site-canvas-editor.tsx`) |
 | `/admin/whatsapp` | `src/app/admin/(panel)/whatsapp/page.tsx` | Conexão Meta Cloud API + bot + logs |
@@ -133,9 +135,14 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Serviços admin (lista + criar) | `src/app/api/admin/services/route.ts` — `GET`, `POST` (corpo com `unitId`; unicidade por par **unidade + nome**) |
 | Serviço (editar + excluir) | `src/app/api/admin/services/[id]/route.ts` — `PATCH` (opcional `unitId`), `DELETE` |
 | Agendamentos (lista por intervalo) | `src/app/api/admin/appointments/route.ts` — `GET ?from=&to=` (AAAA-MM-DD) |
+| Encaixe (balcão) | `src/app/api/admin/appointments/encaixe/route.ts` — `GET` (buracos livres) / `POST` (cria com `bookingSource=encaixe`; `force` para conflito) |
 | Agendamentos (frequência / heatmap) | `src/app/api/admin/appointments/frequency/route.ts` — `GET ?unit=&staff=&from=&to=&chartRange=` (`from`/`to` AAAA-MM-DD têm prioridade; senão `chartRange`; senão últimos 30 dias; intervalo máx. 366 dias) |
 | Comanda | `src/app/api/admin/appointments/[id]/comanda/route.ts` — `GET`/`PATCH` (serviços, produtos, pago) |
 | Produtos | `src/app/api/admin/products/route.ts` + `[id]` |
+| Vendas avulsas | `src/app/api/admin/product-sales/route.ts` — `GET`/`POST` (balcão) |
+| Loja (catálogo) | `src/app/api/public/org/[slug]/products/route.ts` |
+| Loja (checkout PIX) | `src/app/api/public/org/[slug]/product-sales/checkout/route.ts` |
+| Loja (pedido) | `src/app/api/public/org/[slug]/product-sales/[token]/route.ts` |
 | Relatórios | `src/app/api/admin/reports/route.ts` |
 | Operacional | `src/app/api/admin/ops/route.ts` |
 | Avaliações | `src/app/api/admin/reviews/route.ts` — `GET ?rating=&page=` |
@@ -235,6 +242,8 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | `cloudinary-server.ts` | Upload/remoção de avatar e **assets de marca** (logo/hero/canvas, incl. vídeo) no Cloudinary (só servidor; requer `CLOUDINARY_*`) |
 | `appointment-slot-conflict.ts` | Regras de sobreposição de horário (agendamento geral vs. por profissional); `excludeAppointmentId` na remarcação |
 | `booking-availability.ts` | Motor de disponibilidade: duração multi-serviço, capacidade da equipe, slots que cabem inteiros |
+| `encaixe-gaps.ts` / `encaixe-booking.ts` | Buracos livres + criação de encaixe no balcão (`force` com conflitos explícitos) |
+| `product-sales.ts` | Venda avulsa (balcão/loja), baixa/estorno de estoque, catálogo público |
 | `public-booking-slot.ts` | Validação compartilhada de slot (expediente, profissional, conflitos, auto-atribuição) — `POST /api/appointments` e gestão pública |
 | `booking-domain.ts` | Criar / cancelar / remarcar / listar por telefone — site e bot WhatsApp |
 | `whatsapp-meta-client.ts` / `whatsapp-crypto.ts` / `whatsapp-bot-fsm.ts` / `whatsapp-notify-client.ts` / `whatsapp-reminders.ts` / `whatsapp-log-labels.ts` | Cloud API Meta, criptografia de token, FSM do bot, comanda/confirmação com link `/minha-reserva`, lembretes ~24h e ~2h, textos amigáveis do histórico no admin |
@@ -272,7 +281,7 @@ Mapa orientativo — quando alterar uma área, atualize também [historico-de-mu
 | Hero, seções animadas | `hero.tsx`, `hero-video.tsx`, `animated-section.tsx`, `section-title.tsx`, `home-barbers-grid.tsx`, `home-services-grid.tsx`, `home-contact-grid.tsx` |
 | Formulário agendamento | `booking-form.tsx` |
 | Gestão reserva (cliente) | `manage-reservation-client.tsx` |
-| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-morning-briefing.tsx`, `admin-morning-briefing-ai.tsx`, `admin-right-hand-insights.tsx`, `admin-right-hand-compare-bars.tsx`, `admin-right-hand-retention.tsx`, `admin-ops-unpaid-list.tsx`, `admin-whatsapp-draft-button.tsx`, `admin-reports-period-ai.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-frequency-heatmap.tsx`, `admin-appointments-calendar.tsx`, `admin-appointment-comanda-sheet.tsx`, `admin-products-manager.tsx`, `admin-date-range-picker.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
+| Painel | `admin-panel-nav.tsx` (grupos BN), `admin-page-header.tsx`, `admin-morning-briefing.tsx`, `admin-morning-briefing-ai.tsx`, `admin-right-hand-insights.tsx`, `admin-right-hand-compare-bars.tsx`, `admin-right-hand-retention.tsx`, `admin-ops-unpaid-list.tsx`, `admin-whatsapp-draft-button.tsx`, `admin-reports-period-ai.tsx`, `admin-config-appearance.tsx`, `admin-config-feature-toggles.tsx`, `onboarding-checklist.tsx`, `admin-table.tsx`, `admin-appointment-frequency-heatmap.tsx`, `admin-appointments-calendar.tsx`, `admin-encaixe-sheet.tsx`, `admin-appointment-comanda-sheet.tsx`, `admin-products-manager.tsx`, `admin-product-sale-panel.tsx`, `public-product-store.tsx`, `public-product-order-status.tsx`, `admin-date-range-picker.tsx`, `admin-appointment-filters-form.tsx`, `admin-pagination.tsx`, `admin-export-button.tsx`, `dashboard-period-tabs.tsx`, `dashboard-telemetry-scope-tabs.tsx`, `dashboard-unit-telemetry.tsx`, `dashboard-volume-area.tsx`, `dashboard-revenue-line.tsx`, `dashboard-payment-stack.tsx`, `dashboard-status-pie.tsx`, `dashboard-services-bar-chart.tsx`, `dashboard-summary-table.tsx`, `admin-units-manager.tsx`, `admin-staff-manager.tsx`, `admin-services-manager.tsx`, `admin-settings-manager.tsx`, `admin-profile-form.tsx`, `admin-work-schedule-form.tsx` |
 | Mapa (contato) | `location-map.tsx` (só renderiza com query/endereço da unidade) |
 | Aviso BD offline | `database-unavailable-notice.tsx` |
 | Logo do tenant | `brand-logo.tsx` — placeholder de letra se sem `logoUrl` (**não** cai em `logo.jpeg` do piloto) |

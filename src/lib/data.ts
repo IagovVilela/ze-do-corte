@@ -4,7 +4,7 @@ import { getDefaultBarbershopUnitId } from "@/lib/barbershop-unit";
 import { prisma } from "@/lib/prisma";
 import type { PublicBarber, ServiceSummary } from "@/lib/types";
 
-function isDatabaseConnectionError(error: unknown): boolean {
+export function isDatabaseConnectionError(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return error.code === "P1001" || error.code === "P1017";
   }

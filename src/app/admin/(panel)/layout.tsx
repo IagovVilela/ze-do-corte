@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { Montserrat } from "next/font/google";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     title: "Barbernegon Admin",
     statusBarStyle: "black-translucent",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: "#0c0c0e",
 };
 

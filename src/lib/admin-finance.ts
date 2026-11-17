@@ -298,6 +298,18 @@ export async function getFinanceBalanceSnapshot(options: {
     );
   }
 
+  const productSalesPaid = await prisma.productSale.findMany({
+    where: {
+      organizationId: options.organizationId,
+      paymentStatus: "PAID",
+      paidAt: { gte: from, lte: to },
+    },
+    select: { amountTotal: true },
+  });
+  for (const sale of productSalesPaid) {
+    caixaProducts += Number(sale.amountTotal);
+  }
+
   const totalIncome = incomePaid + caixaServices + caixaProducts;
   const totalExpense = expensePaid;
   const projectedIncome = totalIncome + incomeOpen;

@@ -4,6 +4,10 @@ import { createHash } from "node:crypto";
 
 import { parseExternalRef, type SaasPlanId, saasPlanById } from "@/lib/asaas-plans";
 import { notifyClubClient } from "@/lib/club-notify-client";
+import {
+  markProductSaleFailed,
+  markProductSalePaid,
+} from "@/lib/product-sales";
 import { prisma } from "@/lib/prisma";
 
 type AsaasWebhookBody = {
@@ -238,6 +242,13 @@ export async function processAsaasWebhook(
       select: { id: true },
     });
     if (appt) parsed = { kind: "appt", id: appt.id };
+    else {
+      const psale = await prisma.productSale.findFirst({
+        where: { asaasPaymentId: body.payment.id },
+        select: { id: true },
+      });
+      if (psale) parsed = { kind: "psale", id: psale.id };
+    }
   }
   if (!parsed && (body.subscription?.id || body.payment?.subscription)) {
     const subId = body.subscription?.id ?? body.payment?.subscription ?? "";
@@ -275,12 +286,19 @@ export async function processAsaasWebhook(
               select: { unit: { select: { organizationId: true } } },
             })
           )?.unit?.organizationId ?? null
-        : (
-            await prisma.clientSubscription.findUnique({
-              where: { id: parsed.id },
-              select: { organizationId: true },
-            })
-          )?.organizationId ?? null;
+        : parsed.kind === "psale"
+          ? (
+              await prisma.productSale.findUnique({
+                where: { id: parsed.id },
+                select: { organizationId: true },
+              })
+            )?.organizationId ?? null
+          : (
+              await prisma.clientSubscription.findUnique({
+                where: { id: parsed.id },
+                select: { organizationId: true },
+              })
+            )?.organizationId ?? null;
 
   if (organizationId) {
     await prisma.paymentEvent.update({
@@ -346,6 +364,20 @@ export async function processAsaasWebhook(
       eventUpper.includes("SUBSCRIPTION_INACTIVATED")
     ) {
       await markClubCancelled(parsed.id);
+    }
+  } else if (parsed.kind === "psale") {
+    if (
+      eventUpper.includes("PAYMENT_RECEIVED") ||
+      eventUpper.includes("PAYMENT_CONFIRMED") ||
+      isPaidStatus(paymentStatus)
+    ) {
+      if (body.payment) await markProductSalePaid(parsed.id, body.payment);
+    } else if (
+      eventUpper.includes("PAYMENT_DELETED") ||
+      eventUpper.includes("PAYMENT_REFUNDED") ||
+      eventUpper.includes("PAYMENT_OVERDUE")
+    ) {
+      await markProductSaleFailed(parsed.id);
     }
   }
 

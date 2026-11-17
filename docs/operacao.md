@@ -73,7 +73,7 @@ Opcional. Com **`RESEND_API_KEY`** e **`RESEND_FROM_EMAIL`** definidos, o sistem
 - dono/admin atribui um profissional a um agendamento existente no painel (`PATCH /api/admin/appointments/[id]`), ou
 - alguém pede **redefinição de senha** em **`/admin/esqueci-senha`** (link válido por 1 hora).
 
-Sem essas variáveis, o agendamento continua normal; no reset de senha o link só aparece no log do servidor (útil em desenvolvimento). O remetente deve ser um domínio **verificado** na [Resend](https://resend.com/) ou, para testes, `onboarding@resend.dev`. Defina também **`NEXT_PUBLIC_APP_URL`** (ou `APP_URL`) para o link do e-mail apontar ao domínio certo. **Não commite** a API key.
+Sem essas variáveis, o agendamento continua normal; no reset de senha o pedido falha com **503** se a conta existir e o e-mail não sair. O remetente **`RESEND_FROM_EMAIL`** precisa usar um domínio **verificado** em [resend.com/domains](https://resend.com/domains) (ex.: `Barbernegon <noreply@barbernegon.com>`). O endereço de teste `onboarding@resend.dev` **só entrega** para o e-mail da conta Resend — para qualquer outro destinatário o envio é rejeitado (incluindo “esqueci minha senha”). Defina também **`NEXT_PUBLIC_APP_URL`** (ou `APP_URL`) para o link do e-mail apontar ao domínio certo. **Não commite** a API key.
 
 **Regra com Web Push:** se o profissional tiver **pelo menos uma** subscrição push ativa na base **e** VAPID estiver configurado (ver abaixo), o sistema **não envia e-mail** para esse aviso — usa só notificação no browser.
 

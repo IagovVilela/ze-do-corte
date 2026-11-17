@@ -12,11 +12,14 @@
 | [admin-hierarquia.md](./admin-hierarquia.md) | Papéis do painel (proprietário, admin, funcionário), permissões e unidades |
 | [configurar-admin.md](./configurar-admin.md) | Passo a passo: BD, seed do proprietário, login `/admin/login`, equipe, troubleshooting |
 | [barbernegon.md](./barbernegon.md) | Multi-tenant, `siteJson`, rotas `/{slug}`, roadmap Barbernegon |
+| [brief-replicacao-studio-site.md](./brief-replicacao-studio-site.md) | Brief completo para replicar o editor de site (canvas) em outro projeto |
 | [pitch-investidor-barbernegon.md](./pitch-investidor-barbernegon.md) | Explicativo / one-pager para conversa com investidor |
 | [whatsapp-meta.md](./whatsapp-meta.md) | WhatsApp Cloud API: webhook, tokens, bot, templates, lembretes |
 | [pagamentos-asaas.md](./pagamentos-asaas.md) | Asaas: SaaS Free + Pro, PIX do salão, clube, webhooks |
 | [financeiro-gerencial.md](./financeiro-gerencial.md) | DRE, CSV/PV, ponto de equilíbrio, fluxo de caixa (Pro) |
 | [guia-whatsapp-e-pagamentos.md](./guia-whatsapp-e-pagamentos.md) | Passo a passo prático: configurar WhatsApp + Asaas (plataforma e salão) |
+| [checklist-onboarding-salao.md](./checklist-onboarding-salao.md) | Onboarding 100%: checklist por cliente, links, templates Meta prontos, Asaas, Plus+ |
+| [guia-onboarding-novo-cliente.md](./guia-onboarding-novo-cliente.md) | Guia passo a passo por cliente novo (links, bot, templates, Asaas) |
 | [informativo-pagamentos-asaas.pdf](./informativo-pagamentos-asaas.pdf) | Fonte interna do PDF Asaas (cópia pública em `/informativos/pagamentos-asaas.pdf`) |
 | [informativo-whatsapp-plus.pdf](./informativo-whatsapp-plus.pdf) | Fonte interna do PDF Plus+ (cópia pública em `/informativos/whatsapp-plus.pdf`) |
 | [suporte.md](./suporte.md) | Central de ajuda, chamados e contato (`/admin/suporte` + inbox Ops) |

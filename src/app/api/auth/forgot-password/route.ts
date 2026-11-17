@@ -85,12 +85,25 @@ export async function POST(request: Request) {
     const base = resolvePasswordResetAppBaseUrl(request);
     const resetUrl = `${base}/admin/redefinir-senha?token=${encodeURIComponent(rawToken)}`;
 
-    await sendPasswordResetEmail({
+    const { sent } = await sendPasswordResetEmail({
       to: member.email,
       displayName: member.displayName,
       resetUrl,
       expiresAt,
     });
+
+    if (!sent) {
+      console.error(
+        "[forgot-password] token criado, mas e-mail não saiu (RESEND_* / domínio do remetente).",
+      );
+      return NextResponse.json(
+        {
+          message:
+            "Não foi possível enviar o e-mail agora. Tente de novo em instantes ou fale com o suporte.",
+        },
+        { status: 503 },
+      );
+    }
   } catch (error) {
     console.error("[forgot-password] falha ao emitir/enviar reset:", error);
     const detail =

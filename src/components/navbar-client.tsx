@@ -23,21 +23,30 @@ export type NavbarChromeProps = {
   logoUrl?: string | null;
   homeHref?: string;
   bookHref?: string;
+  shopHref?: string | null;
   whatsappHref?: string | null;
   instagramHref?: string | null;
   /** Sem redes da plataforma — só links da org. */
   phoneLabel?: string | null;
 };
 
-function buildLinks(homeHref: string, bookHref: string) {
+function buildLinks(
+  homeHref: string,
+  bookHref: string,
+  shopHref?: string | null,
+) {
   const base = homeHref === "/" ? "" : homeHref.replace(/\/$/, "");
-  return [
+  const links = [
     { href: homeHref, label: "Início" },
     { href: `${base}/#servicos`, label: "Serviços" },
     { href: `${base}/#equipe`, label: "Equipe" },
     { href: `${base}/#contato`, label: "Contato" },
     { href: bookHref, label: "Agendar" },
   ];
+  if (shopHref) {
+    links.splice(4, 0, { href: shopHref, label: "Loja" });
+  }
+  return links;
 }
 
 function NavbarSocialLinks({
@@ -328,6 +337,7 @@ export function NavbarChrome({
   logoUrl,
   homeHref = "/",
   bookHref = "/agendar",
+  shopHref,
   whatsappHref,
   instagramHref,
 }: NavbarChromeProps) {
@@ -337,7 +347,7 @@ export function NavbarChrome({
   const [portalReady, setPortalReady] = useState(false);
   const menuId = useId();
   const { direction, pastTop } = useScrollDirection({ threshold: 14, topMargin: 72 });
-  const links = buildLinks(homeHref, bookHref);
+  const links = buildLinks(homeHref, bookHref, shopHref);
   const reduceMotion = !mounted || reduceMotionPref === true;
 
   /** Esconder quando rola para baixo E não está no topo E menu mobile fechado. */

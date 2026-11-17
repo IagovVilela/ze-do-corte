@@ -57,6 +57,7 @@ export default async function TenantClubPage({ params }: Props) {
         logoUrl={org.logoUrl}
         homeHref={homeHref}
         bookHref={bookHref}
+        shopHref={`/${org.slug}/loja`}
         phoneLabel={org.phoneLabel}
         whatsappHref={org.whatsappHref}
         instagramHref={org.instagramHref}
